@@ -1,0 +1,23 @@
+{
+  "name": "ts-thumbnails",
+  "description": "TagSpaces common thumbnails module",
+  "version": "1.1.0",
+  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "main": "tsthumbgen.js",
+  "scripts": {
+    "test": "jest",
+    "code-format": "npx prettier --write ."
+  },
+  "dependencies": {
+    "async": "^3.2.0",
+    "path": "^0.12.7",
+    "pdf-thumbnail": "^1.0.6",
+    "pdfjs-dist": "^2.7.570",
+    "sharp": "^0.27.1"
+  },
+  "devDependencies": {
+    "fs-extra": "^9.1.0",
+    "jest": "^26.6.3",
+    "path": "^0.12.7"
+  }
+}
