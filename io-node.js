@@ -69,13 +69,7 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
       });
   });
 
-module.exports.walkDirectory = function (
-  path,
-
-  options = {},
-  fileCallback,
-  dirCallback
-) {
+function walkDirectory(path, options = {}, fileCallback, dirCallback) {
   const mergedOptions = {
     recursive: false,
     skipMetaFolder: true,
@@ -139,9 +133,9 @@ module.exports.walkDirectory = function (
         return err;
       })
   );
-};
+}
 
-module.exports.enhanceEntry = function (entry) {
+function enhanceEntry(entry) {
   let fileNameTags = [];
   if (entry.isFile) {
     fileNameTags = paths.extractTagsAsObjects(entry.name);
@@ -182,7 +176,7 @@ module.exports.enhanceEntry = function (entry) {
   }
   // console.log('Enhancing ' + entry.path); console.log(enhancedEntry);
   return enhancedEntry;
-};
+}
 
 const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
   new Promise((resolve) => {
@@ -370,8 +364,9 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
     });
   });
 
-module.exports.loadTextFilePromise = (filePath) =>
-  getFileContentPromise(filePath);
+function loadTextFilePromise(filePath) {
+  return getFileContentPromise(filePath);
+}
 
 const getFileContentPromise = (fullPath) =>
   new Promise((resolve, reject) => {
@@ -394,3 +389,9 @@ const getFileContentPromise = (fullPath) =>
     };
     xhr.send();
   });
+
+module.exports = {
+  walkDirectory,
+  enhanceEntry,
+  loadTextFilePromise,
+};
