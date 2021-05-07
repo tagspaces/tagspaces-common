@@ -1,5 +1,4 @@
-import pathLib from "path";
-
+const pathLib = require("path");
 const fs = require("fs-extra");
 
 const metaFolder = ".ts";
@@ -378,8 +377,8 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
     });
   });
 
-module.exports.loadTextFilePromise = (filePath, bucketName) =>
-  getFileContentPromise(filePath, bucketName);
+module.exports.loadTextFilePromise = (filePath) =>
+  getFileContentPromise(filePath);
 
 const getFileContentPromise = (fullPath) =>
   new Promise((resolve, reject) => {
