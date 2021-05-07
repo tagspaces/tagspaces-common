@@ -18,7 +18,7 @@
 
 const metaFolder = ".ts";
 
-export function getMetaDirectoryPath(directoryPath, dirSeparator) {
+function getMetaDirectoryPath(directoryPath, dirSeparator) {
   if (directoryPath.endsWith(metaFolder + dirSeparator)) {
     return directoryPath;
   }
@@ -32,12 +32,12 @@ export function getMetaDirectoryPath(directoryPath, dirSeparator) {
  * @param path -> root//subFolder/
  * @returns {string} -> root/subFolder
  */
-export function normalizePath(path) {
+function normalizePath(path) {
   if (!path) return "";
   return cleanTrailingDirSeparator(path.replace(/\/\//g, "/"));
 }
 
-export function cleanTrailingDirSeparator(dirPath) {
+function cleanTrailingDirSeparator(dirPath) {
   if (dirPath) {
     if (dirPath.lastIndexOf("\\") === dirPath.length - 1) {
       return dirPath.substring(0, dirPath.length - 1);
