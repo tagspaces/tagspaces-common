@@ -2,16 +2,7 @@ const pathLib = require("path");
 const fs = require("fs-extra");
 const paths = require("./paths");
 const utils = require("./utils");
-
-const metaFolder = ".ts";
-const bTagContainer = "[";
-const eTagContainer = "]";
-const tagDelimiter = " ";
-const metaFileExt = ".json";
-const thumbFileExt = ".jpg";
-const folderThumbFile = "tst.jpg";
-const folderIndexFile = "tsi.json";
-const metaFolderFile = "tsm.json";
+const AppConfig = require("./AppConfig");
 
 const getPropertiesPromise = (path) => {
   return new Promise((resolve) => {
@@ -66,10 +57,10 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
           "Getting properties for " + filePath + " failed with: " + error
         );
         const fsEntry = {
-          name: extractFileName(filePath, pathLib.sep),
+          name: paths.extractFileName(filePath, pathLib.sep),
           isFile: true,
           path: filePath,
-          extension: extractFileExtension(filePath, pathLib.sep),
+          extension: paths.extractFileExtension(filePath, pathLib.sep),
           size: 0,
           lmdt: new Date().getTime(),
           isNewFile: true,
@@ -122,11 +113,14 @@ module.exports.walkDirectory = function (
               if (
                 mergedOptions.skipDotHiddenFolder &&
                 entry.name.startsWith(".") &&
-                entry.name !== metaFolder
+                entry.name !== AppConfig.metaFolder
               ) {
                 return entry;
               }
-              if (mergedOptions.skipMetaFolder && entry.name === metaFolder) {
+              if (
+                mergedOptions.skipMetaFolder &&
+                entry.name === AppConfig.metaFolder
+              ) {
                 return entry;
               }
               return walkDirectory(
@@ -168,7 +162,7 @@ module.exports.enhanceEntry = function (entry) {
   const enhancedEntry = {
     name: entry.name,
     isFile: entry.isFile,
-    extension: entry.isFile ? extractFileExtension(entry.name) : "",
+    extension: entry.isFile ? paths.extractFileExtension(entry.name) : "",
     tags: [...sidecarTags, ...fileNameTags],
     size: entry.size,
     lmdt: entry.lmdt,
@@ -235,7 +229,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
             eentry.size = stats.size;
             eentry.lmdt = stats.mtime.getTime();
 
-            if (!eentry.isFile && eentry.name.endsWith(metaFolder)) {
+            if (!eentry.isFile && eentry.name.endsWith(AppConfig.metaFolder)) {
               containsMetaFolder = true;
             }
 
@@ -244,10 +238,10 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
               const folderMetaPath =
                 eentry.path +
                 pathLib.sep +
-                (!eentry.path.includes("/" + metaFolder)
-                  ? metaFolder + pathLib.sep
+                (!eentry.path.includes("/" + AppConfig.metaFolder)
+                  ? AppConfig.metaFolder + pathLib.sep
                   : "") +
-                metaFolderFile;
+                AppConfig.metaFolderFile;
               try {
                 const folderMeta = fs.readJsonSync(folderMetaPath);
                 eentry.meta = folderMeta;
@@ -257,14 +251,14 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
               }
 
               // Loading thumbs for folders
-              if (!eentry.path.includes("/" + metaFolder)) {
+              if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
                 // skipping meta folder
                 const folderTmbPath =
                   eentry.path +
                   pathLib.sep +
-                  metaFolder +
+                  AppConfig.metaFolder +
                   pathLib.sep +
-                  folderThumbFile;
+                  AppConfig.folderThumbFile;
                 const tmbStats = fs.statSync(folderTmbPath);
                 if (tmbStats.isFile()) {
                   eentry.thumbPath = folderTmbPath;
@@ -324,10 +318,10 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                           } */
 
                 // Reading meta json files with tags and description
-                if (metaEntryName.endsWith(metaFileExt)) {
+                if (metaEntryName.endsWith(AppConfig.metaFileExt)) {
                   const fileNameWithoutMetaExt = metaEntryName.substr(
                     0,
-                    metaEntryName.lastIndexOf(metaFileExt)
+                    metaEntryName.lastIndexOf(AppConfig.metaFileExt)
                   );
                   const origFile = enhancedEntries.find(
                     (result) => result.name === fileNameWithoutMetaExt
@@ -348,10 +342,10 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                 }
 
                 // Finding if thumbnail available
-                if (metaEntryName.endsWith(thumbFileExt)) {
+                if (metaEntryName.endsWith(AppConfig.thumbFileExt)) {
                   const fileNameWithoutMetaExt = metaEntryName.substr(
                     0,
-                    metaEntryName.lastIndexOf(thumbFileExt)
+                    metaEntryName.lastIndexOf(AppConfig.thumbFileExt)
                   );
                   enhancedEntries.map((enhancedEntry) => {
                     if (enhancedEntry.name === fileNameWithoutMetaExt) {

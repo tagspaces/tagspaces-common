@@ -16,15 +16,15 @@
  *
  */
 
-const metaFolder = ".ts";
+const AppConfig = require("./AppConfig");
 
 function getMetaDirectoryPath(directoryPath, dirSeparator) {
-  if (directoryPath.endsWith(metaFolder + dirSeparator)) {
+  if (directoryPath.endsWith(AppConfig.metaFolder + dirSeparator)) {
     return directoryPath;
   }
   return (
     (directoryPath ? normalizePath(directoryPath) + dirSeparator : "") +
-    metaFolder
+    AppConfig.metaFolder
   );
 }
 /**
@@ -51,6 +51,46 @@ function cleanTrailingDirSeparator(dirPath) {
   return "";
 }
 
+function extractFileName(filePath, dirSeparator) {
+  return filePath
+    ? filePath.substring(
+        filePath.lastIndexOf(dirSeparator) + 1,
+        filePath.length
+      )
+    : filePath;
+}
+
+function extractFileExtension(filePath, dirSeparator) {
+  const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
+  const lastIndexEndTagContainer = filePath.lastIndexOf(
+    AppConfig.endTagContainer
+  );
+  const lastindexDot = filePath.lastIndexOf(".");
+  if (lastindexDot < 0) {
+    return "";
+  }
+  if (lastindexDot < lastindexDirSeparator) {
+    // case: "../remote.php/webdav/somefilename"
+    return "";
+  }
+  if (lastindexDot < lastIndexEndTagContainer) {
+    // case: "[20120125 89.4kg 19.5% 60.5% 39.8% 2.6kg]"
+    return "";
+  }
+  let extension = filePath
+    .substring(lastindexDot + 1, filePath.length)
+    .toLowerCase()
+    .trim();
+  const lastindexQuestionMark = extension.lastIndexOf("?");
+  if (lastindexQuestionMark > 0) {
+    // Removing everything after ? in URLs .png?queryParam1=2342
+    extension = extension.substring(0, lastindexQuestionMark);
+  }
+  return extension;
+}
+
 module.exports = {
   getMetaDirectoryPath,
+  extractFileName,
+  extractFileExtension,
 };

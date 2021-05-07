@@ -72,5 +72,5 @@ function extractTags(filePath) {
 }
 
 module.exports = {
-  extractTagsAsObjects
+  extractTagsAsObjects,
 };
