@@ -39,10 +39,8 @@ const getPropertiesPromise = (path) => {
 
 const saveFilePromise = (filePath, content, overwrite = true) =>
   new Promise((resolve, reject) => {
-    const fileSystem = this.fs;
-
     function saveFile(entry, tContent) {
-      fileSystem.writeFile(entry.path, tContent, "utf8", (error) => {
+      fs.writeFile(entry.path, tContent, "utf8", (error) => {
         if (error) {
           reject(error);
           return;
@@ -227,7 +225,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
           eentry.meta = {};
 
           try {
-            stats = this.fs.statSync(entryPath);
+            stats = fs.statSync(entryPath);
             // if (isWin && winattr.getSync(entryPath).hidden) {
             //   return;
             // }
@@ -249,7 +247,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                   : "") +
                 metaFolderFile;
               try {
-                const folderMeta = this.fs.readJsonSync(folderMetaPath);
+                const folderMeta = fs.readJsonSync(folderMetaPath);
                 eentry.meta = folderMeta;
                 // console.log('Success reading meta folder file ' + folderMetaPath);
               } catch (err) {
@@ -265,7 +263,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                   metaFolder +
                   pathLib.sep +
                   folderThumbFile;
-                const tmbStats = this.fs.statSync(folderTmbPath);
+                const tmbStats = fs.statSync(folderTmbPath);
                 if (tmbStats.isFile()) {
                   eentry.thumbPath = folderTmbPath;
                 }
@@ -283,7 +281,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                 fileName.endsWith(".md") ||
                 fileName.endsWith(".html"))
             ) {
-              const fileContent = this.fs.readFileSync(eentry.path, "utf8");
+              const fileContent = fs.readFileSync(eentry.path, "utf8");
               eentry.textContent = Pro.Indexer.extractTextContent(
                 fileName,
                 fileContent
@@ -335,7 +333,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                   if (origFile) {
                     const metaFilePath =
                       metaFolderPath + pathLib.sep + metaEntryName;
-                    const metaFileObj = this.fs.readJsonSync(metaFilePath);
+                    const metaFileObj = fs.readJsonSync(metaFilePath);
                     if (metaFileObj) {
                       enhancedEntries.map((enhancedEntry) => {
                         if (enhancedEntry.name === fileNameWithoutMetaExt) {
