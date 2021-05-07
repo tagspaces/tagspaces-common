@@ -1,141 +1,17 @@
-const pathJS = require('path');
+const AWS = require("aws-sdk");
+const pathJS = require("path");
+// get reference to S3 client
+const s3 = new AWS.S3();
 
-const metaFolder = '.ts';
-const bTagContainer = '[';
-const eTagContainer = ']';
-const tagDelimiter = ' ';
-const metaFileExt = '.json';
-const thumbFileExt = '.jpg';
-const folderThumbFile = 'tst.jpg';
-const folderIndexFile = 'tsi.json';
-const metaFolderFile = 'tsm.json';
-/*
- * @param path
- * @param bucketName
- * @returns {Promise<[]>}
- */
-module.exports.indexer = function (path) {
-  console.log(
-    'createDirectoryIndex started in AWS Lambda:' +
-      path +
-      ' bucketName:' +
-      bucketName
-  );
-  console.time('createDirectoryIndex');
-  const directoryIndex = [];
-  let counter = 0;
-  return walkDirectory(
-    path,
-
-    {
-      recursive: true,
-      skipMetaFolder: true,
-      skipDotHiddenFolder: true,
-      extractText: false,
-    },
-    (fileEntry) => {
-      counter += 1;
-      // if (counter > AppConfig.indexerLimit) { TODO set index limit
-      //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
-      //     window.walkCanceled = true;
-      // }
-      directoryIndex.push(enhanceEntry(fileEntry));
-    },
-    (directoryEntry) => {
-      if (directoryEntry.name !== metaFolder) {
-        counter += 1;
-        directoryIndex.push(enhanceEntry(directoryEntry));
-      }
-    }
-  )
-    .then(() => {
-      // entries - can be used for further processing
-      // window.walkCanceled = false;
-      console.log(
-        'Directory index created ' +
-          path +
-          ' containing ' +
-          directoryIndex.length
-      );
-      console.timeEnd('createDirectoryIndex');
-      return directoryIndex;
-    })
-    .catch((err) => {
-      // window.walkCanceled = false;
-      console.timeEnd('createDirectoryIndex');
-      console.warn('Error creating index: ' + err);
-    });
-};
-
-module.exports.addToIndex = function (
-  key,
-  size,
-  LastModified,
-  thumbPath,
-  bucketName
-) {
-  if (key.indexOf(metaFolder + '/') !== -1) {
-    console.info('addToIndex skip meta folder' + key);
-    return Promise.resolve(true);
-  }
-  const dirPath = extractContainingDirectoryPath(key);
-  const metaFilePath = getMetaIndexFilePath(dirPath);
-  return loadTextFilePromise(metaFilePath, bucketName).then(
-    (metaFileContent) => {
-      let tsi = [];
-      if (metaFileContent) {
-        tsi = JSON.parse(metaFileContent.trim());
-      }
-
-      const eentry = {};
-      eentry.name = extractFileName(key);
-      eentry.path = key;
-      eentry.bucketName = bucketName;
-      eentry.tags = [];
-      eentry.thumbPath = thumbPath;
-      eentry.meta = {};
-      eentry.isFile = true;
-      eentry.size = size;
-      eentry.lmdt = Date.parse(LastModified);
-
-      tsi.push(eentry);
-
-      return persistIndex(dirPath, tsi, bucketName);
-    }
-  );
-};
-
-module.exports.removeFromIndex = function (key, bucketName) {
-  if (key.indexOf(metaFolder + '/') !== -1) {
-    console.info('removeFromIndex skip meta folder' + key);
-    return Promise.resolve(true);
-  }
-  const dirPath = extractContainingDirectoryPath(key);
-  const metaFilePath = getMetaIndexFilePath(dirPath);
-  return loadTextFilePromise(metaFilePath, bucketName).then(
-    (metaFileContent) => {
-      if (metaFileContent) {
-        const tsi = JSON.parse(metaFileContent.trim());
-        const newTsi = tsi.filter((item) => item.path !== key);
-        if (tsi.size !== newTsi.size) {
-          return persistIndex(dirPath, newTsi, bucketName);
-        }
-      }
-    }
-  );
-};
-
-const getMetaIndexFilePath = (directoryPath, dirSeparator = '/') => {
-  return directoryPath.length > 0 && directoryPath !== '/'
-    ? pathJS.normalize(
-        directoryPath +
-          dirSeparator +
-          metaFolder +
-          dirSeparator +
-          folderIndexFile
-      )
-    : pathJS.normalize(metaFolder + dirSeparator + folderIndexFile);
-};
+const metaFolder = ".ts";
+const bTagContainer = "[";
+const eTagContainer = "]";
+const tagDelimiter = " ";
+const metaFileExt = ".json";
+const thumbFileExt = ".jpg";
+const folderThumbFile = "tst.jpg";
+const folderIndexFile = "tsi.json";
+const metaFolderFile = "tsm.json";
 
 const getPropertiesPromise = (path, bucketName) => {
   const params = {
@@ -146,19 +22,19 @@ const getPropertiesPromise = (path, bucketName) => {
   return headObjectPromise
     .then((data) =>
       /*
-                      data = {
-                        "AcceptRanges":"bytes",
-                        "LastModified":"2018-10-22T12:57:16.000Z",
-                        "ContentLength":101003,
-                        "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
-                        "ContentType":"image/png",
-                        "ServerSideEncryption":"AES256",
-                        "Metadata":{}
-                      }
-                      */
+                            data = {
+                              "AcceptRanges":"bytes",
+                              "LastModified":"2018-10-22T12:57:16.000Z",
+                              "ContentLength":101003,
+                              "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
+                              "ContentType":"image/png",
+                              "ServerSideEncryption":"AES256",
+                              "Metadata":{}
+                            }
+                            */
       ({
-        name: path.substring(path.lastIndexOf('/') + 1, path.length),
-        isFile: !path.endsWith('/'),
+        name: path.substring(path.lastIndexOf("/") + 1, path.length),
+        isFile: !path.endsWith("/"),
         size: data.ContentLength,
         lmdt: Date.parse(data.LastModified),
         path,
@@ -184,24 +60,24 @@ const saveFilePromise = (filePath, content, overWrite, bucketName, mode) => {
     if (isNewFile || overWrite === true) {
       if (result.size !== content.length) {
         console.log(
-          'Update index size:' +
+          "Update index size:" +
             result.size +
-            ' old index size:' +
+            " old index size:" +
             content.length
         );
         // || mode === 'text') {
         const fileExt = extractFileExtension(filePath);
 
         let mimeType;
-        if (fileExt === 'md') {
-          mimeType = 'text/markdown';
-        } else if (fileExt === 'txt') {
-          mimeType = 'text/plain';
-        } else if (fileExt === 'html') {
-          mimeType = 'text/html';
+        if (fileExt === "md") {
+          mimeType = "text/markdown";
+        } else if (fileExt === "txt") {
+          mimeType = "text/plain";
+        } else if (fileExt === "html") {
+          mimeType = "text/html";
         } else {
           // default type
-          mimeType = 'text/plain';
+          mimeType = "text/plain";
         }
         const params = {
           Bucket: bucketName,
@@ -212,7 +88,7 @@ const saveFilePromise = (filePath, content, overWrite, bucketName, mode) => {
         return s3
           .putObject(params, (err) => {
             if (err) {
-              console.log('Error upload ' + filePath); // an error occurred
+              console.log("Error upload " + filePath); // an error occurred
               console.log(err, err.stack); // an error occurred
               return false;
             }
@@ -228,77 +104,11 @@ const saveFilePromise = (filePath, content, overWrite, bucketName, mode) => {
  */
 function saveTextFilePromise(filePath, content, overWrite, bucketName) {
   // filePath = pathJS.normalize(filePath);
-  console.log('Saving text file: ' + filePath);
-  return saveFilePromise(filePath, content, overWrite, bucketName, 'text');
+  console.log("Saving text file: " + filePath);
+  return saveFilePromise(filePath, content, overWrite, bucketName, "text");
 }
 
-module.exports.persistIndex = function (
-  directoryPath,
-  directoryIndex,
-  bucketName,
-  dirSeparator = '/'
-) {
-  const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  // const normalizedPath = pathJS.normalize(directoryPath);
-  // const folderIndexPath = normalizedPath + dirSeparator + metaFolder + dirSeparator + folderIndexFile;
-  /* const relativeIndex = [];
-      const clipRange = normalizedPath.length + 1;
-      directoryIndex.forEach((entry) => {
-          if (entry.thumbPath) {
-              relativeIndex.push({
-                  ...entry,
-                  path: entry.path.substr(clipRange),
-                  thumbPath: entry.thumbPath // PlatformIO.haveObjectStoreSupport() ? entry.thumbPath : entry.thumbPath.substr(clipRange)
-              });
-          } else {
-              relativeIndex.push({
-                  ...entry,
-                  path: entry.path.substr(clipRange)
-              });
-          }
-      }); */
-  // zip.file(AppConfig.folderIndexFile, JSON.stringify(relativeIndex));
-  // zip.generateAsync({type:"base64"}).then(content => {
-  // const b64data = 'data:application/zip;base64,' + content;
-  return saveTextFilePromise(
-    folderIndexPath,
-    JSON.stringify(directoryIndex), // relativeIndex),
-    true,
-    bucketName
-  )
-    .then(() => {
-      console.log(
-        'Index persisted for: ' + directoryPath + ' to ' + folderIndexPath
-      );
-      // zip.loadAsync(atob(content)).then((archive) => {
-      //   const files = Object.keys(archive.files);
-      //   // for(let i=0; i< files.length; i++){
-      //   //     console.log(files[i] + " " + zip.files[files[i]].date);
-      //   // }
-      //   archive.file(AppConfig.folderIndexFile).async("string").then(data => {
-      //     console.log(data);
-      //   });
-      // });
-      return true;
-    })
-    .catch(() => {
-      console.warn('Error saving the index for ' + directoryPath);
-    });
-  // });
-
-  // PlatformIO.saveTextFilePromise(
-  //   folderIndexPath,
-  //   JSON.stringify(relativeIndex),
-  //   true
-  // ).then(() => {
-  //   console.log('Index persisted for: ' + directoryPath + ' to ' + folderIndexPath);
-  //   return true;
-  // }).catch(() => {
-  //   console.warn('Error saving the index for ' + directoryPath);
-  // });
-};
-
-function walkDirectory(
+module.exports.walkDirectory = function (
   path,
 
   options = {},
@@ -340,7 +150,7 @@ function walkDirectory(
             if (mergedOptions.recursive) {
               if (
                 mergedOptions.skipDotHiddenFolder &&
-                entry.name.startsWith('.') &&
+                entry.name.startsWith(".") &&
                 entry.name !== metaFolder
               ) {
                 return entry;
@@ -361,33 +171,33 @@ function walkDirectory(
         )
       )
       .catch((err) => {
-        console.warn('Error walking directory ' + err);
+        console.warn("Error walking directory " + err);
         return err;
       })
   );
-}
+};
 
-function enhanceEntry(entry) {
+module.exports.enhanceEntry = function (entry) {
   let fileNameTags = [];
   if (entry.isFile) {
     fileNameTags = extractTagsAsObjects(entry.name);
   }
-  let sidecarDescription = '';
-  let sidecarColor = '';
+  let sidecarDescription = "";
+  let sidecarColor = "";
   let sidecarTags = [];
   if (entry.meta) {
-    sidecarDescription = entry.meta.description || '';
-    sidecarColor = entry.meta.color || '';
+    sidecarDescription = entry.meta.description || "";
+    sidecarColor = entry.meta.color || "";
     sidecarTags = entry.meta.tags || [];
     sidecarTags.map((tag) => {
-      tag.type = 'sidecar';
+      tag.type = "sidecar";
       return true;
     });
   }
   const enhancedEntry = {
     name: entry.name,
     isFile: entry.isFile,
-    extension: entry.isFile ? extractFileExtension(entry.name) : '',
+    extension: entry.isFile ? extractFileExtension(entry.name) : "",
     tags: [...sidecarTags, ...fileNameTags],
     size: entry.size,
     lmdt: entry.lmdt,
@@ -408,80 +218,7 @@ function enhanceEntry(entry) {
   }
   // console.log('Enhancing ' + entry.path); console.log(enhancedEntry);
   return enhancedEntry;
-}
-
-function extractFileExtension(filePath) {
-  const lastindexDirSeparator = filePath.lastIndexOf('/');
-  const lastIndexEndTagContainer = filePath.lastIndexOf(eTagContainer);
-  const lastindexDot = filePath.lastIndexOf('.');
-  if (lastindexDot < 0) {
-    return '';
-  }
-  if (lastindexDot < lastindexDirSeparator) {
-    // case: "../remote.php/webdav/somefilename"
-    return '';
-  }
-  if (lastindexDot < lastIndexEndTagContainer) {
-    // case: "[20120125 89.4kg 19.5% 60.5% 39.8% 2.6kg]"
-    return '';
-  }
-  let extension = filePath
-    .substring(lastindexDot + 1, filePath.length)
-    .toLowerCase()
-    .trim();
-  const lastindexQuestionMark = extension.lastIndexOf('?');
-  if (lastindexQuestionMark > 0) {
-    // Removing everything after ? in URLs .png?queryParam1=2342
-    extension = extension.substring(0, lastindexQuestionMark);
-  }
-  return extension;
-
-  /* alternative implementation
-        const ext = fileURL.split('.').pop();
-        return (ext === fileURL) ? '' : ext; */
-}
-
-function extractTagsAsObjects(filePath) {
-  const tagsInFileName = extractTags(filePath);
-  const tagArray = [];
-  tagsInFileName.map((tag) => {
-    tagArray.push({
-      title: '' + tag,
-      type: 'plain',
-    });
-    return true;
-  });
-  return tagArray;
-}
-
-function extractTags(filePath) {
-  // console.log('Extracting tags from: ' + filePath);
-  const fileName = extractFileName(filePath);
-  // WithoutExt
-  let tags = [];
-  const beginTagContainer = fileName.indexOf(bTagContainer);
-  const endTagContainer = fileName.indexOf(eTagContainer);
-  if (
-    beginTagContainer < 0 ||
-    endTagContainer < 0 ||
-    beginTagContainer >= endTagContainer
-  ) {
-    // console.log('Filename does not contains tags. Aborting extraction.');
-    return tags;
-  }
-  const cleanedTags = [];
-  const tagContainer = fileName
-    .slice(beginTagContainer + 1, endTagContainer)
-    .trim();
-  tags = tagContainer.split(tagDelimiter);
-  for (let i = 0; i < tags.length; i += 1) {
-    // Min tag length set to 1 character
-    if (tags[i].trim().length > 0) {
-      cleanedTags.push(tags[i]);
-    }
-  }
-  return cleanedTags;
-}
+};
 
 const listDirectoryPromise = (path, lite = true) =>
   new Promise(async (resolve) => {
@@ -492,36 +229,36 @@ const listDirectoryPromise = (path, lite = true) =>
     // console.log('Meta folder content: ' + JSON.stringify(metaContent));
 
     const params = {
-      Delimiter: '/', // '/',
+      Delimiter: "/", // '/',
       Prefix:
-        path.length > 0 && path !== '/' ? pathJS.normalize(path + '/') : '',
+        path.length > 0 && path !== "/" ? pathJS.normalize(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
     };
     s3.listObjectsV2(params, (error, data) => {
       // console.warn(data);
       /* data = {
-                Contents: [
-                   {
-                  ETag: "\"70ee1738b6b21\"",
-                  Key: "example11.jpg",
-                  LastModified: <Date Representation>,
-                  Owner: {
-                   DisplayName: "myname12",
-                   ID: "12345example251"
-                  },
-                  Size: 112311,
-                  StorageClass: "STANDARD"
-                 },..
-                ],
-                NextMarker: "eyJNYXJrZXIiOiBudWxsLCAiYm90b190cnVuY2F0ZV9hbW91bnQiOiAyfQ=="
-               }
-               */
+                      Contents: [
+                         {
+                        ETag: "\"70ee1738b6b21\"",
+                        Key: "example11.jpg",
+                        LastModified: <Date Representation>,
+                        Owner: {
+                         DisplayName: "myname12",
+                         ID: "12345example251"
+                        },
+                        Size: 112311,
+                        StorageClass: "STANDARD"
+                       },..
+                      ],
+                      NextMarker: "eyJNYXJrZXIiOiBudWxsLCAiYm90b190cnVuY2F0ZV9hbW91bnQiOiAyfQ=="
+                     }
+                     */
       if (error) {
         console.error(
-          'Error listing directory ' +
+          "Error listing directory " +
             params.Prefix +
-            ' bucketName:' +
+            " bucketName:" +
             bucketName,
           error
         );
@@ -541,12 +278,12 @@ const listDirectoryPromise = (path, lite = true) =>
         // console.warn(JSON.stringify(dir));
         const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
         eentry = {};
-        const prefixArray = prefix.replace(/\/$/, '').split('/');
+        const prefixArray = prefix.replace(/\/$/, "").split("/");
         eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
         eentry.path = prefix;
         eentry.bucketName = bucketName;
         eentry.tags = [];
-        eentry.thumbPath = '';
+        eentry.thumbPath = "";
         eentry.meta = {};
         eentry.isFile = false;
         eentry.size = 0;
@@ -566,14 +303,14 @@ const listDirectoryPromise = (path, lite = true) =>
       // Handling files
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
-        let thumbPath = getThumbFileLocationForFile(file.Key, '/');
+        let thumbPath = getThumbFileLocationForFile(file.Key, "/");
         const thumbAvailable = metaContent.find(
           (obj) => obj.path === thumbPath
         );
         if (thumbAvailable) {
           thumbPath = getURLforPath(thumbPath, bucketName, 604800); // 60 * 60 * 24 * 7 = 1 week
         } else {
-          thumbPath = '';
+          thumbPath = "";
         }
 
         eentry = {};
@@ -621,18 +358,18 @@ const listDirectoryPromise = (path, lite = true) =>
 
 const getURLforPath = (path, bucketName, expirationInSeconds = 900) => {
   if (!path || path.length < 1) {
-    console.warn('Wrong path param for getURLforPath');
-    return '';
+    console.warn("Wrong path param for getURLforPath");
+    return "";
   }
   const params = {
     Bucket: bucketName,
     Key: path,
     Expires: expirationInSeconds,
   };
-  return s3.getSignedUrl('getObject', params);
+  return s3.getSignedUrl("getObject", params);
 };
 
-function getThumbFileLocationForFile(entryPath, dirSeparator = '/') {
+function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
   const containingFolder = extractContainingDirectoryPath(
     entryPath,
     dirSeparator
@@ -654,11 +391,11 @@ const getEntryMeta = async (eentry) => {
       // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
     } else {
       if (
-        !eentry.path.includes('/' + metaFolder) &&
-        !eentry.path.includes(metaFolder + '/')
+        !eentry.path.includes("/" + metaFolder) &&
+        !eentry.path.includes(metaFolder + "/")
       ) {
         // skipping meta folder
-        const folderTmbPath = eentry.path + metaFolder + '/' + folderThumbFile;
+        const folderTmbPath = eentry.path + metaFolder + "/" + folderThumbFile;
         const folderThumbProps = await getPropertiesPromise(
           folderTmbPath,
           eentry.bucketName
@@ -673,7 +410,7 @@ const getEntryMeta = async (eentry) => {
         // }
         // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
         const folderMetaPath =
-          eentry.path + '/' + metaFolder + '/' + metaFolderFile;
+          eentry.path + "/" + metaFolder + "/" + metaFolderFile;
         const folderProps = await getPropertiesPromise(
           folderMetaPath,
           eentry.bucketName
@@ -694,7 +431,7 @@ const getEntryMeta = async (eentry) => {
   return result;
 };
 
-const loadTextFilePromise = (filePath, bucketName) =>
+module.exports.loadTextFilePromise = (filePath, bucketName) =>
   getFileContentPromise(filePath, bucketName);
 
 /**
@@ -713,15 +450,15 @@ const getFileContentPromise = async (filePath, bucketName) => {
       .getObject(params)
       .promise()
       .then((data) => {
-        return data.Body.toString('utf8');
+        return data.Body.toString("utf8");
       });
   } catch (e) {
-    console.log('Error getObject ' + filePath, e);
-    return Promise.resolve('');
+    console.log("Error getObject " + filePath, e);
+    return Promise.resolve("");
   }
 };
 
-function getMetaFileLocationForFile(entryPath, dirSeparator = '/') {
+function getMetaFileLocationForFile(entryPath, dirSeparator = "/") {
   const containingFolder = extractContainingDirectoryPath(
     entryPath,
     dirSeparator
@@ -731,35 +468,38 @@ function getMetaFileLocationForFile(entryPath, dirSeparator = '/') {
 }
 
 function extractFileName(filePath) {
-  return filePath.substring(filePath.lastIndexOf('/') + 1, filePath.length);
+  return filePath.substring(filePath.lastIndexOf("/") + 1, filePath.length);
 }
 
-function getMetaDirectoryPath(directoryPath, dirSeparator = '/') {
-  return (directoryPath ? directoryPath + dirSeparator : '') + metaFolder;
+function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
+  return (directoryPath ? directoryPath + dirSeparator : "") + metaFolder;
 }
 
-function extractContainingDirectoryPath(filePath, dirSeparator = '/') {
+module.exports.extractContainingDirectoryPath = function (
+  filePath,
+  dirSeparator = "/"
+) {
   if (filePath.indexOf(dirSeparator) === -1) {
     return dirSeparator;
   }
   return filePath.substring(0, filePath.lastIndexOf(dirSeparator));
-}
+};
 
 const listMetaDirectoryPromise = async (path, bucketName) => {
   const entries = [];
   let entry;
 
   /* const metaDirPath =  pathJS.format({
-          root: path,
-          base: metaFolder,
-          ext: 'ignored'
-      }); */
+            root: path,
+            base: metaFolder,
+            ext: 'ignored'
+        }); */
   const params = {
-    Delimiter: '/',
+    Delimiter: "/",
     Prefix:
-      path !== '/' && path.length > 0
-        ? pathJS.normalize(path + '/' + metaFolder + '/')
-        : metaFolder + '/',
+      path !== "/" && path.length > 0
+        ? pathJS.normalize(path + "/" + metaFolder + "/")
+        : metaFolder + "/",
     Bucket: bucketName,
   };
   const results = await s3
@@ -787,7 +527,7 @@ const listMetaDirectoryPromise = async (path, bucketName) => {
     })
     .catch((err) => {
       // console.log(err);
-      console.warn('Error listing meta directory ' + path, err);
+      console.warn("Error listing meta directory " + path, err);
       return entries; // returning results even if any promise fails
     });
   return results;
