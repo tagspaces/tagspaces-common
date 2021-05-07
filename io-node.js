@@ -1,7 +1,6 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
 const paths = require("./paths");
-const utils = require("./utils");
 const AppConfig = require("./AppConfig");
 
 const getPropertiesPromise = (path) => {
@@ -145,7 +144,7 @@ module.exports.walkDirectory = function (
 module.exports.enhanceEntry = function (entry) {
   let fileNameTags = [];
   if (entry.isFile) {
-    fileNameTags = utils.extractTagsAsObjects(entry.name);
+    fileNameTags = paths.extractTagsAsObjects(entry.name);
   }
   let sidecarDescription = "";
   let sidecarColor = "";

@@ -89,8 +89,51 @@ function extractFileExtension(filePath, dirSeparator) {
   return extension;
 }
 
+function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator) {
+  const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
+  const tagArray = [];
+  tagsInFileName.map((tag) => {
+    tagArray.push({
+      title: "" + tag,
+      type: "plain",
+    });
+    return true;
+  });
+  return tagArray;
+}
+
+function extractTags(filePath, tagDelimiter, dirSeparator) {
+  // console.log('Extracting tags from: ' + filePath);
+  const fileName = extractFileName(filePath, dirSeparator);
+  // WithoutExt
+  let tags = [];
+  const beginTagContainer = fileName.indexOf(AppConfig.beginTagContainer);
+  const endTagContainer = fileName.indexOf(AppConfig.endTagContainer);
+  if (
+    beginTagContainer < 0 ||
+    endTagContainer < 0 ||
+    beginTagContainer >= endTagContainer
+  ) {
+    // console.log('Filename does not contains tags. Aborting extraction.');
+    return tags;
+  }
+  const cleanedTags = [];
+  const tagContainer = fileName
+    .slice(beginTagContainer + 1, endTagContainer)
+    .trim();
+  tags = tagContainer.split(tagDelimiter);
+  for (let i = 0; i < tags.length; i += 1) {
+    // Min tag length set to 1 character
+    if (tags[i].trim().length > 0) {
+      cleanedTags.push(tags[i]);
+    }
+  }
+  return cleanedTags;
+}
+
 module.exports = {
   getMetaDirectoryPath,
   extractFileName,
   extractFileExtension,
+  extractTagsAsObjects,
 };
