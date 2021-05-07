@@ -288,10 +288,10 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
               );
             }
 
-            if (window.walkCanceled) {
+            /*if (window.walkCanceled) {
               resolve(enhancedEntries);
               return;
-            }
+            }*/
           } catch (e) {
             console.warn("Can not load properties for: " + entryPath + " " + e);
           }
@@ -310,10 +310,10 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
               return;
             }
 
-            if (window.walkCanceled) {
+            /*if (window.walkCanceled) {
               resolve(enhancedEntries); // returning results even if walk canceled
               return;
-            }
+            }*/
 
             if (metaEntries) {
               metaEntries.forEach((metaEntryName) => {
@@ -361,9 +361,9 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
                   });
                 }
 
-                if (window.walkCanceled) {
+                /*if (window.walkCanceled) {
                   resolve(enhancedEntries);
-                }
+                }*/
               });
             }
             resolve(enhancedEntries);
