@@ -50,3 +50,7 @@ function cleanTrailingDirSeparator(dirPath) {
   // console.log('Directory Path ' + dirPath + ' undefined');
   return "";
 }
+
+module.exports = {
+  getMetaDirectoryPath,
+};

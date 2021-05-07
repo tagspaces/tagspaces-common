@@ -1,5 +1,6 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
+const paths = require("./paths");
 
 const metaFolder = ".ts";
 const bTagContainer = "[";
@@ -300,7 +301,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
 
         // Read the .ts meta content
         if (!lite && containsMetaFolder) {
-          metaFolderPath = getMetaDirectoryPath(path, pathLib.sep);
+          metaFolderPath = paths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {
             if (err) {
               console.log(
