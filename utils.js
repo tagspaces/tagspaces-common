@@ -70,3 +70,7 @@ function extractTags(filePath) {
   }
   return cleanedTags;
 }
+
+module.exports = {
+  extractTagsAsObjects
+};
