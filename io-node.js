@@ -1,5 +1,6 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
+const { getMetaDirectoryPath } = require("./paths");
 
 const metaFolder = ".ts";
 const bTagContainer = "[";
