@@ -29,6 +29,22 @@ const getPropertiesPromise = (path) => {
   });
 };
 
+const saveTextFilePromise = (filePath, content, overwrite) => {
+  console.log("Saving file: " + filePath);
+
+  // Handling the UTF8 support for text files
+  const UTF8_BOM = "\ufeff";
+  let textContent = content;
+
+  if (content.indexOf(UTF8_BOM) === 0) {
+    console.log("Content begins with a UTF8 bom");
+  } else {
+    textContent = UTF8_BOM + content;
+  }
+
+  return saveFilePromise(filePath, textContent, overwrite);
+};
+
 const saveFilePromise = (filePath, content, overwrite = true) =>
   new Promise((resolve, reject) => {
     function saveFile(entry, tContent) {
@@ -392,6 +408,7 @@ const getFileContentPromise = (fullPath) =>
 
 module.exports = {
   walkDirectory,
+  saveTextFilePromise,
   enhanceEntry,
   loadTextFilePromise,
 };
