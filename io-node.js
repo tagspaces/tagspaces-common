@@ -411,6 +411,7 @@ const getFileContentPromise = (fullPath) =>
 module.exports = {
   walkDirectory,
   saveTextFilePromise,
+  getPropertiesPromise,
   enhanceEntry,
   loadTextFilePromise,
 };
