@@ -87,72 +87,6 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
       });
   });
 
-function walkDirectory(path, options = {}, fileCallback, dirCallback) {
-  const mergedOptions = {
-    recursive: false,
-    skipMetaFolder: true,
-    skipDotHiddenFolder: false,
-    loadMetaDate: true,
-    extractText: false,
-    ...options,
-  };
-  return (
-    listDirectoryPromise(path, false, mergedOptions.extractText)
-      // @ts-ignore
-      .then((entries) =>
-        // if (window.walkCanceled) {
-        //     return false;
-        // }
-        Promise.all(
-          entries.map((entry) => {
-            // if (window.walkCanceled) {
-            //     return false;
-            // }
-
-            if (entry.isFile) {
-              if (fileCallback) {
-                fileCallback(entry);
-              }
-              return entry;
-            }
-
-            if (dirCallback) {
-              dirCallback(entry);
-            }
-
-            if (mergedOptions.recursive) {
-              if (
-                mergedOptions.skipDotHiddenFolder &&
-                entry.name.startsWith(".") &&
-                entry.name !== AppConfig.metaFolder
-              ) {
-                return entry;
-              }
-              if (
-                mergedOptions.skipMetaFolder &&
-                entry.name === AppConfig.metaFolder
-              ) {
-                return entry;
-              }
-              return walkDirectory(
-                entry.path,
-
-                mergedOptions,
-                fileCallback,
-                dirCallback
-              );
-            }
-            return entry;
-          })
-        )
-      )
-      .catch((err) => {
-        console.warn("Error walking directory " + err);
-        return err;
-      })
-  );
-}
-
 
 const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
   new Promise((resolve) => {
@@ -367,7 +301,7 @@ const getFileContentPromise = (fullPath) =>
   });
 
 module.exports = {
-  walkDirectory,
+  listDirectoryPromise,
   saveTextFilePromise,
   getPropertiesPromise,
   loadTextFilePromise,

@@ -13,7 +13,7 @@ const folderThumbFile = "tst.jpg";
 const folderIndexFile = "tsi.json";
 const metaFolderFile = "tsm.json";
 
-const getPropertiesPromise = (path, bucketName) => {
+function getPropertiesPromise (path, bucketName) {
   const params = {
     Bucket: bucketName,
     Key: path,
@@ -44,7 +44,7 @@ const getPropertiesPromise = (path, bucketName) => {
       console.log(err);
       return false;
     });
-};
+}
 
 /**
  * Persists a given content(binary supported) to a specified filepath (tested)
@@ -107,75 +107,6 @@ function saveTextFilePromise(filePath, content, overWrite, bucketName) {
   console.log("Saving text file: " + filePath);
   return saveFilePromise(filePath, content, overWrite, bucketName, "text");
 }
-
-module.exports.walkDirectory = function (
-  path,
-
-  options = {},
-  fileCallback,
-  dirCallback
-) {
-  const mergedOptions = {
-    recursive: false,
-    skipMetaFolder: true,
-    skipDotHiddenFolder: false,
-    loadMetaDate: true,
-    extractText: false,
-    ...options,
-  };
-  return (
-    listDirectoryPromise(path, false, mergedOptions.extractText)
-      // @ts-ignore
-      .then((entries) =>
-        // if (window.walkCanceled) {
-        //     return false;
-        // }
-        Promise.all(
-          entries.map((entry) => {
-            // if (window.walkCanceled) {
-            //     return false;
-            // }
-
-            if (entry.isFile) {
-              if (fileCallback) {
-                fileCallback(entry);
-              }
-              return entry;
-            }
-
-            if (dirCallback) {
-              dirCallback(entry);
-            }
-
-            if (mergedOptions.recursive) {
-              if (
-                mergedOptions.skipDotHiddenFolder &&
-                entry.name.startsWith(".") &&
-                entry.name !== metaFolder
-              ) {
-                return entry;
-              }
-              if (mergedOptions.skipMetaFolder && entry.name === metaFolder) {
-                return entry;
-              }
-              return walkDirectory(
-                entry.path,
-
-                mergedOptions,
-                fileCallback,
-                dirCallback
-              );
-            }
-            return entry;
-          })
-        )
-      )
-      .catch((err) => {
-        console.warn("Error walking directory " + err);
-        return err;
-      })
-  );
-};
 
 const listDirectoryPromise = (path, lite = true) =>
   new Promise(async (resolve) => {
@@ -388,7 +319,7 @@ const getEntryMeta = async (eentry) => {
   return result;
 };
 
-module.exports.loadTextFilePromise = (filePath, bucketName) =>
+loadTextFilePromise = (filePath, bucketName) =>
   getFileContentPromise(filePath, bucketName);
 
 /**
@@ -432,7 +363,7 @@ function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
   return (directoryPath ? directoryPath + dirSeparator : "") + metaFolder;
 }
 
-module.exports.extractContainingDirectoryPath = function (
+const extractContainingDirectoryPath = function (
   filePath,
   dirSeparator = "/"
 ) {
@@ -488,4 +419,11 @@ const listMetaDirectoryPromise = async (path, bucketName) => {
       return entries; // returning results even if any promise fails
     });
   return results;
+};
+
+module.exports = {
+  listDirectoryPromise,
+  saveTextFilePromise,
+  getPropertiesPromise,
+  loadTextFilePromise,
 };
