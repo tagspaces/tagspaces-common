@@ -37,6 +37,10 @@ function normalizePath(path) {
   return cleanTrailingDirSeparator(path.replace(/\/\//g, "/"));
 }
 
+function extractContainingDirectoryPath(filePath, dirSeparator) {
+  return filePath.substring(0, filePath.lastIndexOf(dirSeparator));
+}
+
 function cleanTrailingDirSeparator(dirPath) {
   if (dirPath) {
     if (dirPath.lastIndexOf("\\") === dirPath.length - 1) {
@@ -133,6 +137,7 @@ function extractTags(filePath, tagDelimiter, dirSeparator) {
 
 module.exports = {
   getMetaDirectoryPath,
+  extractContainingDirectoryPath,
   extractFileName,
   extractFileExtension,
   extractTagsAsObjects,
