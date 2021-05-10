@@ -48,7 +48,7 @@ const saveTextFilePromise = (filePath, content, overwrite) => {
 const saveFilePromise = (filePath, content, overwrite = true) =>
   new Promise((resolve, reject) => {
     function saveFile(entry, tContent) {
-      fs.writeFile(entry.path, tContent, "utf8", (error) => {
+      fs.outputFile(entry.path, tContent, (error) => {
         if (error) {
           reject(error);
           return;
