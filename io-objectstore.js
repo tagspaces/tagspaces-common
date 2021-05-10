@@ -13,7 +13,7 @@ const folderThumbFile = "tst.jpg";
 const folderIndexFile = "tsi.json";
 const metaFolderFile = "tsm.json";
 
-function getPropertiesPromise (path, bucketName) {
+function getPropertiesPromise(path, bucketName) {
   const params = {
     Bucket: bucketName,
     Key: path,
@@ -363,10 +363,7 @@ function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
   return (directoryPath ? directoryPath + dirSeparator : "") + metaFolder;
 }
 
-const extractContainingDirectoryPath = function (
-  filePath,
-  dirSeparator = "/"
-) {
+const extractContainingDirectoryPath = function (filePath, dirSeparator = "/") {
   if (filePath.indexOf(dirSeparator) === -1) {
     return dirSeparator;
   }

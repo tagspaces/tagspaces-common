@@ -87,7 +87,6 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
       });
   });
 
-
 const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
   new Promise((resolve) => {
     const enhancedEntries = [];
