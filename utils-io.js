@@ -84,11 +84,20 @@ function enhanceEntry(entry) {
   if (entry.meta) {
     sidecarDescription = entry.meta.description || "";
     sidecarColor = entry.meta.color || "";
-    sidecarTags = entry.meta.tags || [];
-    sidecarTags.map((tag) => {
-      tag.type = "sidecar";
-      return true;
-    });
+    if (entry.meta.tags && entry.meta.tags.length > 0) {
+      entry.meta.tags.forEach((tag) => {
+        const cleanedTag = {
+          title: tag.title,
+        };
+        if (tag.color) {
+          cleanedTag.color = tag.color;
+        }
+        if (tag.textcolor) {
+          cleanedTag.textcolor = tag.textcolor;
+        }
+        sidecarTags.push(cleanedTag);
+      });
+    }
   }
   const enhancedEntry = {
     name: entry.name,
