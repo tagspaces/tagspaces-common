@@ -153,48 +153,6 @@ function walkDirectory(path, options = {}, fileCallback, dirCallback) {
   );
 }
 
-function enhanceEntry(entry) {
-  let fileNameTags = [];
-  if (entry.isFile) {
-    fileNameTags = paths.extractTagsAsObjects(entry.name);
-  }
-  let sidecarDescription = "";
-  let sidecarColor = "";
-  let sidecarTags = [];
-  if (entry.meta) {
-    sidecarDescription = entry.meta.description || "";
-    sidecarColor = entry.meta.color || "";
-    sidecarTags = entry.meta.tags || [];
-    sidecarTags.map((tag) => {
-      tag.type = "sidecar";
-      return true;
-    });
-  }
-  const enhancedEntry = {
-    name: entry.name,
-    isFile: entry.isFile,
-    extension: entry.isFile ? paths.extractFileExtension(entry.name) : "",
-    tags: [...sidecarTags, ...fileNameTags],
-    size: entry.size,
-    lmdt: entry.lmdt,
-    path: entry.path,
-  };
-  if (sidecarDescription) {
-    enhancedEntry.description = sidecarDescription;
-  }
-  // enhancedEntry.description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vitae magna rhoncus, rutrum dolor id, vestibulum arcu. Maecenas scelerisque nisl quis sollicitudin dapibus. Ut pulvinar est sed nunc finibus cursus. Nam semper felis eu ex auctor, nec semper lectus sagittis. Donec dictum volutpat lorem, in mollis turpis scelerisque in. Morbi pulvinar egestas turpis, euismod suscipit leo egestas eget. Nullam ac mollis sem. \n Quisque luctus dapibus elit, sed molestie ipsum tempor quis. Sed urna turpis, mattis quis orci ac, placerat lacinia est. Pellentesque quis arcu malesuada, consequat magna ut, tincidunt eros. Aenean sodales nisl finibus pharetra blandit. Pellentesque egestas magna et lectus tempor ultricies. Phasellus sed ornare leo. Vivamus sed massa erat. \n Mauris eu dignissim justo, eget luctus nisi. Ut nec arcu quis ligula tempor porttitor. Pellentesque in pharetra quam. Nulla nec ornare magna. Phasellus interdum dictum mauris eget laoreet. In vulputate massa sem, a mattis elit turpis duis.';
-  if (entry && entry.thumbPath) {
-    enhancedEntry.thumbPath = entry.thumbPath;
-  }
-  if (entry && entry.textContent) {
-    enhancedEntry.textContent = entry.textContent;
-  }
-  if (sidecarColor) {
-    enhancedEntry.color = sidecarColor;
-  }
-  // console.log('Enhancing ' + entry.path); console.log(enhancedEntry);
-  return enhancedEntry;
-}
 
 const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
   new Promise((resolve) => {
@@ -412,6 +370,5 @@ module.exports = {
   walkDirectory,
   saveTextFilePromise,
   getPropertiesPromise,
-  enhanceEntry,
   loadTextFilePromise,
 };
