@@ -59,7 +59,9 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
 
     getPropertiesPromise(filePath)
       .then((entry) => {
-        if (entry && entry.isFile && overwrite) {
+        if (!entry) {
+          saveFile({ path: filePath, isNewFile: false, tags: [] }, content);
+        } else if (entry.isFile && overwrite) {
           saveFile({ ...entry, isNewFile: false, tags: [] }, content);
         } else {
           saveFile({ ...entry, isNewFile: true, tags: [] }, content);
