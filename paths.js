@@ -93,17 +93,13 @@ function extractFileExtension(filePath, dirSeparator) {
   return extension;
 }
 
-function extractTagsAsObjects(
-  filePath,
-  tagDelimiter = " ",
-  dirSeparator = "/"
-) {
+function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator) {
   const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
   const tagArray = [];
   tagsInFileName.map((tag) => {
     tagArray.push({
       title: "" + tag,
-      // type: "plain",
+      type: "plain",
     });
     return true;
   });

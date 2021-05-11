@@ -76,7 +76,7 @@ function walkDirectory(
 function enhanceEntry(entry) {
   let fileNameTags = [];
   if (entry.isFile) {
-    fileNameTags = paths.extractTagsAsObjects(entry.name);
+    fileNameTags = paths.extractTagsAsObjects(entry.name, " ", "/");
   }
   let sidecarDescription = "";
   let sidecarColor = "";
