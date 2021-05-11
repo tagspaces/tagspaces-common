@@ -1,19 +1,13 @@
 const AWS = require("aws-sdk");
 const pathJS = require("path");
+const paths = require("./paths");
+const AppConfig = require("./AppConfig");
 // get reference to S3 client
 const s3 = new AWS.S3();
 
-const metaFolder = ".ts";
-const bTagContainer = "[";
-const eTagContainer = "]";
-const tagDelimiter = " ";
-const metaFileExt = ".json";
-const thumbFileExt = ".jpg";
-const folderThumbFile = "tst.jpg";
-const folderIndexFile = "tsi.json";
-const metaFolderFile = "tsm.json";
-
-function getPropertiesPromise(path, bucketName) {
+function getPropertiesPromise(param) {
+  const path = param.path;
+  const bucketName = param.bucketName;
   const params = {
     Bucket: bucketName,
     Key: path,
@@ -49,10 +43,12 @@ function getPropertiesPromise(path, bucketName) {
 /**
  * Persists a given content(binary supported) to a specified filepath (tested)
  */
-const saveFilePromise = (filePath, content, overWrite, bucketName, mode) => {
+const saveFilePromise = (param, content, overWrite, mode) => {
+  const path = param.path;
+  const bucketName = param.bucketName;
   let isNewFile = false;
   // eslint-disable-next-line no-param-reassign
-  filePath = pathJS.normalize(filePath); // normalizePath(this.normalizeRootPath(filePath));
+  const filePath = pathJS.normalize(path); // normalizePath(this.normalizeRootPath(filePath));
   return getPropertiesPromise(filePath, bucketName).then((result) => {
     if (result === false) {
       isNewFile = true;
@@ -66,7 +62,7 @@ const saveFilePromise = (filePath, content, overWrite, bucketName, mode) => {
             content.length
         );
         // || mode === 'text') {
-        const fileExt = extractFileExtension(filePath);
+        const fileExt = paths.extractFileExtension(filePath);
 
         let mimeType;
         if (fileExt === "md") {
@@ -102,18 +98,20 @@ const saveFilePromise = (filePath, content, overWrite, bucketName, mode) => {
 /**
  * Persists a given text content to a specified filepath (tested)
  */
-function saveTextFilePromise(filePath, content, overWrite, bucketName) {
+function saveTextFilePromise(param, content, overWrite) {
   // filePath = pathJS.normalize(filePath);
-  console.log("Saving text file: " + filePath);
-  return saveFilePromise(filePath, content, overWrite, bucketName, "text");
+  console.log("Saving text file: " + param.path);
+  return saveFilePromise(param, content, overWrite, "text");
 }
 
-const listDirectoryPromise = (path, lite = true) =>
+const listDirectoryPromise = (param, lite = true) =>
   new Promise(async (resolve) => {
+    const path = param.path;
+    const bucketName = param.bucketName;
     const enhancedEntries = [];
     let eentry;
 
-    const metaContent = await listMetaDirectoryPromise(path, bucketName);
+    const metaContent = await listMetaDirectoryPromise(param);
     // console.log('Meta folder content: ' + JSON.stringify(metaContent));
 
     const params = {
@@ -191,7 +189,7 @@ const listDirectoryPromise = (path, lite = true) =>
       // Handling files
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
-        let thumbPath = getThumbFileLocationForFile(file.Key, "/");
+        let thumbPath = path.getThumbFileLocationForFile(file.Key, "/");
         const thumbAvailable = metaContent.find(
           (obj) => obj.path === thumbPath
         );
@@ -202,7 +200,7 @@ const listDirectoryPromise = (path, lite = true) =>
         }
 
         eentry = {};
-        eentry.name = extractFileName(file.Key);
+        eentry.name = paths.extractFileName(file.Key);
         eentry.path = file.Key;
         eentry.bucketName = bucketName;
         eentry.tags = [];
@@ -214,7 +212,7 @@ const listDirectoryPromise = (path, lite = true) =>
         if (file.Key !== params.Prefix) {
           // skipping the current folder
           enhancedEntries.push(eentry);
-          const metaFilePath = getMetaFileLocationForFile(file.Key);
+          const metaFilePath = path.getMetaFileLocationForFile(file.Key);
           const metaFileAvailable = metaContent.find(
             (obj) => obj.path === metaFilePath
           );
@@ -257,19 +255,10 @@ const getURLforPath = (path, bucketName, expirationInSeconds = 900) => {
   return s3.getSignedUrl("getObject", params);
 };
 
-function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
-  const containingFolder = extractContainingDirectoryPath(
-    entryPath,
-    dirSeparator
-  );
-  const mFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
-  return mFolder + dirSeparator + extractFileName(entryPath) + thumbFileExt;
-}
-
 const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
     if (eentry.isFile) {
-      const metaFilePath = getMetaFileLocationForFile(eentry.path);
+      const metaFilePath = paths.getMetaFileLocationForFile(eentry.path);
       const metaFileContent = await loadTextFilePromise(
         metaFilePath,
         eentry.bucketName
@@ -279,11 +268,12 @@ const getEntryMeta = async (eentry) => {
       // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
     } else {
       if (
-        !eentry.path.includes("/" + metaFolder) &&
-        !eentry.path.includes(metaFolder + "/")
+        !eentry.path.includes("/" + AppConfig.metaFolder) &&
+        !eentry.path.includes(AppConfig.metaFolder + "/")
       ) {
         // skipping meta folder
-        const folderTmbPath = eentry.path + metaFolder + "/" + folderThumbFile;
+        const folderTmbPath =
+          eentry.path + AppConfig.metaFolder + "/" + AppConfig.folderThumbFile;
         const folderThumbProps = await getPropertiesPromise(
           folderTmbPath,
           eentry.bucketName
@@ -298,7 +288,11 @@ const getEntryMeta = async (eentry) => {
         // }
         // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
         const folderMetaPath =
-          eentry.path + "/" + metaFolder + "/" + metaFolderFile;
+          eentry.path +
+          "/" +
+          AppConfig.metaFolder +
+          "/" +
+          AppConfig.metaFolderFile;
         const folderProps = await getPropertiesPromise(
           folderMetaPath,
           eentry.bucketName
@@ -346,31 +340,9 @@ const getFileContentPromise = async (filePath, bucketName) => {
   }
 };
 
-function getMetaFileLocationForFile(entryPath, dirSeparator = "/") {
-  const containingFolder = extractContainingDirectoryPath(
-    entryPath,
-    dirSeparator
-  );
-  const mFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
-  return mFolder + dirSeparator + extractFileName(entryPath) + metaFileExt;
-}
-
-function extractFileName(filePath) {
-  return filePath.substring(filePath.lastIndexOf("/") + 1, filePath.length);
-}
-
-function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
-  return (directoryPath ? directoryPath + dirSeparator : "") + metaFolder;
-}
-
-const extractContainingDirectoryPath = function (filePath, dirSeparator = "/") {
-  if (filePath.indexOf(dirSeparator) === -1) {
-    return dirSeparator;
-  }
-  return filePath.substring(0, filePath.lastIndexOf(dirSeparator));
-};
-
-const listMetaDirectoryPromise = async (path, bucketName) => {
+const listMetaDirectoryPromise = async (param) => {
+  const path = param.path;
+  const bucketName = param.bucketName;
   const entries = [];
   let entry;
 
@@ -383,8 +355,8 @@ const listMetaDirectoryPromise = async (path, bucketName) => {
     Delimiter: "/",
     Prefix:
       path !== "/" && path.length > 0
-        ? pathJS.normalize(path + "/" + metaFolder + "/")
-        : metaFolder + "/",
+        ? pathJS.normalize(path + "/" + AppConfig.metaFolder + "/")
+        : AppConfig.metaFolder + "/",
     Bucket: bucketName,
   };
   const results = await s3

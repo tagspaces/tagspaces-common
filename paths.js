@@ -27,6 +27,7 @@ function getMetaDirectoryPath(directoryPath, dirSeparator) {
     AppConfig.metaFolder
   );
 }
+
 /**
  *
  * @param path -> root//subFolder/
@@ -38,6 +39,9 @@ function normalizePath(path) {
 }
 
 function extractContainingDirectoryPath(filePath, dirSeparator) {
+  if (filePath.indexOf(dirSeparator) === -1) {
+    return dirSeparator;
+  }
   return filePath.substring(0, filePath.lastIndexOf(dirSeparator));
 }
 
@@ -93,6 +97,31 @@ function extractFileExtension(filePath, dirSeparator) {
   return extension;
 }
 
+function getMetaFileLocationForFile(entryPath, dirSeparator) {
+  const containingFolder = extractContainingDirectoryPath(
+    entryPath,
+    dirSeparator
+  );
+  const metaFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
+  return (
+    metaFolder +
+    dirSeparator +
+    extractFileName(entryPath, dirSeparator) +
+    AppConfig.metaFileExt
+  );
+}
+
+function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
+  const containingFolder = extractContainingDirectoryPath(
+    entryPath,
+    dirSeparator
+  );
+  const mFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
+  return (
+    mFolder + dirSeparator + extractFileName(entryPath) + AppConfig.thumbFileExt
+  );
+}
+
 function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator) {
   const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
   const tagArray = [];
@@ -138,6 +167,8 @@ function extractTags(filePath, tagDelimiter, dirSeparator) {
 module.exports = {
   getMetaDirectoryPath,
   extractContainingDirectoryPath,
+  getThumbFileLocationForFile,
+  getMetaFileLocationForFile,
   extractFileName,
   extractFileExtension,
   extractTagsAsObjects,
