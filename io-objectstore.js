@@ -5,6 +5,11 @@ const AppConfig = require("./AppConfig");
 // get reference to S3 client
 const s3 = new AWS.S3();
 
+/**
+ * TODO not in use for AWS
+ * @param param
+ * @returns {Promise<{path: *, lmdt: number, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
+ */
 function getPropertiesPromise(param) {
   const path = param.path;
   const bucketName = param.bucketName;
