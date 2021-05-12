@@ -54,8 +54,12 @@ function walkDirectory(
               ) {
                 return entry;
               }
+              const subPath =
+                typeof path === "object" && path !== null
+                  ? { ...path, path: entry.path }
+                  : entry.path;
               return walkDirectory(
-                entry.path,
+                subPath,
                 listDirectoryPromise,
                 mergedOptions,
                 fileCallback,
