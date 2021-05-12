@@ -35,7 +35,7 @@ function getPropertiesPromise(param) {
         name: path.substring(path.lastIndexOf("/") + 1, path.length),
         isFile: !path.endsWith("/"),
         size: data.ContentLength,
-        lmdt: Date.parse(data.LastModified),
+        lmdt: data.LastModified, // Date.parse(data.LastModified),
         path,
       })
     )
@@ -197,7 +197,7 @@ const listDirectoryPromise = (param, lite = true) =>
       // Handling files
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
-        let thumbPath = path.getThumbFileLocationForFile(file.Key, "/");
+        let thumbPath = paths.getThumbFileLocationForFile(file.Key, "/");
         const thumbAvailable = metaContent.find(
           (obj) => obj.path === thumbPath
         );
@@ -226,7 +226,7 @@ const listDirectoryPromise = (param, lite = true) =>
         if (file.Key !== params.Prefix) {
           // skipping the current folder
           enhancedEntries.push(eentry);
-          const metaFilePath = path.getMetaFileLocationForFile(file.Key);
+          const metaFilePath = paths.getMetaFileLocationForFile(file.Key);
           const metaFileAvailable = metaContent.find(
             (obj) => obj.path === metaFilePath
           );
