@@ -54,7 +54,10 @@ const saveFilePromise = (param, content, overWrite, mode) => {
   let isNewFile = false;
   // eslint-disable-next-line no-param-reassign
   const filePath = pathJS.normalize(path); // normalizePath(this.normalizeRootPath(filePath));
-  return getPropertiesPromise(filePath, bucketName).then((result) => {
+  return getPropertiesPromise({
+    path: filePath,
+    bucketName: bucketName,
+  }).then((result) => {
     if (result === false) {
       isNewFile = true;
     }
@@ -199,7 +202,13 @@ const listDirectoryPromise = (param, lite = true) =>
           (obj) => obj.path === thumbPath
         );
         if (thumbAvailable) {
-          thumbPath = getURLforPath(thumbPath, bucketName, 604800); // 60 * 60 * 24 * 7 = 1 week
+          thumbPath = getURLforPath(
+            {
+              path: thumbPath,
+              bucketName: bucketName,
+            },
+            604800
+          ); // 60 * 60 * 24 * 7 = 1 week
         } else {
           thumbPath = "";
         }
@@ -247,7 +256,9 @@ const listDirectoryPromise = (param, lite = true) =>
     });
   });
 
-const getURLforPath = (path, bucketName, expirationInSeconds = 900) => {
+const getURLforPath = (param, expirationInSeconds = 900) => {
+  const path = param.path;
+  const bucketName = param.bucketName;
   if (!path || path.length < 1) {
     console.warn("Wrong path param for getURLforPath");
     return "";
@@ -264,10 +275,10 @@ const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
     if (eentry.isFile) {
       const metaFilePath = paths.getMetaFileLocationForFile(eentry.path);
-      const metaFileContent = await loadTextFilePromise(
-        metaFilePath,
-        eentry.bucketName
-      );
+      const metaFileContent = await loadTextFilePromise({
+        path: metaFilePath,
+        bucketName: eentry.bucketName,
+      });
       eentry.meta = JSON.parse(metaFileContent.trim());
       resolve(eentry);
       // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
@@ -279,14 +290,16 @@ const getEntryMeta = async (eentry) => {
         // skipping meta folder
         const folderTmbPath =
           eentry.path + AppConfig.metaFolder + "/" + AppConfig.folderThumbFile;
-        const folderThumbProps = await getPropertiesPromise(
-          folderTmbPath,
-          eentry.bucketName
-        );
+        const folderThumbProps = await getPropertiesPromise({
+          path: folderTmbPath,
+          bucketName: eentry.bucketName,
+        });
         if (folderThumbProps.isFile) {
           eentry.thumbPath = getURLforPath(
-            folderTmbPath,
-            eentry.bucketName,
+            {
+              path: folderTmbPath,
+              bucketName: eentry.bucketName,
+            },
             604800
           ); // 60 * 60 * 24 * 7 = 1 week ;
         }
@@ -298,15 +311,15 @@ const getEntryMeta = async (eentry) => {
           AppConfig.metaFolder +
           "/" +
           AppConfig.metaFolderFile;
-        const folderProps = await getPropertiesPromise(
-          folderMetaPath,
-          eentry.bucketName
-        );
+        const folderProps = await getPropertiesPromise({
+          path: folderMetaPath,
+          bucketName: eentry.bucketName,
+        });
         if (folderProps.isFile) {
-          const metaFileContent = await loadTextFilePromise(
-            folderMetaPath,
-            eentry.bucketName
-          );
+          const metaFileContent = await loadTextFilePromise({
+            path: folderMetaPath,
+            bucketName: eentry.bucketName,
+          });
           eentry.meta = JSON.parse(metaFileContent.trim());
           // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
         }
@@ -318,8 +331,7 @@ const getEntryMeta = async (eentry) => {
   return result;
 };
 
-loadTextFilePromise = (filePath, bucketName) =>
-  getFileContentPromise(filePath, bucketName);
+loadTextFilePromise = (param) => getFileContentPromise(param);
 
 /**
  * Use only for files (will not work for dirs)
@@ -327,11 +339,13 @@ loadTextFilePromise = (filePath, bucketName) =>
  * @param bucketName
  * @returns {Promise<any>}
  */
-const getFileContentPromise = async (filePath, bucketName) => {
+const getFileContentPromise = async (param) => {
+  const path = param.path;
+  const bucketName = param.bucketName;
   try {
     const params = {
       Bucket: bucketName,
-      Key: filePath,
+      Key: path,
     };
     return s3
       .getObject(params)
@@ -340,7 +354,7 @@ const getFileContentPromise = async (filePath, bucketName) => {
         return data.Body.toString("utf8");
       });
   } catch (e) {
-    console.log("Error getObject " + filePath, e);
+    console.log("Error getObject " + path, e);
     return Promise.resolve("");
   }
 };
