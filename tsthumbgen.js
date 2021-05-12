@@ -46,7 +46,7 @@ module.exports.generateImageThumbnail = function (
   image,
   imageType,
   imagePath,
-  fnUpload = (data, next) => {
+  fnUpload = (imagePath, data, next) => {
     next();
   }
 ) {
