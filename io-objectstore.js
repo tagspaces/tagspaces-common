@@ -226,7 +226,7 @@ const listDirectoryPromise = (param, lite = true) =>
         if (file.Key !== params.Prefix) {
           // skipping the current folder
           enhancedEntries.push(eentry);
-          const metaFilePath = paths.getMetaFileLocationForFile(file.Key);
+          const metaFilePath = paths.getMetaFileLocationForFile(file.Key, "/");
           const metaFileAvailable = metaContent.find(
             (obj) => obj.path === metaFilePath
           );
@@ -274,7 +274,7 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
 const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
     if (eentry.isFile) {
-      const metaFilePath = paths.getMetaFileLocationForFile(eentry.path);
+      const metaFilePath = paths.getMetaFileLocationForFile(eentry.path, "/");
       const metaFileContent = await loadTextFilePromise({
         path: metaFilePath,
         bucketName: eentry.bucketName,

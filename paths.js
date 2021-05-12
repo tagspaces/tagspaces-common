@@ -18,14 +18,14 @@
 
 const AppConfig = require("./AppConfig");
 
-function getMetaDirectoryPath(directoryPath, dirSeparator) {
+function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
+  if (!directoryPath) {
+    return AppConfig.metaFolder;
+  }
   if (directoryPath.endsWith(AppConfig.metaFolder + dirSeparator)) {
     return directoryPath;
   }
-  return (
-    (directoryPath ? normalizePath(directoryPath) + dirSeparator : "") +
-    AppConfig.metaFolder
-  );
+  return normalizePath(directoryPath) + dirSeparator + AppConfig.metaFolder;
 }
 
 /**
@@ -38,7 +38,7 @@ function normalizePath(path) {
   return cleanTrailingDirSeparator(path.replace(/\/\//g, "/"));
 }
 
-function extractContainingDirectoryPath(filePath, dirSeparator) {
+function extractContainingDirectoryPath(filePath, dirSeparator = "/") {
   if (filePath.indexOf(dirSeparator) === -1) {
     return dirSeparator;
   }
@@ -59,7 +59,7 @@ function cleanTrailingDirSeparator(dirPath) {
   return "";
 }
 
-function extractFileName(filePath, dirSeparator) {
+function extractFileName(filePath, dirSeparator = "/") {
   return filePath
     ? filePath.substring(
         filePath.lastIndexOf(dirSeparator) + 1,
@@ -68,7 +68,7 @@ function extractFileName(filePath, dirSeparator) {
     : filePath;
 }
 
-function extractFileExtension(filePath, dirSeparator) {
+function extractFileExtension(filePath, dirSeparator = "/") {
   const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
   const lastIndexEndTagContainer = filePath.lastIndexOf(
     AppConfig.endTagContainer
@@ -97,7 +97,7 @@ function extractFileExtension(filePath, dirSeparator) {
   return extension;
 }
 
-function getMetaFileLocationForFile(entryPath, dirSeparator) {
+function getMetaFileLocationForFile(entryPath, dirSeparator = "/") {
   const containingFolder = extractContainingDirectoryPath(
     entryPath,
     dirSeparator
@@ -122,7 +122,7 @@ function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
   );
 }
 
-function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator) {
+function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator = "/") {
   const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
   const tagArray = [];
   tagsInFileName.map((tag) => {
@@ -135,7 +135,7 @@ function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator) {
   return tagArray;
 }
 
-function extractTags(filePath, tagDelimiter, dirSeparator) {
+function extractTags(filePath, tagDelimiter, dirSeparator = "/") {
   // console.log('Extracting tags from: ' + filePath);
   const fileName = extractFileName(filePath, dirSeparator);
   // WithoutExt
