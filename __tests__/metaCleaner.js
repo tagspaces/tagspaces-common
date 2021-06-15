@@ -1,5 +1,7 @@
-const metaCleaner = require("../metacleaner");
+const { cleanMeta } = require("../metacleaner");
 
-it("clean meta", async () => {
-  metaCleaner.cleanMeta("C:\\Users\\smari\\OneDrive\\Картини\\Feedback");
-});
+test("clean meta", async () => {
+  // const dirPath = "C:\\Users\\smari\\OneDrive\\Картини\\Feedback";
+  const dirPath = "/Users/sytolk/Documents/subs";
+  await cleanMeta(dirPath);
+}, 5000);

@@ -12,7 +12,7 @@ function walkDirectory(
     recursive: false,
     skipMetaFolder: true,
     skipDotHiddenFolder: false,
-    loadMetaDate: true,
+    loadMetaData: true,
     extractText: false,
     ...options,
   };
