@@ -1,14 +1,15 @@
 const fs = require("fs-extra");
-// const path = require("path");
 const filepath = require("filepath");
 const AppConfig = require("./AppConfig");
 const { listDirectoryPromise } = require("./io-node");
 const { walkDirectory } = require("./utils-io");
 
-const cleanMeta = (dirPath, callback, analise = true) => {
-  /*assert(Array.isArray(parts));
-    assert(parts[0] === 'home');
-    assert(parts.pop() === 'README.md');*/
+const cleanMeta = (
+  dirPath,
+  callback,
+  analyze = true,
+  options = { considerMetaJSON: true, considerThumb: true }
+) => {
   return walkDirectory(
     dirPath,
     listDirectoryPromise,
@@ -39,19 +40,23 @@ const cleanMeta = (dirPath, callback, analise = true) => {
         } else if (fileName === AppConfig.folderIndexFile) {
         } else if (fileName === AppConfig.metaFolderFile) {
         } else if (fileExtension === AppConfig.metaFileExt) {
-          checkExist(
-            originFile.sep + originFile.path,
-            fileEntry.path,
-            analise,
-            callback
-          );
+          if (options.considerMetaJSON) {
+            checkExist(
+              originFile.sep + originFile.path,
+              fileEntry.path,
+              analyze,
+              callback
+            );
+          }
         } else if (fileExtension === AppConfig.thumbFileExt) {
-          checkExist(
-            originFile.sep + originFile.path,
-            fileEntry.path,
-            analise,
-            callback
-          );
+          if (options.considerThumb) {
+            checkExist(
+              originFile.sep + originFile.path,
+              fileEntry.path,
+              analyze,
+              callback
+            );
+          }
         }
       }
     }
@@ -65,10 +70,10 @@ const cleanMeta = (dirPath, callback, analise = true) => {
     });
 };
 
-const checkExist = (filePath, thumbPath, analise, callback) => {
+const checkExist = (filePath, thumbPath, analyze, callback) => {
   if (!fs.existsSync(filePath)) {
     // console.log("Thumb not exist:" + thumbPath);
-    if (!analise) {
+    if (!analyze) {
       try {
         fs.unlinkSync(thumbPath);
         //file removed

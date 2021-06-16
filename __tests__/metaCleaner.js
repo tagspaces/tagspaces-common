@@ -9,7 +9,8 @@ test("clean meta", async () => {
     (filePath) => {
       files.push(filePath);
     },
-    true
+    true,
+    { considerMetaJSON: false, considerThumb: true }
   );
   console.log(JSON.stringify(files));
 }); //, 5000);
