@@ -5,7 +5,7 @@ const AppConfig = require("./AppConfig");
 const { listDirectoryPromise } = require("./io-node");
 const { walkDirectory } = require("./utils-io");
 
-const cleanMeta = (dirPath, analise = true) => {
+const cleanMeta = (dirPath, callback, analise = true) => {
   /*assert(Array.isArray(parts));
     assert(parts[0] === 'home');
     assert(parts.pop() === 'README.md');*/
@@ -16,7 +16,9 @@ const cleanMeta = (dirPath, analise = true) => {
       recursive: true,
       skipMetaFolder: false,
       skipDotHiddenFolder: false,
+      loadMetaData: false,
       extractText: false,
+      lite: true,
     },
     (fileEntry) => {
       const pathObj = filepath.create(fileEntry.path);
@@ -27,34 +29,55 @@ const cleanMeta = (dirPath, analise = true) => {
         // console.debug(fileName);
         const fileExtension = pathObj.extname();
         // console.debug(fileExtension);
+        const originPath = parts.slice(0, metaFolderIndex);
+        originPath.push(
+          fileName.substring(0, fileName.length - fileExtension.length)
+        );
+        const originFile = filepath.create(originPath);
+
         if (fileName === AppConfig.folderThumbFile) {
         } else if (fileName === AppConfig.folderIndexFile) {
         } else if (fileName === AppConfig.metaFolderFile) {
         } else if (fileExtension === AppConfig.metaFileExt) {
-        } else if (fileExtension === AppConfig.thumbFileExt) {
-          const originPath = parts.slice(0, metaFolderIndex);
-          originPath.push(
-            fileName.substring(0, fileName.length - fileExtension.length)
+          checkExist(
+            originFile.sep + originFile.path,
+            fileEntry.path,
+            analise,
+            callback
           );
-          const originFile = filepath.create(originPath);
-          if (!fs.existsSync(originFile.sep + originFile.path)) {
-            // if (!originFile.exists()) {
-            console.log("Thumb not exist:" + fileEntry.path);
-          }
+        } else if (fileExtension === AppConfig.thumbFileExt) {
+          checkExist(
+            originFile.sep + originFile.path,
+            fileEntry.path,
+            analise,
+            callback
+          );
         }
       }
-    },
-    (directoryEntry) => {}
+    }
   )
     .then(() => {
-      // entries - can be used for further processing
-      // window.walkCanceled = false;
-      console.debug("Directory cleaned " + dirPath);
+      //console.debug("Directory cleaned " + dirPath);
       return true;
     })
     .catch((err) => {
       console.debug("Error clean dir " + path + ": ", err);
     });
+};
+
+const checkExist = (filePath, thumbPath, analise, callback) => {
+  if (!fs.existsSync(filePath)) {
+    // console.log("Thumb not exist:" + thumbPath);
+    if (!analise) {
+      try {
+        fs.unlinkSync(thumbPath);
+        //file removed
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    callback(thumbPath);
+  }
 };
 
 module.exports = {

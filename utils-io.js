@@ -14,10 +14,11 @@ function walkDirectory(
     skipDotHiddenFolder: false,
     loadMetaData: true,
     extractText: false,
+    lite: false,
     ...options,
   };
   return (
-    listDirectoryPromise(path, false, mergedOptions.extractText)
+    listDirectoryPromise(path, mergedOptions.lite, mergedOptions.extractText)
       // @ts-ignore
       .then((entries) =>
         // if (window.walkCanceled) {
