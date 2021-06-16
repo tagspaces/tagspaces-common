@@ -187,9 +187,9 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
             }
 
             /*if (window.walkCanceled) {
-              resolve(enhancedEntries);
-              return;
-            }*/
+                resolve(enhancedEntries);
+                return;
+              }*/
           } catch (e) {
             console.warn("Can not load properties for: " + entryPath + " " + e);
           }

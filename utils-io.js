@@ -12,12 +12,13 @@ function walkDirectory(
     recursive: false,
     skipMetaFolder: true,
     skipDotHiddenFolder: false,
-    loadMetaDate: true,
+    loadMetaData: true,
     extractText: false,
+    lite: false,
     ...options,
   };
   return (
-    listDirectoryPromise(path, false, mergedOptions.extractText)
+    listDirectoryPromise(path, mergedOptions.lite, mergedOptions.extractText)
       // @ts-ignore
       .then((entries) =>
         // if (window.walkCanceled) {
