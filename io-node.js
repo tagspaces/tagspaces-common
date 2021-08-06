@@ -3,6 +3,10 @@ const fs = require("fs-extra");
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
+const isDirectory = (entryPath) => {
+  return this.fs.lstatSync(entryPath).isDirectory();
+}
+
 const getPropertiesPromise = (path) => {
   return new Promise((resolve) => {
     /* stats for file:
