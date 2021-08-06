@@ -4,8 +4,8 @@ const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
 const isDirectory = (entryPath) => {
-  return this.fs.lstatSync(entryPath).isDirectory();
-}
+  return fs.lstatSync(entryPath).isDirectory();
+};
 
 const getPropertiesPromise = (path) => {
   return new Promise((resolve) => {
