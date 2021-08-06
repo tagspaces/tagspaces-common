@@ -1,5 +1,5 @@
 {
-  "name": "ts-common",
+  "name": "@tagspaces/tagspaces-common",
   "description": "TagSpaces common thumbnails module",
   "version": "1.1.10",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "jest": "^26.6.3"
+  },
+  "publishConfig": {
+    "@tagspaces:registry": "https://npm.pkg.github.com"
   }
 }
