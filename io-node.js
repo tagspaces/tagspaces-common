@@ -307,5 +307,6 @@ module.exports = {
   listDirectoryPromise,
   saveTextFilePromise,
   getPropertiesPromise,
+  isDirectory,
   loadTextFilePromise,
 };
