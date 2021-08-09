@@ -1,8 +1,9 @@
 name: Publish to NPMJS and GPR
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - master
 jobs:
   publish-to-npm-and-gpr:
     runs-on: ubuntu-latest
