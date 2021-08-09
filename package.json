@@ -6,7 +6,8 @@
   "main": "tsthumbgen.js",
   "scripts": {
     "test": "jest",
-    "code-format": "npx prettier --write ."
+    "code-format": "npx prettier --write .",
+    "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
     "async": "^3.2.1",
