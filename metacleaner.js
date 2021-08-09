@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const filepath = require("filepath");
+const filepath = require("./filepath");
 const AppConfig = require("./AppConfig");
 const { listDirectoryPromise } = require("./io-node");
 const { walkDirectory } = require("./utils-io");
