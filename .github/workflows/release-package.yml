@@ -14,17 +14,16 @@ jobs:
       # Update package version and set up git
       - uses: actions/setup-node@master
       - name: Update package version and setup git
-        run: |
+      - run: |
           git config user.name "Tagspaces"
           git config user.email contact@tagspaces.org
-          npm version 1.0.$(date +%s)
 
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v2
         with:
           node-version: 12
           registry-url: 'https://registry.npmjs.org'
-        run: |
+      - run: |
           npm install
           npm config set //registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN
           npm config list
