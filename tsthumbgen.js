@@ -82,13 +82,13 @@ module.exports.generateImageThumbnail = function (
             " due to an error: ",
           err
         );
-        return false;
+        return Promise.resolve(false);
       } else {
         console.log(
           "Successfully resized" //+ srcBucket + '/' + srcKey +
           //' and uploaded to ' + dstBucket + '/' + dstKey
         );
-        return true;
+        return Promise.resolve(true);
       }
     }
   );
