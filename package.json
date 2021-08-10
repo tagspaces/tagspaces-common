@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-common",
   "description": "TagSpaces common thumbnails module",
-  "version": "1.1.22",
+  "version": "1.1.23",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "main": "tsthumbgen.js",
   "scripts": {

@@ -50,48 +50,50 @@ module.exports.generateImageThumbnail = function (
     next();
   }
 ) {
-  // Download the image from S3, transform, and upload to a different S3 bucket.
-  async.waterfall(
-    [
-      function transform(next) {
-        // set thumbnail width. Resize will set height automatically
-        // to maintain aspect ratio.
+  return new Promise((resolve) => {
+    // Download the image from S3, transform, and upload to a different S3 bucket.
+    async.waterfall(
+      [
+        function transform(next) {
+          // set thumbnail width. Resize will set height automatically
+          // to maintain aspect ratio.
 
-        // Transform the image buffer in memory.
-        sharp(image)
-          .rotate()
-          .resize(tmbMaxWidth)
-          .jpeg()
-          .toBuffer(imageType, function (err, buffer) {
-            if (err) {
-              next(err);
-            } else {
-              next(null, buffer);
-            }
-          });
-      },
-      function upload(data, next) {
-        fnUpload(imagePath, data, next);
-      },
-    ],
-    function (err) {
-      if (err) {
-        console.error(
-          "Unable to resize " + //+ srcBucket + '/' + srcKey +
-            //' and upload to ' + dstBucket + '/' + dstKey +
-            " due to an error: ",
-          err
-        );
-        return Promise.resolve(false);
-      } else {
-        console.log(
-          "Successfully resized" //+ srcBucket + '/' + srcKey +
-          //' and uploaded to ' + dstBucket + '/' + dstKey
-        );
-        return Promise.resolve(true);
+          // Transform the image buffer in memory.
+          sharp(image)
+            .rotate()
+            .resize(tmbMaxWidth)
+            .jpeg()
+            .toBuffer(imageType, function (err, buffer) {
+              if (err) {
+                next(err);
+              } else {
+                next(null, buffer);
+              }
+            });
+        },
+        function upload(data, next) {
+          fnUpload(imagePath, data, next);
+        },
+      ],
+      function (err) {
+        if (err) {
+          console.error(
+            "Unable to resize " + //+ srcBucket + '/' + srcKey +
+              //' and upload to ' + dstBucket + '/' + dstKey +
+              " due to an error: ",
+            err
+          );
+          resolve(false);
+        } else {
+          console.log(
+            "Successfully resized" //+ srcBucket + '/' + srcKey +
+            //' and uploaded to ' + dstBucket + '/' + dstKey
+          );
+          resolve(true);
+        }
       }
-    }
-  );
+    );
+  });
 };
 
 module.exports.generatePDFThumbnail = function (
