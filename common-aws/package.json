@@ -1,0 +1,18 @@
+{
+  "name": "tagspaces-common",
+  "description": "TagSpaces common aws thumbnails module",
+  "version": "1.1.23",
+  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "scripts": {
+    "test": "jest",
+    "code-format": "npx prettier --write .",
+    "pkg-publish": "npm publish --access public"
+  },
+  "dependencies": {
+    "aws-sdk": "2.966.0",
+    "tagspaces-common": "1.1.24"
+  },
+  "publishConfig": {
+    "@tagspaces:registry": "https://npm.pkg.github.com"
+  }
+}

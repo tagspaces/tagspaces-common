@@ -1,7 +1,7 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
-const paths = require("./paths");
-const AppConfig = require("./AppConfig");
+const tsPaths = require("tagspaces-common/paths");
+const AppConfig = require("tagspaces-common/AppConfig");
 
 const isDirectory = (entryPath) => {
   return fs.lstatSync(entryPath).isDirectory();
@@ -78,10 +78,10 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
           "Getting properties for " + filePath + " failed with: " + error
         );
         const fsEntry = {
-          name: paths.extractFileName(filePath, pathLib.sep),
+          name: tsPaths.extractFileName(filePath, pathLib.sep),
           isFile: true,
           path: filePath,
-          extension: paths.extractFileExtension(filePath, pathLib.sep),
+          extension: tsPaths.extractFileExtension(filePath, pathLib.sep),
           size: 0,
           lmdt: new Date().getTime(),
           isNewFile: true,
@@ -101,7 +101,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
     let containsMetaFolder = false;
     // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
     if (path.startsWith("./")) {
-      // relative paths
+      // relative tsPaths
       path = pathLib.resolve(path);
     }
     fs.readdir(path, (error, entries) => {
@@ -202,7 +202,7 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
 
         // Read the .ts meta content
         if (!lite && containsMetaFolder) {
-          metaFolderPath = paths.getMetaDirectoryPath(path, pathLib.sep);
+          metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {
             if (err) {
               console.log(

@@ -3,25 +3,13 @@
   "description": "TagSpaces common thumbnails module",
   "version": "1.1.23",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
-  "main": "tsthumbgen.js",
   "scripts": {
     "test": "jest",
-    "code-format": "npx prettier --write .",
-    "pkg-publish": "npm publish --access public"
-  },
-  "dependencies": {
-    "async": "^3.2.1",
-    "aws-sdk": "2.963.0",
-    "fs-extra": "^10.0.0",
-    "path": "^0.12.7",
-    "pdf-thumbnail": "^1.0.6",
-    "pdfjs-dist": "^2.9.359",
-    "sharp": "^0.27.1"
+    "code-format": "npx prettier --write ."
   },
   "devDependencies": {
+    "fs-extra": "^10.0.0",
+    "path": "^0.12.7",
     "jest": "^26.6.3"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
   }
 }

@@ -1,4 +1,4 @@
-const { cleanMeta } = require("../metacleaner");
+const { cleanMeta } = require("../metacleaner/metacleaner");
 
 test("clean meta", async () => {
   // const dirPath = "C:\\Users\\smari\\OneDrive\\Картини\\Feedback";

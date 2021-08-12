@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
 const pathJS = require("path");
-const paths = require("./paths");
-const AppConfig = require("./AppConfig");
+const tsPaths = require("tagspaces-common/tsPaths");
+const AppConfig = require("tagspaces-common/AppConfig");
 // get reference to S3 client
 const s3 = new AWS.S3();
 
@@ -70,7 +70,7 @@ const saveFilePromise = (param, content, overWrite, mode) => {
             content.length
         );
         // || mode === 'text') {
-        const fileExt = paths.extractFileExtension(filePath);
+        const fileExt = tsPaths.extractFileExtension(filePath);
 
         let mimeType;
         if (fileExt === "md") {
@@ -197,7 +197,7 @@ const listDirectoryPromise = (param, lite = true) =>
       // Handling files
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
-        let thumbPath = paths.getThumbFileLocationForFile(file.Key, "/");
+        let thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, "/");
         const thumbAvailable = metaContent.find(
           (obj) => obj.path === thumbPath
         );
@@ -214,7 +214,7 @@ const listDirectoryPromise = (param, lite = true) =>
         }
 
         eentry = {};
-        eentry.name = paths.extractFileName(file.Key);
+        eentry.name = tsPaths.extractFileName(file.Key);
         eentry.path = file.Key;
         eentry.bucketName = bucketName;
         eentry.tags = [];
@@ -226,7 +226,10 @@ const listDirectoryPromise = (param, lite = true) =>
         if (file.Key !== params.Prefix) {
           // skipping the current folder
           enhancedEntries.push(eentry);
-          const metaFilePath = paths.getMetaFileLocationForFile(file.Key, "/");
+          const metaFilePath = tsPaths.getMetaFileLocationForFile(
+            file.Key,
+            "/"
+          );
           const metaFileAvailable = metaContent.find(
             (obj) => obj.path === metaFilePath
           );
@@ -274,7 +277,7 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
 const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
     if (eentry.isFile) {
-      const metaFilePath = paths.getMetaFileLocationForFile(eentry.path, "/");
+      const metaFilePath = tsPaths.getMetaFileLocationForFile(eentry.path, "/");
       const metaFileContent = await loadTextFilePromise({
         path: metaFilePath,
         bucketName: eentry.bucketName,

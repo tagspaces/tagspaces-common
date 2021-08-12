@@ -1,6 +1,6 @@
 const fs = require("fs-extra");
 const path = require("path");
-const thumbGen = require("../tsthumbgen");
+const thumbGen = require("../thumbgen-image/tsimagethumbgen");
 
 it("gen image thumbnail", async () => {
   const image = fs.readFileSync(path.resolve(__dirname, "img.jpg"));
