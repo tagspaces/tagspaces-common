@@ -1,6 +1,5 @@
 const pathJS = require("path");
-const tsCommon = require("tagspaces-common/io-node");
-// const tsPaths = require("tagspaces-common/paths");
+const tsCommon = require("tagspaces-common-node/io-node");
 const tsUtils = require("tagspaces-common/utils-io");
 const AppConfig = require("tagspaces-common/AppConfig");
 /*

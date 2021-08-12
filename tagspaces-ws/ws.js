@@ -1,10 +1,12 @@
 "use strict";
 const ws = require("http");
 // const { parse } = require('querystring');
-const workers = require("tagspaces-workers/tsnodethumbgen");
+const tsThumbgen = require("tagspaces-workers/tsnodethumbgen");
+const tsIndexer = require("tagspaces-workers/tsnodeindexer");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
+ * curl -d '{"directoryPath":"/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/indexer
  */
 module.exports.createWS = function (port) {
   const hostname = "127.0.0.1";
@@ -38,7 +40,7 @@ module.exports.createWS = function (port) {
             const thumbs = [];
             if (arrayPaths && arrayPaths.length > 0) {
               for (const path of arrayPaths) {
-                const success = await workers.processAllThumbnails(
+                const success = await tsThumbgen.processAllThumbnails(
                   path,
                   generatePdf
                 );
@@ -63,6 +65,34 @@ module.exports.createWS = function (port) {
           }
         });
       }
+    } else if (reqUrl.pathname === "/indexer") {
+      if (req.method === "POST") {
+        let body = "";
+        req.on("data", function (data) {
+          body += data;
+          // console.log("Partial body: " + body);
+        });
+        req.on("end", async () => {
+          let directoryPath;
+          if (body.startsWith("directoryPath=")) {
+            directoryPath = decodeURIComponent(body.substr(14));
+          } else {
+            const params = JSON.parse(body); // { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
+            directoryPath = params.directoryPath;
+          }
+
+          tsIndexer.indexer(directoryPath).then((directoryIndex) => {
+            // TODO extractText, ignorePatterns impl
+            tsIndexer
+              .persistIndex(directoryPath, directoryIndex)
+              .then((success) => {
+                if (success) {
+                  console.log("Index generated in folder: " + directoryPath);
+                }
+              });
+          });
+        });
+      }
     } else {
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
@@ -72,6 +102,11 @@ module.exports.createWS = function (port) {
           '<form name="thumbgen" action="thumb-gen" method="post">\n' +
           '  <label for="p">Generate Thumbnails file/folder:</label>\n' +
           '  <input type="text" name="p"/>\n' +
+          "  <button>Submit</button>\n" +
+          "</form>" +
+          '<form name="indexer" action="indexer" method="post">\n' +
+          '  <label for="directoryPath">Generate Index in folder:</label>\n' +
+          '  <input type="text" name="directoryPath"/>\n' +
           "  <button>Submit</button>\n" +
           "</form>" +
           "</p>"
