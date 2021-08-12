@@ -88,6 +88,11 @@ module.exports.createWS = function (port) {
               .then((success) => {
                 if (success) {
                   console.log("Index generated in folder: " + directoryPath);
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  res.setHeader("Cache-Control", "no-store, must-revalidate");
+                  // res.write(JSON.stringify(thumbs));
+                  res.end(JSON.stringify(directoryIndex));
                 }
               });
           });
