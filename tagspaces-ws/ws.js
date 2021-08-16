@@ -1,5 +1,6 @@
 "use strict";
 const ws = require("http");
+const jwt = require("jsonwebtoken");
 // const { parse } = require('querystring');
 const tsThumbgen = require("tagspaces-workers/tsnodethumbgen");
 const tsIndexer = require("tagspaces-workers/tsnodeindexer");
@@ -11,10 +12,27 @@ const tsIndexer = require("tagspaces-workers/tsnodeindexer");
 module.exports.createWS = function (port) {
   const hostname = "127.0.0.1";
 
+  const verifyAuth = (token, res) => {
+    try {
+      const decoded = jwt.verify(token, "123456");
+      if (decoded) {
+        return true;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    res.statusCode = 401;
+    res.end();
+    return false;
+  };
+
   const requestHandler = (req, res) => {
     const baseURL = "http://" + req.headers.host + "/";
     const reqUrl = new URL(req.url, baseURL);
     if (reqUrl.pathname === "/thumb-gen") {
+      if (!verifyAuth(req.headers.authorization, res)) {
+        return;
+      }
       const generatePdf = reqUrl.searchParams.has("pdf")
         ? reqUrl.searchParams.get("pdf")
         : false;
@@ -66,6 +84,9 @@ module.exports.createWS = function (port) {
         });
       }
     } else if (reqUrl.pathname === "/indexer") {
+      if (!verifyAuth(req.headers.authorization, res)) {
+        return;
+      }
       if (req.method === "POST") {
         let body = "";
         req.on("data", function (data) {
