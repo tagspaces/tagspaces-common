@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "main": "index.js",
   "scripts": {

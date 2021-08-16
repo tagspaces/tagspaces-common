@@ -14,6 +14,10 @@ module.exports.createWS = function (port) {
 
   const verifyAuth = (token, res) => {
     try {
+      const PREFIX = "Bearer ";
+      if (token.startsWith(PREFIX)) {
+        token = token.slice(PREFIX.length);
+      }
       const decoded = jwt.verify(token, "123456");
       if (decoded) {
         return true;
