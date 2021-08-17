@@ -88,6 +88,8 @@ module.exports.createWS = function (port, key) {
             res.end(JSON.stringify(thumbs));
           } catch (e) {
             console.log(e);
+            res.statusCode = 400;
+            res.end();
           }
         });
       }
@@ -102,29 +104,35 @@ module.exports.createWS = function (port, key) {
           // console.log("Partial body: " + body);
         });
         req.on("end", async () => {
-          let directoryPath;
-          if (body.startsWith("directoryPath=")) {
-            directoryPath = decodeURIComponent(body.substr(14));
-          } else {
-            const params = JSON.parse(body); // { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
-            directoryPath = params.directoryPath;
-          }
+          try {
+            let directoryPath;
+            if (body.startsWith("directoryPath=")) {
+              directoryPath = decodeURIComponent(body.substr(14));
+            } else {
+              const params = JSON.parse(body); // { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
+              directoryPath = params.directoryPath;
+            }
 
-          tsIndexer.indexer(directoryPath).then((directoryIndex) => {
-            // TODO extractText, ignorePatterns impl
-            tsIndexer
-              .persistIndex(directoryPath, directoryIndex)
-              .then((success) => {
-                if (success) {
-                  console.log("Index generated in folder: " + directoryPath);
-                  res.statusCode = 200;
-                  res.setHeader("Content-Type", "application/json");
-                  res.setHeader("Cache-Control", "no-store, must-revalidate");
-                  // res.write(JSON.stringify(thumbs));
-                  res.end(JSON.stringify(directoryIndex));
-                }
-              });
-          });
+            tsIndexer.indexer(directoryPath).then((directoryIndex) => {
+              // TODO extractText, ignorePatterns impl
+              tsIndexer
+                .persistIndex(directoryPath, directoryIndex)
+                .then((success) => {
+                  if (success) {
+                    console.log("Index generated in folder: " + directoryPath);
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "application/json");
+                    res.setHeader("Cache-Control", "no-store, must-revalidate");
+                    // res.write(JSON.stringify(thumbs));
+                    res.end(JSON.stringify({ success }));
+                  }
+                });
+            });
+          } catch (e) {
+            console.log(e);
+            res.statusCode = 400;
+            res.end();
+          }
         });
       }
     } else {
