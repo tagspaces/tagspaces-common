@@ -9,21 +9,25 @@ const tsIndexer = require("tagspaces-workers/tsnodeindexer");
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
  * curl -d '{"directoryPath":"/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/indexer
  */
-module.exports.createWS = function (port) {
+module.exports.createWS = function (port, key) {
   const hostname = "127.0.0.1";
 
   const verifyAuth = (token, res) => {
-    try {
-      const PREFIX = "Bearer ";
-      if (token.startsWith(PREFIX)) {
-        token = token.slice(PREFIX.length);
+    if (!token) {
+      console.error("No Auth header provided!");
+    } else {
+      try {
+        const PREFIX = "Bearer ";
+        if (token.startsWith(PREFIX)) {
+          token = token.slice(PREFIX.length);
+        }
+        const decoded = jwt.verify(token, key);
+        if (decoded) {
+          return true;
+        }
+      } catch (err) {
+        console.error(err);
       }
-      const decoded = jwt.verify(token, "123456");
-      if (decoded) {
-        return true;
-      }
-    } catch (err) {
-      console.error(err);
     }
     res.statusCode = 401;
     res.end();
@@ -127,8 +131,8 @@ module.exports.createWS = function (port) {
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
       res.end(
-        "<h1>Hello from Tagspaces WS.</h1>" +
-          "<p>" +
+        "<h1>Hello from Tagspaces WS.</h1>"
+        /*"<p>" +
           '<form name="thumbgen" action="thumb-gen" method="post">\n' +
           '  <label for="p">Generate Thumbnails file/folder:</label>\n' +
           '  <input type="text" name="p"/>\n' +
@@ -139,7 +143,7 @@ module.exports.createWS = function (port) {
           '  <input type="text" name="directoryPath"/>\n' +
           "  <button>Submit</button>\n" +
           "</form>" +
-          "</p>"
+          "</p>"*/
       );
     }
   };

@@ -14,4 +14,5 @@
 const argv = process.argv.slice(2);
 const httpServer = require("./ws");
 const port = argv[0] === "-p" ? parseInt(argv[1]) : 8888;
-httpServer.createWS(port); //argv.port);
+const key = argv[2] === "-k" ? parseInt(argv[3]) : undefined;
+httpServer.createWS(port, key);
