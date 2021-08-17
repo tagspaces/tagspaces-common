@@ -7,6 +7,7 @@ const thumbFileExt = ".jpg";
 const folderThumbFile = "tst.jpg";
 const folderIndexFile = "tsi.json";
 const metaFolderFile = "tsm.json";
+const dirSeparator = process.platform === "win32" ? "\\" : "/";
 
 module.exports = {
   metaFolder,
@@ -18,4 +19,5 @@ module.exports = {
   folderThumbFile,
   folderIndexFile,
   metaFolderFile,
+  dirSeparator,
 };
