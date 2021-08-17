@@ -164,7 +164,8 @@ function extractTags(filePath, tagDelimiter, dirSeparator = "/") {
   return cleanedTags;
 }
 
-module.exports = {
+export {
+  normalizePath,
   getMetaDirectoryPath,
   extractContainingDirectoryPath,
   getThumbFileLocationForFile,

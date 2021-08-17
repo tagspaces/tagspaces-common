@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-common-node",
   "description": "TagSpaces common node thumbnails module",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "pkg-publish": "npm publish --access public"
@@ -9,7 +9,7 @@
   "dependencies": {
     "fs-extra": "^10.0.0",
     "path": "^0.12.7",
-    "tagspaces-common": "^1.1.24"
+    "tagspaces-common": "^1.1.29"
   },
   "publishConfig": {
     "@tagspaces:registry": "https://npm.pkg.github.com"

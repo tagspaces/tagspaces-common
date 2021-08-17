@@ -1,5 +1,6 @@
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
+const { loadTextFilePromise } = require("tagspaces-common-node/io-node");
 
 function walkDirectory(
   path,
@@ -130,7 +131,25 @@ function enhanceEntry(entry) {
   return enhancedEntry;
 }
 
-module.exports = {
-  walkDirectory,
-  enhanceEntry,
-};
+/**
+ * @param jsonContent: string
+ * @returns {*}
+ */
+function loadJSONString(jsonContent) {
+  let jsonObject;
+  let json;
+  const UTF8_BOM = "\ufeff";
+  if (jsonContent.indexOf(UTF8_BOM) === 0) {
+    json = jsonContent.substring(1, jsonContent.length);
+  } else {
+    json = jsonContent;
+  }
+  try {
+    jsonObject = JSON.parse(json);
+  } catch (err) {
+    console.error("Error parsing meta json file: " + json, err);
+  }
+  return jsonObject;
+}
+
+export { walkDirectory, enhanceEntry, loadJSONString };

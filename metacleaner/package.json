@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "fs-extra": "^10.0.0",
-    "tagspaces-common-node": "1.0.0"
+    "tagspaces-common-node": "1.0.1"
   },
   "publishConfig": {
     "@tagspaces:registry": "https://npm.pkg.github.com"

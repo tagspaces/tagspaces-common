@@ -80,56 +80,6 @@ const indexer = function (path) {
     });
 };
 
-const persistIndex = function (directoryPath, directoryIndex) {
-  const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  // const normalizedPath = pathJS.normalize(directoryPath);
-  // const folderIndexPath = normalizedPath + dirSeparator + metaFolder + dirSeparator + folderIndexFile;
-  /* const relativeIndex = [];
-        const clipRange = normalizedPath.length + 1;
-        directoryIndex.forEach((entry) => {
-            if (entry.thumbPath) {
-                relativeIndex.push({
-                    ...entry,
-                    path: entry.path.substr(clipRange),
-                    thumbPath: entry.thumbPath // PlatformIO.haveObjectStoreSupport() ? entry.thumbPath : entry.thumbPath.substr(clipRange)
-                });
-            } else {
-                relativeIndex.push({
-                    ...entry,
-                    path: entry.path.substr(clipRange)
-                });
-            }
-        }); */
-  // zip.file(AppConfig.folderIndexFile, JSON.stringify(relativeIndex));
-  // zip.generateAsync({type:"base64"}).then(content => {
-  // const b64data = 'data:application/zip;base64,' + content;
-  return tsCommon
-    .saveTextFilePromise(
-      folderIndexPath,
-      JSON.stringify(directoryIndex), // relativeIndex),
-      true
-    )
-    .then(() => {
-      console.log(
-        "Index persisted for: " + directoryPath + " to " + folderIndexPath
-      );
-      // zip.loadAsync(atob(content)).then((archive) => {
-      //   const files = Object.keys(archive.files);
-      //   // for(let i=0; i< files.length; i++){
-      //   //     console.log(files[i] + " " + zip.files[files[i]].date);
-      //   // }
-      //   archive.file(AppConfig.folderIndexFile).async("string").then(data => {
-      //     console.log(data);
-      //   });
-      // });
-      return true;
-    })
-    .catch((err) => {
-      console.error("Error saving the index for " + folderIndexPath, err);
-    });
-  // });
-};
-
 /*const addToIndex = function (key, size, LastModified, thumbPath) {
   if (key.indexOf(AppConfig.metaFolder + "/") !== -1) {
     console.info("addToIndex skip meta folder" + key);
@@ -179,23 +129,10 @@ const removeFromIndex = function (key, bucketName) {
     });
 };*/
 
-const getMetaIndexFilePath = (directoryPath, dirSeparator = pathJS.sep) => {
-  return directoryPath.length > 0 && directoryPath !== dirSeparator
-    ? pathJS.normalize(
-        directoryPath +
-          dirSeparator +
-          AppConfig.metaFolder +
-          dirSeparator +
-          AppConfig.folderIndexFile
-      )
-    : pathJS.normalize(
-        AppConfig.metaFolder + dirSeparator + AppConfig.folderIndexFile
-      );
-};
-
 module.exports = {
   indexer,
   persistIndex,
+  loadIndex,
   // addToIndex,
   // removeFromIndex,
 };

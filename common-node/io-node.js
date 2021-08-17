@@ -277,9 +277,40 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
     });
   });
 
-function loadTextFilePromise(filePath) {
-  return getFileContentPromise(filePath);
-}
+const loadTextFilePromise = (filePath, isPreview = false) => {
+  return new Promise((resolve, reject) => {
+    if (isPreview) {
+      const stream = fs.createReadStream(filePath, {
+        start: 0,
+        end: 10000,
+      });
+
+      stream.on("error", (err) => {
+        reject(err);
+      });
+
+      const chunks = [];
+      stream.on("data", (chunk) => {
+        chunks.push(chunk.toString());
+        // console.log('stream data ' + chunk);
+      });
+
+      stream.on("end", () => {
+        const textContent = chunks.join("");
+        resolve(textContent);
+        // console.log('final output ' + string);
+      });
+    } else {
+      fs.readFile(filePath, "utf8", (error, content) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(content);
+        }
+      });
+    }
+  });
+};
 
 const getFileContentPromise = (fullPath) =>
   new Promise((resolve, reject) => {
@@ -303,10 +334,11 @@ const getFileContentPromise = (fullPath) =>
     xhr.send();
   });
 
-module.exports = {
+export {
   listDirectoryPromise,
   saveTextFilePromise,
   getPropertiesPromise,
   isDirectory,
   loadTextFilePromise,
+  getFileContentPromise,
 };

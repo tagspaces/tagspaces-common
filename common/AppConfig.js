@@ -9,7 +9,7 @@ const folderIndexFile = "tsi.json";
 const metaFolderFile = "tsm.json";
 const dirSeparator = process.platform === "win32" ? "\\" : "/";
 
-module.exports = {
+export {
   metaFolder,
   beginTagContainer,
   endTagContainer,
