@@ -1,4 +1,4 @@
-import { loadTextFilePromise, saveTextFilePromise } from "./io-node";
+const { loadTextFilePromise, saveTextFilePromise } = require("./io-node");
 const { normalizePath } = require("tagspaces-common/paths");
 const { loadJSONString } = require("tagspaces-common/utils-io");
 const AppConfig = require("tagspaces-common/AppConfig");
@@ -98,7 +98,7 @@ function loadJSONFile(filePath) {
   );
 }
 
-export {
+module.exports = {
   persistIndex,
   loadIndex,
   loadJsonContent,

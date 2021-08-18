@@ -164,7 +164,7 @@ function extractTags(filePath, tagDelimiter, dirSeparator = "/") {
   return cleanedTags;
 }
 
-export {
+module.exports = {
   normalizePath,
   getMetaDirectoryPath,
   extractContainingDirectoryPath,

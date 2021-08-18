@@ -2,8 +2,10 @@
 const ws = require("http");
 const jwt = require("jsonwebtoken");
 // const { parse } = require('querystring');
-const tsThumbgen = require("tagspaces-workers/tsnodethumbgen");
-const tsIndexer = require("tagspaces-workers/tsnodeindexer");
+const { processAllThumbnails } = require("tagspaces-workers/tsnodethumbgen");
+const { indexer } = require("tagspaces-workers/tsnodeindexer");
+const { persistIndex } = require("tagspaces-common-node/indexer");
+
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
@@ -66,7 +68,7 @@ module.exports.createWS = function (port, key) {
             const thumbs = [];
             if (arrayPaths && arrayPaths.length > 0) {
               for (const path of arrayPaths) {
-                const success = await tsThumbgen.processAllThumbnails(
+                const success = await processAllThumbnails(
                   path,
                   generatePdf
                 );
@@ -113,10 +115,9 @@ module.exports.createWS = function (port, key) {
               directoryPath = params.directoryPath;
             }
 
-            tsIndexer.indexer(directoryPath).then((directoryIndex) => {
+            indexer(directoryPath).then((directoryIndex) => {
               // TODO extractText, ignorePatterns impl
-              tsIndexer
-                .persistIndex(directoryPath, directoryIndex)
+              persistIndex(directoryPath, directoryIndex)
                 .then((success) => {
                   if (success) {
                     console.log("Index generated in folder: " + directoryPath);

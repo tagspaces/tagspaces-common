@@ -334,7 +334,7 @@ const getFileContentPromise = (fullPath) =>
     xhr.send();
   });
 
-export {
+module.exports = {
   listDirectoryPromise,
   saveTextFilePromise,
   getPropertiesPromise,

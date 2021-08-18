@@ -130,9 +130,7 @@ const removeFromIndex = function (key, bucketName) {
 };*/
 
 module.exports = {
-  indexer,
-  persistIndex,
-  loadIndex,
+  indexer
   // addToIndex,
   // removeFromIndex,
 };

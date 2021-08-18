@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-workers",
   "description": "utils for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.13",
+  "version": "1.0.18",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "generate-thumbs": "node generatethumbs.js",
@@ -12,7 +12,7 @@
     "yargs": "^17.1.0"
   },
   "dependencies": {
-    "tagspaces-common-node": "^1.0.7",
+    "tagspaces-common-node": "^1.0.12",
     "tagspaces-thumbgen-image": "^1.0.0"
   },
   "publishConfig": {

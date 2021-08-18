@@ -1,6 +1,5 @@
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
-const { loadTextFilePromise } = require("tagspaces-common-node/io-node");
 
 function walkDirectory(
   path,
@@ -152,4 +151,4 @@ function loadJSONString(jsonContent) {
   return jsonObject;
 }
 
-export { walkDirectory, enhanceEntry, loadJSONString };
+module.exports = { walkDirectory, enhanceEntry, loadJSONString };
