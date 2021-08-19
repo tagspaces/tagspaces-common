@@ -3,8 +3,8 @@ const ws = require("http");
 const jwt = require("jsonwebtoken");
 // const { parse } = require('querystring');
 const { processAllThumbnails } = require("tagspaces-workers/tsnodethumbgen");
-const { indexer } = require("tagspaces-workers/tsnodeindexer");
-const { persistIndex } = require("tagspaces-common-node/indexer");
+// const { indexer } = require("tagspaces-workers/tsnodeindexer");
+const { persistIndex, indexer } = require("tagspaces-common-node/indexer");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
@@ -103,16 +103,15 @@ module.exports.createWS = function (port, key) {
         });
         req.on("end", async () => {
           try {
-            let directoryPath;
-            if (body.startsWith("directoryPath=")) {
+            // let directoryPath;
+            /*if (body.startsWith("directoryPath=")) {
               directoryPath = decodeURIComponent(body.substr(14));
-            } else {
-              const params = JSON.parse(body); // { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
-              directoryPath = params.directoryPath;
-            }
+            } else {*/
+            //  const params = JSON.parse(body);
+            //  directoryPath = params.directoryPath;
+            const { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
 
-            indexer(directoryPath).then((directoryIndex) => {
-              // TODO extractText, ignorePatterns impl
+            indexer(directoryPath, extractText, ignorePatterns).then((directoryIndex) => {
               persistIndex(directoryPath, directoryIndex).then((success) => {
                 if (success) {
                   console.log("Index generated in folder: " + directoryPath);
