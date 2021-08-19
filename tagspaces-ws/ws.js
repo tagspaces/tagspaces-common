@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 // const { parse } = require('querystring');
 const { processAllThumbnails } = require("tagspaces-workers/tsnodethumbgen");
 // const { indexer } = require("tagspaces-workers/tsnodeindexer");
-const { persistIndex, indexer } = require("tagspaces-common-node/indexer");
+const { persistIndex, createIndex } = require("tagspaces-common-node/indexer");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
@@ -112,24 +112,27 @@ module.exports.createWS = function (port, key) {
             const { directoryPath, extractText, ignorePatterns } =
               JSON.parse(body);
 
-            indexer(directoryPath, extractText, ignorePatterns).then(
-              (directoryIndex) => {
-                persistIndex(directoryPath, directoryIndex).then((success) => {
-                  if (success) {
-                    console.log("Index generated in folder: " + directoryPath);
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.setHeader("Cache-Control", "no-store, must-revalidate");
-                    // res.write(JSON.stringify(thumbs));
-                    res.end(JSON.stringify({ success }));
-                  }
-                });
-              }
-            );
+            createIndex(
+              directoryPath,
+              extractText,
+              ignorePatterns ? ignorePatterns : []
+            ).then((directoryIndex) => {
+              persistIndex(directoryPath, directoryIndex).then((success) => {
+                if (success) {
+                  console.log("Index generated in folder: " + directoryPath);
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  res.setHeader("Cache-Control", "no-store, must-revalidate");
+                  // res.write(JSON.stringify(thumbs));
+                  res.end(JSON.stringify({ success }));
+                }
+              });
+            });
           } catch (e) {
             console.log(e);
             res.statusCode = 400;
-            res.end();
+            res.setHeader("Content-Type", "application/json");
+            res.end({ success: false, error: e.message });
           }
         });
       }
