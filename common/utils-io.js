@@ -1,13 +1,27 @@
+const micromatch = require("micromatch");
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
+/**
+ * @param path: string
+ * @param listDirectoryPromise
+ * @param options: {}
+ * @param fileCallback: () => {}
+ * @param dirCallback: () => {}
+ * @param ignorePatterns: Array<string>
+ * @returns {*}
+ */
 function walkDirectory(
   path,
   listDirectoryPromise,
   options = {},
   fileCallback,
-  dirCallback
+  dirCallback,
+  ignorePatterns = []
 ) {
+  if (ignorePatterns.length > 0 && micromatch.isMatch(path, ignorePatterns)) {
+    return;
+  }
   const mergedOptions = {
     recursive: false,
     skipMetaFolder: true,
@@ -29,6 +43,12 @@ function walkDirectory(
             // if (window.walkCanceled) {
             //     return false;
             // }
+            if (
+              ignorePatterns.length > 0 &&
+              micromatch.isMatch(entry.path, ignorePatterns)
+            ) {
+              return false;
+            }
 
             if (entry.isFile) {
               if (fileCallback) {
@@ -64,7 +84,8 @@ function walkDirectory(
                 listDirectoryPromise,
                 mergedOptions,
                 fileCallback,
-                dirCallback
+                dirCallback,
+                ignorePatterns
               );
             }
             return entry;

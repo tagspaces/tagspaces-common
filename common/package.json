@@ -1,12 +1,15 @@
 {
   "name": "tagspaces-common",
   "description": "TagSpaces common module",
-  "version": "1.1.30",
+  "version": "1.1.31",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "pkg-publish": "npm publish --access public"
   },
   "publishConfig": {
     "@tagspaces:registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "micromatch": "^4.0.4"
   }
 }

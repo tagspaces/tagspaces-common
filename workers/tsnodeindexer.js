@@ -2,7 +2,8 @@ const pathJS = require("path");
 const tsCommon = require("tagspaces-common-node/io-node");
 const tsUtils = require("tagspaces-common/utils-io");
 const AppConfig = require("tagspaces-common/AppConfig");
-/*
+/**
+ * @deprecated use tagspaces-common-node/indexer/indexer instead
  * @param path
  * @param bucketName
  * @returns {Promise<[]>}
@@ -130,7 +131,7 @@ const removeFromIndex = function (key, bucketName) {
 };*/
 
 module.exports = {
-  indexer
+  indexer,
   // addToIndex,
   // removeFromIndex,
 };

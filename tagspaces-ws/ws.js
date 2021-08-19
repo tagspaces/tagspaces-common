@@ -6,7 +6,6 @@ const { processAllThumbnails } = require("tagspaces-workers/tsnodethumbgen");
 const { indexer } = require("tagspaces-workers/tsnodeindexer");
 const { persistIndex } = require("tagspaces-common-node/indexer");
 
-
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
  * curl -d '{"directoryPath":"/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/indexer
@@ -68,10 +67,7 @@ module.exports.createWS = function (port, key) {
             const thumbs = [];
             if (arrayPaths && arrayPaths.length > 0) {
               for (const path of arrayPaths) {
-                const success = await processAllThumbnails(
-                  path,
-                  generatePdf
-                );
+                const success = await processAllThumbnails(path, generatePdf);
                 if (success) {
                   // console.log("Thumbnails generated");
                   if (typeof success === "object") {
@@ -117,17 +113,16 @@ module.exports.createWS = function (port, key) {
 
             indexer(directoryPath).then((directoryIndex) => {
               // TODO extractText, ignorePatterns impl
-              persistIndex(directoryPath, directoryIndex)
-                .then((success) => {
-                  if (success) {
-                    console.log("Index generated in folder: " + directoryPath);
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.setHeader("Cache-Control", "no-store, must-revalidate");
-                    // res.write(JSON.stringify(thumbs));
-                    res.end(JSON.stringify({ success }));
-                  }
-                });
+              persistIndex(directoryPath, directoryIndex).then((success) => {
+                if (success) {
+                  console.log("Index generated in folder: " + directoryPath);
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  res.setHeader("Cache-Control", "no-store, must-revalidate");
+                  // res.write(JSON.stringify(thumbs));
+                  res.end(JSON.stringify({ success }));
+                }
+              });
             });
           } catch (e) {
             console.log(e);

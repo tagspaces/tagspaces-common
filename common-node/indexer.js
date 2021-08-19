@@ -1,7 +1,100 @@
-const { loadTextFilePromise, saveTextFilePromise } = require("./io-node");
+const pathJS = require("path");
+const {
+  loadTextFilePromise,
+  saveTextFilePromise,
+  listDirectoryPromise,
+} = require("./io-node");
 const { normalizePath } = require("tagspaces-common/paths");
-const { loadJSONString } = require("tagspaces-common/utils-io");
+const {
+  loadJSONString,
+  walkDirectory,
+  enhanceEntry,
+} = require("tagspaces-common/utils-io");
 const AppConfig = require("tagspaces-common/AppConfig");
+
+/**
+ * @param path string
+ * @param extractText: boolean = false
+ * @param ignorePatterns: Array<string>
+ * @param persist: boolean = true
+ * @returns {*}
+ */
+const indexer = function (
+  path,
+  extractText = false,
+  ignorePatterns = []
+) {
+  // console.log("createDirectoryIndex started:" + path);
+  // console.time("createDirectoryIndex");
+  const directoryIndex = [];
+  let counter = 0;
+
+  function cleanPath(filePath) {
+    const cleanPath = filePath
+      .substr(path.length)
+      .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
+
+    if (cleanPath.startsWith("/")) {
+      return cleanPath.substr(1);
+    }
+    return cleanPath;
+  }
+
+  return walkDirectory(
+    path,
+    listDirectoryPromise,
+    {
+      recursive: true,
+      skipMetaFolder: true,
+      skipDotHiddenFolder: true,
+      extractText,
+    },
+    (fileEntry) => {
+      counter += 1;
+      // if (counter > AppConfig.indexerLimit) { TODO set index limit
+      //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
+      //     window.walkCanceled = true;
+      // }
+      const entry = {
+        ...fileEntry,
+        path: cleanPath(fileEntry.path),
+        thumbPath: cleanPath(fileEntry.thumbPath),
+      };
+      directoryIndex.push(enhanceEntry(entry));
+    },
+    (directoryEntry) => {
+      if (directoryEntry.name !== AppConfig.metaFolder) {
+        counter += 1;
+        const entry = {
+          name: directoryEntry.name,
+          isFile: directoryEntry.isFile,
+          tags: directoryEntry.tags,
+          path: cleanPath(directoryEntry.path),
+          thumbPath: cleanPath(directoryEntry.thumbPath),
+        };
+        directoryIndex.push(enhanceEntry(entry));
+      }
+    },
+    ignorePatterns
+  )
+    .then(() => {
+      // entries - can be used for further processing
+      // window.walkCanceled = false;
+      console.log(
+        "Directory index created " +
+          path +
+          " containing " +
+          directoryIndex.length
+      );
+      // console.timeEnd("createDirectoryIndex");
+      return directoryIndex;
+    })
+    .catch((err) => {
+      // window.walkCanceled = false;
+      // console.timeEnd("createDirectoryIndex");
+      console.warn("Error creating index: " + err);
+    });
+};
 
 const persistIndex = function (directoryPath, directoryIndex) {
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
@@ -104,4 +197,5 @@ module.exports = {
   loadJsonContent,
   getMetaIndexFilePath,
   loadJSONFile,
+  indexer
 };
