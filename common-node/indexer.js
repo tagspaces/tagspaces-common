@@ -19,11 +19,7 @@ const AppConfig = require("tagspaces-common/AppConfig");
  * @param persist: boolean = true
  * @returns {*}
  */
-const indexer = function (
-  path,
-  extractText = false,
-  ignorePatterns = []
-) {
+function createIndex(path, extractText = false, ignorePatterns = []) {
   // console.log("createDirectoryIndex started:" + path);
   // console.time("createDirectoryIndex");
   const directoryIndex = [];
@@ -94,9 +90,9 @@ const indexer = function (
       // console.timeEnd("createDirectoryIndex");
       console.warn("Error creating index: " + err);
     });
-};
+}
 
-const persistIndex = function (directoryPath, directoryIndex) {
+function persistIndex(directoryPath, directoryIndex) {
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   return saveTextFilePromise(
     folderIndexPath,
@@ -112,7 +108,7 @@ const persistIndex = function (directoryPath, directoryIndex) {
     .catch((err) => {
       console.error("Error saving the index for " + folderIndexPath, err);
     });
-};
+}
 
 /**
  * works only for Electron use loadJsonContent() with PlatformIO instead
@@ -120,10 +116,7 @@ const persistIndex = function (directoryPath, directoryIndex) {
  * @param dirSeparator: string
  * @returns {Promise<Array<Object>>}
  */
-const loadIndex = function (
-  directoryPath,
-  dirSeparator = AppConfig.dirSeparator
-) {
+function loadIndex(directoryPath, dirSeparator = AppConfig.dirSeparator) {
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   return loadJSONFile(folderIndexPath)
     .then((directoryIndex) => {
@@ -132,18 +125,18 @@ const loadIndex = function (
     .catch((err) => {
       console.log("Error loadIndex", err);
     });
-};
+}
 
-const loadJsonContent = function (
+function loadJsonContent(
   directoryPath,
   jsonContent,
   dirSeparator = AppConfig.dirSeparator
 ) {
   const directoryIndex = loadJSONString(jsonContent);
   return enhanceDirectoryIndex(directoryPath, directoryIndex, dirSeparator);
-};
+}
 
-const enhanceDirectoryIndex = function (
+function enhanceDirectoryIndex(
   directoryPath,
   directoryIndex,
   dirSeparator = AppConfig.dirSeparator
@@ -161,12 +154,12 @@ const enhanceDirectoryIndex = function (
       path: directoryPath + dirSeparator + entry.path,
     };
   });
-};
+}
 
-const getMetaIndexFilePath = (
+function getMetaIndexFilePath(
   directoryPath,
   dirSeparator = AppConfig.dirSeparator
-) => {
+) {
   return directoryPath.length > 0 && directoryPath !== dirSeparator
     ? normalizePath(
         directoryPath +
@@ -178,7 +171,7 @@ const getMetaIndexFilePath = (
     : normalizePath(
         AppConfig.metaFolder + dirSeparator + AppConfig.folderIndexFile
       );
-};
+}
 
 /**
  *
@@ -192,10 +185,10 @@ function loadJSONFile(filePath) {
 }
 
 module.exports = {
+  createIndex,
   persistIndex,
   loadIndex,
   loadJsonContent,
   getMetaIndexFilePath,
   loadJSONFile,
-  indexer
 };

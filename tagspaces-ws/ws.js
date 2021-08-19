@@ -109,20 +109,23 @@ module.exports.createWS = function (port, key) {
             } else {*/
             //  const params = JSON.parse(body);
             //  directoryPath = params.directoryPath;
-            const { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
+            const { directoryPath, extractText, ignorePatterns } =
+              JSON.parse(body);
 
-            indexer(directoryPath, extractText, ignorePatterns).then((directoryIndex) => {
-              persistIndex(directoryPath, directoryIndex).then((success) => {
-                if (success) {
-                  console.log("Index generated in folder: " + directoryPath);
-                  res.statusCode = 200;
-                  res.setHeader("Content-Type", "application/json");
-                  res.setHeader("Cache-Control", "no-store, must-revalidate");
-                  // res.write(JSON.stringify(thumbs));
-                  res.end(JSON.stringify({ success }));
-                }
-              });
-            });
+            indexer(directoryPath, extractText, ignorePatterns).then(
+              (directoryIndex) => {
+                persistIndex(directoryPath, directoryIndex).then((success) => {
+                  if (success) {
+                    console.log("Index generated in folder: " + directoryPath);
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "application/json");
+                    res.setHeader("Cache-Control", "no-store, must-revalidate");
+                    // res.write(JSON.stringify(thumbs));
+                    res.end(JSON.stringify({ success }));
+                  }
+                });
+              }
+            );
           } catch (e) {
             console.log(e);
             res.statusCode = 400;
