@@ -3,11 +3,11 @@ const fs = require("fs-extra");
 const tsPaths = require("tagspaces-common/paths");
 const AppConfig = require("tagspaces-common/AppConfig");
 
-const isDirectory = (entryPath) => {
+function isDirectory(entryPath) {
   return fs.lstatSync(entryPath).isDirectory();
-};
+}
 
-const getPropertiesPromise = (path) => {
+function getPropertiesPromise(path) {
   return new Promise((resolve) => {
     /* stats for file:
      * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
@@ -28,12 +28,14 @@ const getPropertiesPromise = (path) => {
           lmdt: stats.mtime.getTime(),
           path,
         });
+      } else {
+        resolve(false);
       }
     });
   });
-};
+}
 
-const saveTextFilePromise = (filePath, content, overwrite) => {
+function saveTextFilePromise(filePath, content, overwrite) {
   console.log("Saving file: " + filePath);
 
   // Handling the UTF8 support for text files
@@ -47,10 +49,10 @@ const saveTextFilePromise = (filePath, content, overwrite) => {
   }
 
   return saveFilePromise(filePath, textContent, overwrite);
-};
+}
 
-const saveFilePromise = (filePath, content, overwrite = true) =>
-  new Promise((resolve, reject) => {
+function saveFilePromise(filePath, content, overwrite = true) {
+  return new Promise((resolve, reject) => {
     function saveFile(entry, tContent) {
       fs.outputFile(entry.path, tContent, (error) => {
         if (error) {
@@ -90,9 +92,10 @@ const saveFilePromise = (filePath, content, overwrite = true) =>
         saveFile(fsEntry, content);
       });
   });
+}
 
-const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
-  new Promise((resolve) => {
+function listDirectoryPromise(path, lite = true, extractTextContent = false) {
+  return new Promise((resolve) => {
     const enhancedEntries = [];
     let entryPath;
     let metaFolderPath;
@@ -276,8 +279,9 @@ const listDirectoryPromise = (path, lite = true, extractTextContent = false) =>
       }
     });
   });
+}
 
-const loadTextFilePromise = (filePath, isPreview = false) => {
+function loadTextFilePromise(filePath, isPreview = false) {
   return new Promise((resolve, reject) => {
     if (isPreview) {
       const stream = fs.createReadStream(filePath, {
@@ -310,10 +314,10 @@ const loadTextFilePromise = (filePath, isPreview = false) => {
       });
     }
   });
-};
+}
 
-const getFileContentPromise = (fullPath) =>
-  new Promise((resolve, reject) => {
+function getFileContentPromise(fullPath) {
+  return new Promise((resolve, reject) => {
     let fileURL = fullPath;
     if (fileURL.indexOf("file://") === -1) {
       fileURL = "file://" + fileURL;
@@ -333,6 +337,7 @@ const getFileContentPromise = (fullPath) =>
     };
     xhr.send();
   });
+}
 
 module.exports = {
   listDirectoryPromise,

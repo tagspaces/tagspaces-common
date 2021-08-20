@@ -3,6 +3,7 @@ const {
   loadTextFilePromise,
   saveTextFilePromise,
   listDirectoryPromise,
+  getPropertiesPromise,
 } = require("./io-node");
 const { normalizePath } = require("tagspaces-common/paths");
 const {
@@ -16,7 +17,6 @@ const AppConfig = require("tagspaces-common/AppConfig");
  * @param path string
  * @param extractText: boolean = false
  * @param ignorePatterns: Array<string>
- * @param persist: boolean = true
  * @returns {*}
  */
 function createIndex(path, extractText = false, ignorePatterns = []) {
@@ -111,6 +111,21 @@ function persistIndex(directoryPath, directoryIndex) {
 }
 
 /**
+ * @param directoryPath: string
+ * @param dirSeparator: string
+ * @returns {Promise<boolean>}
+ */
+function hasIndex(directoryPath, dirSeparator = AppConfig.dirSeparator) {
+  const folderIndexPath = getMetaIndexFilePath(directoryPath, dirSeparator);
+  return getPropertiesPromise(folderIndexPath)
+    .then((lstat) => lstat && lstat.isFile)
+    .catch((err) => {
+      console.log("Error hasIndex", err);
+      return Promise.resolve(false);
+    });
+}
+
+/**
  * works only for Electron use loadJsonContent() with PlatformIO instead
  * @param directoryPath: string
  * @param dirSeparator: string
@@ -124,6 +139,7 @@ function loadIndex(directoryPath, dirSeparator = AppConfig.dirSeparator) {
     })
     .catch((err) => {
       console.log("Error loadIndex", err);
+      return Promise.resolve([]);
     });
 }
 
@@ -187,6 +203,7 @@ function loadJSONFile(filePath) {
 module.exports = {
   createIndex,
   persistIndex,
+  hasIndex,
   loadIndex,
   loadJsonContent,
   getMetaIndexFilePath,
