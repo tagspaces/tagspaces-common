@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");
 const pathJS = require("path");
-const tsPaths = require("tagspaces-common/tsPaths");
+const tsPaths = require("tagspaces-common/paths");
 const AppConfig = require("tagspaces-common/AppConfig");
 // get reference to S3 client
 const s3 = new AWS.S3();

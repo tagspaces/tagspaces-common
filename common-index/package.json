@@ -1,0 +1,23 @@
+{
+  "name": "tagspaces-common-index",
+  "description": "TagSpaces common index module",
+  "version": "1.0.6",
+  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "scripts": {
+    "install": "node install/platformIO.js",
+    "install-node": "npx cross-env PD_PLATFORM=node node install/platformIO.js",
+    "install-web": "npx cross-env PD_PLATFORM=web node install/platformIO.js",
+    "pkg-publish": "npm publish --access public"
+  },
+  "files": [
+    "index.js",
+    "indexer.js",
+    "install/**"
+  ],
+  "publishConfig": {
+    "@tagspaces:registry": "https://npm.pkg.github.com"
+  },
+  "devDependencies": {
+    "live-plugin-manager": "^0.15.1"
+  }
+}
