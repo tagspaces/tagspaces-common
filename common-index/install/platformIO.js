@@ -2,60 +2,60 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const { PluginManager } = require("live-plugin-manager");
+const npm = require("npm");
+const pkg = require("../package.json");
 
 let platform; // = os.platform();
 
 if (process.env.PD_PLATFORM) {
   platform = process.env.PD_PLATFORM;
+  fs.copySync(
+    path.join(__dirname, "index-" + platform + ".js"),
+    path.join(__dirname, "..", "index.js")
+  );
 }
 
-const manager = new PluginManager({ pluginsPath: "./node_modules" }); // cwd: path.join(__dirname, '..', '..')
+const dependencies = platform + "Dependencies";
+const dependenciesObj = pkg[dependencies];
 
-if (platform === "node") {
-  /*fs.writeFileSync(
-      path.join(__dirname, '..', 'test.txt'),
-      'test node'+platform
-    );*/
+if (dependenciesObj && Object.keys(dependenciesObj).length) {
+  console.log("Installing dependencies for " + platform);
+  const packages = [];
 
-  fs.copySync(
-    path.join(__dirname, "index-node.js"),
-    path.join(__dirname, "..", "index.js")
-  );
-  fs.removeSync(
-    path.join(__dirname, "..", "node_modules", "tagspaces-common-aws")
-  );
-  manager.uninstall("tagspaces-common-aws").then((success) => {
-    console.log("Uninstall AWS:" + success);
+  for (const dep in dependenciesObj) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (dependenciesObj.hasOwnProperty(dep)) {
+      if (!fs.existsSync(path.join(__dirname, "..", "node_modules", dep))) {
+        packages.push(dep.concat("@").concat(dependenciesObj[dep]));
+      }
+    }
+  }
+  // npmArgs.push('--no-save --force');
+  if (packages.length > 0) {
+    fs.removeSync(path.join(__dirname, "..", "node_modules"));
 
-    manager.install("tagspaces-common-node").then((success) => {
-      console.log("Install " + platform + ":" + success);
+    npm.load(function (er) {
+      if (er) {
+        console.log("err:", er);
+        return; // handlError(er)
+      }
+      // npm.config.set('no-save', true);
+      // npm.config.set('no-package-lock', true);
+      npm.commands.install(packages, function (er, data) {
+        if (er) {
+          console.log("err:", er);
+        }
+      });
+      npm.on("log", function (message) {
+        console.log("npm:" + message);
+      });
     });
-  });
-} else if (platform === "web") {
-  /*fs.writeFileSync(
-        path.join(__dirname, '..', 'test.txt'),
-        'test web'+platform
-    );*/
-  fs.copySync(
-    path.join(__dirname, "index-web.js"),
-    path.join(__dirname, "..", "index.js")
-  );
-  fs.removeSync(
-    path.join(__dirname, "..", "node_modules", "tagspaces-common-node")
-  );
-  manager.uninstall("tagspaces-common-node").then((success) => {
-    console.log("Uninstall Node:" + success);
-    manager.install("tagspaces-common-aws").then((success) => {
-      console.log("Install " + platform + ":" + success);
-    });
-  });
+  } else {
+    console.log(
+      "Installing dependencies for " + platform + " are already installed."
+    );
+  }
 } else {
-  manager.uninstallAll().then(() => {
-    console.log("Uninstall All");
-  });
-  /*fs.writeFileSync(
-        path.join(__dirname, '..', 'test.txt'),
-        'no platform:'+platform
-    );*/
+  console.log("No specific dependencies on this platform: " + platform);
+  fs.removeSync(path.join(__dirname, "..", "node_modules"));
 }
