@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-common-index",
   "description": "TagSpaces common index module",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "install": "node install/platformIO.js --no-package-lock --no-save",

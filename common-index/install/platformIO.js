@@ -13,6 +13,8 @@ if (process.env.PD_PLATFORM) {
     path.join(__dirname, "index-" + platform + ".js"),
     path.join(__dirname, "..", "index.js")
   );
+} else {
+  fs.removeSync(path.join(__dirname, "..", "index.js"));
 }
 
 const dependencies = platform + "Dependencies";
