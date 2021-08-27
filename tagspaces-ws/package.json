@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.26",
+  "version": "1.0.28",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "tagspaces-workers": "^1.0.20"
+    "tagspaces-workers": "^1.0.22"
   },
   "webDependencies": {}
 }

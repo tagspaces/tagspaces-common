@@ -13,6 +13,14 @@ module.exports.processAllThumbnails = function (
   entryPath,
   generatePdf = false
 ) {
+  if (
+    entryPath.endsWith(AppConfig.dirSeparator + AppConfig.metaFolder) ||
+    entryPath.endsWith(
+      AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator
+    )
+  ) {
+    return Promise.resolve(false); // dont generate thumbnails for .ts folder
+  }
   const upload = (imagePath, data, next) => {
     const pathParts = path.parse(imagePath);
     const dirName =
