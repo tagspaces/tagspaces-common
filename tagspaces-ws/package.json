@@ -8,6 +8,9 @@
     "run-ws": "node index.js -p 2000",
     "install": "node install/ws.js --no-package-lock --no-save",
     "install-node": "npx cross-env PD_PLATFORM=node node install/ws.js --no-package-lock --no-save",
+    "install-node-linux": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=linux TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
+    "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
+    "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
     "install-web": "npx cross-env PD_PLATFORM=web node install/ws.js --no-package-lock --no-save",
     "pkg-publish": "npm publish --access public"
   },

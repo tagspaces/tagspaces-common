@@ -11,6 +11,37 @@ if (process.env.PD_PLATFORM) {
   platform = process.env.PD_PLATFORM;
 }
 
+function checkSharpPlatform(targetPlatform, arch) {
+  try {
+    let shrapPath = require.resolve("sharp");
+    shrapPath = path.join(
+      shrapPath,
+      "..",
+      "..",
+      "vendor",
+      "8.10.5",
+      "platform.json"
+    );
+    if (!fs.existsSync(shrapPath)) {
+      return false;
+    }
+    const data = fs.readFileSync(shrapPath, "utf8");
+    return data === '"' + targetPlatform + "-" + arch + '"';
+  } catch (e) {
+    return false;
+  }
+}
+
+if (process.env.TARGET_PLATFORM && process.env.TARGET_ARCH) {
+  process.argv.push("--platform=" + process.env.TARGET_PLATFORM);
+  process.argv.push("--arch=" + process.env.TARGET_ARCH);
+  if (
+    !checkSharpPlatform(process.env.TARGET_PLATFORM, process.env.TARGET_ARCH)
+  ) {
+    fs.removeSync(path.join(__dirname, "..", "node_modules"));
+  }
+}
+
 const dependencies = platform + "Dependencies";
 const dependenciesObj = pkg[dependencies];
 
@@ -21,7 +52,9 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
   for (const dep in dependenciesObj) {
     // eslint-disable-next-line no-prototype-builtins
     if (dependenciesObj.hasOwnProperty(dep)) {
-      if (!fs.existsSync(path.join(__dirname, "..", "node_modules", dep))) {
+      if (
+        !fs.existsSync(path.join(__dirname, "..", "node_modules", dep))
+      ) {
         npmArgs.push(dep.concat("@").concat(dependenciesObj[dep]));
       }
     }
