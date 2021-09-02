@@ -52,9 +52,7 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
   for (const dep in dependenciesObj) {
     // eslint-disable-next-line no-prototype-builtins
     if (dependenciesObj.hasOwnProperty(dep)) {
-      if (
-        !fs.existsSync(path.join(__dirname, "..", "node_modules", dep))
-      ) {
+      if (!fs.existsSync(path.join(__dirname, "..", "node_modules", dep))) {
         npmArgs.push(dep.concat("@").concat(dependenciesObj[dep]));
       }
     }

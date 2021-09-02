@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-thumbgen-pdf",
   "description": "TagSpaces pdf thumbnails generation module",
-  "version": "1.1.23",
+  "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "pkg-publish": "npm publish --access public"
