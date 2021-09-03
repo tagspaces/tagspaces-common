@@ -74,13 +74,14 @@ function persistIndex(
       true
     )
     .then(() => {
-      console.log(
+      console.info(
         "Index persisted for: " + directoryPath + " to " + folderIndexPath
       );
       return true;
     })
     .catch(() => {
-      console.warn("Error saving the index for " + directoryPath);
+      console.error("Error saving the index for " + directoryPath);
+      return false;
     });
 }
 
@@ -91,12 +92,25 @@ function addToIndex(key, size, LastModified, thumbPath, bucketName) {
   }
   const dirPath = extractContainingDirectoryPath(key, "/");
   const metaFilePath = getMetaIndexFilePath(dirPath);
+  console.info(
+    "addToIndex key:" +
+      key +
+      " size:" +
+      size +
+      " LastModified:" +
+      LastModified +
+      " thumbPath:" +
+      thumbPath +
+      " bucketName:" +
+      bucketName
+  );
   return tsPlatform
     .loadTextFilePromise({
       path: metaFilePath,
       bucketName: bucketName,
     })
     .then((metaFileContent) => {
+      console.info("addToIndex metaFileContent:" + metaFileContent);
       let tsi = [];
       if (metaFileContent) {
         tsi = JSON.parse(metaFileContent.trim());

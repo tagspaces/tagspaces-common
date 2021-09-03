@@ -8,7 +8,7 @@ const s3 = new AWS.S3();
 /**
  * TODO not in use for AWS
  * @param param
- * @returns {Promise<{path: *, lmdt: number, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
+ * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
 function getPropertiesPromise(param) {
   const path = param.path;
@@ -17,8 +17,9 @@ function getPropertiesPromise(param) {
     Bucket: bucketName,
     Key: path,
   };
-  const headObjectPromise = s3.headObject(params).promise();
-  return headObjectPromise
+  return s3
+    .headObject(params)
+    .promise()
     .then((data) =>
       /*
                             data = {
@@ -40,21 +41,28 @@ function getPropertiesPromise(param) {
       })
     )
     .catch((err) => {
-      console.log(err);
-      return false;
+      console.log("getPropertiesPromise " + path, err);
+      return Promise.resolve(false);
     });
 }
 
 /**
  * Persists a given content(binary supported) to a specified filepath (tested)
+ * @param param
+ * @param content
+ * @param overWrite
+ * @param mode
+ * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
-const saveFilePromise = (param, content, overWrite, mode) => {
-  const path = param.path;
-  const bucketName = param.bucketName;
-  let isNewFile = false;
-  // eslint-disable-next-line no-param-reassign
-  const filePath = pathJS.normalize(path); // normalizePath(this.normalizeRootPath(filePath));
-  return getPropertiesPromise({
+const saveFilePromise = (param, content, overWrite, mode) =>
+  new Promise((resolve, reject) => {
+    const path = param.path;
+    const bucketName = param.bucketName;
+    // let isNewFile = false;
+    // eslint-disable-next-line no-param-reassign
+    const filePath = pathJS.normalize(path); // normalizePath(this.normalizeRootPath(filePath));
+
+    /*return getPropertiesPromise({
     path: filePath,
     bucketName: bucketName,
   }).then((result) => {
@@ -68,40 +76,49 @@ const saveFilePromise = (param, content, overWrite, mode) => {
             result.size +
             " old index size:" +
             content.length
-        );
-        // || mode === 'text') {
-        const fileExt = tsPaths.extractFileExtension(filePath);
+        );*/
+    // || mode === 'text') {
+    const fileExt = tsPaths.extractFileExtension(filePath);
 
-        let mimeType;
-        if (fileExt === "md") {
-          mimeType = "text/markdown";
-        } else if (fileExt === "txt") {
-          mimeType = "text/plain";
-        } else if (fileExt === "html") {
-          mimeType = "text/html";
-        } else {
-          // default type
-          mimeType = "text/plain";
-        }
-        const params = {
-          Bucket: bucketName,
-          Key: filePath,
-          Body: content,
-          ContentType: mimeType,
-        }; // fs.readFileSync(filePath)
-        return s3
-          .putObject(params, (err) => {
-            if (err) {
-              console.log("Error upload " + filePath); // an error occurred
-              console.log(err, err.stack); // an error occurred
-              return false;
-            }
-          })
-          .promise();
-      }
+    let mimeType;
+    if (fileExt === "md") {
+      mimeType = "text/markdown";
+    } else if (fileExt === "txt") {
+      mimeType = "text/plain";
+    } else if (fileExt === "html") {
+      mimeType = "text/html";
+    } else {
+      // default type
+      mimeType = "text/plain";
     }
+    const params = {
+      Bucket: bucketName,
+      Key: filePath,
+      Body: content,
+      ContentType: mimeType,
+    }; // fs.readFileSync(filePath)
+    s3.putObject(params, (err, data) => {
+      if (err) {
+        console.log("Error upload " + filePath); // an error occurred
+        console.log(err, err.stack); // an error occurred
+        resolve(false);
+      }
+      resolve({
+        uuid: data.ETag,
+        name: data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+        url: data.Location,
+        isFile: true,
+        path: filePath,
+        extension: tsPaths.extractFileExtension(filePath, "/"),
+        size: content.length,
+        lmdt: new Date().getTime(),
+        // isNewFile,
+      });
+    }); // .promise();
+    /*}
+    }
+  });*/
   });
-};
 
 /**
  * Persists a given text content to a specified filepath (tested)
@@ -338,28 +355,27 @@ loadTextFilePromise = (param) => getFileContentPromise(param);
 
 /**
  * Use only for files (will not work for dirs)
- * @param filePath
- * @param bucketName
- * @returns {Promise<any>}
+ * @param param
+ * @returns {Promise<string | string>}
  */
 const getFileContentPromise = async (param) => {
   const path = param.path;
   const bucketName = param.bucketName;
-  try {
-    const params = {
-      Bucket: bucketName,
-      Key: path,
-    };
-    return s3
-      .getObject(params)
-      .promise()
-      .then((data) => {
-        return data.Body.toString("utf8");
-      });
-  } catch (e) {
-    console.log("Error getObject " + path, e);
-    return Promise.resolve("");
-  }
+  const params = {
+    Bucket: bucketName,
+    Key: path,
+  };
+  console.info("getFileContentPromise:" + JSON.stringify(params));
+  return s3
+    .getObject(params)
+    .promise()
+    .then((data) => {
+      return data.Body.toString("utf8");
+    })
+    .catch((e) => {
+      console.error("Error getObject " + path, e);
+      return ""; //Promise.resolve("");
+    });
 };
 
 const listMetaDirectoryPromise = async (param) => {
