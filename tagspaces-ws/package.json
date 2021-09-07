@@ -7,6 +7,7 @@
   "scripts": {
     "run-ws": "node index.js -p 2000",
     "install": "node install/ws.js --no-package-lock --no-save",
+    "postinstall": "npm dedupe --no-package-lock",
     "install-node": "npx cross-env PD_PLATFORM=node node install/ws.js --no-package-lock --no-save",
     "install-node-linux": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=linux TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
     "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
@@ -19,7 +20,7 @@
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "tagspaces-workers": "^1.0.22"
+    "tagspaces-workers": "^1.0.29"
   },
   "webDependencies": {}
 }

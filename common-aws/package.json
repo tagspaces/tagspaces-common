@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-common-aws",
   "description": "TagSpaces common aws thumbnails module",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "test": "jest",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "aws-sdk": "2.982.0",
-    "tagspaces-common": "1.1.31",
+    "tagspaces-common": "1.1.32",
     "tagspaces-thumbgen-image": "1.0.0",
     "tagspaces-thumbgen-pdf": "1.0.0"
   },

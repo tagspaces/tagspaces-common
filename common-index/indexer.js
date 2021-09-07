@@ -5,7 +5,11 @@ const {
   listDirectoryPromise,
   getPropertiesPromise,
 } = require("./index");
-const { normalizePath } = require("tagspaces-common/paths");
+const {
+  normalizePath,
+  extractContainingDirectoryPath,
+  extractFileName,
+} = require("tagspaces-common/paths");
 const {
   loadJSONString,
   walkDirectory,
@@ -14,12 +18,18 @@ const {
 const AppConfig = require("tagspaces-common/AppConfig");
 
 /**
- * @param path string
+ * @param param
  * @param extractText: boolean = false
  * @param ignorePatterns: Array<string>
  * @returns {*}
  */
-function createIndex(path, extractText = false, ignorePatterns = []) {
+function createIndex(param, extractText = false, ignorePatterns = []) {
+  let path;
+  if (typeof param === "object" && param !== null) {
+    path = param.path;
+  } else {
+    path = param;
+  }
   // console.log("createDirectoryIndex started:" + path);
   // console.time("createDirectoryIndex");
   const directoryIndex = [];
@@ -37,7 +47,7 @@ function createIndex(path, extractText = false, ignorePatterns = []) {
   }
 
   return walkDirectory(
-    path,
+    param,
     listDirectoryPromise,
     {
       recursive: true,
@@ -92,10 +102,16 @@ function createIndex(path, extractText = false, ignorePatterns = []) {
     });
 }
 
-function persistIndex(directoryPath, directoryIndex) {
+function persistIndex(param, directoryIndex) {
+  let directoryPath;
+  if (typeof param === "object" && param !== null) {
+    directoryPath = param.path;
+  } else {
+    directoryPath = param;
+  }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   return saveTextFilePromise(
-    folderIndexPath,
+    { ...param, path: folderIndexPath },
     JSON.stringify(directoryIndex), // relativeIndex),
     true
   )
@@ -111,13 +127,19 @@ function persistIndex(directoryPath, directoryIndex) {
 }
 
 /**
- * @param directoryPath: string
+ * @param param
  * @param dirSeparator: string
  * @returns {Promise<boolean>}
  */
-function hasIndex(directoryPath, dirSeparator = AppConfig.dirSeparator) {
+function hasIndex(param, dirSeparator = AppConfig.dirSeparator) {
+  let directoryPath;
+  if (typeof param === "object" && param !== null) {
+    directoryPath = param.path;
+  } else {
+    directoryPath = param;
+  }
   const folderIndexPath = getMetaIndexFilePath(directoryPath, dirSeparator);
-  return getPropertiesPromise(folderIndexPath)
+  return getPropertiesPromise({ ...param, path: folderIndexPath })
     .then((lstat) => lstat && lstat.isFile)
     .catch((err) => {
       console.log("Error hasIndex", err);
@@ -126,14 +148,19 @@ function hasIndex(directoryPath, dirSeparator = AppConfig.dirSeparator) {
 }
 
 /**
- * works only for Electron use loadJsonContent() with PlatformIO instead
- * @param directoryPath: string
+ * @param param
  * @param dirSeparator: string
  * @returns {Promise<Array<Object>>}
  */
-function loadIndex(directoryPath, dirSeparator = AppConfig.dirSeparator) {
+function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {
+  let directoryPath;
+  if (typeof param === "object" && param !== null) {
+    directoryPath = param.path;
+  } else {
+    directoryPath = param;
+  }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  return loadJSONFile(folderIndexPath)
+  return loadJSONFile({ ...param, path: folderIndexPath })
     .then((directoryIndex) => {
       return enhanceDirectoryIndex(directoryPath, directoryIndex, dirSeparator);
     })
@@ -172,6 +199,76 @@ function enhanceDirectoryIndex(
   });
 }
 
+function addToIndex(param, size, LastModified, thumbPath) {
+  if (param.path.indexOf(AppConfig.metaFolder + "/") !== -1) {
+    console.info("addToIndex skip meta folder" + param.path);
+    return Promise.resolve(true);
+  }
+  const dirPath = extractContainingDirectoryPath(param.path, "/");
+  const metaFilePath = getMetaIndexFilePath(dirPath);
+  console.info(
+    "addToIndex path:" +
+      param.path +
+      " size:" +
+      size +
+      " LastModified:" +
+      LastModified +
+      " thumbPath:" +
+      thumbPath +
+      " bucketName:" +
+      param.bucketName
+  );
+  return loadTextFilePromise({
+    path: metaFilePath,
+    bucketName: param.bucketName,
+  }).then((metaFileContent) => {
+    console.info("addToIndex metaFileContent:" + metaFileContent);
+    let tsi = [];
+    if (metaFileContent) {
+      tsi = JSON.parse(metaFileContent.trim());
+    }
+
+    const eentry = {
+      ...param,
+      name: extractFileName(param.path),
+      tags: [],
+      thumbPath,
+      meta: {},
+      isFile: true,
+      size: size,
+      lmdt: Date.parse(LastModified),
+    };
+
+    tsi.push(eentry);
+
+    return persistIndex({ ...param, path: dirPath }, tsi);
+  });
+}
+
+function removeFromIndex(param) {
+  console.info(
+    "removeFromIndex path:" + param.path + " bucket:" + param.bucketName
+  );
+  if (param.path.indexOf(AppConfig.metaFolder + "/") !== -1) {
+    console.info("removeFromIndex skip meta folder" + param.path);
+    return Promise.resolve(true);
+  }
+  const dirPath = extractContainingDirectoryPath(param.path, "/");
+  const metaFilePath = getMetaIndexFilePath(dirPath);
+  return loadTextFilePromise({
+    ...param,
+    path: metaFilePath,
+  }).then((metaFileContent) => {
+    if (metaFileContent) {
+      const tsi = JSON.parse(metaFileContent.trim());
+      const newTsi = tsi.filter((item) => item.path !== param.path);
+      if (tsi.size !== newTsi.size) {
+        return persistIndex({ ...param, path: dirPath }, newTsi);
+      }
+    }
+  });
+}
+
 function getMetaIndexFilePath(
   directoryPath,
   dirSeparator = AppConfig.dirSeparator
@@ -190,12 +287,11 @@ function getMetaIndexFilePath(
 }
 
 /**
- *
- * @param filePath: string
  * @returns {Promise<*>}
+ * @param param
  */
-function loadJSONFile(filePath) {
-  return loadTextFilePromise(filePath).then((jsonContent) =>
+function loadJSONFile(param) {
+  return loadTextFilePromise(param).then((jsonContent) =>
     loadJSONString(jsonContent)
   );
 }
@@ -208,4 +304,6 @@ module.exports = {
   loadJsonContent,
   getMetaIndexFilePath,
   loadJSONFile,
+  addToIndex,
+  removeFromIndex,
 };

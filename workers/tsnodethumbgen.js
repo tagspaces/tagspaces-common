@@ -4,9 +4,17 @@
 const fs = require("fs-extra");
 const path = require("path");
 const tsThumb = require("tagspaces-thumbgen-image/tsimagethumbgen");
-const tsCommon = require("tagspaces-common-node/io-node");
-const tsUtils = require("tagspaces-common/utils-io");
-const tsPaths = require("tagspaces-common/paths");
+const {
+  isDirectory,
+  listDirectoryPromise,
+  getPropertiesPromise,
+} = require("tagspaces-common-index/index");
+const { walkDirectory } = require("tagspaces-common/utils-io");
+const {
+  extractFileName,
+  getMetaDirectoryPath,
+  extractContainingDirectoryPath,
+} = require("tagspaces-common/paths");
 const AppConfig = require("tagspaces-common/AppConfig");
 
 module.exports.processAllThumbnails = function (
@@ -81,30 +89,29 @@ module.exports.processAllThumbnails = function (
     });
   };
 
-  if (tsCommon.isDirectory(entryPath)) {
-    return tsUtils
-      .walkDirectory(
-        entryPath,
-        tsCommon.listDirectoryPromise,
-        {
-          recursive: true,
-          skipMetaFolder: true,
-          skipDotHiddenFolder: true,
-          extractText: false,
-        },
-        (fileEntry) => generateThumbnail(fileEntry.path),
+  if (isDirectory(entryPath)) {
+    return walkDirectory(
+      entryPath,
+      listDirectoryPromise,
+      {
+        recursive: true,
+        skipMetaFolder: true,
+        skipDotHiddenFolder: true,
+        extractText: false,
+      },
+      (fileEntry) => generateThumbnail(fileEntry.path),
 
-        /*return fs.readFile(fileEntry.path, function (err, data) {
+      /*return fs.readFile(fileEntry.path, function (err, data) {
                       if (err) {
                           console.log('Error read image:' + fileEntry.path, err);
                       }
                       tsThumb.generateImageThumbnail(data, fileEntry.type, upload);
                   })*/
-        (directoryEntry) => {
-          if (directoryEntry.name !== AppConfig.metaFolder) {
-          }
+      (directoryEntry) => {
+        if (directoryEntry.name !== AppConfig.metaFolder) {
         }
-      )
+      }
+    )
       .then((results) => {
         // entries - can be used for further processing
         // window.walkCanceled = false;
@@ -123,23 +130,20 @@ module.exports.processAllThumbnails = function (
 };
 
 function getThumbFileLocation(filePath) {
-  const containingFolder = tsPaths.extractContainingDirectoryPath(
-    filePath,
-    path.sep
-  );
-  const metaFolder = tsPaths.getMetaDirectoryPath(containingFolder, path.sep);
+  const containingFolder = extractContainingDirectoryPath(filePath, path.sep);
+  const metaFolder = getMetaDirectoryPath(containingFolder, path.sep);
   return (
     metaFolder +
     path.sep +
-    tsPaths.extractFileName(filePath, path.sep) +
+    extractFileName(filePath, path.sep) +
     AppConfig.thumbFileExt
   );
 }
 
 const checkThumbUpToDate = (filePath) => {
-  return tsCommon.getPropertiesPromise(filePath).then((origStats) => {
+  return getPropertiesPromise(filePath).then((origStats) => {
     const thumbFilePath = getThumbFileLocation(filePath);
-    return tsCommon.getPropertiesPromise(thumbFilePath).then((stats) => {
+    return getPropertiesPromise(thumbFilePath).then((stats) => {
       if (stats) {
         // Thumbnail exists
         return origStats.lmdt <= stats.lmdt;

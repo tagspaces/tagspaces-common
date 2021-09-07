@@ -7,7 +7,17 @@ function isDirectory(entryPath) {
   return fs.lstatSync(entryPath).isDirectory();
 }
 
-function getPropertiesPromise(path) {
+/**
+ * @param param (path - deprecated or Object)
+ * @returns {Promise<unknown>}
+ */
+function getPropertiesPromise(param) {
+  let path;
+  if (typeof param === "object" && param !== null) {
+    path = param.path;
+  } else {
+    path = param;
+  }
   return new Promise((resolve) => {
     /* stats for file:
      * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
@@ -35,7 +45,13 @@ function getPropertiesPromise(path) {
   });
 }
 
-function saveTextFilePromise(filePath, content, overwrite) {
+function saveTextFilePromise(param, content, overwrite) {
+  let filePath;
+  if (typeof param === "object" && param !== null) {
+    filePath = param.path;
+  } else {
+    filePath = param;
+  }
   console.log("Saving file: " + filePath);
 
   // Handling the UTF8 support for text files
@@ -48,10 +64,16 @@ function saveTextFilePromise(filePath, content, overwrite) {
     textContent = UTF8_BOM + content;
   }
 
-  return saveFilePromise(filePath, textContent, overwrite);
+  return saveFilePromise(param, textContent, overwrite);
 }
 
-function saveFilePromise(filePath, content, overwrite = true) {
+function saveFilePromise(param, content, overwrite = true) {
+  let filePath;
+  if (typeof param === "object" && param !== null) {
+    filePath = param.path;
+  } else {
+    filePath = param;
+  }
   return new Promise((resolve, reject) => {
     function saveFile(entry, tContent) {
       fs.outputFile(entry.path, tContent, (error) => {
@@ -63,7 +85,7 @@ function saveFilePromise(filePath, content, overwrite = true) {
       });
     }
 
-    getPropertiesPromise(filePath)
+    getPropertiesPromise(param)
       .then((entry) => {
         if (!entry) {
           saveFile({ path: filePath, isNewFile: false, tags: [] }, content);
@@ -94,7 +116,13 @@ function saveFilePromise(filePath, content, overwrite = true) {
   });
 }
 
-function listDirectoryPromise(path, lite = true, extractTextContent = false) {
+function listDirectoryPromise(param, lite = true, extractTextContent = false) {
+  let path;
+  if (typeof param === "object" && param !== null) {
+    path = param.path;
+  } else {
+    path = param;
+  }
   return new Promise((resolve) => {
     const enhancedEntries = [];
     let entryPath;
@@ -281,7 +309,13 @@ function listDirectoryPromise(path, lite = true, extractTextContent = false) {
   });
 }
 
-function loadTextFilePromise(filePath, isPreview = false) {
+function loadTextFilePromise(param, isPreview = false) {
+  let filePath;
+  if (typeof param === "object" && param !== null) {
+    filePath = param.path;
+  } else {
+    filePath = param;
+  }
   return new Promise((resolve, reject) => {
     if (isPreview) {
       const stream = fs.createReadStream(filePath, {
@@ -316,9 +350,14 @@ function loadTextFilePromise(filePath, isPreview = false) {
   });
 }
 
-function getFileContentPromise(fullPath) {
+function getFileContentPromise(param) {
+  let fileURL;
+  if (typeof param === "object" && param !== null) {
+    fileURL = param.path;
+  } else {
+    fileURL = param;
+  }
   return new Promise((resolve, reject) => {
-    let fileURL = fullPath;
     if (fileURL.indexOf("file://") === -1) {
       fileURL = "file://" + fileURL;
     }

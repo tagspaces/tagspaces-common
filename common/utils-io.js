@@ -3,7 +3,7 @@ const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
 /**
- * @param path: string
+ * @param param (path - deprecated or Object)
  * @param listDirectoryPromise
  * @param options: {}
  * @param fileCallback: () => {}
@@ -12,13 +12,19 @@ const AppConfig = require("./AppConfig");
  * @returns {*}
  */
 function walkDirectory(
-  path,
+  param,
   listDirectoryPromise,
   options = {},
   fileCallback,
   dirCallback,
   ignorePatterns = []
 ) {
+  let path;
+  if (typeof param === "object" && param !== null) {
+    path = param.path;
+  } else {
+    path = param;
+  }
   if (ignorePatterns.length > 0 && micromatch.isMatch(path, ignorePatterns)) {
     return;
   }
@@ -32,7 +38,7 @@ function walkDirectory(
     ...options,
   };
   return (
-    listDirectoryPromise(path, mergedOptions.lite, mergedOptions.extractText)
+    listDirectoryPromise(param, mergedOptions.lite, mergedOptions.extractText)
       // @ts-ignore
       .then((entries) =>
         // if (window.walkCanceled) {

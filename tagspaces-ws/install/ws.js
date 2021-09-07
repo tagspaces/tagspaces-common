@@ -48,17 +48,28 @@ const dependenciesObj = pkg[dependencies];
 if (dependenciesObj && Object.keys(dependenciesObj).length) {
   console.log("Installing dependencies for " + platform);
   const npmArgs = []; //'install'];
+  let npmInstall = false;
 
   for (const dep in dependenciesObj) {
     // eslint-disable-next-line no-prototype-builtins
     if (dependenciesObj.hasOwnProperty(dep)) {
-      if (!fs.existsSync(path.join(__dirname, "..", "node_modules", dep))) {
-        npmArgs.push(dep.concat("@").concat(dependenciesObj[dep]));
+      npmArgs.push(dep.concat("@").concat(dependenciesObj[dep]));
+      const packagePath = path.join(__dirname, "..", "node_modules", dep);
+      if (!fs.existsSync(packagePath)) {
+        npmInstall = true;
+      } else {
+        const packageJson = require(path.join(packagePath, "package.json"));
+        const cleanVersion = dependenciesObj[dep].startsWith("^")
+          ? dependenciesObj[dep].substr(1)
+          : dependenciesObj[dep];
+        if (packageJson.version !== cleanVersion) {
+          npmInstall = true;
+        }
       }
     }
   }
   // npmArgs.push('--no-save --force');
-  if (npmArgs.length > 0) {
+  if (npmInstall && npmArgs.length > 0) {
     npm.load(function (er) {
       if (er) {
         console.log("err:", er);
