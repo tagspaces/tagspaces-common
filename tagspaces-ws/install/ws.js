@@ -81,6 +81,11 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
         if (er) {
           console.log("err:", er);
         }
+        npm.commands.dedupe([], function (er) {
+          if (er) {
+            console.log("err:", er);
+          }
+        });
       });
       npm.on("log", function (message) {
         console.log("npm:" + message);
