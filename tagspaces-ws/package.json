@@ -1,17 +1,17 @@
 {
   "name": "tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "main": "index.js",
   "scripts": {
     "run-ws": "node index.js -p 2000",
-    "install": "node install/ws.js --no-package-lock --no-save",
-    "install-node": "npx cross-env PD_PLATFORM=node node install/ws.js --no-package-lock --no-save",
-    "install-node-linux": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=linux TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
-    "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
-    "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js --no-package-lock --no-save",
-    "install-web": "npx cross-env PD_PLATFORM=web node install/ws.js --no-package-lock --no-save",
+    "install": "node install/ws.js",
+    "install-node": "npx cross-env PD_PLATFORM=node node install/ws.js",
+    "install-node-linux": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=linux TARGET_ARCH=x64 node install/ws.js",
+    "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js",
+    "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js",
+    "install-web": "npx cross-env PD_PLATFORM=web node install/ws.js",
     "pkg-publish": "npm publish --access public"
   },
   "publishConfig": {
@@ -19,7 +19,7 @@
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "tagspaces-workers": "^1.0.32"
+    "tagspaces-workers": "^1.0.34"
   },
   "webDependencies": {}
 }

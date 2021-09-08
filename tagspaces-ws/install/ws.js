@@ -75,6 +75,8 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
         console.log("err:", er);
         return; // handlError(er)
       }
+      npm.config.set("save", false);
+      npm.config.set("package-lock", false);
       // npm.config.set('no-save', true);
       // npm.config.set('no-package-lock', true);
       npm.commands.install(npmArgs, function (er, data) {

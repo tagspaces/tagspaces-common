@@ -1,7 +1,7 @@
 {
   "name": "tagspaces-common",
   "description": "TagSpaces common module",
-  "version": "1.1.32",
+  "version": "1.1.33",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "pkg-publish": "npm publish --access public"

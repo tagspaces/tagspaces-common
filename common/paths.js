@@ -45,6 +45,20 @@ function extractContainingDirectoryPath(filePath, dirSeparator = "/") {
   return filePath.substring(0, filePath.lastIndexOf(dirSeparator));
 }
 
+function extractParentDirectoryPath(dirPath, dirSeparator = "/") {
+  if (!dirPath) return;
+  let path = dirPath;
+  if (path.endsWith(dirSeparator)) {
+    path = path.substring(0, path.lastIndexOf(dirSeparator));
+  }
+  const lastIndex = path.lastIndexOf(dirSeparator);
+  if (lastIndex !== -1) {
+    return path.substring(0, lastIndex);
+  }
+  // return root dir in cases that dirPath not start with dirSeparator (AWS)
+  return "";
+}
+
 function cleanTrailingDirSeparator(dirPath) {
   if (dirPath) {
     if (dirPath.lastIndexOf("\\") === dirPath.length - 1) {
@@ -111,6 +125,15 @@ function getMetaFileLocationForFile(entryPath, dirSeparator = "/") {
   );
 }
 
+function getMetaFileLocationForDir(
+  entryPath,
+  dirSeparator = "/", // = AppConfig.dirSeparator
+  metaFile = AppConfig.metaFolderFile
+) {
+  const metaFolder = getMetaDirectoryPath(entryPath, dirSeparator);
+  return metaFolder + dirSeparator + metaFile;
+}
+
 function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
   const containingFolder = extractContainingDirectoryPath(
     entryPath,
@@ -168,8 +191,10 @@ module.exports = {
   normalizePath,
   getMetaDirectoryPath,
   extractContainingDirectoryPath,
+  extractParentDirectoryPath,
   getThumbFileLocationForFile,
   getMetaFileLocationForFile,
+  getMetaFileLocationForDir,
   extractFileName,
   extractFileExtension,
   extractTagsAsObjects,
