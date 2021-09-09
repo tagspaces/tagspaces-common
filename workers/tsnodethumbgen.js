@@ -8,7 +8,7 @@ const {
   isDirectory,
   listDirectoryPromise,
   getPropertiesPromise,
-} = require("tagspaces-common-index/index");
+} = require("tagspaces-platforms/index");
 const { walkDirectory } = require("tagspaces-common/utils-io");
 const {
   extractFileName,

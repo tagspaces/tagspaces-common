@@ -553,7 +553,6 @@ function saveBinaryFilePromise(
  * @returns {Promise<>}
  */
 function createDirectoryPromise(param) {
-  // eslint-disable-next-line no-param-reassign
   const dirPath = tsPaths.normalizePath(normalizeRootPath(param.path)) + "/";
   console.log("Creating directory: " + dirPath);
   return s3()
@@ -572,9 +571,11 @@ function createDirectoryPromise(param) {
       }
       const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
       const metaContent = '{"id":"' + new Date().getTime() + '"}';
-      return saveTextFilePromise(metaFilePath, metaContent, false).then(
-        () => out
-      );
+      return saveTextFilePromise(
+        { ...param, path: metaFilePath },
+        metaContent,
+        false
+      ).then(() => out);
     });
 }
 
@@ -669,11 +670,13 @@ function renameDirectoryPromise(param, newDirectoryPath) {
         const promises = [];
         listedObjects.Contents.forEach(({ Key }) => {
           if (Key.endsWith("/")) {
-            promises.push(createDirectoryPromise(newDirectoryPath));
+            promises.push(
+              createDirectoryPromise({ ...param, path: newDirectoryPath })
+            );
           } else {
             promises.push(
               copyFilePromise(
-                Key,
+                { ...param, path: Key },
                 parenDirPath +
                   "/" +
                   Key.replace(
@@ -686,12 +689,15 @@ function renameDirectoryPromise(param, newDirectoryPath) {
         });
 
         return Promise.all(promises).then(() =>
-          deleteDirectoryPromise(param.path).then(() => newDirectoryPath)
+          deleteDirectoryPromise(param).then(() => newDirectoryPath)
         );
       } else {
         // empty Dir
-        return createDirectoryPromise(newDirectoryPath).then(() =>
-          deleteDirectoryPromise(param.path).then(() => newDirectoryPath)
+        return createDirectoryPromise({
+          ...param,
+          path: newDirectoryPath,
+        }).then(() =>
+          deleteDirectoryPromise(param).then(() => newDirectoryPath)
         );
       }
     })
@@ -762,7 +768,7 @@ async function getDirectoryPrefixes(param) {
 
     listedObjects.CommonPrefixes.forEach(({ Prefix }) => {
       prefixes.push({ Key: Prefix });
-      promises.push(getDirectoryPrefixes(Prefix));
+      promises.push(getDirectoryPrefixes({ ...param, path: Prefix }));
     });
     // if (listedObjects.IsTruncated) await this.deleteDirectoryPromise(path);
   }
