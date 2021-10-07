@@ -1,0 +1,25 @@
+{
+  "name": "tagspaces-shell",
+  "description": "Shell script for creating Tagspaces thumbnails and index",
+  "version": "1.0.0",
+  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "scripts": {
+    "build:dev": "webpack --config webpack.config.js --mode development",
+    "build:prod": "webpack --config webpack.config.js --mode production",
+    "node-install": "npx cross-env PD_PLATFORM=node npm install && npm dedupe",
+    "npmdedupe": "npm dedupe",
+    "start": "node index.js -m indexer",
+    "pkg-publish": "npm publish --access public"
+  },
+  "devDependencies": {
+    "yargs": "^17.1.0",
+    "webpack": "^5.57.1",
+    "webpack-cli": "^4.8.0"
+  },
+  "dependencies": {
+    "tagspaces-workers": "^1.0.35"
+  },
+  "publishConfig": {
+    "@tagspaces:registry": "https://npm.pkg.github.com"
+  }
+}
