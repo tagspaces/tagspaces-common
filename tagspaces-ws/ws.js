@@ -2,9 +2,9 @@
 const ws = require("http");
 const jwt = require("jsonwebtoken");
 // const { parse } = require('querystring');
-const { processAllThumbnails } = require("tagspaces-workers/tsnodethumbgen");
+const { processAllThumbnails } = require("@tagspaces/tagspaces-workers/tsnodethumbgen");
 // const { indexer } = require("tagspaces-workers/tsnodeindexer");
-const { persistIndex, createIndex } = require("tagspaces-platforms/indexer");
+const { persistIndex, createIndex } = require("@tagspaces/tagspaces-platforms/indexer");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen

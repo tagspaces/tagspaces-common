@@ -3,19 +3,19 @@
 // dependencies
 const fs = require("fs-extra");
 const path = require("path");
-const tsThumb = require("tagspaces-thumbgen-image/tsimagethumbgen");
+const tsThumb = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
 const {
   isDirectory,
   listDirectoryPromise,
   getPropertiesPromise,
-} = require("tagspaces-platforms/index");
-const { walkDirectory } = require("tagspaces-common/utils-io");
+} = require("@tagspaces/tagspaces-platforms/index");
+const { walkDirectory } = require("@tagspaces/tagspaces-common/utils-io");
 const {
   extractFileName,
   getMetaDirectoryPath,
   extractContainingDirectoryPath,
-} = require("tagspaces-common/paths");
-const AppConfig = require("tagspaces-common/AppConfig");
+} = require("@tagspaces/tagspaces-common/paths");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 module.exports.processAllThumbnails = function (
   entryPath,

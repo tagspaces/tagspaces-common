@@ -25,7 +25,7 @@ const argv = require("yargs/yargs")(process.argv.slice(2))
   .alias("h", "help").argv;
 
 if (argv.mode === "thumbgen") {
-  const thumbGen = require("tagspaces-workers/tsnodethumbgen");
+  const thumbGen = require("@tagspaces/tagspaces-workers/tsnodethumbgen");
   for (const dir of argv._) {
     thumbGen.processAllThumbnails(dir, argv.pdf).then((success) => {
       if (success) {
@@ -36,7 +36,7 @@ if (argv.mode === "thumbgen") {
     });
   }
 } else if (argv.mode === "indexer") {
-  const { persistIndex, createIndex } = require("tagspaces-platforms/indexer");
+  const { persistIndex, createIndex } = require("@tagspaces/tagspaces-platforms/indexer");
 
   for (const dir of argv._) {
     createIndex(dir).then((directoryIndex) => {

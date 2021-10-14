@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "fs-extra": "^10.0.0",
-    "@tagspaces/tagspaces-common-node": "1.0.0"
+    "@tagspaces/tagspaces-common-node": "1.0.1"
   }
 }
