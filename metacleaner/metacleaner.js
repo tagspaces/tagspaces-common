@@ -1,8 +1,8 @@
 const fs = require("fs-extra");
 const filepath = require("./filepath");
-const AppConfig = require("tagspaces-common/AppConfig");
-const { walkDirectory } = require("tagspaces-common/utils-io");
-const { listDirectoryPromise } = require("tagspaces-common-node/io-node");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const { walkDirectory } = require("@tagspaces/tagspaces-common/utils-io");
+const { listDirectoryPromise } = require("@tagspaces/tagspaces-common-node/io-node");
 
 const cleanMeta = (
   dirPath,

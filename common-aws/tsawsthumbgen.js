@@ -3,9 +3,9 @@
 // dependencies
 const AWS = require("aws-sdk");
 const path = require("path");
-const tsThumbImage = require("tagspaces-thumbgen-image/tsimagethumbgen");
-const tsThumbPdf = require("tagspaces-thumbgen-pdf/tspdfthumbgen");
-const AppConfig = require("tagspaces-common/AppConfig");
+const tsThumbImage = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
+const tsThumbPdf = require("@tagspaces/tagspaces-thumbgen-pdf/tspdfthumbgen");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 // get reference to S3 client
 const s3 = new AWS.S3();

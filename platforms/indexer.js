@@ -9,13 +9,13 @@ const {
   normalizePath,
   extractContainingDirectoryPath,
   extractFileName,
-} = require("tagspaces-common/paths");
+} = require("@tagspaces/tagspaces-common/paths");
 const {
   loadJSONString,
   walkDirectory,
   enhanceEntry,
-} = require("tagspaces-common/utils-io");
-const AppConfig = require("tagspaces-common/AppConfig");
+} = require("@tagspaces/tagspaces-common/utils-io");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 /**
  * @param param

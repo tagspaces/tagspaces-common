@@ -1,7 +1,7 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
-const tsPaths = require("tagspaces-common/paths");
-const AppConfig = require("tagspaces-common/AppConfig");
+const tsPaths = require("@tagspaces/tagspaces-common/paths");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 function isDirectory(entryPath) {
   return fs.lstatSync(entryPath).isDirectory();
