@@ -1,17 +1,14 @@
 {
-  "name": "tagspaces-workers",
+  "name": "@tagspaces/tagspaces-workers",
   "description": "utils for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.40",
+  "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
-    "node-install": "npx cross-env PD_PLATFORM=node npm install tagspaces-platforms && npm install && npm dedupe",
+    "node-install": "npx cross-env PD_PLATFORM=node npm install @tagspaces/tagspaces-platforms && npm install && npm dedupe",
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "tagspaces-platforms": "^1.0.1",
-    "tagspaces-thumbgen-image": "^1.0.4"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
+    "@tagspaces/tagspaces-platforms": "^1.0.0",
+    "@tagspaces/tagspaces-thumbgen-image": "^1.0.0"
   }
 }

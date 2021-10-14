@@ -1,5 +1,5 @@
 {
-  "name": "tagspaces-shell",
+  "name": "@tagspaces/tagspaces-shell",
   "description": "Shell script for creating Tagspaces thumbnails and index",
   "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
@@ -17,9 +17,6 @@
     "webpack-cli": "^4.8.0"
   },
   "dependencies": {
-    "tagspaces-workers": "^1.0.35"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
+    "@tagspaces/tagspaces-workers": "^1.0.0"
   }
 }

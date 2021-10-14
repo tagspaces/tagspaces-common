@@ -1,5 +1,5 @@
 {
-  "name": "tagspaces-metacleaner",
+  "name": "@tagspaces/tagspaces-metacleaner",
   "description": "TagSpaces common thumbnails module",
   "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
@@ -8,9 +8,6 @@
   },
   "dependencies": {
     "fs-extra": "^10.0.0",
-    "tagspaces-common-node": "1.0.1"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
+    "@tagspaces/tagspaces-common-node": "1.0.0"
   }
 }

@@ -1,7 +1,7 @@
 {
-  "name": "tagspaces-ws",
+  "name": "@tagspaces/tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.44",
+  "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "main": "build/index.js",
   "files": [
@@ -16,14 +16,12 @@
     "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js",
     "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js",
     "install-web": "npx cross-env PD_PLATFORM=web node install/ws.js",
+    "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
     "pkg-publish": "npm publish --access public"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "tagspaces-workers": "^1.0.40"
+    "@tagspaces/tagspaces-workers": "^1.0.0"
   },
   "webDependencies": {},
   "peerDependencies": {

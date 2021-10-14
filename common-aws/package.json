@@ -1,7 +1,7 @@
 {
-  "name": "tagspaces-common-aws",
+  "name": "@tagspaces/tagspaces-common-aws",
   "description": "TagSpaces common aws thumbnails module",
-  "version": "1.0.18",
+  "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "test": "jest",
@@ -9,11 +9,8 @@
   },
   "dependencies": {
     "aws-sdk": "2.984.0",
-    "tagspaces-common": "1.1.33",
-    "tagspaces-thumbgen-image": "1.0.0",
-    "tagspaces-thumbgen-pdf": "1.0.0"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
+    "@tagspaces/tagspaces-common": "1.1.34",
+    "@tagspaces/tagspaces-thumbgen-image": "1.0.0",
+    "@tagspaces/tagspaces-thumbgen-pdf": "1.0.0"
   }
 }

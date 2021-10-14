@@ -1,5 +1,5 @@
 {
-  "name": "tagspaces-thumbgen-pdf",
+  "name": "@tagspaces/tagspaces-thumbgen-pdf",
   "description": "TagSpaces pdf thumbnails generation module",
   "version": "1.0.0",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
@@ -9,8 +9,5 @@
   "dependencies": {
     "pdf-thumbnail": "^1.0.6",
     "pdfjs-dist": "^2.10.377"
-  },
-  "publishConfig": {
-    "@tagspaces:registry": "https://npm.pkg.github.com"
   }
 }

@@ -301,6 +301,7 @@ module.exports = {
   persistIndex,
   hasIndex,
   loadIndex,
+  enhanceDirectoryIndex,
   loadJsonContent,
   getMetaIndexFilePath,
   loadJSONFile,
