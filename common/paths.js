@@ -151,7 +151,7 @@ function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator = "/") {
   tagsInFileName.map((tag) => {
     tagArray.push({
       title: "" + tag,
-      type: "plain",
+      // type: "plain",
     });
     return true;
   });
