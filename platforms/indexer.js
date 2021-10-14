@@ -152,7 +152,7 @@ function hasIndex(param, dirSeparator = AppConfig.dirSeparator) {
  * @param dirSeparator: string
  * @returns {Promise<Array<Object>>}
  */
-function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {
+function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {       // TODO add locationID
   let directoryPath;
   if (typeof param === "object" && param !== null) {
     directoryPath = param.path;

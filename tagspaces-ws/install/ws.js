@@ -11,7 +11,7 @@ if (process.env.PD_PLATFORM) {
   platform = process.env.PD_PLATFORM;
 }
 
-function checkSharpPlatform(targetPlatform, arch) {
+/*function checkSharpPlatform(targetPlatform, arch) {
   try {
     let shrapPath = require.resolve("sharp");
     shrapPath = path.join(
@@ -40,7 +40,7 @@ if (process.env.TARGET_PLATFORM && process.env.TARGET_ARCH) {
   ) {
     fs.removeSync(path.join(__dirname, "..", "node_modules"));
   }
-}
+}*/
 
 const dependencies = platform + "Dependencies";
 const dependenciesObj = pkg[dependencies];
@@ -77,6 +77,9 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
       }
       npm.config.set("save", false);
       npm.config.set("package-lock", false);
+      if (process.env.TARGET_PLATFORM) {
+        npm.config.set("platform", process.env.TARGET_PLATFORM);
+      }
       // npm.config.set('no-save', true);
       // npm.config.set('no-package-lock', true);
       npm.commands.install(npmArgs, function (er, data) {

@@ -1,14 +1,14 @@
 {
   "name": "tagspaces-thumbgen-image",
   "description": "TagSpaces common thumbnails image generation module",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
     "async": "^3.2.1",
-    "sharp": "^0.27.1"
+    "sharp": "^0.28.3"
   },
   "publishConfig": {
     "@tagspaces:registry": "https://npm.pkg.github.com"

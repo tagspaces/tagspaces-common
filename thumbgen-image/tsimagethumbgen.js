@@ -2,7 +2,7 @@
 
 // dependencies
 const async = require("async");
-const sharp = require("sharp");
+const sharp = require("./sharp/index").sharp;
 const stream = require("stream");
 
 const tmbMaxWidth = 400;
@@ -65,47 +65,52 @@ module.exports.generateImageThumbnail = function (
   }
 ) {
   return new Promise((resolve) => {
-    // Download the image from S3, transform, and upload to a different S3 bucket.
-    async.waterfall(
-      [
-        function transform(next) {
-          // set thumbnail width. Resize will set height automatically
-          // to maintain aspect ratio.
+    if (!sharp) {
+      console.error("Unable to resize " + imagePath + " sharp not available");
+      resolve(false);
+    } else {
+      // Download the image from S3, transform, and upload to a different S3 bucket.
+      async.waterfall(
+        [
+          function transform(next) {
+            // set thumbnail width. Resize will set height automatically
+            // to maintain aspect ratio.
 
-          // Transform the image buffer in memory.
-          sharp(image)
-            .rotate()
-            .resize(tmbMaxWidth)
-            .jpeg()
-            .toBuffer(imageType, function (err, buffer) {
-              if (err) {
-                next(err);
-              } else {
-                next(null, buffer);
-              }
-            });
-        },
-        function upload(data, next) {
-          fnUpload(imagePath, data, next);
-        },
-      ],
-      function (err) {
-        if (err) {
-          console.error(
-            "Unable to resize " + //+ srcBucket + '/' + srcKey +
-              //' and upload to ' + dstBucket + '/' + dstKey +
-              " due to an error: ",
-            err
-          );
-          resolve(false);
-        } else {
-          console.log(
-            "Successfully resized" //+ srcBucket + '/' + srcKey +
-            //' and uploaded to ' + dstBucket + '/' + dstKey
-          );
-          resolve(true);
+            // Transform the image buffer in memory.
+            sharp(image)
+              .rotate()
+              .resize(tmbMaxWidth)
+              .jpeg()
+              .toBuffer(imageType, function (err, buffer) {
+                if (err) {
+                  next(err);
+                } else {
+                  next(null, buffer);
+                }
+              });
+          },
+          function upload(data, next) {
+            fnUpload(imagePath, data, next);
+          },
+        ],
+        function (err) {
+          if (err) {
+            console.error(
+              "Unable to resize " + //+ srcBucket + '/' + srcKey +
+                //' and upload to ' + dstBucket + '/' + dstKey +
+                " due to an error: ",
+              err
+            );
+            resolve(false);
+          } else {
+            console.log(
+              "Successfully resized" //+ srcBucket + '/' + srcKey +
+              //' and uploaded to ' + dstBucket + '/' + dstKey
+            );
+            resolve(true);
+          }
         }
-      }
-    );
+      );
+    }
   });
 };
