@@ -200,12 +200,14 @@ function enhanceDirectoryIndex(
     if (entry.thumbPath) {
       return {
         ...entry,
+        locationID,
         path: directoryPath + dirSeparator + entry.path,
         thumbPath: directoryPath + dirSeparator + entry.thumbPath,
       };
     }
     return {
       ...entry,
+      locationID,
       path: directoryPath + dirSeparator + entry.path,
     };
   });

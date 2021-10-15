@@ -1,13 +1,13 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "install": "node install/platformIO.js",
     "install-node": "npx cross-env PD_PLATFORM=node node install/platformIO.js",
     "install-web": "npx cross-env PD_PLATFORM=web node install/platformIO.js",
-    "pkg-publish": "npm publish --access public"
+    "pkg-publish": "npm run install-node && npm publish --access public"
   },
   "files": [
     "index.js",
