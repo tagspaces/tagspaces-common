@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "install": "node install/platformIO.js",
@@ -11,13 +11,15 @@
   },
   "files": [
     "index.js",
+    "aws.js",
     "indexer.js",
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "^1.0.3"
+    "@tagspaces/tagspaces-common-node": "^1.0.3",
+    "@tagspaces/tagspaces-common-aws": "^1.0.4"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "^1.0.3"
+    "@tagspaces/tagspaces-common-aws": "^1.0.4"
   }
 }
