@@ -148,21 +148,27 @@ function hasIndex(param, dirSeparator = AppConfig.dirSeparator) {
 }
 
 /**
- * @param param
+ * @param param = {directoryPath:string, locationID:string}
  * @param dirSeparator: string
  * @returns {Promise<Array<Object>>}
  */
-function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {       // TODO add locationID
-  let directoryPath;
+function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {
+  let directoryPath, locationID;
   if (typeof param === "object" && param !== null) {
     directoryPath = param.path;
+    locationID = param.locationID;
   } else {
     directoryPath = param;
   }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   return loadJSONFile({ ...param, path: folderIndexPath })
     .then((directoryIndex) => {
-      return enhanceDirectoryIndex(directoryPath, directoryIndex, dirSeparator);
+      return enhanceDirectoryIndex(
+        directoryPath,
+        directoryIndex,
+        locationID,
+        dirSeparator
+      );
     })
     .catch((err) => {
       console.log("Error loadIndex", err);
@@ -176,12 +182,18 @@ function loadJsonContent(
   dirSeparator = AppConfig.dirSeparator
 ) {
   const directoryIndex = loadJSONString(jsonContent);
-  return enhanceDirectoryIndex(directoryPath, directoryIndex, dirSeparator);
+  return enhanceDirectoryIndex(
+    directoryPath,
+    directoryIndex,
+    undefined,
+    dirSeparator
+  );
 }
 
 function enhanceDirectoryIndex(
   directoryPath,
   directoryIndex,
+  locationID,
   dirSeparator = AppConfig.dirSeparator
 ) {
   return directoryIndex.map((entry) => {
