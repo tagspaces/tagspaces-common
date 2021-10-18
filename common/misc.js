@@ -28,3 +28,32 @@ export function prepareTagForExport(tag) {
     ...(tag.description && { description: tag.description }),
   };
 }
+
+/**
+ * Convert 64bit url string to Blob
+ * @name b64toBlob
+ * @method
+ * @param {string} b64Data - the 64bit url string which should be converted to Blob
+ * @param {string} contentType - content type of blob
+ * @param {int} sliceSize - optional size of slices if omited 512 is used as default
+ * @returns {Blob}
+ */
+export function b64toBlob(
+    b64Data,
+    contentType = '',
+    sliceSize = 512
+) {
+  const byteCharacters = Buffer.from(b64Data, 'base64'); // atob(b64Data);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i += 1) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+  return new Blob(byteArrays, {type: contentType});
+}

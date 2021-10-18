@@ -37,7 +37,7 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
 
   function cleanPath(filePath) {
     const cleanPath = filePath
-      .substr(path.length)
+      .substr(path.length) // remove root location path from index
       .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
 
     if (cleanPath.startsWith("/")) {
@@ -196,6 +196,10 @@ function enhanceDirectoryIndex(
   locationID,
   dirSeparator = AppConfig.dirSeparator
 ) {
+  if (AppConfig.isCordova && !directoryPath.startsWith(dirSeparator)) {
+    // in cordova search results needs to start with dirSeparator
+    directoryPath = dirSeparator + directoryPath;
+  }
   return directoryIndex.map((entry) => {
     if (entry.thumbPath) {
       return {

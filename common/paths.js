@@ -145,6 +145,16 @@ function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
   );
 }
 
+function getThumbFileLocationForDirectory(entryPath, dirSeparator = "/") {
+  return (
+    entryPath +
+    (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
+    AppConfig.metaFolder +
+    dirSeparator +
+    AppConfig.folderThumbFile
+  );
+}
+
 function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator = "/") {
   const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
   const tagArray = [];
@@ -189,10 +199,12 @@ function extractTags(filePath, tagDelimiter, dirSeparator = "/") {
 
 module.exports = {
   normalizePath,
+  cleanTrailingDirSeparator,
   getMetaDirectoryPath,
   extractContainingDirectoryPath,
   extractParentDirectoryPath,
   getThumbFileLocationForFile,
+  getThumbFileLocationForDirectory,
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,
   extractFileName,
