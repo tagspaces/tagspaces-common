@@ -71,7 +71,10 @@ module.exports.processAllThumbnails = function (
           const image = fs.readFileSync(filePath);
           return tsThumb
             .generateImageThumbnail(image, fileType, filePath, upload)
-            .then(thumbGenResults);
+            .then(thumbGenResults)
+            .catch((error) => {
+              console.error("Generating thumbnail failed: " + filePath, error);
+            });
         } else if (fileType === "pdf" && generatePdf) {
           // TODO pdf thumb is generated for MACOS only
           /* const pdfFile = fs.readFileSync(filePath);

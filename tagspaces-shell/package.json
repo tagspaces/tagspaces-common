@@ -8,6 +8,7 @@
     "build:prod": "webpack --config webpack.config.js --mode production",
     "node-install": "rimraf package-lock.json && rimraf node_modules && npx cross-env PD_PLATFORM=node npm install && npm dedupe",
     "start": "node index.js -m indexer",
+    "start-thumbnails": "node index.js ./__test__",
     "pkg-publish": "npm run node-install && npm run build:prod && npm publish --access public"
   },
   "devDependencies": {
@@ -16,6 +17,6 @@
     "webpack-cli": "^4.8.0"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-workers": "^1.0.13"
+    "@tagspaces/tagspaces-workers": "^1.0.17"
   }
 }

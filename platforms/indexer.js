@@ -9,6 +9,8 @@ const {
   normalizePath,
   extractContainingDirectoryPath,
   extractFileName,
+  getMetaFileLocationForFile,
+  getMetaFileLocationForDir,
 } = require("@tagspaces/tagspaces-common/paths");
 const {
   loadJSONString,
@@ -55,28 +57,37 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
       skipDotHiddenFolder: true,
       extractText,
     },
-    (fileEntry) => {
+    async (fileEntry) => {
       counter += 1;
       // if (counter > AppConfig.indexerLimit) { TODO set index limit
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
+      const meta = await getEntryMeta(
+        getMetaFileLocationForFile(fileEntry.path)
+      );
+
       const entry = {
         ...fileEntry,
         path: cleanPath(fileEntry.path),
         thumbPath: cleanPath(fileEntry.thumbPath),
+        meta: meta,
       };
       directoryIndex.push(enhanceEntry(entry));
     },
-    (directoryEntry) => {
+    async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
+        const meta = await getEntryMeta(
+          getMetaFileLocationForDir(directoryEntry.path)
+        );
         const entry = {
           name: directoryEntry.name,
           isFile: directoryEntry.isFile,
           tags: directoryEntry.tags,
           path: cleanPath(directoryEntry.path),
           thumbPath: cleanPath(directoryEntry.thumbPath),
+          meta: meta,
         };
         directoryIndex.push(enhanceEntry(entry));
       }
@@ -100,6 +111,15 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
       // console.timeEnd("createDirectoryIndex");
       console.warn("Error creating index: " + err);
     });
+}
+
+async function getEntryMeta(metaFilePath) {
+  let meta;
+  // const metaFileProps = await getPropertiesPromise(metaFilePath);
+  // if (metaFileProps.isFile) {
+  meta = await loadJSONFile({ path: metaFilePath });
+  //}
+  return meta;
 }
 
 function persistIndex(param, directoryIndex) {
@@ -309,9 +329,12 @@ function getMetaIndexFilePath(
  * @param param
  */
 function loadJSONFile(param) {
-  return loadTextFilePromise(param).then((jsonContent) =>
-    loadJSONString(jsonContent)
-  );
+  return loadTextFilePromise(param)
+    .then((jsonContent) => loadJSONString(jsonContent))
+    .catch(() => {
+      return undefined;
+      // console.debug("File not exist: " + param.path);
+    });
 }
 
 module.exports = {

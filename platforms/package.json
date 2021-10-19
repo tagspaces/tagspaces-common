@@ -1,14 +1,14 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.0.22",
+  "version": "1.0.29",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "install": "node install/platformIO.js",
     "install-node": "npx cross-env PD_PLATFORM=node node install/platformIO.js",
     "install-web": "npx cross-env PD_PLATFORM=web node install/platformIO.js",
     "install-cordova": "npx cross-env PD_PLATFORM=cordova node install/platformIO.js",
-    "pkg-publish": "npm run install-node && npm publish --access public"
+    "pkg-publish": "npm publish --access public"
   },
   "files": [
     "index.js",
@@ -17,14 +17,14 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "^1.0.3",
-    "@tagspaces/tagspaces-common-aws": "^1.0.4"
+    "@tagspaces/tagspaces-common-node": "^1.0.6",
+    "@tagspaces/tagspaces-common-aws": "^1.0.5"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "^1.0.4"
+    "@tagspaces/tagspaces-common-aws": "^1.0.5"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "^1.0.8",
-    "@tagspaces/tagspaces-common-aws": "^1.0.4"
+    "@tagspaces/tagspaces-common-cordova": "^1.0.9",
+    "@tagspaces/tagspaces-common-aws": "^1.0.5"
   }
 }

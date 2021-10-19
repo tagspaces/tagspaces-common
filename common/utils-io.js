@@ -45,7 +45,7 @@ function walkDirectory(
         //     return false;
         // }
         Promise.all(
-          entries.map((entry) => {
+          entries.map(async (entry) => {
             // if (window.walkCanceled) {
             //     return false;
             // }
@@ -58,13 +58,13 @@ function walkDirectory(
 
             if (entry.isFile) {
               if (fileCallback) {
-                fileCallback(entry);
+                await fileCallback(entry);
               }
               return entry;
             }
 
             if (dirCallback) {
-              dirCallback(entry);
+              await dirCallback(entry);
             }
 
             if (mergedOptions.recursive) {
