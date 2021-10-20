@@ -216,25 +216,35 @@ function enhanceDirectoryIndex(
   locationID,
   dirSeparator = AppConfig.dirSeparator
 ) {
-  if (AppConfig.isCordova && !directoryPath.startsWith(dirSeparator)) {
-    // in cordova search results needs to start with dirSeparator
-    directoryPath = dirSeparator + directoryPath;
+  if (AppConfig.isCordova) {
+    if (!directoryPath.startsWith(dirSeparator)) {
+      // in cordova search results needs to start with dirSeparator
+      directoryPath = dirSeparator + directoryPath;
+    }
   }
   return directoryIndex.map((entry) => {
     if (entry.thumbPath) {
       return {
         ...entry,
         locationID,
-        path: directoryPath + dirSeparator + entry.path,
-        thumbPath: directoryPath + dirSeparator + entry.thumbPath,
+        path: directoryPath + dirSeparator + toPlatformPath(entry.path),
+        thumbPath: directoryPath + dirSeparator + toPlatformPath(entry.thumbPath),
       };
     }
     return {
       ...entry,
       locationID,
-      path: directoryPath + dirSeparator + entry.path,
+      path: directoryPath + dirSeparator + toPlatformPath(entry.path),
     };
   });
+}
+
+function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
+  if (AppConfig.isWin) {
+    // index is created with Unix dir separator /
+    return path.replaceAll("/", dirSeparator);
+  }
+  return path;
 }
 
 function addToIndex(param, size, LastModified, thumbPath) {

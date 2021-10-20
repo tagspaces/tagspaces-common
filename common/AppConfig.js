@@ -7,7 +7,8 @@ const thumbFileExt = ".jpg";
 const folderThumbFile = "tst.jpg";
 const folderIndexFile = "tsi.json";
 const metaFolderFile = "tsm.json";
-const dirSeparator = process.platform === "win32" ? "\\" : "/";
+const isWin = process.platform === "win32";
+const dirSeparator = isWin ? "\\" : "/";
 const isCordovaiOS =
   typeof window !== "undefined" &&
   /^file:\/{3}[^\/]/i.test(window.location.href) &&
@@ -34,6 +35,7 @@ module.exports = {
   folderThumbFile,
   folderIndexFile,
   metaFolderFile,
+  isWin,
   dirSeparator,
   isCordovaiOS,
   isCordovaAndroid,
