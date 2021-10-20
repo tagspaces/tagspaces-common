@@ -355,7 +355,7 @@ function getPropertiesPromise(param) {
     });
 }
 
-loadTextFilePromise = (param) => getFileContentPromise(param);
+const loadTextFilePromise = (param) => getFileContentPromise(param);
 
 /**
  * Use only for files (will not work for dirs)
@@ -787,6 +787,7 @@ module.exports = {
   configure,
   listDirectoryPromise,
   getURLforPath,
+  saveFilePromise,
   saveTextFilePromise,
   getPropertiesPromise,
   loadTextFilePromise,
