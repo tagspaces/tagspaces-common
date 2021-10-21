@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-const pathJS = require("path");
+// const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 // get reference to S3 client
@@ -55,7 +55,12 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
     Key: path,
     Expires: expirationInSeconds,
   };
-  return s3().getSignedUrl("getObject", params);
+  try {
+    return s3().getSignedUrl("getObject", params);
+  } catch (e) {
+    console.warn("Error by getSignedUrl" + e.toString());
+    return "";
+  }
 };
 
 const listMetaDirectoryPromise = async (param) => {
@@ -64,16 +69,11 @@ const listMetaDirectoryPromise = async (param) => {
   const entries = [];
   let entry;
 
-  /* const metaDirPath =  pathJS.format({
-            root: path,
-            base: metaFolder,
-            ext: 'ignored'
-        }); */
   const params = {
     Delimiter: "/",
     Prefix:
       path !== "/" && path.length > 0
-        ? pathJS.normalize(path + "/" + AppConfig.metaFolder + "/")
+        ? normalizeRootPath(path + "/" + AppConfig.metaFolder + "/")
         : AppConfig.metaFolder + "/",
     Bucket: bucketName,
   };
@@ -119,9 +119,9 @@ const listDirectoryPromise = (param, lite = true) =>
     // console.log('Meta folder content: ' + JSON.stringify(metaContent));
 
     const params = {
-      Delimiter: "/", // '/',
+      Delimiter: "/",
       Prefix:
-        path.length > 0 && path !== "/" ? pathJS.normalize(path + "/") : "",
+        path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
     };
@@ -193,7 +193,10 @@ const listDirectoryPromise = (param, lite = true) =>
       // Handling files
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
-        let thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, "/");
+        let thumbPath = tsPaths.getThumbFileLocationForFile(file.Key);
+        if (thumbPath.startsWith("/")) {
+          thumbPath = thumbPath.substring(1);
+        }
         const thumbAvailable = metaContent.find(
           (obj) => obj.path === thumbPath
         );
@@ -222,10 +225,10 @@ const listDirectoryPromise = (param, lite = true) =>
         if (file.Key !== params.Prefix) {
           // skipping the current folder
           enhancedEntries.push(eentry);
-          const metaFilePath = tsPaths.getMetaFileLocationForFile(
-            file.Key,
-            "/"
-          );
+          let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+          if (metaFilePath.startsWith("/")) {
+            metaFilePath = metaFilePath.substring(1);
+          }
           const metaFileAvailable = metaContent.find(
             (obj) => obj.path === metaFilePath
           );
@@ -257,8 +260,9 @@ const listDirectoryPromise = (param, lite = true) =>
 
 const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
+    const entryPath = tsPaths.normalizePath(eentry.path);
     if (eentry.isFile) {
-      const metaFilePath = tsPaths.getMetaFileLocationForFile(eentry.path, "/");
+      const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
       const metaFileContent = await loadTextFilePromise({
         path: metaFilePath,
         bucketName: eentry.bucketName,
@@ -268,17 +272,21 @@ const getEntryMeta = async (eentry) => {
       // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
     } else {
       if (
-        !eentry.path.includes("/" + AppConfig.metaFolder) &&
-        !eentry.path.includes(AppConfig.metaFolder + "/")
+        !entryPath.includes("/" + AppConfig.metaFolder) &&
+        !entryPath.includes(AppConfig.metaFolder + "/")
       ) {
         // skipping meta folder
         const folderTmbPath =
-          eentry.path + AppConfig.metaFolder + "/" + AppConfig.folderThumbFile;
+          entryPath +
+          "/" +
+          AppConfig.metaFolder +
+          "/" +
+          AppConfig.folderThumbFile;
         const folderThumbProps = await getPropertiesPromise({
           path: folderTmbPath,
           bucketName: eentry.bucketName,
         });
-        if (folderThumbProps.isFile) {
+        if (folderThumbProps && folderThumbProps.isFile) {
           eentry.thumbPath = getURLforPath(
             {
               path: folderTmbPath,
@@ -290,7 +298,7 @@ const getEntryMeta = async (eentry) => {
         // }
         // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
         const folderMetaPath =
-          eentry.path +
+          entryPath +
           "/" +
           AppConfig.metaFolder +
           "/" +
@@ -299,7 +307,7 @@ const getEntryMeta = async (eentry) => {
           path: folderMetaPath,
           bucketName: eentry.bucketName,
         });
-        if (folderProps.isFile) {
+        if (folderProps && folderProps.isFile) {
           const metaFileContent = await loadTextFilePromise({
             path: folderMetaPath,
             bucketName: eentry.bucketName,
@@ -320,61 +328,123 @@ const getEntryMeta = async (eentry) => {
  * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
 function getPropertiesPromise(param) {
-  const path = param.path;
+  const path = normalizeRootPath(param.path);
   const bucketName = param.bucketName;
-  const params = {
-    Bucket: bucketName,
-    Key: path,
-  };
-  return s3()
-    .headObject(params)
-    .promise()
-    .then((data) =>
-      /*
-                            data = {
-                              "AcceptRanges":"bytes",
-                              "LastModified":"2018-10-22T12:57:16.000Z",
-                              "ContentLength":101003,
-                              "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
-                              "ContentType":"image/png",
-                              "ServerSideEncryption":"AES256",
-                              "Metadata":{}
-                            }
-                            */
-      ({
-        name: path.substring(path.lastIndexOf("/") + 1, path.length),
-        isFile: !path.endsWith("/"),
-        size: data.ContentLength,
-        lmdt: data.LastModified, // Date.parse(data.LastModified),
-        path,
+  if (path) {
+    const params = {
+      Bucket: bucketName,
+      Key: path,
+    };
+    return s3()
+      .headObject(params)
+      .promise()
+      .then((data) => {
+        /*
+                                data = {
+                                  "AcceptRanges":"bytes",
+                                  "LastModified":"2018-10-22T12:57:16.000Z",
+                                  "ContentLength":101003,
+                                  "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
+                                  "ContentType":"image/png",
+                                  "ServerSideEncryption":"AES256",
+                                  "Metadata":{}
+                                }
+                                */
+
+        const isFile = !path.endsWith("/");
+        return {
+          name: isFile
+            ? tsPaths.extractFileName(path)
+            : tsPaths.extractDirectoryName(path),
+          isFile: !path.endsWith("/"),
+          size: data.ContentLength,
+          lmdt: data.LastModified, // Date.parse(data.LastModified),
+          path,
+        };
       })
-    )
-    .catch((err) => {
-      console.log("getPropertiesPromise " + path, err);
-      return Promise.resolve(false);
+      .catch((err) => {
+        // workaround for checking if a folder exists on s3
+        // console.log("getPropertiesPromise " + path, err);
+        const listParams = {
+          Bucket: bucketName,
+          Prefix: path,
+          MaxKeys: 1,
+          Delimiter: "/",
+        };
+        return s3().listObjectsV2(listParams, (listError, listData) => {
+          if (listError) {
+            return false;
+          }
+          const folderExists =
+            (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
+            (listData &&
+              listData.CommonPrefixes &&
+              listData.CommonPrefixes.length > 0); // needed for DO
+          if (folderExists) {
+            return {
+              name: tsPaths.extractDirectoryName(path),
+              isFile: false,
+              size: 0,
+              lmdt: undefined,
+              path: path,
+            };
+          } else {
+            return false;
+          }
+        });
+      });
+  } else {
+    // root folder
+    return Promise.resolve({
+      name: bucketName,
+      isFile: false,
+      size: 0,
+      lmdt: undefined,
+      path: "/",
     });
+  }
 }
 
-const loadTextFilePromise = (param) => getFileContentPromise(param);
+const loadTextFilePromise = (param, isPreview) =>
+  getFileContentPromise(param, "text", isPreview);
 
 /**
  * Use only for files (will not work for dirs)
  * @param param
+ * @param type text | arraybuffer
+ * @param isPreview
  * @returns {Promise<string | string>}
  */
-const getFileContentPromise = async (param) => {
-  const path = param.path;
+const getFileContentPromise = async (
+  param,
+  type = "text",
+  isPreview = false
+) => {
+  const path = normalizeRootPath(param.path);
   const bucketName = param.bucketName;
   const params = {
     Bucket: bucketName,
     Key: path,
+    Range: isPreview ? "bytes=0-10000" : "",
   };
-  console.info("getFileContentPromise:" + JSON.stringify(params));
+  // console.info("getFileContentPromise:" + JSON.stringify(params));
   return s3()
     .getObject(params)
     .promise()
     .then((data) => {
-      return data.Body.toString("utf8");
+      // data: {
+      // "AcceptRanges":"bytes",
+      // "LastModified":"2018-10-22T16:24:42.000Z",
+      // "ContentLength":99,
+      // "ETag":"\"407a96716a09a2cf36ca32759cf15497\"",
+      // "ContentType":"application/json",
+      // "ServerSideEncryption":"AES256",
+      // "Metadata":{},
+      // "Body":{"type":"Buffer","data":[123,....,10,125]}}
+      if (type === "text") {
+        return data.Body.toString("utf8");
+      }
+      return data.Body;
     })
     .catch((e) => {
       console.error("Error getObject " + path, e);
@@ -396,7 +466,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
     const bucketName = param.bucketName;
     // let isNewFile = false;
     // eslint-disable-next-line no-param-reassign
-    const filePath = pathJS.normalize(path); // normalizePath(this.normalizeRootPath(filePath));
+    const filePath = normalizeRootPath(path);
 
     /*return getPropertiesPromise({
     path: filePath,
@@ -460,7 +530,6 @@ const saveFilePromise = (param, content, overWrite, mode) =>
  * Persists a given text content to a specified filepath (tested)
  */
 function saveTextFilePromise(param, content, overWrite) {
-  // filePath = pathJS.normalize(filePath);
   console.log("Saving text file: " + param.path);
   return saveFilePromise(param, content, overWrite, "text");
 }
@@ -791,6 +860,7 @@ module.exports = {
   saveTextFilePromise,
   getPropertiesPromise,
   loadTextFilePromise,
+  getFileContentPromise,
   saveBinaryFilePromise,
   createDirectoryPromise,
   copyFilePromise,

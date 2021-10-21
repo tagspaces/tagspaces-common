@@ -82,6 +82,27 @@ function extractFileName(filePath, dirSeparator = "/") {
     : filePath;
 }
 
+function extractDirectoryName(dirPath, dirSeparator = "/") {
+  if (!dirPath) return "";
+  let directoryName = dirPath;
+  if (dirPath.indexOf(dirSeparator) !== -1) {
+    if (dirPath.endsWith(dirSeparator)) {
+      directoryName = directoryName.substring(
+        0,
+        dirPath.lastIndexOf(dirSeparator)
+      );
+    }
+    const lastDirSeparator = directoryName.lastIndexOf(dirSeparator);
+    if (lastDirSeparator !== -1) {
+      directoryName = directoryName.substring(
+        lastDirSeparator + 1,
+        directoryName.length
+      );
+    }
+  }
+  return directoryName;
+}
+
 function extractFileExtension(filePath, dirSeparator = "/") {
   const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
   const lastIndexEndTagContainer = filePath.lastIndexOf(
@@ -208,6 +229,7 @@ module.exports = {
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,
   extractFileName,
+  extractDirectoryName,
   extractFileExtension,
   extractTagsAsObjects,
 };
