@@ -63,9 +63,10 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      const meta = await getEntryMeta(
-        getMetaFileLocationForFile(fileEntry.path)
-      );
+      const meta = await getEntryMeta({
+        ...param,
+        path: getMetaFileLocationForFile(fileEntry.path),
+      });
 
       const entry = {
         ...fileEntry,
@@ -78,9 +79,10 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        const meta = await getEntryMeta(
-          getMetaFileLocationForDir(directoryEntry.path)
-        );
+        const meta = await getEntryMeta({
+          ...param,
+          path: getMetaFileLocationForDir(directoryEntry.path),
+        });
         const entry = {
           name: directoryEntry.name,
           isFile: directoryEntry.isFile,
@@ -113,11 +115,15 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
     });
 }
 
-async function getEntryMeta(metaFilePath) {
-  let meta;
+/**
+ * @param params = {path: , bucketName: }
+ * @returns {Promise<*>}
+ */
+async function getEntryMeta(param) {
+  //metaFilePath) {
   // const metaFileProps = await getPropertiesPromise(metaFilePath);
   // if (metaFileProps.isFile) {
-  meta = await loadJSONFile({ path: metaFilePath });
+  const meta = await loadJSONFile(param); // { path: metaFilePath });
   //}
   return meta;
 }
@@ -228,7 +234,8 @@ function enhanceDirectoryIndex(
         ...entry,
         locationID,
         path: directoryPath + dirSeparator + toPlatformPath(entry.path),
-        thumbPath: directoryPath + dirSeparator + toPlatformPath(entry.thumbPath),
+        thumbPath:
+          directoryPath + dirSeparator + toPlatformPath(entry.thumbPath),
       };
     }
     return {

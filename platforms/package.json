@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.0.40",
+  "version": "1.0.42",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "install": "node install/platformIO.js",
@@ -17,14 +17,14 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "^1.0.8",
-    "@tagspaces/tagspaces-common-aws": "^1.0.16"
+    "@tagspaces/tagspaces-common-node": "^1.0.9",
+    "@tagspaces/tagspaces-common-aws": "^1.0.17"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "^1.0.16"
+    "@tagspaces/tagspaces-common-aws": "^1.0.17"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "^1.0.11",
-    "@tagspaces/tagspaces-common-aws": "^1.0.16"
+    "@tagspaces/tagspaces-common-cordova": "^1.0.12",
+    "@tagspaces/tagspaces-common-aws": "^1.0.17"
   }
 }

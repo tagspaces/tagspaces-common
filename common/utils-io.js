@@ -86,7 +86,7 @@ function walkDirectory(
                   ? { ...path, path: entry.path }
                   : entry.path;
               return walkDirectory(
-                subPath,
+                { ...param, path: subPath },
                 listDirectoryPromise,
                 mergedOptions,
                 fileCallback,
@@ -162,6 +162,9 @@ function enhanceEntry(entry) {
  * @returns {*}
  */
 function loadJSONString(jsonContent) {
+  if (!jsonContent) {
+    return undefined;
+  }
   let jsonObject;
   let json;
   const UTF8_BOM = "\ufeff";

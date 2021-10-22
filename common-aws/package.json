@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-aws",
   "description": "TagSpaces common aws module",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "author": "Stanimir Marinov <s.marinov@structmedia.com>",
   "scripts": {
     "test": "jest",
@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "aws-sdk": "2.984.0",
-    "@tagspaces/tagspaces-common": "^1.1.45"
+    "@tagspaces/tagspaces-common": "^1.1.46"
   }
 }
