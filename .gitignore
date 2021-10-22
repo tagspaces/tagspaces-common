@@ -3,3 +3,5 @@
 
 node_modules
 __tests__/.ts
+__tests__/common-aws/buckets/bucket1/**
+!__tests__/common-aws/buckets/bucket1/.gitkeep

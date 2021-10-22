@@ -335,64 +335,64 @@ function getPropertiesPromise(param) {
       Bucket: bucketName,
       Key: path,
     };
-    return s3()
-      .headObject(params)
-      .promise()
-      .then((data) => {
-        /*
-                                data = {
-                                  "AcceptRanges":"bytes",
-                                  "LastModified":"2018-10-22T12:57:16.000Z",
-                                  "ContentLength":101003,
-                                  "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
-                                  "ContentType":"image/png",
-                                  "ServerSideEncryption":"AES256",
-                                  "Metadata":{}
-                                }
-                                */
+    return new Promise((resolve) => {
+      s3().headObject(params, (err, data) => {
+        if (err) {
+          // workaround for checking if a folder exists on s3
+          // console.log("getPropertiesPromise " + path, err);
+          const listParams = {
+            Bucket: bucketName,
+            Prefix: path,
+            MaxKeys: 1,
+            Delimiter: "/",
+          };
+          s3().listObjectsV2(listParams, (listError, listData) => {
+            if (listError) {
+              resolve(false);
+            }
+            const folderExists =
+              (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
+              (listData &&
+                listData.CommonPrefixes &&
+                listData.CommonPrefixes.length > 0); // needed for DO
+            if (folderExists) {
+              resolve({
+                name: tsPaths.extractDirectoryName(path),
+                isFile: false,
+                size: 0,
+                lmdt: undefined,
+                path: path,
+              });
+            } else {
+              resolve(false);
+            }
+          });
+        } else {
+          /*
+                                  data = {
+                                    "AcceptRanges":"bytes",
+                                    "LastModified":"2018-10-22T12:57:16.000Z",
+                                    "ContentLength":101003,
+                                    "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
+                                    "ContentType":"image/png",
+                                    "ServerSideEncryption":"AES256",
+                                    "Metadata":{}
+                                  }
+                                  */
 
-        const isFile = !path.endsWith("/");
-        return {
-          name: isFile
-            ? tsPaths.extractFileName(path)
-            : tsPaths.extractDirectoryName(path),
-          isFile: !path.endsWith("/"),
-          size: data.ContentLength,
-          lmdt: data.LastModified, // Date.parse(data.LastModified),
-          path,
-        };
-      })
-      .catch((err) => {
-        // workaround for checking if a folder exists on s3
-        // console.log("getPropertiesPromise " + path, err);
-        const listParams = {
-          Bucket: bucketName,
-          Prefix: path,
-          MaxKeys: 1,
-          Delimiter: "/",
-        };
-        return s3().listObjectsV2(listParams, (listError, listData) => {
-          if (listError) {
-            return false;
-          }
-          const folderExists =
-            (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
-            (listData &&
-              listData.CommonPrefixes &&
-              listData.CommonPrefixes.length > 0); // needed for DO
-          if (folderExists) {
-            return {
-              name: tsPaths.extractDirectoryName(path),
-              isFile: false,
-              size: 0,
-              lmdt: undefined,
-              path: path,
-            };
-          } else {
-            return false;
-          }
-        });
+          const isFile = !path.endsWith("/");
+          resolve({
+            name: isFile
+              ? tsPaths.extractFileName(path)
+              : tsPaths.extractDirectoryName(path),
+            isFile: !path.endsWith("/"),
+            size: data.ContentLength,
+            lmdt: data.LastModified, // Date.parse(data.LastModified),
+            path,
+          });
+        }
       });
+    });
   } else {
     // root folder
     return Promise.resolve({
@@ -559,8 +559,8 @@ function saveBinaryFilePromise(
   return new Promise((resolve, reject) => {
     let isNewFile = false;
     // eslint-disable-next-line no-param-reassign
-    const filePath = tsPaths.normalizePath(normalizeRootPath(param.path));
-    getPropertiesPromise(filePath)
+    const filePath = normalizeRootPath(param.path);
+    getPropertiesPromise({ ...param, path: filePath })
       .then((result) => {
         if (result === false) {
           isNewFile = true;
@@ -609,6 +609,8 @@ function saveBinaryFilePromise(
             console.log(err, err.stack); // an error occurred
             reject("saveBinaryFilePromise error");
           }
+        } else {
+          resolve(result);
         }
         return result;
       })
@@ -806,7 +808,7 @@ function deleteDirectoryPromise(param) {
     return s3()
       .deleteObject({
         Bucket: param.bucketName,
-        Key: path,
+        Key: param.path,
       })
       .promise();
   });
@@ -822,7 +824,7 @@ async function getDirectoryPrefixes(param) {
   const promises = [];
   const listParams = {
     Bucket: param.bucketName,
-    Prefix: normalizeRootPath(param.path),
+    Prefix: tsPaths.normalizePath(normalizeRootPath(param.path)) + "/",
     Delimiter: "/",
   };
   const listedObjects = await s3().listObjectsV2(listParams).promise();
