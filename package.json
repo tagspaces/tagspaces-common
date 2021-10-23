@@ -2,7 +2,8 @@
   "name": "tagspaces-commons-parent",
   "description": "TagSpaces common thumbnails module",
   "version": "1.0.0",
-  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
   "scripts": {
     "test": "jest",
     "code-format": "prettier --write ."

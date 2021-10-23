@@ -2,7 +2,8 @@
   "name": "@tagspaces/tagspaces-common",
   "description": "TagSpaces common module",
   "version": "1.1.46",
-  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
   "scripts": {
     "pkg-publish": "npm publish --access public"
   },

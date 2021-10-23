@@ -2,7 +2,8 @@
   "name": "@tagspaces/tagspaces-common-node",
   "description": "TagSpaces common node thumbnails module",
   "version": "1.0.9",
-  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
   "scripts": {
     "pkg-publish": "rimraf package-lock.json && npm install && npm publish --access public"
   },

@@ -2,7 +2,8 @@
   "name": "@tagspaces/tagspaces-thumbgen-image",
   "description": "TagSpaces common thumbnails image generation module",
   "version": "1.0.1",
-  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
   "scripts": {
     "pkg-publish": "npm publish --access public"
   },

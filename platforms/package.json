@@ -2,7 +2,8 @@
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
   "version": "1.0.43",
-  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
   "scripts": {
     "install": "node install/platformIO.js",
     "install-node": "npx cross-env PD_PLATFORM=node node install/platformIO.js",

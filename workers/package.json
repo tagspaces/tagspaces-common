@@ -2,7 +2,8 @@
   "name": "@tagspaces/tagspaces-workers",
   "description": "utils for creating thumbnails and index used by the TagSpaces application",
   "version": "1.0.18",
-  "author": "Stanimir Marinov <s.marinov@structmedia.com>",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
   "scripts": {
     "node-install": "rimraf package-lock.json && rimraf node_modules && npx cross-env PD_PLATFORM=node npm install && npm dedupe",
     "pkg-publish": "npm run node-install && npm publish --access public"
