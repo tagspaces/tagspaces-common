@@ -5,7 +5,7 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "test": "jest",
+    "test": "jest --config=jest.config.unit.js --verbose",
     "code-format": "prettier --write ."
   },
   "devDependencies": {

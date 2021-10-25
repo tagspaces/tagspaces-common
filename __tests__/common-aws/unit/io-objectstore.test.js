@@ -15,7 +15,7 @@ const {
   renameDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise
-} = require("../../common-aws/io-objectstore");
+} = require("../../../common-aws/io-objectstore");
 
 beforeAll(async () => {
   configure({
@@ -96,7 +96,7 @@ test("saveBinaryFilePromise", async () => {
       path: "dir/img.jpg",
       bucketName: "bucket1",
     },
-    fs.createReadStream(pathJs.resolve(__dirname, "../img.jpg"))
+    fs.createReadStream(pathJs.resolve(__dirname, "../../img.jpg"))
   );
   console.log("content:" + JSON.stringify(content));
 });
