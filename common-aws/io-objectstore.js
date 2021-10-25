@@ -1,5 +1,6 @@
 const AWS = require("aws-sdk");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
+const { v1: uuidv1 } = require('uuid');
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 // get reference to S3 client
