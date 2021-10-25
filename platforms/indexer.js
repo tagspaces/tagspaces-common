@@ -23,9 +23,15 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  * @param param
  * @param extractText: boolean = false
  * @param ignorePatterns: Array<string>
+ * @param listDirectory function
  * @returns {*}
  */
-function createIndex(param, extractText = false, ignorePatterns = []) {
+function createIndex(
+  param,
+  extractText = false,
+  ignorePatterns = [],
+  listDirectory = undefined
+) {
   let path;
   if (typeof param === "object" && param !== null) {
     path = param.path;
@@ -50,7 +56,7 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
 
   return walkDirectory(
     param,
-    listDirectoryPromise,
+    listDirectory ? listDirectory : listDirectoryPromise,
     {
       recursive: true,
       skipMetaFolder: true,
@@ -116,7 +122,7 @@ function createIndex(param, extractText = false, ignorePatterns = []) {
 }
 
 /**
- * @param params = {path: , bucketName: }
+ * @param param = {path: , bucketName: }
  * @returns {Promise<*>}
  */
 async function getEntryMeta(param) {
