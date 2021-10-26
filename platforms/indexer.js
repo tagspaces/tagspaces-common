@@ -134,6 +134,12 @@ async function getEntryMeta(param) {
   return meta;
 }
 
+/**
+ * use it for native platform only (saveTextFilePromise cannot switch -location can be S3).
+ * look at utils-io -> persistIndex with PlatformIO.saveTextFilePromise instead
+ * @param param
+ * @param directoryIndex
+ */
 function persistIndex(param, directoryIndex) {
   let directoryPath;
   if (typeof param === "object" && param !== null) {

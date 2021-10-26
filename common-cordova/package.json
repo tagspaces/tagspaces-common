@@ -1,13 +1,13 @@
 {
   "name": "@tagspaces/tagspaces-common-cordova",
   "description": "TagSpaces common cordova module",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "pkg-publish": "rimraf package-lock.json && npm install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^1.1.46"
+    "@tagspaces/tagspaces-common": "^1.1.47"
   }
 }

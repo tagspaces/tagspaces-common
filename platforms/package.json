@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.0.45",
+  "version": "1.0.47",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -18,14 +18,14 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "^1.0.9",
-    "@tagspaces/tagspaces-common-aws": "^1.0.19"
+    "@tagspaces/tagspaces-common-node": "^1.0.10",
+    "@tagspaces/tagspaces-common-aws": "^1.0.21"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "^1.0.19"
+    "@tagspaces/tagspaces-common-aws": "^1.0.21"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "^1.0.12",
-    "@tagspaces/tagspaces-common-aws": "^1.0.19"
+    "@tagspaces/tagspaces-common-cordova": "^1.0.13",
+    "@tagspaces/tagspaces-common-aws": "^1.0.21"
   }
 }

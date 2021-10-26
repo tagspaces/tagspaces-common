@@ -34,7 +34,7 @@ function walkDirectory(
     skipDotHiddenFolder: false,
     loadMetaData: true,
     extractText: false,
-    lite: false,
+    lite: true,
     ...options,
   };
   return (

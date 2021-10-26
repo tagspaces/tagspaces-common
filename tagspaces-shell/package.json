@@ -18,6 +18,6 @@
     "webpack-cli": "^4.8.0"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-workers": "^1.0.19"
+    "@tagspaces/tagspaces-workers": "^1.0.21"
   }
 }

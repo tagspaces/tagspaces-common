@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
-const { v1: uuidv1 } = require('uuid');
+const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 // get reference to S3 client
@@ -202,13 +202,15 @@ const listDirectoryPromise = (param, lite = true) =>
           (obj) => obj.path === thumbPath
         );
         if (thumbAvailable) {
-          thumbPath = getURLforPath(
-            {
-              path: thumbPath,
-              bucketName: bucketName,
-            },
-            604800
-          ); // 60 * 60 * 24 * 7 = 1 week
+          if (!lite) {
+            thumbPath = getURLforPath(
+              {
+                path: thumbPath,
+                bucketName: bucketName,
+              },
+              604800
+            ); // 60 * 60 * 24 * 7 = 1 week
+          }
         } else {
           thumbPath = "";
         }
