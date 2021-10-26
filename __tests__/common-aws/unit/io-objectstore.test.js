@@ -2,7 +2,6 @@ const fs = require("fs");
 const pathJs = require("path");
 const {
   configure,
-  s3,
   listDirectoryPromise,
   getURLforPath,
   saveFilePromise,
@@ -14,7 +13,7 @@ const {
   renameFilePromise,
   renameDirectoryPromise,
   deleteFilePromise,
-  deleteDirectoryPromise
+  deleteDirectoryPromise,
 } = require("../../../common-aws/io-objectstore");
 
 beforeAll(async () => {
@@ -24,18 +23,6 @@ beforeAll(async () => {
     secretAccessKey: "S3RVER",
     endpointURL: "http://localhost:4569",
     // signatureVersion: "v4",
-  });
-});
-
-test("uploadImage", async () => {
-  const params = {
-    Key: "image1.png",
-    Bucket: "bucket1",
-    Body: fs.createReadStream(pathJs.resolve(__dirname, "../img.jpg")), // todo path absolute
-  };
-
-  s3().upload(params, function uploadCallback(err, data) {
-    console.log(err, data);
   });
 });
 
@@ -102,12 +89,10 @@ test("saveBinaryFilePromise", async () => {
 });
 
 test("createDirectoryPromise", async () => {
-  const content = await createDirectoryPromise(
-    {
-      path: "dir/subdir/",
-      bucketName: "bucket1",
-    }
-  );
+  const content = await createDirectoryPromise({
+    path: "dir/subdir/",
+    bucketName: "bucket1",
+  });
   console.log("content:" + JSON.stringify(content));
 });
 
@@ -116,8 +101,8 @@ test("copyFilePromise", async () => {
     {
       path: "dir/img.jpg",
       bucketName: "bucket1",
-    }
-    ,'dir/subdir/img.jpg'
+    },
+    "dir/subdir/img.jpg"
   );
   console.log("content:" + JSON.stringify(content));
 });
@@ -127,8 +112,8 @@ test("renameFilePromise", async () => {
     {
       path: "dir/img.jpg",
       bucketName: "bucket1",
-    }
-    ,'dir/img1.jpg'
+    },
+    "dir/img1.jpg"
   );
   console.log("content:" + JSON.stringify(content));
 });
@@ -138,28 +123,24 @@ test("renameDirectoryPromise", async () => {
     {
       path: "dir/subdir2/",
       bucketName: "bucket1",
-    }
-    ,'dir/subdir4/'
+    },
+    "dir/subdir4/"
   );
   console.log("content:" + JSON.stringify(content));
 });
 
 test("deleteFilePromise", async () => {
-  const content = await deleteFilePromise(
-    {
-      path: "dir/img1.jpg",
-      bucketName: "bucket1",
-    }
-  );
+  const content = await deleteFilePromise({
+    path: "dir/img1.jpg",
+    bucketName: "bucket1",
+  });
   console.log("content:" + JSON.stringify(content));
 });
 
 test("deleteDirectoryPromise", async () => {
-  const content = await deleteDirectoryPromise(
-    {
-      path: "dir/subdir/",
-      bucketName: "bucket1",
-    }
-  );
+  const content = await deleteDirectoryPromise({
+    path: "dir/subdir/",
+    bucketName: "bucket1",
+  });
   console.log("content:" + JSON.stringify(content));
 });

@@ -173,10 +173,12 @@ function loadJSONString(jsonContent) {
   } else {
     json = jsonContent;
   }
-  try {
-    jsonObject = JSON.parse(json);
-  } catch (err) {
-    console.error("Error parsing meta json file: " + json, err);
+  if (json) {
+    try {
+      jsonObject = JSON.parse(json);
+    } catch (err) {
+      console.error("Error parsing meta json file: " + json, err);
+    }
   }
   return jsonObject;
 }

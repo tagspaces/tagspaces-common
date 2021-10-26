@@ -1,7 +1,7 @@
 module.exports = async () => {
 
   return {
-    verbose: true,
+    verbose: false,
     rootDir: './__tests__',
     /**
      * globalSetup: ran once before all tests

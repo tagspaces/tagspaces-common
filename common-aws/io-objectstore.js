@@ -450,7 +450,7 @@ const getFileContentPromise = async (
       return data.Body;
     })
     .catch((e) => {
-      console.error("Error getObject " + path + " " + e.message);
+      // console.error("Error getObject " + path + " " + e.message);
       return ""; //Promise.resolve("");
     });
 };
