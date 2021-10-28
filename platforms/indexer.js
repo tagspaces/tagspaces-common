@@ -1,10 +1,11 @@
 const pathJS = require("path");
+const { getURLforPath } = require("./aws");
 const {
   loadTextFilePromise,
   saveTextFilePromise,
   listDirectoryPromise,
   getPropertiesPromise,
-} = require("./index");
+} = require("./index"); // TODO replace with PlatformIO after: https://trello.com/c/fPp0gh1W/759-fully-migrate-the-electron-and-cordova-platforms-to-new-the-tagspaces-platform
 const {
   normalizePath,
   extractContainingDirectoryPath,
@@ -24,13 +25,15 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  * @param extractText: boolean = false
  * @param ignorePatterns: Array<string>
  * @param listDirectory function
+ * @param loadTextFile function
  * @returns {*}
  */
 function createIndex(
   param,
   extractText = false,
   ignorePatterns = [],
-  listDirectory = undefined
+  listDirectory = undefined,
+  loadTextFile = undefined
 ) {
   let path;
   if (typeof param === "object" && param !== null) {
@@ -69,10 +72,13 @@ function createIndex(
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      const meta = await getEntryMeta({
-        ...param,
-        path: getMetaFileLocationForFile(fileEntry.path),
-      });
+      const meta = await getEntryMeta(
+        {
+          ...param,
+          path: getMetaFileLocationForFile(fileEntry.path),
+        },
+        loadTextFile
+      );
 
       const entry = {
         ...fileEntry,
@@ -85,10 +91,13 @@ function createIndex(
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        const meta = await getEntryMeta({
-          ...param,
-          path: getMetaFileLocationForDir(directoryEntry.path),
-        });
+        const meta = await getEntryMeta(
+          {
+            ...param,
+            path: getMetaFileLocationForDir(directoryEntry.path),
+          },
+          loadTextFile
+        );
         const entry = {
           name: directoryEntry.name,
           isFile: directoryEntry.isFile,
@@ -123,13 +132,14 @@ function createIndex(
 
 /**
  * @param param = {path: , bucketName: }
+ * @param loadTextFile  function
  * @returns {Promise<*>}
  */
-async function getEntryMeta(param) {
+async function getEntryMeta(param, loadTextFile) {
   //metaFilePath) {
   // const metaFileProps = await getPropertiesPromise(metaFilePath);
   // if (metaFileProps.isFile) {
-  const meta = await loadJSONFile(param); // { path: metaFilePath });
+  const meta = await loadJSONFile(param, loadTextFile); // { path: metaFilePath });
   //}
   return meta;
 }
@@ -166,17 +176,25 @@ function persistIndex(param, directoryIndex) {
 
 /**
  * @param param
- * @param dirSeparator: string
+ * @param getProperties function
  * @returns {Promise<boolean>}
  */
-function hasIndex(param, dirSeparator = AppConfig.dirSeparator) {
+function hasIndex(param, getProperties) {
   let directoryPath;
   if (typeof param === "object" && param !== null) {
     directoryPath = param.path;
   } else {
     directoryPath = param;
   }
-  const folderIndexPath = getMetaIndexFilePath(directoryPath, dirSeparator);
+  const folderIndexPath = getMetaIndexFilePath(directoryPath);
+  if (getProperties) {
+    return getProperties(folderIndexPath)
+      .then((lstat) => lstat && lstat.isFile)
+      .catch((err) => {
+        console.log("Error hasIndex", err);
+        return Promise.resolve(false);
+      });
+  }
   return getPropertiesPromise({ ...param, path: folderIndexPath })
     .then((lstat) => lstat && lstat.isFile)
     .catch((err) => {
@@ -188,9 +206,10 @@ function hasIndex(param, dirSeparator = AppConfig.dirSeparator) {
 /**
  * @param param = {directoryPath:string, locationID:string}
  * @param dirSeparator: string
+ * @param loadFilePromise function
  * @returns {Promise<Array<Object>>}
  */
-function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {
+function loadIndex(param, dirSeparator = AppConfig.dirSeparator, loadFilePromise) {
   let directoryPath, locationID;
   if (typeof param === "object" && param !== null) {
     directoryPath = param.path;
@@ -199,10 +218,10 @@ function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {
     directoryPath = param;
   }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  return loadJSONFile({ ...param, path: folderIndexPath })
+  return loadJSONFile({ ...param, path: folderIndexPath }, loadFilePromise)
     .then((directoryIndex) => {
       return enhanceDirectoryIndex(
-        directoryPath,
+        param,
         directoryIndex,
         locationID,
         dirSeparator
@@ -214,7 +233,7 @@ function loadIndex(param, dirSeparator = AppConfig.dirSeparator) {
     });
 }
 
-function loadJsonContent(
+/*function loadJsonContent(
   directoryPath,
   jsonContent,
   dirSeparator = AppConfig.dirSeparator
@@ -226,14 +245,24 @@ function loadJsonContent(
     undefined,
     dirSeparator
   );
-}
+}*/
 
 function enhanceDirectoryIndex(
-  directoryPath,
+  param,
   directoryIndex,
   locationID,
   dirSeparator = AppConfig.dirSeparator
 ) {
+  if (!directoryIndex) {
+    return undefined;
+  }
+  let directoryPath;
+  if (typeof param === "object" && param !== null) {
+    directoryPath = param.path;
+  } else {
+    directoryPath = param;
+  }
+
   if (AppConfig.isCordova) {
     if (!directoryPath.startsWith(dirSeparator)) {
       // in cordova search results needs to start with dirSeparator
@@ -242,12 +271,25 @@ function enhanceDirectoryIndex(
   }
   return directoryIndex.map((entry) => {
     if (entry.thumbPath) {
+      let thumbPath;
+      if (param.bucketName) {
+        thumbPath = getURLforPath(
+          {
+            path: entry.thumbPath,
+            bucketName: param.bucketName,
+          },
+          604800
+        );
+      } else {
+        thumbPath =
+          directoryPath + dirSeparator + toPlatformPath(entry.thumbPath);
+      }
+
       return {
         ...entry,
         locationID,
         path: directoryPath + dirSeparator + toPlatformPath(entry.path),
-        thumbPath:
-          directoryPath + dirSeparator + toPlatformPath(entry.thumbPath),
+        thumbPath: thumbPath,
       };
     }
     return {
@@ -356,8 +398,17 @@ function getMetaIndexFilePath(
 /**
  * @returns {Promise<*>}
  * @param param
+ * @param loadFilePromise
  */
-function loadJSONFile(param) {
+function loadJSONFile(param, loadFilePromise) {
+  if (loadFilePromise) {
+    return loadFilePromise(param.path)
+      .then((jsonContent) => loadJSONString(jsonContent))
+      .catch(() => {
+        return undefined;
+        // console.debug("File not exist: " + param.path);
+      });
+  }
   return loadTextFilePromise(param)
     .then((jsonContent) => loadJSONString(jsonContent))
     .catch(() => {
@@ -372,7 +423,7 @@ module.exports = {
   hasIndex,
   loadIndex,
   enhanceDirectoryIndex,
-  loadJsonContent,
+  // loadJsonContent,
   getMetaIndexFilePath,
   loadJSONFile,
   addToIndex,
