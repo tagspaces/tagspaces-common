@@ -22,7 +22,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 /**
  * @param param
- * @param extractText: boolean = false
+ * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
  * @param ignorePatterns: Array<string>
  * @param listDirectory function
  * @param loadTextFile function
@@ -30,7 +30,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  */
 function createIndex(
   param,
-  extractText = false,
+  mode = ['extractThumbPath'],
   ignorePatterns = [],
   listDirectory = undefined,
   loadTextFile = undefined
@@ -64,7 +64,7 @@ function createIndex(
       recursive: true,
       skipMetaFolder: true,
       skipDotHiddenFolder: true,
-      extractText,
+      mode,
     },
     async (fileEntry) => {
       counter += 1;

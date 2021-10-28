@@ -488,7 +488,7 @@ async function listMetaDirectoryPromise(path) {
 /**
  * Creates a list with containing the files and the sub directories of a given directory
  */
-function listDirectoryPromise(param, lite) {
+function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
   let path;
   if (typeof param === "object" && param !== null) {
     path = param.path;
@@ -497,7 +497,9 @@ function listDirectoryPromise(param, lite) {
   }
   return new Promise(async (resolve, reject) => {
     console.time("listDirectoryPromise");
-    const metaContent = !lite ? await listMetaDirectoryPromise(path) : [];
+    const metaContent = mode.includes("extractThumbPath")
+      ? await listMetaDirectoryPromise(path)
+      : [];
 
     const enhancedEntries = [];
     const metaPromises = [];
@@ -527,7 +529,7 @@ function listDirectoryPromise(param, lite) {
                   });
                 }
 
-                if (!lite) {
+                if (mode.includes('extractThumbPath')) {
                   if (entry.isDirectory) {
                     // Read tsm.json from subfolders
                     if (

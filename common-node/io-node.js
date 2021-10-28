@@ -116,7 +116,13 @@ function saveFilePromise(param, content, overwrite = true) {
   });
 }
 
-function listDirectoryPromise(param, lite = true, extractTextContent = false) {
+/**
+ *
+ * @param param
+ * @param mode = ['extractTextContent', 'extractThumbPath']
+ * @returns {Promise<unknown>}
+ */
+function listDirectoryPromise(param, mode = ['extractThumbPath']) {
   let path;
   if (typeof param === "object" && param !== null) {
     path = param.path;
@@ -171,7 +177,7 @@ function listDirectoryPromise(param, lite = true, extractTextContent = false) {
             }
 
             // Read tsm.json from sub folders
-            if (!eentry.isFile && !lite) {
+            if (!eentry.isFile && mode.includes('extractThumbPath')) {
               const folderMetaPath =
                 eentry.path +
                 pathLib.sep +
@@ -203,23 +209,25 @@ function listDirectoryPromise(param, lite = true, extractTextContent = false) {
               }
             }
 
-            const fileName = eentry.name.toLowerCase();
-            if (
-              extractTextContent &&
-              eentry.isFile &&
-              Pro &&
-              Pro.Indexer &&
-              Pro.Indexer.extractTextContent &&
-              (fileName.endsWith(".txt") ||
-                fileName.endsWith(".md") ||
-                fileName.endsWith(".html"))
-            ) {
-              const fileContent = fs.readFileSync(eentry.path, "utf8");
-              eentry.textContent = Pro.Indexer.extractTextContent(
-                fileName,
-                fileContent
-              );
-            }
+            /*if(mode.includes('extractTextContent')){  TODO
+              const fileName = eentry.name.toLowerCase();
+              if (
+                  extractTextContent &&
+                  eentry.isFile &&
+                  Pro &&
+                  Pro.Indexer &&
+                  Pro.Indexer.extractTextContent &&
+                  (fileName.endsWith(".txt") ||
+                      fileName.endsWith(".md") ||
+                      fileName.endsWith(".html"))
+              ) {
+                const fileContent = fs.readFileSync(eentry.path, "utf8");
+                eentry.textContent = Pro.Indexer.extractTextContent(
+                    fileName,
+                    fileContent
+                );
+              }
+            }*/
 
             /*if (window.walkCanceled) {
                 resolve(enhancedEntries);
@@ -232,7 +240,7 @@ function listDirectoryPromise(param, lite = true, extractTextContent = false) {
         });
 
         // Read the .ts meta content
-        if (!lite && containsMetaFolder) {
+        if (containsMetaFolder && mode.includes('extractThumbPath')) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {
             if (err) {

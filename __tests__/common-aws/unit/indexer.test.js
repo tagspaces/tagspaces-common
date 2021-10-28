@@ -35,7 +35,7 @@ test("createIndex", async () => {
     path: "",
     bucketName: "bucket1",
   };
-  const index = await createIndex(param, false, [], listDirectoryPromise);
+  const index = await createIndex(param, ['extractThumbPath'], [], listDirectoryPromise);
   expect(index.some(({ name }) => name === "image.png")).toBe(true);
   // console.log("list:" + JSON.stringify(index));
 

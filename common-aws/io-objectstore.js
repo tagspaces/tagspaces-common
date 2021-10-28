@@ -109,7 +109,13 @@ const listMetaDirectoryPromise = async (param) => {
   return results;
 };
 
-const listDirectoryPromise = (param, lite = true) =>
+/**
+ *
+ * @param param
+ * @param mode = ['extractTextContent', 'extractThumbPath', 'extractThumbURL']
+ * @returns {Promise<unknown>}
+ */
+const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
   new Promise(async (resolve) => {
     const path = param.path;
     const bucketName = param.bucketName;
@@ -194,25 +200,32 @@ const listDirectoryPromise = (param, lite = true) =>
       // Handling files
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
-        let thumbPath = tsPaths.getThumbFileLocationForFile(file.Key);
-        if (thumbPath.startsWith("/")) {
-          thumbPath = thumbPath.substring(1);
-        }
-        const thumbAvailable = metaContent.find(
-          (obj) => obj.path === thumbPath
-        );
-        if (thumbAvailable) {
-          if (!lite) {
-            thumbPath = getURLforPath(
-              {
-                path: thumbPath,
-                bucketName: bucketName,
-              },
-              604800
-            ); // 60 * 60 * 24 * 7 = 1 week
+        let thumbPath;
+        if (
+          mode.some(
+            (el) => el === "extractThumbURL" || el === "extractThumbPath"
+          )
+        ) {
+          thumbPath = tsPaths.getThumbFileLocationForFile(file.Key);
+          if (thumbPath.startsWith("/")) {
+            thumbPath = thumbPath.substring(1);
           }
-        } else {
-          thumbPath = "";
+          const thumbAvailable = metaContent.find(
+            (obj) => obj.path === thumbPath
+          );
+          if (thumbAvailable) {
+            if (mode.includes("extractThumbURL")) {
+              thumbPath = getURLforPath(
+                {
+                  path: thumbPath,
+                  bucketName: bucketName,
+                },
+                604800
+              ); // 60 * 60 * 24 * 7 = 1 week
+            }
+          } /*else {
+            thumbPath = "";
+          }*/
         }
 
         eentry = {};
@@ -220,7 +233,9 @@ const listDirectoryPromise = (param, lite = true) =>
         eentry.path = file.Key;
         eentry.bucketName = bucketName;
         eentry.tags = [];
-        eentry.thumbPath = thumbPath;
+        if (thumbPath) {
+          eentry.thumbPath = thumbPath;
+        }
         eentry.meta = {};
         eentry.isFile = true;
         eentry.size = file.Size;
