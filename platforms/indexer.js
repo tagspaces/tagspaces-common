@@ -30,7 +30,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  */
 function createIndex(
   param,
-  mode = ['extractThumbPath'],
+  mode = ["extractThumbPath"],
   ignorePatterns = [],
   listDirectory = undefined,
   loadTextFile = undefined
@@ -163,11 +163,13 @@ function persistIndex(param, directoryIndex) {
     JSON.stringify(directoryIndex), // relativeIndex),
     true
   )
-    .then(() => {
-      console.log(
-        "Index persisted for: " + directoryPath + " to " + folderIndexPath
-      );
-      return true;
+    .then((result) => {
+      if (result) {
+        console.log(
+          "Index persisted for: " + directoryPath + " to " + folderIndexPath
+        );
+      }
+      return result;
     })
     .catch((err) => {
       console.error("Error saving the index for " + folderIndexPath, err);
@@ -209,7 +211,11 @@ function hasIndex(param, getProperties) {
  * @param loadFilePromise function
  * @returns {Promise<Array<Object>>}
  */
-function loadIndex(param, dirSeparator = AppConfig.dirSeparator, loadFilePromise) {
+function loadIndex(
+  param,
+  dirSeparator = AppConfig.dirSeparator,
+  loadFilePromise
+) {
   let directoryPath, locationID;
   if (typeof param === "object" && param !== null) {
     directoryPath = param.path;

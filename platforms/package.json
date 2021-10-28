@@ -19,13 +19,13 @@
   ],
   "nodeDependencies": {
     "@tagspaces/tagspaces-common-node": "^1.0.12",
-    "@tagspaces/tagspaces-common-aws": "^1.0.24"
+    "@tagspaces/tagspaces-common-aws": "^1.0.25"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "^1.0.24"
+    "@tagspaces/tagspaces-common-aws": "^1.0.25"
   },
   "cordovaDependencies": {
     "@tagspaces/tagspaces-common-cordova": "^1.0.15",
-    "@tagspaces/tagspaces-common-aws": "^1.0.24"
+    "@tagspaces/tagspaces-common-aws": "^1.0.25"
   }
 }

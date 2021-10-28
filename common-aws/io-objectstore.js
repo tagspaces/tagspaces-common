@@ -511,6 +511,8 @@ const saveFilePromise = (param, content, overWrite, mode) =>
       mimeType = "text/plain";
     } else if (fileExt === "html") {
       mimeType = "text/html";
+    } else if (fileExt === "json") {
+      mimeType = "application/json";
     } else {
       // default type
       mimeType = "text/plain";
