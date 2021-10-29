@@ -2,6 +2,8 @@
 
 `npm install`
 
+#### (Note: this is npm project dont use yarn to install packages) 
+
 ### Testing
 
 `npm run-script test`
