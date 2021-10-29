@@ -13,9 +13,10 @@
     "pkg-publish": "npm run node-install && npm run build:prod && npm publish --access public"
   },
   "devDependencies": {
-    "yargs": "^17.1.0",
     "webpack": "^5.57.1",
-    "webpack-cli": "^4.8.0"
+    "webpack-cli": "^4.8.0",
+    "yargs": "^17.1.0",
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@tagspaces/tagspaces-workers": "^1.0.21"
