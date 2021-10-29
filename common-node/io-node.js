@@ -122,7 +122,7 @@ function saveFilePromise(param, content, overwrite = true) {
  * @param mode = ['extractTextContent', 'extractThumbPath']
  * @returns {Promise<unknown>}
  */
-function listDirectoryPromise(param, mode = ['extractThumbPath']) {
+function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
   let path;
   if (typeof param === "object" && param !== null) {
     path = param.path;
@@ -177,7 +177,7 @@ function listDirectoryPromise(param, mode = ['extractThumbPath']) {
             }
 
             // Read tsm.json from sub folders
-            if (!eentry.isFile && mode.includes('extractThumbPath')) {
+            if (!eentry.isFile && mode.includes("extractThumbPath")) {
               const folderMetaPath =
                 eentry.path +
                 pathLib.sep +
@@ -209,25 +209,17 @@ function listDirectoryPromise(param, mode = ['extractThumbPath']) {
               }
             }
 
-            /*if(mode.includes('extractTextContent')){  TODO
+            if (mode.includes("extractTextContent") && eentry.isFile) {
               const fileName = eentry.name.toLowerCase();
               if (
-                  extractTextContent &&
-                  eentry.isFile &&
-                  Pro &&
-                  Pro.Indexer &&
-                  Pro.Indexer.extractTextContent &&
-                  (fileName.endsWith(".txt") ||
-                      fileName.endsWith(".md") ||
-                      fileName.endsWith(".html"))
+                fileName.endsWith(".txt") ||
+                fileName.endsWith(".md") ||
+                fileName.endsWith(".html")
               ) {
                 const fileContent = fs.readFileSync(eentry.path, "utf8");
-                eentry.textContent = Pro.Indexer.extractTextContent(
-                    fileName,
-                    fileContent
-                );
+                eentry.textContent = extractTextContent(fileName, fileContent);
               }
-            }*/
+            }
 
             /*if (window.walkCanceled) {
                 resolve(enhancedEntries);
@@ -240,7 +232,7 @@ function listDirectoryPromise(param, mode = ['extractThumbPath']) {
         });
 
         // Read the .ts meta content
-        if (containsMetaFolder && mode.includes('extractThumbPath')) {
+        if (containsMetaFolder && mode.includes("extractThumbPath")) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {
             if (err) {
@@ -386,6 +378,60 @@ function getFileContentPromise(param) {
   });
 }
 
+function extractTextContent(fileName, textContent) {
+  // Convert to lowercase
+  let fileContent = textContent.toLowerCase();
+  let contentArray;
+  if (fileName.endsWith(".md")){
+    const marked = require("marked");
+    const tokens = marked.lexer(fileContent, { });
+    contentArray = tokens.map((token) => {
+      if (token.text) {
+        return token.text;
+      }
+      return "";
+    });
+  } else if(fileName.endsWith(".html")) {
+    const marked = require("marked");
+    const lexer = new marked.Lexer({});
+    const tokens = lexer.inlineTokens(fileContent);
+    // const tokens = marked.lexer(fileContent, { });
+    contentArray = tokens.map((token) => {
+      if (token.type === "text") {
+        return token.text;
+      }
+      return "";
+    });
+  } else {
+    contentArray = fileContent.split(" ");
+  }
+
+  // clear duplicate words
+  contentArray = [...new Set(contentArray)];
+
+  /*if (fileName.endsWith(".html")) {
+    // Use only the content in the body
+    const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
+    const matches = pattern.exec(fileContent);
+    if (matches && matches.length > 0) {
+      fileContent = matches[1];
+    }
+
+    const span = document.createElement("span");
+    span.innerHTML = fileContent;
+    fileContent = span.textContent || span.innerText;
+  }*/
+
+  // Todo remove very long word e.g. dataUrls or other binary data which could be in the text
+
+  // replace unnecessary chars. leave only chars, numbers and space
+  // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
+  // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
+  fileContent = contentArray.join(" ").trim();
+  fileContent = fileContent.replace(/[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g, "");
+  return fileContent;
+}
+
 module.exports = {
   listDirectoryPromise,
   saveTextFilePromise,
@@ -393,4 +439,5 @@ module.exports = {
   isDirectory,
   loadTextFilePromise,
   getFileContentPromise,
+  extractTextContent
 };

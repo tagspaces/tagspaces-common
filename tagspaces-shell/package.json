@@ -26,5 +26,9 @@
     "README.md",
     "LICENSE"
   ],
-  "dependencies": {}
+  "dependencies": {},
+  "engines": {
+    "yarn": "please-use-npm",
+    "npm": ">= 6.14.15"
+  }
 }
