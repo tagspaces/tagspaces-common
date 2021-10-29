@@ -117,9 +117,13 @@ module.exports.createWS = function (port, key) {
             const { directoryPath, extractText, ignorePatterns } =
               JSON.parse(body);
 
+            const mode = ["extractThumbPath"];
+            if (extractText) {
+              mode.push('extractTextContent');
+            }
             createIndex(
               directoryPath,
-              ["extractThumbPath"],
+              mode,
               ignorePatterns ? ignorePatterns : []
             ).then((directoryIndex) => {
               persistIndex(directoryPath, directoryIndex).then((success) => {
