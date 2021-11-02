@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/shell",
   "description": "Shell script for creating thumbnails and search index for the TagSpaces applications",
-  "version": "1.0.2",
+  "version": "1.0.3 ",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -19,7 +19,7 @@
     "webpack-cli": "^4.8.0",
     "yargs": "^17.1.0",
     "rimraf": "^3.0.2",
-    "@tagspaces/tagspaces-workers": "^1.0.25"
+    "@tagspaces/tagspaces-workers": "^1.0.28"
   },
   "files": [
     "build/",

@@ -7,7 +7,9 @@ const thumbFileExt = ".jpg";
 const folderThumbFile = "tst.jpg";
 const folderIndexFile = "tsi.json";
 const metaFolderFile = "tsm.json";
-const isWin = process.platform === "win32";
+const isWin =
+  process &&
+  (process.platform === "win32" || /^(msys|cygwin)$/.test(process.env.OSTYPE));
 const dirSeparator = isWin ? "\\" : "/";
 const isCordovaiOS =
   typeof window !== "undefined" &&

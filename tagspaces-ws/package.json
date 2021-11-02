@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "build/index.js",
@@ -24,7 +24,7 @@
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "@tagspaces/tagspaces-workers": "^1.0.27"
+    "@tagspaces/tagspaces-workers": "^1.0.28"
   },
   "webDependencies": {},
   "peerDependencies": {

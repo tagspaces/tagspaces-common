@@ -75,7 +75,7 @@ function createIndex(
       const meta = await getEntryMeta(
         {
           ...param,
-          path: getMetaFileLocationForFile(fileEntry.path),
+          path: getMetaFileLocationForFile(fileEntry.path, AppConfig.dirSeparator),
         },
         loadTextFile
       );
