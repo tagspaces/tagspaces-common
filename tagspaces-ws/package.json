@@ -6,7 +6,8 @@
   "license": "MIT",
   "main": "build/index.js",
   "files": [
-    "build/"
+    "build/",
+    "LICENSE"
   ],
   "scripts": {
     "build:dev": "webpack --config webpack.config.js --mode development",

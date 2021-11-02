@@ -30,7 +30,6 @@ module.exports = {
     rules: [
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
       // { enforce: "pre", test: /\.js?$/, loader: "source-map-loader" },
-
       // { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     ],
   },
@@ -45,10 +44,7 @@ module.exports = {
 
   // Tells webpack where to output the bundled javascript
   output: {
-    filename: "index.js",
-    //library: 'TagspacesWS',
-    //libraryTarget: 'umd',
-    //umdNamedDefine: true,
+    filename: "tsshell.js",
     path: join(__dirname, "build"),
   },
 

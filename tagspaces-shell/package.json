@@ -1,26 +1,32 @@
 {
-  "name": "@tagspaces/tagspaces-shell",
-  "description": "Shell script for creating Tagspaces thumbnails and index",
-  "version": "1.0.0",
+  "name": "@tagspaces/shell",
+  "description": "Shell script for creating thumbnails and search index for the TagSpaces applications",
+  "version": "1.0.2",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "build:dev": "webpack --config webpack.config.js --mode development",
     "build:prod": "webpack --config webpack.config.js --mode production",
     "node-install": "rimraf package-lock.json && rimraf node_modules && npx cross-env PD_PLATFORM=node npm install && npm dedupe",
-    "start": "node index.js -m indexer",
-    "start-thumbnails": "node index.js ./__test__",
+    "gen-index": "node build/tsshell.js -m indexer",
+    "gen-index-dev": "node index.js -m indexer",
+    "gen-thumbnails": "node build/tsshell.js -m thumbgen",
+    "gen-thumbnails-dev": "node index.js ./__test__",
     "pkg-publish": "npm run node-install && npm run build:prod && npm publish --access public"
   },
   "devDependencies": {
     "webpack": "^5.57.1",
     "webpack-cli": "^4.8.0",
     "yargs": "^17.1.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "@tagspaces/tagspaces-workers": "^1.0.25"
   },
-  "dependencies": {
-    "@tagspaces/tagspaces-workers": "^1.0.26"
-  },
+  "files": [
+    "build/",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {},
   "engines": {
     "yarn": "please-use-npm",
     "npm": ">= 6.14.15"
