@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.0.54",
+  "version": "1.0.55",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -18,7 +18,7 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "^1.0.13",
+    "@tagspaces/tagspaces-common-node": "^1.0.14",
     "@tagspaces/tagspaces-common-aws": "^1.0.25"
   },
   "webDependencies": {
