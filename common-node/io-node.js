@@ -382,16 +382,16 @@ function extractTextContent(fileName, textContent) {
   // Convert to lowercase
   let fileContent = textContent.toLowerCase();
   let contentArray;
-  if (fileName.endsWith(".md")){
+  if (fileName.endsWith(".md")) {
     const marked = require("marked");
-    const tokens = marked.lexer(fileContent, { });
+    const tokens = marked.lexer(fileContent, {});
     contentArray = tokens.map((token) => {
       if (token.text) {
         return token.text;
       }
       return "";
     });
-  } else if(fileName.endsWith(".html")) {
+  } else if (fileName.endsWith(".html")) {
     const marked = require("marked");
     const lexer = new marked.Lexer({});
     const tokens = lexer.inlineTokens(fileContent);
@@ -429,6 +429,7 @@ function extractTextContent(fileName, textContent) {
   // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
   fileContent = contentArray.join(" ").trim();
   fileContent = fileContent.replace(/[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g, "");
+  fileContent = fileContent.replace(/\n/g, "");
   return fileContent;
 }
 
@@ -439,5 +440,5 @@ module.exports = {
   isDirectory,
   loadTextFilePromise,
   getFileContentPromise,
-  extractTextContent
+  extractTextContent,
 };
