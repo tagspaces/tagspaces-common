@@ -1,18 +1,21 @@
 {
   "name": "@tagspaces/shell",
   "description": "Shell script for creating thumbnails and search index for the TagSpaces applications",
-  "version": "1.0.2",
+  "version": "1.1.2",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "build:dev": "webpack --config webpack.config.js --mode development",
     "build:prod": "webpack --config webpack.config.js --mode production",
     "node-install": "rimraf package-lock.json && rimraf node_modules && npx cross-env PD_PLATFORM=node npm install && npm dedupe",
-    "gen-index": "node build/tsshell.js -m indexer",
-    "gen-index-dev": "node index.js -m indexer",
-    "gen-thumbnails": "node build/tsshell.js -m thumbgen",
-    "gen-thumbnails-dev": "node index.js ./__test__",
+    "gen-index": "node bin/cli.js -m indexer",
+    "gen-index-dev": "node bin/clidev.js -m indexer",
+    "gen-thumbnails": "node bin/cli.js -m thumbgen",
+    "gen-thumbnails-dev": "node bin/clidev.js ./__test__",
     "pkg-publish": "npm run node-install && npm run build:prod && npm publish --access public"
+  },
+  "bin": {
+    "tscmd": "./bin/cli.js"
   },
   "devDependencies": {
     "webpack": "^5.57.1",

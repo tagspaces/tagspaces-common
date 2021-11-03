@@ -44,7 +44,8 @@ module.exports = {
 
   // Tells webpack where to output the bundled javascript
   output: {
-    filename: "tsshell.js",
+    filename: "tscmd.js",
+    libraryTarget: "umd",
     path: join(__dirname, "build"),
   },
 

@@ -1,18 +1,18 @@
 This is a set of command line tools which can create search index and thumbnails for folders used in the TagSpaces Desktop and Web apps.
 
+## Installation
+
+    npm install -global @tagspaces/shell
+
 ## Search index generation
 
 This tool will create a search index for a given folder with all its sub folders.
 
 Run node script:
 
-    npm run gen-index /some/folder/
+    tscmd -m indexer /some/folder/
 
-This will internally call:
-
-    node build/tsshell.js -m indexer /some/folder/
-
-Which can be used for automation e.g. in CRON jobs
+This command can be used for automation e.g. in CRON jobs.
 
 ## Thumbnail generation
 
@@ -30,10 +30,7 @@ run node script:
 
 Run node script:
 
-    npm run gen-thumbnails /some/folder/
+    tscmd -m thumbgen /some/folder/
 
-This will internally call:
-
-    node build/tsshell.js -m thumbgen /some/folder/
-
-Which can be used for automation e.g. in CRON jobs
+This command can be used for automation e.g. in CRON jobs.
+Don't forget to put the trailing slash after the folder name.
