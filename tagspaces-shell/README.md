@@ -18,7 +18,7 @@ This command can be used for automation e.g. in CRON jobs.
 
 This script will recursively create thumbnails for a specified folder with all its sub folders.
 
-It's need to install [sharp](https://sharp.pixelplumbing.com/install) package globally:
+You have to install [sharp](https://sharp.pixelplumbing.com/install) package globally with the following command:
 
     npm i sharp -g
 
