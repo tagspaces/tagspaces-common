@@ -1,15 +1,85 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
+const winattr = require("winattr");
+const { getPath } = require("platform-folders");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
+const { arrayBufferToBuffer } = require("@tagspaces/tagspaces-common/misc");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+let fsWatcher;
 
 function isDirectory(entryPath) {
   return fs.lstatSync(entryPath).isDirectory();
 }
 
+function getDevicePaths() {
+  const paths = {
+    desktopFolder: getPath("desktop"),
+    documentsFolder: getPath("documents"),
+    downloadsFolder: getPath("downloads"),
+    musicFolder: getPath("music"),
+    picturesFolder: getPath("pictures"),
+    videosFolder: getPath("videos"),
+  };
+  if (AppConfig.isMac) {
+    paths.iCloudFolder =
+      getPath("home") + "/Library/Mobile Documents/com~apple~CloudDocs";
+  }
+  return paths;
+}
+
+function createDirectoryTree(directoryPath) {
+  const generateDirectoryTree = (dirPath) => {
+    try {
+      const tree = {};
+      const dstats = fs.lstatSync(dirPath);
+      tree.name = pathLib.basename(dirPath);
+      tree.isFile = false;
+      tree.lmdt = dstats.mtime;
+      tree.path = dirPath;
+      tree.children = [];
+      const dirList = fs.readdirSync(dirPath);
+      for (let i = 0; i < dirList.length; i += 1) {
+        const path = dirPath + AppConfig.dirSeparator + dirList[i];
+        const stats = fs.lstatSync(path);
+        if (stats.isFile()) {
+          tree.children.push({
+            name: pathLib.basename(path),
+            isFile: true,
+            size: stats.size,
+            lmdt: stats.mtime,
+            path,
+          });
+        } else {
+          tree.children.push(generateDirectoryTree(path));
+        }
+      }
+      return tree;
+    } catch (ex) {
+      console.error("Generating tree for " + dirPath + " failed " + ex);
+    }
+  };
+  // console.log(JSON.stringify(directoryTree));
+  return generateDirectoryTree(directoryPath);
+}
+
+/**
+ * Create a promise that rejects in <ms> milliseconds
+ * @param ms: number
+ */
+function timeout(ms) {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => {
+      clearTimeout(id);
+      reject(new Error("Timed out in " + ms + "ms."));
+    }, ms);
+  });
+}
+
 /**
  * @param param (path - deprecated or Object)
- * @returns {Promise<unknown>}
+ * return on success: resolve Promise<TS.FileSystemEntry>
+ *        on error:   resolve Promise<false> (file not exist) TODO rethink this to reject error too
+ *        on timeout: reject error
  */
 function getPropertiesPromise(param) {
   let path;
@@ -18,7 +88,7 @@ function getPropertiesPromise(param) {
   } else {
     path = param;
   }
-  return new Promise((resolve) => {
+  const promise = new Promise((resolve) => {
     /* stats for file:
      * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
      * "blksize":4096, "ino":2634172, "size":230, "blocks":24,  "atime":"2015-11-24T09:56:41.932Z",
@@ -43,6 +113,9 @@ function getPropertiesPromise(param) {
       }
     });
   });
+
+  // Returns a race between our timeout and the passed in promise
+  return Promise.race([promise, timeout(2000)]);
 }
 
 function saveTextFilePromise(param, content, overwrite) {
@@ -117,6 +190,69 @@ function saveFilePromise(param, content, overwrite = true) {
 }
 
 /**
+ * @param filePath: string
+ * @param content: any
+ * @param overwrite: boolean
+ */
+function saveBinaryFilePromise(filePath, content, overwrite) {
+  console.log("Saving binary file: " + filePath);
+  const buff = arrayBufferToBuffer(content);
+  return saveFilePromise(filePath, buff, overwrite);
+}
+
+/**
+ * @param path: string
+ * deprecated useTrash: boolean -> use electron-io moveToTrash
+ */
+function deleteFilePromise(path) {
+  /*if (useTrash) {
+    return new Promise((resolve, reject) => {
+      if (moveToTrash([path])) {
+        resolve(path);
+      } else {
+        // console.error('deleteDirectoryPromise '+path+' failed');
+        reject(new Error("deleteDirectoryPromise " + path + " failed"));
+      }
+    });
+  }*/
+
+  return new Promise((resolve, reject) => {
+    fs.unlink(path, (error) => {
+      if (error) {
+        return reject(error);
+      }
+      return resolve(path);
+    });
+  });
+}
+
+/**
+ * @param path: string
+ * deprecated useTrash -> use moveToTrash from electron-io
+ */
+function deleteDirectoryPromise(path) {
+  /*if (useTrash) {
+    return new Promise((resolve, reject) => {
+      if (this.moveToTrash([path])) {
+        resolve(path);
+      } else {
+        // console.error('deleteDirectoryPromise '+path+' failed');
+        reject(new Error("deleteDirectoryPromise " + path + " failed"));
+      }
+    });
+  }*/
+
+  return new Promise((resolve, reject) => {
+    fs.rm(path, { recursive: true, force: true }, (error) => {
+      if (error) {
+        return reject(error);
+      }
+      return resolve(path);
+    });
+  });
+}
+
+/**
  *
  * @param param
  * @param mode = ['extractTextContent', 'extractThumbPath']
@@ -137,7 +273,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
     let eentry;
     let containsMetaFolder = false;
     // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
-    if (path.startsWith("./")) {
+    if (path.startsWith("./") || path.startsWith("../")) {
       // relative tsPaths
       path = pathLib.resolve(path);
     }
@@ -309,12 +445,21 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
   });
 }
 
+/**
+ * @param param: {},
+ * @param isPreview: boolean
+ * @returns {Promise<string>}
+ */
 function loadTextFilePromise(param, isPreview = false) {
   let filePath;
   if (typeof param === "object" && param !== null) {
     filePath = param.path;
   } else {
     filePath = param;
+  }
+  if (filePath.startsWith("./") || filePath.startsWith("../")) {
+    // relative paths
+    filePath = pathLib.resolve(filePath);
   }
   return new Promise((resolve, reject) => {
     if (isPreview) {
@@ -350,7 +495,7 @@ function loadTextFilePromise(param, isPreview = false) {
   });
 }
 
-function getFileContentPromise(param) {
+/*function getFileContentPromise(param) {
   let fileURL;
   if (typeof param === "object" && param !== null) {
     fileURL = param.path;
@@ -359,6 +504,10 @@ function getFileContentPromise(param) {
   }
   return new Promise((resolve, reject) => {
     if (fileURL.indexOf("file://") === -1) {
+      if (fileURL.startsWith("./") || fileURL.startsWith("../")) {
+        // relative paths
+        fileURL = pathLib.resolve(fileURL);
+      }
       fileURL = "file://" + fileURL;
     }
     const xhr = new XMLHttpRequest();
@@ -376,7 +525,7 @@ function getFileContentPromise(param) {
     };
     xhr.send();
   });
-}
+}*/
 
 function extractTextContent(fileName, textContent) {
   // Convert to lowercase
@@ -433,12 +582,169 @@ function extractTextContent(fileName, textContent) {
   return fileContent;
 }
 
+function createDirectoryPromise(dirPath) {
+  console.log("Creating directory: " + dirPath);
+  return new Promise((resolve, reject) => {
+    fs.mkdirp(dirPath, (error) => {
+      if (error) {
+        reject(
+          new Error("Error creating folder: " + dirPath + " with " + error)
+        );
+        return;
+      }
+      // Make newly created .ts folders hidden under Windows
+      if (AppConfig.isWin && dirPath.endsWith("\\" + AppConfig.metaFolder)) {
+        winattr.set(dirPath, { hidden: true }, (err) => {
+          resolve(dirPath);
+          if (err) {
+            console.warn("Error setting hidden attr. to dir: " + dirPath);
+          } else {
+            console.log("Success setting hidden attr. to dir: " + dirPath);
+          }
+        });
+      } else {
+        resolve(dirPath);
+      }
+    });
+  });
+}
+
+function copyFilePromise(sourceFilePath, targetFilePath) {
+  console.log("Copying file: " + sourceFilePath + " to " + targetFilePath);
+  return new Promise((resolve, reject) => {
+    if (sourceFilePath === targetFilePath) {
+      reject(
+        'Trying to copy over the same file. Copying "' +
+          sourceFilePath +
+          '" failed'
+      );
+    } else if (fs.lstatSync(sourceFilePath).isDirectory()) {
+      reject("Trying to copy a file: " + sourceFilePath + ". Copying failed");
+      /* } else if (fs.existsSync(targetFilePath)) {
+      reject('File "' + targetFilePath + '" exists. Copying failed.'); */
+    } else {
+      fs.copy(sourceFilePath, targetFilePath, (error) => {
+        if (error) {
+          reject("Copying: " + sourceFilePath + " failed.");
+          return;
+        }
+        resolve([sourceFilePath, targetFilePath]);
+      });
+    }
+  });
+}
+
+function renameFilePromise(filePath, newFilePath) {
+  console.log("Renaming file: " + filePath + " to " + newFilePath);
+  // stopWatchingDirectories();
+  return new Promise((resolve, reject) => {
+    if (filePath === newFilePath) {
+      reject(
+        'Source and target file paths are the same. Renaming of "' +
+          filePath +
+          '" failed'
+      );
+      return;
+    }
+    if (fs.lstatSync(filePath).isDirectory()) {
+      reject(
+        'Trying to rename a directory. Renaming of "' + filePath + '" failed'
+      );
+      return;
+    }
+    if (!fs.existsSync(filePath)) {
+      reject(
+        'Source file does not exist. Renaming of "' + filePath + '" failed'
+      );
+      return;
+    }
+    if (fs.existsSync(newFilePath)) {
+      reject(
+        'Target filename "' +
+          newFilePath +
+          '" exists. Renaming of "' +
+          filePath +
+          '" failed'
+      );
+      return;
+    }
+    fs.move(filePath, newFilePath, { clobber: true }, (error) => {
+      if (error) {
+        reject("Renaming: " + filePath + " failed with: " + error);
+        return;
+      }
+      resolve([filePath, newFilePath]);
+    });
+  });
+}
+
+function renameDirectoryPromise(dirPath, newDirName) {
+  const newDirPath =
+    tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
+    AppConfig.dirSeparator +
+    newDirName;
+  console.log("Renaming dir: " + dirPath + " to " + newDirPath);
+  // stopWatchingDirectories();
+  return new Promise((resolve, reject) => {
+    if (dirPath === newDirPath) {
+      reject("Trying to move in the same directory. Moving failed");
+      return;
+    }
+    if (fs.existsSync(newDirPath)) {
+      reject(
+        'Directory "' +
+          newDirPath +
+          '" exists. Renaming of "' +
+          dirPath +
+          '" failed'
+      );
+      return;
+    }
+    const dirStatus = fs.lstatSync(dirPath);
+    if (dirStatus.isDirectory) {
+      fs.rename(dirPath, newDirPath, (error) => {
+        if (error) {
+          reject('Renaming "' + dirPath + '" failed with: ' + error);
+          return;
+        }
+        resolve(newDirPath);
+      });
+    } else {
+      reject("Path is not a directory. Renaming of " + dirPath + " failed.");
+    }
+  });
+}
+
+// Experimental functionality
+function watchDirectory(dirPath, listener) {
+  // stopWatchingDirectories();
+  fsWatcher = fs.watch(
+    dirPath,
+    { persistent: true, recursive: false },
+    listener
+  );
+}
+
+function resolveFilePath(filePath) {
+  pathLib.resolve(filePath);
+}
+
 module.exports = {
   listDirectoryPromise,
   saveTextFilePromise,
+  saveFilePromise,
+  saveBinaryFilePromise,
   getPropertiesPromise,
   isDirectory,
   loadTextFilePromise,
-  getFileContentPromise,
   extractTextContent,
+  createDirectoryPromise,
+  copyFilePromise,
+  renameFilePromise,
+  renameDirectoryPromise,
+  deleteFilePromise,
+  deleteDirectoryPromise,
+  watchDirectory,
+  getDevicePaths,
+  createDirectoryTree,
 };

@@ -1,16 +1,18 @@
 {
   "name": "@tagspaces/tagspaces-common-node",
-  "description": "TagSpaces common node thumbnails module",
-  "version": "1.0.15",
+  "description": "TagSpaces common node module",
+  "version": "1.0.21",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
   },
   "dependencies": {
+    "@tagspaces/tagspaces-common": "^1.1.50",
     "fs-extra": "^10.0.0",
     "path": "^0.12.7",
+    "platform-folders": "^0.5.4",
     "marked": "^3.0.8",
-    "@tagspaces/tagspaces-common": "^1.1.49"
+    "winattr": "^3.0.0"
   }
 }

@@ -7,6 +7,7 @@
   "scripts": {
     "install": "node install/platformIO.js",
     "install-node": "rimraf node_modules && npx cross-env PD_PLATFORM=node npm run install",
+    "install-electron": "rimraf node_modules && npx cross-env PD_PLATFORM=electron npm run install",
     "install-web": "rimraf node_modules && npx cross-env PD_PLATFORM=web npm run install",
     "install-cordova": "rimraf node_modules && npx cross-env PD_PLATFORM=cordova npm run install",
     "pkg-publish": "npm publish --access public"
@@ -19,7 +20,7 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "^1.0.15",
+    "@tagspaces/tagspaces-common-node": "^1.0.21",
     "@tagspaces/tagspaces-common-aws": "^1.0.28"
   },
   "webDependencies": {
@@ -28,5 +29,10 @@
   "cordovaDependencies": {
     "@tagspaces/tagspaces-common-cordova": "^1.0.16",
     "@tagspaces/tagspaces-common-aws": "^1.0.28"
+  },
+  "electronDependencies": {
+    "@tagspaces/tagspaces-common-node": "^1.0.21",
+    "@tagspaces/tagspaces-common-electron": "^1.0.0",
+    "@tagspaces/tagspaces-common-aws": "^1.0.26"
   }
 }

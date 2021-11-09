@@ -19,7 +19,7 @@
 /**
  * @param tag TS.Tag
  */
-export function prepareTagForExport(tag) {
+function prepareTagForExport(tag) {
   return {
     title: tag.title,
     ...(tag.color && { color: tag.color }),
@@ -38,12 +38,8 @@ export function prepareTagForExport(tag) {
  * @param {int} sliceSize - optional size of slices if omited 512 is used as default
  * @returns {Blob}
  */
-export function b64toBlob(
-    b64Data,
-    contentType = '',
-    sliceSize = 512
-) {
-  const byteCharacters = Buffer.from(b64Data, 'base64'); // atob(b64Data);
+function b64toBlob(b64Data, contentType = "", sliceSize = 512) {
+  const byteCharacters = Buffer.from(b64Data, "base64"); // atob(b64Data);
   const byteArrays = [];
 
   for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
@@ -55,5 +51,16 @@ export function b64toBlob(
     const byteArray = new Uint8Array(byteNumbers);
     byteArrays.push(byteArray);
   }
-  return new Blob(byteArrays, {type: contentType});
+  return new Blob(byteArrays, { type: contentType });
 }
+
+function arrayBufferToBuffer(content) {
+  const buffer = Buffer.alloc(content.byteLength);
+  const view = new Uint8Array(content);
+  for (let i = 0; i < buffer.length; ++i) {
+    buffer[i] = view[i];
+  }
+  return buffer;
+}
+
+module.exports = { prepareTagForExport, b64toBlob, arrayBufferToBuffer };
