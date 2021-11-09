@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+// const encodeS3URI = require("./encodeS3URI");
 // get reference to S3 client
 let S3;
 let conf;
@@ -688,8 +689,8 @@ function copyFilePromise(param, newFilePath) {
   return s3()
     .copyObject({
       Bucket: param.bucketName,
-      CopySource: encodeURI(param.bucketName + "/" + nFilePath),
-      Key: nNewFilePath,
+      CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
+      Key: nNewFilePath, //encodeS3URI
     })
     .promise();
 }
@@ -712,8 +713,8 @@ function renameFilePromise(param, newFilePath) {
     s3()
       .copyObject({
         Bucket: param.bucketName,
-        CopySource: encodeURI(param.bucketName + "/" + nFilePath), // this.encodeS3URI(nFilePath),
-        Key: nNewFilePath,
+        CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
+        Key: nNewFilePath, //encodeS3URI
       })
       .promise()
       .then(() =>

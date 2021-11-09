@@ -113,9 +113,18 @@ test("renameFilePromise", async () => {
       path: "dir/img.jpg",
       bucketName: "bucket1",
     },
-    "dir/img1.jpg"
+    "dir/img+1.jpg"
   );
   console.log("content:" + JSON.stringify(content));
+
+  const content1 = await renameFilePromise(
+    {
+      path: "dir/img+1.jpg",
+      bucketName: "bucket1",
+    },
+    "dir/im+g1.jpg"
+  );
+  console.log("content:" + JSON.stringify(content1));
 });
 
 test("renameDirectoryPromise", async () => {
