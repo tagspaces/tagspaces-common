@@ -11,6 +11,6 @@
     "fs-extra": "^10.0.0",
     "path": "^0.12.7",
     "marked": "^3.0.8",
-    "@tagspaces/tagspaces-common": "^1.1.49"
+    "@tagspaces/tagspaces-common": "1.1.49"
   }
 }

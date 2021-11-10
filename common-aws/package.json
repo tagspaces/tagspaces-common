@@ -11,6 +11,6 @@
   "dependencies": {
     "aws-sdk": "2.984.0",
     "uuid": "8.3.2",
-    "@tagspaces/tagspaces-common": "^1.1.49"
+    "@tagspaces/tagspaces-common": "1.1.49"
   }
 }
