@@ -8,7 +8,7 @@
     "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^1.1.50",
+    "@tagspaces/tagspaces-common": "1.1.50",
     "fs-extra": "^10.0.0",
     "path": "^0.12.7",
     "platform-folders": "^0.5.4",

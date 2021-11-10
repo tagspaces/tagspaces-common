@@ -9,7 +9,7 @@
     "pkg-publish": "npm run node-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-platforms": "^1.0.56",
-    "@tagspaces/tagspaces-thumbgen-image": "^1.0.1"
+    "@tagspaces/tagspaces-platforms": "1.0.56",
+    "@tagspaces/tagspaces-thumbgen-image": "1.0.1"
   }
 }
