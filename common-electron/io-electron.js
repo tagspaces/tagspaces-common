@@ -1,4 +1,5 @@
 import http from "http";
+const fetch = require("sync-fetch");
 const electron = require("electron");
 const ipcRenderer = electron.ipcRenderer;
 const webFrame = electron.webFrame;

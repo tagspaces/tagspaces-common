@@ -1,11 +1,14 @@
 {
   "name": "@tagspaces/tagspaces-common-electron",
   "description": "TagSpaces common electron module",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
+  },
+  "dependencies": {
+    "sync-fetch": "^0.3.1"
   },
   "peerDependencies": {
     "electron": "^15"

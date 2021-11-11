@@ -100,7 +100,7 @@ function platformSetLanguage(language) {
   if (setLanguage) {
     setLanguage(language);
   } else {
-    console.log('setLangauge not supported');
+    console.log("setLanguage not supported");
   }
 }
 
@@ -165,16 +165,19 @@ function platformCreateDirectoryTree(directoryPath) {
 }
 
 /**
+ * @param token
  * @param directoryPath: string
  * @param extractText: boolean
  * @param ignorePatterns: Array<string>
  */
 function platformCreateDirectoryIndexInWorker(
+  token,
   directoryPath,
   extractText,
   ignorePatterns
 ) {
   return createDirectoryIndexInWorker(
+    token,
     directoryPath,
     extractText,
     ignorePatterns
@@ -182,10 +185,11 @@ function platformCreateDirectoryIndexInWorker(
 }
 
 /**
+ * @param token
  * @param tmbGenerationList: Array<string>
  */
-function platformCreateThumbnailsInWorker(tmbGenerationList) {
-  return createThumbnailsInWorker(tmbGenerationList);
+function platformCreateThumbnailsInWorker(token, tmbGenerationList) {
+  return createThumbnailsInWorker(token, tmbGenerationList);
 }
 
 /**
