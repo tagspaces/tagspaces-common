@@ -1,7 +1,5 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
-const winattr = require("winattr");
-const { getPath } = require("platform-folders");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const { arrayBufferToBuffer } = require("@tagspaces/tagspaces-common/misc");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
@@ -11,7 +9,8 @@ function isDirectory(entryPath) {
   return fs.lstatSync(entryPath).isDirectory();
 }
 
-function getDevicePaths() {
+/*function getDevicePaths() {
+  const { getPath } = require("platform-folders");
   const paths = {
     desktopFolder: getPath("desktop"),
     documentsFolder: getPath("documents"),
@@ -25,7 +24,7 @@ function getDevicePaths() {
       getPath("home") + "/Library/Mobile Documents/com~apple~CloudDocs";
   }
   return paths;
-}
+}*/
 
 function createDirectoryTree(directoryPath) {
   const generateDirectoryTree = (dirPath) => {
@@ -301,9 +300,6 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
 
           try {
             stats = fs.statSync(entryPath);
-            // if (isWin && winattr.getSync(entryPath).hidden) {
-            //   return;
-            // }
             eentry.isFile = stats.isFile();
             eentry.size = stats.size;
             eentry.lmdt = stats.mtime.getTime();
@@ -592,19 +588,7 @@ function createDirectoryPromise(dirPath) {
         );
         return;
       }
-      // Make newly created .ts folders hidden under Windows
-      if (AppConfig.isWin && dirPath.endsWith("\\" + AppConfig.metaFolder)) {
-        winattr.set(dirPath, { hidden: true }, (err) => {
-          resolve(dirPath);
-          if (err) {
-            console.warn("Error setting hidden attr. to dir: " + dirPath);
-          } else {
-            console.log("Success setting hidden attr. to dir: " + dirPath);
-          }
-        });
-      } else {
-        resolve(dirPath);
-      }
+      resolve(dirPath);
     });
   });
 }
@@ -745,6 +729,5 @@ module.exports = {
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,
-  getDevicePaths,
   createDirectoryTree,
 };

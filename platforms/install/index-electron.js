@@ -1,4 +1,62 @@
-const IO_NODE = require("@tagspaces/tagspaces-common-node/io-node");
-const IO_ELECTRON = require("@tagspaces/tagspaces-common-electron/io-electron");
+import {
+    listDirectoryPromise,
+    saveTextFilePromise,
+    saveFilePromise,
+    saveBinaryFilePromise,
+    getPropertiesPromise,
+    isDirectory,
+    loadTextFilePromise,
+    extractTextContent,
+    createDirectoryPromise,
+    copyFilePromise,
+    renameFilePromise,
+    renameDirectoryPromise,
+    deleteFilePromise,
+    deleteDirectoryPromise,
+    watchDirectory,
+    createDirectoryTree,
+} from "@tagspaces/tagspaces-common-node/io-node";
 
-module.exports = { ...IO_NODE, ...IO_ELECTRON };
+import {
+    getDevicePaths,
+    setLanguage,
+    showMainWindow,
+    setZoomFactorElectron,
+    quitApp,
+    focusWindow,
+    setGlobalShortcuts,
+    moveToTrash,
+    isWorkerAvailable,
+    createDirectoryIndexInWorker,
+    createThumbnailsInWorker
+} from "@tagspaces/tagspaces-common-electron/io-electron";
+
+export {
+    listDirectoryPromise,
+    saveTextFilePromise,
+    saveFilePromise,
+    saveBinaryFilePromise,
+    getPropertiesPromise,
+    isDirectory,
+    loadTextFilePromise,
+    extractTextContent,
+    createDirectoryPromise,
+    copyFilePromise,
+    renameFilePromise,
+    renameDirectoryPromise,
+    deleteFilePromise,
+    deleteDirectoryPromise,
+    watchDirectory,
+    createDirectoryTree,
+    getDevicePaths,
+    setLanguage,
+    showMainWindow,
+    setZoomFactorElectron,
+    quitApp,
+    focusWindow,
+    setGlobalShortcuts,
+    moveToTrash,
+    isWorkerAvailable,
+    createDirectoryIndexInWorker,
+    createThumbnailsInWorker
+};

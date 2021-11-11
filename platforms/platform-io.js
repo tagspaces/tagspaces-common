@@ -18,6 +18,13 @@
 
 const {
   watchDirectory,
+  setLanguage,
+  isWorkerAvailable,
+  setZoomFactorElectron,
+  setGlobalShortcuts,
+  showMainWindow,
+  quitApp,
+  focusWindow,
   getDevicePaths,
   createDirectoryTree,
   createDirectoryIndexInWorker,
@@ -48,7 +55,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 let objectStoreAPI;
 
-function enableObjectStoreSupport(objectStoreConfig) {
+function platformEnableObjectStoreSupport(objectStoreConfig) {
   return new Promise((resolve, reject) => {
     if (
       objectStoreAPI !== undefined &&
@@ -68,36 +75,79 @@ function enableObjectStoreSupport(objectStoreConfig) {
   });
 }
 
-function disableObjectStoreSupport() {
+function platformDisableObjectStoreSupport() {
   objectStoreAPI = undefined;
 }
 
-function haveObjectStoreSupport() {
+function platformHaveObjectStoreSupport() {
   return objectStoreAPI !== undefined;
 }
 
-function isMinio() {
+function platformIsMinio() {
   return objectStoreAPI !== undefined && objectStoreAPI.config().endpointURL;
 }
 
-function getDirSeparator() {
+function platformGetDirSeparator() {
   // TODO rethink usage for S3 on Win
-  return haveObjectStoreSupport() ? "/" : AppConfig.dirSeparator;
+  return platformHaveObjectStoreSupport() ? "/" : AppConfig.dirSeparator;
 }
 
-function platformWatchDirectoryIO(dirPath, listener) {
+function platformWatchDirectory(dirPath, listener) {
   watchDirectory(dirPath, listener);
 }
 
+function platformSetLanguage(language) {
+  if (setLanguage) {
+    setLanguage(language);
+  } else {
+    console.log('setLangauge not supported');
+  }
+}
+
+function platformIsWorkerAvailable() {
+  if (isWorkerAvailable) {
+    return isWorkerAvailable();
+  }
+  return false;
+}
+
+function platformSetZoomFactorElectron(zoomLevel) {
+  if (setZoomFactorElectron) {
+    setZoomFactorElectron(zoomLevel);
+  } else {
+    console.log("setZoomFactorElectron not supported");
+  }
+}
+
+function platformSetGlobalShortcuts(globalShortcutsEnabled) {
+  if (setGlobalShortcuts) {
+    setGlobalShortcuts(globalShortcutsEnabled);
+  } else {
+    console.log("setGlobalShortcuts not supported");
+  }
+}
+
+function platformShowMainWindow() {
+  showMainWindow();
+}
+
+function platformQuitApp() {
+  quitApp();
+}
+
+function platformFocusWindow() {
+  focusWindow();
+}
+
 function platformGetDevicePaths() {
-  getDevicePaths();
+  return getDevicePaths();
 }
 
 /**
  * @param path : string
  * @param expirationInSeconds?: number
  */
-function getURLforPath(path, expirationInSeconds) {
+function platformGetURLforPath(path, expirationInSeconds) {
   if (objectStoreAPI) {
     const param = {
       path,
@@ -160,7 +210,7 @@ function platformListDirectoryPromise(
 }
 
 /**
- * @deprecated TODO for remove (use listDirectoryPromise only)
+ * @deprecated TODO for remove (use listDirectoryPromise only) -> after set path to param
  * @param param
  * @param mode
  * @param ignorePatterns
@@ -223,10 +273,7 @@ function platformCreateDirectoryPromise(dirPath) {
  * @param sourceFilePath: string
  * @param targetFilePath: string
  */
-async function platformCopyFilePromise(
-  sourceFilePath,
-  targetFilePath
-) {
+async function platformCopyFilePromise(sourceFilePath, targetFilePath) {
   return copyFilePromiseOverwrite(sourceFilePath, targetFilePath);
 }
 
@@ -424,17 +471,8 @@ function platformShowInFileManager(dirPath) {
   return showInFileManager(dirPath);
 }
 
-function platformOpenFile(filePath, warningOpeningFilesExternally) {
-  if (
-    !warningOpeningFilesExternally ||
-    confirm(
-      'Do you really want to open "' +
-        filePath +
-        '"? Execution of some files can be potentially dangerous!'
-    )
-  ) {
-    openFile(filePath);
-  }
+function platformOpenFile(filePath) {
+  openFile(filePath);
 }
 
 function platformResolveFilePath(filePath) {
@@ -462,17 +500,26 @@ function platformShareFiles(files) {
 }
 
 module.exports = {
-  enableObjectStoreSupport,
-  disableObjectStoreSupport,
-  haveObjectStoreSupport,
-  isMinio,
-  getDirSeparator,
-  platformWatchDirectoryIO,
+  platformSetLanguage,
+  platformIsWorkerAvailable,
+  platformSetZoomFactorElectron,
+  platformSetGlobalShortcuts,
+  platformShowMainWindow,
+  platformQuitApp,
+  platformEnableObjectStoreSupport,
+  platformDisableObjectStoreSupport,
+  platformHaveObjectStoreSupport,
+  platformIsMinio,
+  platformGetDirSeparator,
+  platformWatchDirectory,
+  platformFocusWindow,
   platformGetDevicePaths,
-  getURLforPath,
+  platformGetURLforPath,
   platformCreateDirectoryTree,
   platformCreateDirectoryIndexInWorker,
+  platformCreateThumbnailsInWorker,
   platformListDirectoryPromise,
+  platformListObjectStoreDir,
   platformGetPropertiesPromise,
   platformCreateDirectoryPromise,
   platformCopyFilePromise,
@@ -485,5 +532,13 @@ module.exports = {
   platformSaveTextFilePromise,
   platformSaveBinaryFilePromise,
   platformDeleteFilePromise,
-  platformDeleteDirectoryPromise
+  platformDeleteDirectoryPromise,
+  platformOpenDirectory,
+  platformShowInFileManager,
+  platformOpenFile,
+  platformResolveFilePath,
+  platformOpenUrl,
+  platformSelectFileDialog,
+  platformSelectDirectoryDialog,
+  platformShareFiles,
 };

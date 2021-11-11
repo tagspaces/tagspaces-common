@@ -1,8 +1,13 @@
 import http from "http";
-const Settings = require("./settings");
 const electron = require("electron");
 const ipcRenderer = electron.ipcRenderer;
 const webFrame = electron.webFrame;
+const wsPort = 49352;
+
+function getDevicePaths() {
+  return ipcRenderer.invoke("get-device-paths");
+}
+
 /**
  * @param language: string
  */
@@ -40,7 +45,7 @@ function setGlobalShortcuts(globalShortcutsEnabled) {
  * @param files: Array<string>
  */
 function moveToTrash(files) {
-  ipcRenderer
+  return ipcRenderer
     .invoke("move-to-trash", files)
     .then((result) => result && result.length > 0);
 }
@@ -77,7 +82,7 @@ function selectDirectoryDialog() {
 // web service
 function isWorkerAvailable() {
   try {
-    const res = fetch("http://127.0.0.1:" + Settings.wsPort, {
+    const res = fetch("http://127.0.0.1:" + wsPort, {
       method: "HEAD",
     });
     return res.status === 200;
@@ -96,7 +101,7 @@ function postRequest(payload, endpoint, token) {
   return new Promise((resolve, reject) => {
     const option = {
       hostname: "127.0.0.1",
-      port: Settings.wsPort,
+      port: wsPort,
       method: "POST",
       path: endpoint,
       headers: {
@@ -160,7 +165,8 @@ function createThumbnailsInWorker(token, tmbGenerationList) {
   return postRequest(payload, "/thumb-gen", token);
 }
 
-module.exports = {
+export {
+  getDevicePaths,
   setLanguage,
   showMainWindow,
   setZoomFactorElectron,
