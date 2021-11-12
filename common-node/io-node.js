@@ -287,7 +287,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   enhancedEntries.map((enhancedEntry) => {
                     if (enhancedEntry.name === fileNameWithoutMetaExt) {
                       const thumbFilePath =
-                        metaFolderPath + pathLib.sep + metaEntryName;
+                        metaFolderPath + pathLib.sep + encodeURIComponent(metaEntryName);
                       enhancedEntry.thumbPath = thumbFilePath;
                     }
                     return true;
