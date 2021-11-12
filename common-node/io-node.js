@@ -663,6 +663,7 @@ function renameFilePromise(filePath, newFilePath) {
 }
 
 function renameDirectoryPromise(dirPath, newDirName) {
+  dirPath = pathLib.resolve(dirPath);
   const newDirPath =
     tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
     AppConfig.dirSeparator +

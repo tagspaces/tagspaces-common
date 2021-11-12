@@ -10,7 +10,8 @@
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
     "test-platform-io-node": "npm run install-node && jest --config=jest.config.node.unit.js ./__tests__/platforms/unit/platform-io.test.js",
     "install-node": "cd platforms && npm run install-node && cd ..",
-    "code-format": "prettier --write ."
+    "code-format": "prettier --write .",
+    "husky-install": "husky install"
   },
   "devDependencies": {
     "exec-sh": "^0.4.0",
