@@ -93,7 +93,11 @@ function platformGetDirSeparator() {
 }
 
 function platformWatchDirectory(dirPath, listener) {
-  watchDirectory(dirPath, listener);
+  if(watchDirectory) {
+    watchDirectory(dirPath, listener);
+  } else {
+    console.log("watchDirectory not supported");
+  }
 }
 
 function platformSetLanguage(language) {
@@ -140,7 +144,12 @@ function platformFocusWindow() {
 }
 
 function platformGetDevicePaths() {
-  return getDevicePaths();
+  if(getDevicePaths) {
+    return getDevicePaths();
+  } else {
+    console.log("getDevicePaths not supported");
+    return Promise.resolve(undefined);
+  }
 }
 
 /**
