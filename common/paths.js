@@ -156,13 +156,20 @@ function getMetaFileLocationForDir(
 }
 
 function getThumbFileLocationForFile(entryPath, dirSeparator = "/") {
+  if (entryPath.indexOf(dirSeparator + AppConfig.metaFolder) > -1) {
+    // entryPath is in .ts folder - no thumb file location exist
+    return undefined;
+  }
   const containingFolder = extractContainingDirectoryPath(
     entryPath,
     dirSeparator
   );
   const mFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
   return (
-    mFolder + dirSeparator + extractFileName(entryPath) + AppConfig.thumbFileExt
+    mFolder +
+    dirSeparator +
+    encodeURIComponent(extractFileName(entryPath)) +
+    AppConfig.thumbFileExt
   );
 }
 
