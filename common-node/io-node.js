@@ -156,15 +156,29 @@ function saveFilePromise(param, content, overwrite = true) {
         resolve(entry);
       });
     }
+    function getDefaultFile() {
+      return {
+        name: tsPaths.extractFileName(filePath, pathLib.sep),
+        isFile: true,
+        path: filePath,
+        extension: tsPaths.extractFileExtension(filePath, pathLib.sep),
+        size: 0,
+        lmdt: new Date().getTime(),
+        isNewFile: true,
+        tags: [],
+      };
+    }
 
     getPropertiesPromise(param)
       .then((entry) => {
         if (!entry) {
-          saveFile({ path: filePath, isNewFile: false, tags: [] }, content);
-        } else if (entry.isFile && overwrite) {
-          saveFile({ ...entry, isNewFile: false, tags: [] }, content);
-        } else {
-          saveFile({ ...entry, isNewFile: true, tags: [] }, content);
+          saveFile(getDefaultFile(), content);
+        } else if (overwrite) {
+          if (entry.isFile) {
+            saveFile({ ...entry, isNewFile: false, tags: [] }, content);
+          } /*else {  // directory exist!
+            saveFile({ ...entry, isNewFile: true, tags: [] }, content);
+          }*/
         }
         return true;
       })
@@ -173,17 +187,7 @@ function saveFilePromise(param, content, overwrite = true) {
         console.log(
           "Getting properties for " + filePath + " failed with: " + error
         );
-        const fsEntry = {
-          name: tsPaths.extractFileName(filePath, pathLib.sep),
-          isFile: true,
-          path: filePath,
-          extension: tsPaths.extractFileExtension(filePath, pathLib.sep),
-          size: 0,
-          lmdt: new Date().getTime(),
-          isNewFile: true,
-          tags: [],
-        };
-        saveFile(fsEntry, content);
+        saveFile(getDefaultFile(), content);
       });
   });
 }
@@ -419,7 +423,9 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   enhancedEntries.map((enhancedEntry) => {
                     if (enhancedEntry.name === fileNameWithoutMetaExt) {
                       const thumbFilePath =
-                        metaFolderPath + pathLib.sep + encodeURIComponent(metaEntryName);
+                        metaFolderPath +
+                        pathLib.sep +
+                        encodeURIComponent(metaEntryName);
                       enhancedEntry.thumbPath = thumbFilePath;
                     }
                     return true;
