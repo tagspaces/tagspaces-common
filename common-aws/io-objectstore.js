@@ -208,7 +208,7 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
           )
         ) {
           thumbPath = tsPaths.getThumbFileLocationForFile(file.Key);
-          if (thumbPath.startsWith("/")) {
+          if (thumbPath && thumbPath.startsWith("/")) {
             thumbPath = thumbPath.substring(1);
           }
           const thumbAvailable = metaContent.find(
