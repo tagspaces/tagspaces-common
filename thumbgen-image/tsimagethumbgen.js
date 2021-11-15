@@ -79,6 +79,7 @@ module.exports.generateImageThumbnail = function (
             // Transform the image buffer in memory.
             sharp(image)
               .rotate()
+              .flatten({ background: "#ededed" })
               .resize(tmbMaxWidth)
               .jpeg()
               .toBuffer(imageType, function (err, buffer) {
