@@ -45,6 +45,11 @@ function configure(objectStoreConfig) {
   }
 }
 
+/**
+ * @param param param.path - needs to be not encoded s3().getSignedUrl - this will double encode it
+ * @param expirationInSeconds
+ * @returns {string}
+ */
 const getURLforPath = (param, expirationInSeconds = 900) => {
   const path = param.path;
   const bucketName = param.bucketName;
@@ -207,7 +212,7 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
             (el) => el === "extractThumbURL" || el === "extractThumbPath"
           )
         ) {
-          thumbPath = tsPaths.getThumbFileLocationForFile(file.Key);
+          thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, '/', false);
           if (thumbPath && thumbPath.startsWith("/")) {
             thumbPath = thumbPath.substring(1);
           }
