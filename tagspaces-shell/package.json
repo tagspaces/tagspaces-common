@@ -10,7 +10,7 @@
     "node-install": "rimraf package-lock.json && rimraf node_modules && npx cross-env PD_PLATFORM=node npm install && npm dedupe",
     "gen-index": "node bin/cli.js -m indexer",
     "gen-index-dev": "node bin/clidev.js -m indexer",
-    "gen-thumbnails": "node bin/cli.js -m thumbgen",
+    "gen-thumbnails": "node bin/cli.js -m thumbgen /home/stanimir/Pictures",
     "gen-thumbnails-dev": "node bin/clidev.js ./__test__",
     "pkg-publish": "npm run node-install && npm run build:prod && npm publish --access public"
   },
@@ -22,7 +22,7 @@
     "webpack-cli": "^4.8.0",
     "yargs": "^17.1.0",
     "rimraf": "^3.0.2",
-    "@tagspaces/tagspaces-workers": "1.0.28"
+    "@tagspaces/tagspaces-workers": "1.0.30"
   },
   "files": [
     "build/",
