@@ -5,6 +5,8 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
+    "debug-sharp": "npm add --ignore-scripts=false --verbose sharp",
+    "debug-sharp-node": "ldd node_modules/sharp/build/Release/sharp-linux-x64.node",
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {

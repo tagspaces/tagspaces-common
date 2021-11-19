@@ -13,13 +13,14 @@
     "build:dev": "webpack --config webpack.config.js --mode development",
     "build:prod": "webpack --config webpack.config.js --mode production",
     "start": "node build/index.js -p 49352",
-    "start-dev": "node index.js -p 49352",
+    "start-dev": "node index.js -p 2000 -k xxx",
     "install-node": "rimraf node_modules && npx cross-env PD_PLATFORM=node node install/ws.js",
     "install-node-linux": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=linux TARGET_ARCH=x64 node install/ws.js",
     "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js",
     "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js",
     "install-web": "npx cross-env PD_PLATFORM=web node install/ws.js",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
+    "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer yyy\" -X POST http://127.0.0.1:49352/thumb-gen",
     "pkg-publish": "npm run install-node && npm run build:prod && npm publish --access public"
   },
   "nodeDependencies": {
