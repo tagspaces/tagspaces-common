@@ -10,6 +10,7 @@ const metaFolderFile = "tsm.json";
 const isWin =
   process &&
   (process.platform === "win32" || /^(msys|cygwin)$/.test(process.env.OSTYPE));
+const isMac = process && process.platform === "darwin";
 const dirSeparator = isWin ? "\\" : "/";
 const isCordovaiOS =
   typeof window !== "undefined" &&
@@ -38,6 +39,7 @@ module.exports = {
   folderIndexFile,
   metaFolderFile,
   isWin,
+  isMac,
   dirSeparator,
   isCordovaiOS,
   isCordovaAndroid,

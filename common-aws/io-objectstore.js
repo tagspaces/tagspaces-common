@@ -562,6 +562,7 @@ function saveTextFilePromise(param, content, overWrite) {
 
 function normalizeRootPath(filePath) {
   filePath = filePath.replace(new RegExp("//+", "g"), "/");
+  filePath = filePath.replace("\\", "/");
   /* if(filePath.indexOf(AppConfig.dirSeparator) === 0){
     filePath = filePath.substr(AppConfig.dirSeparator.length);
   } */
@@ -829,7 +830,12 @@ function deleteDirectoryPromise(param) {
         Delete: { Objects: prefixes },
       };
 
-      return s3().deleteObjects(deleteParams).promise();
+      try {
+        return s3().deleteObjects(deleteParams).promise();
+      } catch (e) {
+        console.error(e);
+        return Promise.resolve();
+      }
     }
     return s3()
       .deleteObject({

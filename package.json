@@ -5,9 +5,13 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "test": "jest --config=jest.config.unit.js",
-    "test-indexer": "jest --config=jest.config.unit.js ./__tests__/common-aws/unit/indexer.test.js",
-    "code-format": "prettier --write ."
+    "test": "npm run test-aws && npm run test-indexer && npm run test-platform-io-node",
+    "test-aws": "jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
+    "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
+    "test-platform-io-node": "npm run install-node && jest --config=jest.config.node.unit.js ./__tests__/platforms/unit/platform-io.test.js",
+    "install-node": "cd platforms && npm run install-node && cd ..",
+    "code-format": "prettier --write .",
+    "husky-install": "husky install"
   },
   "devDependencies": {
     "exec-sh": "^0.4.0",
