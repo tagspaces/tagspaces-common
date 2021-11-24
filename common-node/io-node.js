@@ -448,7 +448,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
 }
 
 /**
- * @param param: {},
+ * @param param: { path: }
  * @param isPreview: boolean
  * @returns {Promise<string>}
  */
@@ -494,6 +494,33 @@ function loadTextFilePromise(param, isPreview = false) {
         }
       });
     }
+  });
+}
+
+/**
+ * @param param
+ * @param type = text | arraybuffer (for text use loadTextFilePromise) text return type is not supported for node
+ * @returns {Promise<ArrayBuffer>}
+ */
+function getFileContentPromise(param, type = "arraybuffer") {
+  let filePath;
+  if (typeof param === "object" && param !== null) {
+    filePath = param.path;
+  } else {
+    filePath = param;
+  }
+  if (filePath.startsWith("./") || filePath.startsWith("../")) {
+    // relative paths
+    filePath = pathLib.resolve(filePath);
+  }
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, (error, content) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(content);
+      }
+    });
   });
 }
 
@@ -728,6 +755,7 @@ module.exports = {
   getPropertiesPromise,
   isDirectory,
   loadTextFilePromise,
+  getFileContentPromise,
   extractTextContent,
   createDirectoryPromise,
   copyFilePromise,

@@ -36,7 +36,7 @@ const {
   renameFilePromise,
   renameDirectoryPromise,
   loadTextFilePromise,
-  // getFileContentPromise,
+  getFileContentPromise,
   saveFilePromise,
   saveTextFilePromise,
   saveBinaryFilePromise,
@@ -354,7 +354,7 @@ function platformLoadTextFilePromise(filePath, isPreview) {
   return loadTextFilePromise(filePath, isPreview);
 }
 
-/*function platformGetFileContentPromise(filePath, type) {
+function platformGetFileContentPromise(filePath, type) {
   if (objectStoreAPI) {
     const param = {
       path: filePath,
@@ -363,7 +363,7 @@ function platformLoadTextFilePromise(filePath, isPreview) {
     return objectStoreAPI.getFileContentPromise(param, type);
   }
   return getFileContentPromise(filePath, type);
-}*/
+}
 
 function platformSaveFilePromise(filePath, content, overwrite) {
   if (objectStoreAPI) {
@@ -539,7 +539,7 @@ module.exports = {
   platformRenameFilePromise,
   platformRenameDirectoryPromise,
   platformLoadTextFilePromise,
-  // platformGetFileContentPromise,
+  platformGetFileContentPromise,
   platformSaveFilePromise,
   saveTextFilePlatform,
   platformSaveTextFilePromise,
