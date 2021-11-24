@@ -1,14 +1,16 @@
 {
   "name": "@tagspaces/tagspaces-thumbgen-image",
   "description": "TagSpaces common thumbnails image generation module",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
+    "debug-sharp": "npm add --ignore-scripts=false --verbose sharp",
+    "debug-sharp-node": "ldd node_modules/sharp/build/Release/sharp-linux-x64.node",
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
     "async": "^3.2.1",
-    "sharp": "^0.29.2"
+    "sharp": "^0.29.3"
   }
 }

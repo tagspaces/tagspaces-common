@@ -70,6 +70,7 @@ module.exports.createWS = function (port, key) {
             }
 
             const thumbs = [];
+            let statusCode = 200;
             if (arrayPaths && arrayPaths.length > 0) {
               for (const path of arrayPaths) {
                 const success = await processAllThumbnails(path, generatePdf);
@@ -80,11 +81,12 @@ module.exports.createWS = function (port, key) {
                   }
                 } else {
                   console.warn("Thumbnails not generated");
+                  statusCode = 400;
                 }
               }
             }
 
-            res.statusCode = 200;
+            res.statusCode = statusCode;
             res.setHeader("Content-Type", "application/json");
             res.setHeader("Cache-Control", "no-store, must-revalidate");
             // res.write(JSON.stringify(thumbs));
@@ -119,7 +121,7 @@ module.exports.createWS = function (port, key) {
 
             const mode = ["extractThumbPath"];
             if (extractText) {
-              mode.push('extractTextContent');
+              mode.push("extractTextContent");
             }
             createIndex(
               directoryPath,

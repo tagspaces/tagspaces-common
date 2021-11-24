@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@tagspaces/tagspaces-platforms": "1.2.6",
-    "@tagspaces/tagspaces-thumbgen-image": "1.0.1"
+    "@tagspaces/tagspaces-thumbgen-image": "1.0.3"
   }
 }
