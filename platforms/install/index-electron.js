@@ -26,6 +26,11 @@ import {
     focusWindow,
     setGlobalShortcuts,
     moveToTrash,
+    openDirectory,
+    showInFileManager,
+    openFile,
+    openUrl,
+    selectDirectoryDialog,
     isWorkerAvailable,
     createDirectoryIndexInWorker,
     createThumbnailsInWorker
@@ -56,6 +61,11 @@ export {
     focusWindow,
     setGlobalShortcuts,
     moveToTrash,
+    openDirectory,
+    showInFileManager,
+    openFile,
+    openUrl,
+    selectDirectoryDialog,
     isWorkerAvailable,
     createDirectoryIndexInWorker,
     createThumbnailsInWorker
