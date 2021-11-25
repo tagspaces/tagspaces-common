@@ -205,20 +205,8 @@ function saveBinaryFilePromise(filePath, content, overwrite) {
 
 /**
  * @param path: string
- * deprecated useTrash: boolean -> use electron-io moveToTrash
  */
 function deleteFilePromise(path) {
-  /*if (useTrash) {
-    return new Promise((resolve, reject) => {
-      if (moveToTrash([path])) {
-        resolve(path);
-      } else {
-        // console.error('deleteDirectoryPromise '+path+' failed');
-        reject(new Error("deleteDirectoryPromise " + path + " failed"));
-      }
-    });
-  }*/
-
   return new Promise((resolve, reject) => {
     fs.unlink(path, (error) => {
       if (error) {

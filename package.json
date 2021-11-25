@@ -5,7 +5,7 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "test": "npm run test-aws && npm run test-indexer && npm run test-platform-io-node",
+    "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer",
     "test-aws": "jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
     "test-platform-io-node": "npm run install-node && jest --config=jest.config.node.unit.js ./__tests__/platforms/unit/platform-io.test.js",

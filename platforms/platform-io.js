@@ -41,6 +41,7 @@ const {
   saveTextFilePromise,
   saveBinaryFilePromise,
   deleteFilePromise,
+  moveToTrash,
   deleteDirectoryPromise,
   openDirectory,
   showInFileManager,
@@ -93,7 +94,7 @@ function platformGetDirSeparator() {
 }
 
 function platformWatchDirectory(dirPath, listener) {
-  if(watchDirectory) {
+  if (watchDirectory) {
     watchDirectory(dirPath, listener);
   } else {
     console.log("watchDirectory not supported");
@@ -144,7 +145,7 @@ function platformFocusWindow() {
 }
 
 function platformGetDevicePaths() {
-  if(getDevicePaths) {
+  if (getDevicePaths) {
     return getDevicePaths();
   } else {
     console.log("getDevicePaths not supported");
@@ -453,11 +454,14 @@ function platformDeleteFilePromise(path, useTrash) {
     return objectStoreAPI.deleteFilePromise(param, useTrash);
   }
   // PlatformIO.ignoreByWatcher(path);
-
-  return deleteFilePromise(path, useTrash).then((result) => {
-    // PlatformIO.deignoreByWatcher(path);
-    return result;
-  });
+  if (useTrash) {
+    return moveToTrash([path]);
+  } else {
+    return deleteFilePromise(path).then((result) => {
+      // PlatformIO.deignoreByWatcher(path);
+      return result;
+    });
+  }
 }
 
 function platformDeleteDirectoryPromise(path, useTrash) {
