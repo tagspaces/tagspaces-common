@@ -15,11 +15,17 @@ module.exports = function tscmd() {
       type: "string",
       default: "thumbgen",
       description:
-        "Switch thumbnails generation or tagspaces index [thumbgen, indexer]",
+        "Switch thumbnails generation or tagspaces index [thumbgen, indexer, metacleaner]",
+    })
+    .option("analyze", {
+      alias: "a",
+      type: "boolean",
+      default: true,
+      description: "(true) Analyze or (false) perform meta cleanup on disk",
     })
     .check((a, b) => {
       if (a._.length === 0) {
-        throw "please set args [dirPaths..] to generate thumbnails!";
+        throw "please set args [dirPaths..] !";
       }
       return true;
     })
@@ -50,6 +56,20 @@ module.exports = function tscmd() {
             console.log("Index generated in folder: " + dir);
           }
         });
+      });
+    }
+  } else if (argv.mode === "metacleaner") {
+    const { cleanMeta } = require("@tagspaces/tagspaces-metacleaner/metacleaner");
+    for (const dir of argv._) {
+      cleanMeta(
+        dir,
+        (filePath) => {
+          console.log("File cleaned:" + filePath);
+        },
+        argv.analyze,
+        { considerMetaJSON: false, considerThumb: true }
+      ).then(() => {
+        console.log("Dir cleaned:" + dir);
       });
     }
   }
