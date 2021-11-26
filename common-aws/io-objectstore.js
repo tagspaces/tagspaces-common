@@ -212,7 +212,7 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
             (el) => el === "extractThumbURL" || el === "extractThumbPath"
           )
         ) {
-          thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, '/', false);
+          thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, "/", false);
           if (thumbPath && thumbPath.startsWith("/")) {
             thumbPath = thumbPath.substring(1);
           }
@@ -536,9 +536,10 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         resolve(false);
       }
       resolve({
-        uuid: data.ETag,
-        name: data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
-        url: data.Location,
+        uuid: data ? data.ETag : uuidv1(),
+        name:
+          data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+        url: data ? data.Location : filePath,
         isFile: true,
         path: filePath,
         extension: tsPaths.extractFileExtension(filePath, "/"),
