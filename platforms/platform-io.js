@@ -500,12 +500,16 @@ function platformOpenUrl(url) {
   openUrl(url);
 }
 
+/**
+ * TODO not used
+ * @returns {*}
+ */
 function platformSelectFileDialog() {
-  selectFileDialog();
+  return selectFileDialog();
 }
 
 function platformSelectDirectoryDialog() {
-  selectDirectoryDialog();
+  return selectDirectoryDialog();
 }
 
 function platformShareFiles(files) {
