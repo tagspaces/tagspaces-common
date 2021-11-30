@@ -8,6 +8,7 @@
     "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer",
     "test-aws": "jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
+    "test-webdav": "jest --config=jest.config.webdav.unit.js ./__tests__/common-webdav/unit/io-webdav.test.js",
     "test-platform-io-node": "npm run install-node && jest --config=jest.config.node.unit.js ./__tests__/platforms/unit/platform-io.test.js",
     "install-node": "cd platforms && npm run install-node && cd ..",
     "code-format": "prettier --write .",
@@ -26,7 +27,8 @@
     "shx": "^0.3.3",
     "source-map-loader": "^3.0.0",
     "webpack": "^5.57.1",
-    "webpack-cli": "^4.8.0"
+    "webpack-cli": "^4.8.0",
+    "webdav-server": "^2.6.2"
   },
   "dependencies": {},
   "engines": {
