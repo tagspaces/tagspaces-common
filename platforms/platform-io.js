@@ -454,7 +454,7 @@ function platformDeleteFilePromise(path, useTrash) {
     return objectStoreAPI.deleteFilePromise(param, useTrash);
   }
   // PlatformIO.ignoreByWatcher(path);
-  if (useTrash) {
+  if (useTrash && moveToTrash) {
     return moveToTrash([path]);
   } else {
     return deleteFilePromise(path).then((result) => {

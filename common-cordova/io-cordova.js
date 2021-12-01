@@ -1,14 +1,14 @@
 /* globals cordova */
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-import { b64toBlob } from "@tagspaces/tagspaces-common/misc";
-import {
+const { b64toBlob } = require("@tagspaces/tagspaces-common/misc");
+const {
   extractParentDirectoryPath,
   cleanTrailingDirSeparator,
   extractFileName,
   extractFileExtension,
   getMetaFileLocationForDir,
   getThumbFileLocationForDirectory,
-} from "@tagspaces/tagspaces-common/paths";
+} = require("@tagspaces/tagspaces-common/paths");
 
 const appSettingFile = "settings.json";
 const appSettingTagsFile = "settingsTags.json";
@@ -529,7 +529,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   });
                 }
 
-                if (mode.includes('extractThumbPath')) {
+                if (mode.includes("extractThumbPath")) {
                   if (entry.isDirectory) {
                     // Read tsm.json from subfolders
                     if (
@@ -1435,7 +1435,57 @@ function shareFiles(files) {
   window.plugins.socialsharing.shareWithOptions(options, onSuccess, onError);
 }
 
-export {
+module.exports = {
+  onDeviceReady,
+  onDeviceBackButton,
+  isWorkerAvailable,
+  handleOpenURL,
+  normalizePath,
+  onDeviceResume,
+  onApplicationLoad,
+  getDirSystemPromise,
+  resolveFullPath,
+  getAppStorageFileSystem,
+  getFileSystem,
+  saveSettingsFile,
+  loadSettingsFile,
+  saveSettings,
+  loadSettings,
+  loadSettingsTags,
+  sendFile,
+  getDevicePaths,
+  handleStartParameters,
+  quitApp,
+  createDirectoryTree,
+  listMetaDirectoryPromise,
+  listDirectoryPromise,
+  getEntryMeta,
+  getPropertiesPromise,
+  loadTextFilePromise,
+  getFileContentPromise,
+  saveFilePromise,
+  saveTextFilePromise,
+  saveBinaryFilePromise,
+  createDirectoryPromise,
+  copyFilePromise,
+  renameFilePromise,
+  checkFileExist,
+  checkDirExist,
+  renameDirectoryPromise,
+  deleteFilePromise,
+  deleteDirectoryPromise,
+  selectDirectory,
+  selectFile,
+  selectDirectoryDialog,
+  openDirectory,
+  showInFileManager,
+  openFile,
+  openUrl,
+  focusWindow,
+  shareFiles,
+};
+
+/*module.exports = {
   listDirectoryPromise,
   saveTextFilePromise,
   getPropertiesPromise,
@@ -1448,4 +1498,4 @@ export {
   renameDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-};
+};*/
