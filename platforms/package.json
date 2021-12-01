@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.2.18",
+  "version": "1.2.20",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -28,7 +28,7 @@
     "@tagspaces/tagspaces-common-aws": "1.2.3"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "1.2.0",
+    "@tagspaces/tagspaces-common-cordova": "1.2.1",
     "@tagspaces/tagspaces-common-aws": "1.2.3"
   },
   "electronDependencies": {
