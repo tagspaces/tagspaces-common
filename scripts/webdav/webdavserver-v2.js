@@ -1,11 +1,9 @@
-const path = require("path");
 const ws = require("webdav-server").v2;
 
 const PASSWORD = "1234";
-const PORT = 8000;
 const USERNAME = "webdav";
 
-function createServer(dir, authType) {
+function createServer(dir, authType, PORT = 8000) {
   if (!dir) {
     throw new Error("Expected target directory");
   }
@@ -71,8 +69,8 @@ function createServer(dir, authType) {
   };
 }
 
-function createWebDAVServer(authType, dataDir) {
-  return createServer(dataDir, authType);
+function createWebDAVServer(authType, dataDir, port) {
+  return createServer(dataDir, authType, port);
 }
 
 module.exports = {

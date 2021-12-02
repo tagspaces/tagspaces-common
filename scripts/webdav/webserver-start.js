@@ -1,7 +1,8 @@
+const path = require("path");
 const { createWebDAVServer } = require("./webdavserver-v2");
 
 const dataDir = path.resolve(__dirname, "../__tests__/common-aws/buckets");
-const server = createWebDAVServer("basic", dataDir);
+const server = createWebDAVServer("basic", dataDir, 8080);
 server
   .start()
   .then(() => {
