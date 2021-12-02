@@ -54,7 +54,7 @@ const {
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
-let objectStoreAPI;
+let objectStoreAPI, webDavAPI;
 
 function platformEnableObjectStoreSupport(objectStoreConfig) {
   return new Promise((resolve, reject) => {
@@ -78,6 +78,22 @@ function platformEnableObjectStoreSupport(objectStoreConfig) {
 
 function platformDisableObjectStoreSupport() {
   objectStoreAPI = undefined;
+}
+
+function platformEnableWebdavSupport(webdavConfig) {
+    if (
+        webDavAPI === undefined ||
+        webDavAPI.username !== webdavConfig.username ||
+        webDavAPI.password !== webdavConfig.password ||
+        webDavAPI.port !== webdavConfig.port
+    ) {
+      webDavAPI = require("./webdav");
+      webDavAPI.configure(webdavConfig);
+    }
+}
+
+function platformDisableWebdavSupport() {
+  webDavAPI = undefined;
 }
 
 function platformHaveObjectStoreSupport() {
@@ -528,7 +544,9 @@ module.exports = {
   platformShowMainWindow,
   platformQuitApp,
   platformEnableObjectStoreSupport,
+  platformEnableWebdavSupport,
   platformDisableObjectStoreSupport,
+  platformDisableWebdavSupport,
   platformHaveObjectStoreSupport,
   platformIsMinio,
   platformGetDirSeparator,

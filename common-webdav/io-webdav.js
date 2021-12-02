@@ -1,11 +1,16 @@
 const pathLib = require("path");
 const { createAdapter } = require("webdav-fs");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
+const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
 // const { createFsClient } = require("./io-fsclient");
 
-let fsClient;
+let fsClient, username, password, port;
 
 function configure(webDavConfig) {
+  username = webDavConfig.username;
+  password = webDavConfig.password;
+  port = webDavConfig.port;
+
   const wfs = createAdapter("http://localhost:" + webDavConfig.port, {
     username: webDavConfig.username,
     password: webDavConfig.password,
@@ -51,7 +56,7 @@ function isDirectory(entryPath) {
 }
 
 function listDirectoryPromise(entryPath) {
-  return fsClient.listDirectoryPromise(entryPath);
+  return fsClient.listDirectoryPromise(normalizePath(entryPath));
 }
 
 function getPropertiesPromise(entryPath) {

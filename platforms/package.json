@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.3.0",
+  "version": "1.3.3",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -16,6 +16,7 @@
   "files": [
     "index.js",
     "aws.js",
+    "webdav.js",
     "indexer.js",
     "platform-io.js",
     "LICENSE",
@@ -29,7 +30,7 @@
     "@tagspaces/tagspaces-common-aws": "1.3.0"
   },
   "webdavDependencies": {
-    "@tagspaces/tagspaces-common-webdav": "1.0.0",
+    "@tagspaces/tagspaces-common-webdav": "1.0.1",
     "@tagspaces/tagspaces-common-aws": "1.3.0"
   },
   "cordovaDependencies": {
