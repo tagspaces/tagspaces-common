@@ -3,7 +3,7 @@ const { createWebDAVServer } = require("./webdavserver-v2");
 const execSh = require("exec-sh").promise;
 
 module.exports = async function () {
-  await execSh("npm run install-webdav", {
+  await execSh("npm run install-web", {
     cwd: path.resolve(__dirname, "..", "..", "platforms"),
   });
 
