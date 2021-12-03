@@ -748,9 +748,21 @@ function createFsClient(fs) {
   return {
     isDirectory,
     listDirectoryPromise,
-    extractTextContent,
+    saveTextFilePromise,
+    saveFilePromise,
+    saveBinaryFilePromise,
     getPropertiesPromise,
     loadTextFilePromise,
+    getFileContentPromise,
+    extractTextContent,
+    createDirectoryPromise,
+    copyFilePromise,
+    renameFilePromise,
+    renameDirectoryPromise,
+    deleteFilePromise,
+    deleteDirectoryPromise,
+    watchDirectory,
+    createDirectoryTree
   };
 }
 

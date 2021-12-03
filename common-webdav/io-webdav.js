@@ -1,7 +1,7 @@
 const pathLib = require("path");
 const { createAdapter } = require("webdav-fs");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
-const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
+// const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
 // const { createFsClient } = require("./io-fsclient");
 
 let fsClient, username, password, port;
@@ -56,7 +56,19 @@ function isDirectory(entryPath) {
 }
 
 function listDirectoryPromise(entryPath) {
-  return fsClient.listDirectoryPromise(normalizePath(entryPath));
+  return fsClient.listDirectoryPromise(entryPath);
+}
+
+function saveTextFilePromise(param, content, overwrite) {
+  return fsClient.saveTextFilePromise(param, content, overwrite);
+}
+
+function saveFilePromise(param, content, overwrite) {
+  return fsClient.saveFilePromise(param, content, overwrite);
+}
+
+function saveBinaryFilePromise(filePath, content, overwrite) {
+  return fsClient.saveFilePromise(filePath, content, overwrite);
 }
 
 function getPropertiesPromise(entryPath) {
@@ -67,16 +79,56 @@ function loadTextFilePromise(entryPath) {
   return fsClient.loadTextFilePromise(entryPath);
 }
 
+function getFileContentPromise(param, type) {
+  return fsClient.getFileContentPromise(param, type);
+}
+
+function extractTextContent(fileName, textContent) {
+  return fsClient.extractTextContent(fileName, textContent);
+}
+
+function createDirectoryPromise(dirPath) {
+  return fsClient.createDirectoryPromise(dirPath);
+}
+
+function copyFilePromise(sourceFilePath, targetFilePath) {
+  return fsClient.copyFilePromise(sourceFilePath, targetFilePath);
+}
+
+function renameFilePromise(filePath, newFilePath) {
+  return fsClient.renameFilePromise(filePath, newFilePath);
+}
+
+function renameDirectoryPromise(dirPath, newDirName) {
+  return fsClient.renameDirectoryPromise(dirPath, newDirName);
+}
+
+function deleteFilePromise(path) {
+  return fsClient.deleteFilePromise(path);
+}
+
+function deleteDirectoryPromise(path) {
+  return fsClient.deleteDirectoryPromise(path);
+}
+
+function watchDirectory(dirPath, listener) {
+  return fsClient.watchDirectory(dirPath, listener);
+}
+
+function createDirectoryTree(dirPath) {
+  return fsClient.watchDirectory(dirPath);
+}
+
 module.exports = {
   configure,
-  listDirectoryPromise,
-  /*saveTextFilePromise,
-  saveFilePromise,
-  saveBinaryFilePromise,*/
-  getPropertiesPromise,
   isDirectory,
+  listDirectoryPromise,
+  saveTextFilePromise,
+  saveFilePromise,
+  saveBinaryFilePromise,
+  getPropertiesPromise,
   loadTextFilePromise,
-  /* getFileContentPromise,
+  getFileContentPromise,
   extractTextContent,
   createDirectoryPromise,
   copyFilePromise,
@@ -85,5 +137,5 @@ module.exports = {
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,
-  createDirectoryTree,*/
+  createDirectoryTree
 };
