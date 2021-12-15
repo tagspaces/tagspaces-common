@@ -54,7 +54,7 @@ const {
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
-let objectStoreAPI;
+let objectStoreAPI, webDavAPI;
 
 function platformEnableObjectStoreSupport(objectStoreConfig) {
   return new Promise((resolve, reject) => {
@@ -78,6 +78,22 @@ function platformEnableObjectStoreSupport(objectStoreConfig) {
 
 function platformDisableObjectStoreSupport() {
   objectStoreAPI = undefined;
+}
+
+function platformEnableWebdavSupport(webdavConfig) {
+  if (
+    webDavAPI === undefined ||
+    webDavAPI.username !== webdavConfig.username ||
+    webDavAPI.password !== webdavConfig.password ||
+    webDavAPI.port !== webdavConfig.port
+  ) {
+    webDavAPI = require("./webdav");
+    webDavAPI.configure(webdavConfig);
+  }
+}
+
+function platformDisableWebdavSupport() {
+  webDavAPI = undefined;
 }
 
 function platformHaveObjectStoreSupport() {
@@ -219,6 +235,8 @@ function platformListDirectoryPromise(
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.listDirectoryPromise(param, mode, ignorePatterns);
+  } else if (webDavAPI) {
+    return webDavAPI.listDirectoryPromise(path, mode, ignorePatterns);
   }
   return listDirectoryPromise(path, mode, ignorePatterns);
 }
@@ -247,6 +265,8 @@ function platformGetPropertiesPromise(path) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.getPropertiesPromise(param);
+  } else if (webDavAPI) {
+    return webDavAPI.getPropertiesPromise(path);
   }
   return getPropertiesPromise(path);
 }
@@ -274,6 +294,8 @@ function platformCreateDirectoryPromise(dirPath) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.createDirectoryPromise(param);
+  } else if (webDavAPI) {
+    return webDavAPI.createDirectoryPromise(dirPath);
   }
   // PlatformIO.ignoreByWatcher(dirPath); // TODO rethink move Watcher
 
@@ -302,6 +324,8 @@ function copyFilePromiseOverwrite(sourceFilePath, targetFilePath) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.copyFilePromise(param, targetFilePath);
+  } else if (webDavAPI) {
+    return webDavAPI.copyFilePromise(sourceFilePath, targetFilePath);
   }
   // PlatformIO.ignoreByWatcher(targetFilePath);
 
@@ -319,6 +343,8 @@ function platformRenameFilePromise(filePath, newFilePath) {
     };
     return objectStoreAPI.renameFilePromise(param, newFilePath);
     // .then(result => result);
+  } else if (webDavAPI) {
+    return webDavAPI.renameFilePromise(filePath, newFilePath);
   }
   // PlatformIO.ignoreByWatcher(filePath, newFilePath);
 
@@ -335,6 +361,8 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.renameDirectoryPromise(param, newDirName);
+  } else if (webDavAPI) {
+    return webDavAPI.renameDirectoryPromise(dirPath, newDirName);
   }
   // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
@@ -351,6 +379,8 @@ function platformLoadTextFilePromise(filePath, isPreview) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.loadTextFilePromise(param, isPreview);
+  } else if (webDavAPI) {
+    return webDavAPI.loadTextFilePromise(filePath, isPreview);
   }
   return loadTextFilePromise(filePath, isPreview);
 }
@@ -362,6 +392,8 @@ function platformGetFileContentPromise(filePath, type) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.getFileContentPromise(param, type);
+  } else if (webDavAPI) {
+    return webDavAPI.getFileContentPromise(filePath, type);
   }
   return getFileContentPromise(filePath, type);
 }
@@ -373,28 +405,20 @@ function platformSaveFilePromise(filePath, content, overwrite) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.saveFilePromise(param, content, overwrite);
+  } else if (webDavAPI) {
+    return webDavAPI.saveFilePromise(filePath, content, overwrite);
   }
-  //PlatformIO.ignoreByWatcher(filePath);
 
-  return saveFilePromise(filePath, content, overwrite).then((result) => {
-    //PlatformIO.deignoreByWatcher(filePath);
-    return result;
-  });
+  return saveFilePromise(filePath, content, overwrite);
 }
 
 function saveTextFilePlatform(param, content, overwrite) {
   if (objectStoreAPI) {
     return objectStoreAPI.saveTextFilePromise(param, content, overwrite);
+  } else if (webDavAPI) {
+    return webDavAPI.saveTextFilePromise(param.path, content, overwrite);
   }
-
-  // PlatformIO.ignoreByWatcher(param.path);
-
-  return platformSaveTextFilePromise(param.path, content, overwrite).then(
-    (result) => {
-      // PlatformIO.deignoreByWatcher(param.path);
-      return result;
-    }
-  );
+  return platformSaveTextFilePromise(param.path, content, overwrite);
 }
 
 function platformSaveTextFilePromise(filePath, content, overwrite) {
@@ -404,14 +428,11 @@ function platformSaveTextFilePromise(filePath, content, overwrite) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.saveTextFilePromise(param, content, overwrite);
+  } else if (webDavAPI) {
+    return webDavAPI.saveTextFilePromise(filePath, content, overwrite);
   }
 
-  // PlatformIO.ignoreByWatcher(filePath);
-
-  return saveTextFilePromise(filePath, content, overwrite).then((result) => {
-    // PlatformIO.deignoreByWatcher(filePath);
-    return result;
-  });
+  return saveTextFilePromise(filePath, content, overwrite);
 }
 
 function platformSaveBinaryFilePromise(
@@ -431,15 +452,20 @@ function platformSaveBinaryFilePromise(
       overwrite,
       onUploadProgress
     );
+  } else if (webDavAPI) {
+    return webDavAPI.saveBinaryFilePromise(
+      filePath,
+      content,
+      overwrite,
+      onUploadProgress
+    );
   }
-  // PlatformIO.ignoreByWatcher(filePath);
 
   return saveBinaryFilePromise(filePath, content, overwrite).then(
     (succeeded) => {
       if (succeeded && onUploadProgress) {
         onUploadProgress({ key: filePath, loaded: 1, total: 1 }, undefined);
       }
-      // PlatformIO.deignoreByWatcher(filePath);
       return succeeded;
     }
   );
@@ -452,15 +478,13 @@ function platformDeleteFilePromise(path, useTrash) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.deleteFilePromise(param, useTrash);
+  } else if (webDavAPI) {
+    return webDavAPI.deleteFilePromise(path, useTrash);
   }
-  // PlatformIO.ignoreByWatcher(path);
   if (useTrash && moveToTrash) {
     return moveToTrash([path]);
   } else {
-    return deleteFilePromise(path).then((result) => {
-      // PlatformIO.deignoreByWatcher(path);
-      return result;
-    });
+    return deleteFilePromise(path);
   }
 }
 
@@ -471,13 +495,11 @@ function platformDeleteDirectoryPromise(path, useTrash) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.deleteDirectoryPromise(param, useTrash);
+  } else if (webDavAPI) {
+    return webDavAPI.deleteDirectoryPromise(path, useTrash);
   }
-  //PlatformIO.ignoreByWatcher(path);
 
-  return deleteDirectoryPromise(path, useTrash).then((result) => {
-    //PlatformIO.deignoreByWatcher(path);
-    return result;
-  });
+  return deleteDirectoryPromise(path, useTrash);
 }
 
 function platformOpenDirectory(dirPath) {
@@ -528,7 +550,9 @@ module.exports = {
   platformShowMainWindow,
   platformQuitApp,
   platformEnableObjectStoreSupport,
+  platformEnableWebdavSupport,
   platformDisableObjectStoreSupport,
+  platformDisableWebdavSupport,
   platformHaveObjectStoreSupport,
   platformIsMinio,
   platformGetDirSeparator,

@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.2.20",
+  "version": "1.3.7",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -15,25 +15,30 @@
   "files": [
     "index.js",
     "aws.js",
+    "webdav.js",
     "indexer.js",
     "platform-io.js",
     "LICENSE",
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "1.2.5",
-    "@tagspaces/tagspaces-common-aws": "1.2.3"
+    "@tagspaces/tagspaces-common-node": "1.3.3",
+    "@tagspaces/tagspaces-common-aws": "1.3.3",
+    "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "1.2.3"
+    "@tagspaces/tagspaces-common-aws": "1.3.3",
+    "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "1.2.1",
-    "@tagspaces/tagspaces-common-aws": "1.2.3"
+    "@tagspaces/tagspaces-common-cordova": "1.3.3",
+    "@tagspaces/tagspaces-common-aws": "1.3.3",
+    "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "electronDependencies": {
-    "@tagspaces/tagspaces-common-node": "1.2.5",
+    "@tagspaces/tagspaces-common-node": "1.3.3",
     "@tagspaces/tagspaces-common-electron": "1.0.7",
-    "@tagspaces/tagspaces-common-aws": "1.2.3"
+    "@tagspaces/tagspaces-common-aws": "1.3.3",
+    "@tagspaces/tagspaces-common-webdav": "1.0.4"
   }
 }
