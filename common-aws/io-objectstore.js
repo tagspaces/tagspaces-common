@@ -885,6 +885,14 @@ async function getDirectoryPrefixes(param) {
   return prefixes;
 }
 
+function openUrl(url) {
+  window.open(url, "_blank");
+}
+
+function openFile(filePath) {
+  window.open(filePath, "_blank");
+}
+
 module.exports = {
   s3,
   config,
@@ -903,4 +911,6 @@ module.exports = {
   renameDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
+  openUrl,
+  openFile,
 };
