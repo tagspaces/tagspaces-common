@@ -454,7 +454,7 @@ function platformDeleteFilePromise(path, useTrash) {
     return objectStoreAPI.deleteFilePromise(param, useTrash);
   }
   // PlatformIO.ignoreByWatcher(path);
-  if (useTrash) {
+  if (useTrash && moveToTrash) {
     return moveToTrash([path]);
   } else {
     return deleteFilePromise(path).then((result) => {
@@ -500,12 +500,16 @@ function platformOpenUrl(url) {
   openUrl(url);
 }
 
+/**
+ * TODO not used
+ * @returns {*}
+ */
 function platformSelectFileDialog() {
-  selectFileDialog();
+  return selectFileDialog();
 }
 
 function platformSelectDirectoryDialog() {
-  selectDirectoryDialog();
+  return selectDirectoryDialog();
 }
 
 function platformShareFiles(files) {

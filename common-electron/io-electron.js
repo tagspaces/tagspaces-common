@@ -77,7 +77,7 @@ function openUrl(url) {
 }
 
 function selectDirectoryDialog() {
-  ipcRenderer.invoke("select-directory-dialog", "noArg");
+  return ipcRenderer.invoke("select-directory-dialog", "noArg");
 }
 
 // web service
