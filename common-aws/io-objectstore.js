@@ -886,11 +886,23 @@ async function getDirectoryPrefixes(param) {
 }
 
 function openUrl(url) {
-  window.open(url, "_blank");
+  const tmpLink = document.createElement("a");
+  tmpLink.target = "_blank";
+  tmpLink.href = url;
+  tmpLink.rel = "noopener noreferrer";
+  document.body.appendChild(tmpLink);
+  tmpLink.click();
+  tmpLink.parentNode.removeChild(tmpLink);
+  // window.open(url, '_blank').opener = null;
+  // Object.assign(anchor, {
+  //   target: '_blank',
+  //   href: url,
+  //   rel: 'noopener noreferrer'
+  // }).click();
 }
 
 function openFile(filePath) {
-  window.open(filePath, "_blank");
+  openUrl(filePath);
 }
 
 module.exports = {

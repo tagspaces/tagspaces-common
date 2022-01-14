@@ -1391,9 +1391,9 @@ function showInFileManager(filePath) {
  */
 function openFile(filePath) {
   console.log("Opening natively: " + filePath);
-  if (filePath.indexOf("http://") === 0 || filePath.indexOf("https://") === 0) {
-    window.open(filePath, "_system");
-  } else if (filePath.indexOf("file://") === 0) {
+  if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    openUrl(filePath);
+  } else if (filePath.startsWith("file://")) {
     cordova.plugins.fileOpener2.open(filePath);
   } else {
     cordova.plugins.fileOpener2.open("file://" + filePath);
@@ -1401,7 +1401,19 @@ function openFile(filePath) {
 }
 
 function openUrl(url) {
-  window.open(url, "_system");
+  // window.open(url, "_system");
+  const tmpLink = document.createElement("a");
+  tmpLink.target = "_blank";
+  tmpLink.href = url;
+  tmpLink.rel = "noopener noreferrer";
+  document.body.appendChild(tmpLink);
+  tmpLink.click();
+  tmpLink.parentNode.removeChild(tmpLink);
+  // Object.assign(anchor, {
+  //   target: '_blank',
+  //   href: url,
+  //   rel: 'noopener noreferrer'
+  // }).click();
 }
 
 /**
