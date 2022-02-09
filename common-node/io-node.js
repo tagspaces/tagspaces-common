@@ -355,7 +355,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
           enhancedEntries.push(eentry);
         });
 
-        // Read the .ts meta content
+        // Read the .ts meta content TODO extract read meta dir in listMetaDirectoryPromise()
         if (containsMetaFolder && mode.includes("extractThumbPath")) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {

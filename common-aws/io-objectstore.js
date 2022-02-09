@@ -921,6 +921,7 @@ module.exports = {
   config,
   configure,
   listDirectoryPromise,
+  listMetaDirectoryPromise,
   getURLforPath,
   saveFilePromise,
   saveTextFilePromise,
