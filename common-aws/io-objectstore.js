@@ -128,7 +128,14 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
     const enhancedEntries = [];
     let eentry;
 
-    const metaContent = await listMetaDirectoryPromise(param);
+    const loadMeta = mode.some(
+      (el) => el === "extractThumbURL" || el === "extractThumbPath"
+    );
+
+    let metaContent;
+    if (loadMeta) {
+      metaContent = await listMetaDirectoryPromise(param);
+    }
     // console.log('Meta folder content: ' + JSON.stringify(metaContent));
 
     const params = {
@@ -195,7 +202,9 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
         if (eentry.path !== params.Prefix) {
           // skipping the current directory
           enhancedEntries.push(eentry);
-          metaPromises.push(getEntryMeta(eentry));
+          if (loadMeta) {
+            metaPromises.push(getEntryMeta(eentry));
+          }
         }
 
         // if (window.walkCanceled) {
@@ -207,11 +216,7 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
       data.Contents.forEach((file) => {
         // console.warn(JSON.stringify(file));
         let thumbPath;
-        if (
-          mode.some(
-            (el) => el === "extractThumbURL" || el === "extractThumbPath"
-          )
-        ) {
+        if (loadMeta) {
           thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, "/", false);
           if (thumbPath && thumbPath.startsWith("/")) {
             thumbPath = thumbPath.substring(1);
@@ -249,36 +254,42 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
         if (file.Key !== params.Prefix) {
           // skipping the current folder
           enhancedEntries.push(eentry);
-          let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
-          if (metaFilePath.startsWith("/")) {
-            metaFilePath = metaFilePath.substring(1);
-          }
-          const metaFileAvailable = metaContent.find(
-            (obj) => obj.path === metaFilePath
-          );
-          if (metaFileAvailable) {
-            metaPromises.push(getEntryMeta(eentry));
+          if (loadMeta) {
+            let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+            if (metaFilePath.startsWith("/")) {
+              metaFilePath = metaFilePath.substring(1);
+            }
+            const metaFileAvailable = metaContent.find(
+              (obj) => obj.path === metaFilePath
+            );
+            if (metaFileAvailable) {
+              metaPromises.push(getEntryMeta(eentry));
+            }
           }
         }
       });
 
-      Promise.all(metaPromises)
-        .then((entriesMeta) => {
-          entriesMeta.forEach((entryMeta) => {
-            enhancedEntries.some((enhancedEntry) => {
-              if (enhancedEntry.path === entryMeta.path) {
-                enhancedEntry = entryMeta;
-                return true;
-              }
-              return false;
+      if (metaPromises.length > 0) {
+        Promise.all(metaPromises)
+          .then((entriesMeta) => {
+            entriesMeta.forEach((entryMeta) => {
+              enhancedEntries.some((enhancedEntry) => {
+                if (enhancedEntry.path === entryMeta.path) {
+                  enhancedEntry = entryMeta;
+                  return true;
+                }
+                return false;
+              });
             });
+            resolve(enhancedEntries);
+            return true;
+          })
+          .catch(() => {
+            resolve(enhancedEntries);
           });
-          resolve(enhancedEntries);
-          return true;
-        })
-        .catch(() => {
-          resolve(enhancedEntries);
-        });
+      } else {
+        resolve(enhancedEntries);
+      }
     });
   });
 
