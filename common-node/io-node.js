@@ -243,11 +243,31 @@ function deleteDirectoryPromise(path) {
   });
 }
 
+function listMetaDirectoryPromise(param) {
+  let path;
+  if (typeof param === "object" && param !== null) {
+    path = param.path;
+  } else {
+    path = param;
+  }
+  const metaPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
+  return new Promise((resolve) => {
+    fs.readdir(metaPath, (error, entries) => {
+      if (error) {
+        console.warn("Error listing meta directory " + metaPath);
+        resolve([]); // returning results even if any promise fails
+        return;
+      }
+      resolve(entries);
+    });
+  });
+}
+
 /**
  *
  * @param param
  * @param mode = ['extractTextContent', 'extractThumbPath']
- * @returns {Promise<unknown>}
+ * @returns {Promise<FileSystemEntry[]>}
  */
 function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
   let path;
@@ -256,13 +276,20 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
   } else {
     path = param;
   }
-  return new Promise((resolve) => {
+
+  return new Promise(async (resolve) => {
+    const loadMeta = mode.includes("extractThumbPath");
+    let metaContent;
+    if (loadMeta) {
+      metaContent = await listMetaDirectoryPromise(param);
+    }
+
     const enhancedEntries = [];
     let entryPath;
     let metaFolderPath;
     let stats;
     let eentry;
-    let containsMetaFolder = false;
+    // let containsMetaFolder = false;
     // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
     if (path.startsWith("./") || path.startsWith("../")) {
       // relative tsPaths
@@ -296,39 +323,50 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
             eentry.size = stats.size;
             eentry.lmdt = stats.mtime.getTime();
 
-            if (!eentry.isFile && eentry.name.endsWith(AppConfig.metaFolder)) {
+            /*if (!eentry.isFile && eentry.name.endsWith(AppConfig.metaFolder)) {
               containsMetaFolder = true;
-            }
+            }*/
 
             // Read tsm.json from sub folders
-            if (!eentry.isFile && mode.includes("extractThumbPath")) {
-              const folderMetaPath =
+            const folderMetaPath = tsPaths.getMetaFileLocationForDir(
+              eentry.path,
+              pathLib.sep
+            );
+            if (!eentry.isFile && metaContent.includes(folderMetaPath)) {
+              // mode.includes("extractThumbPath")) {
+              /*const folderMetaPath =
                 eentry.path +
                 pathLib.sep +
                 (!eentry.path.includes("/" + AppConfig.metaFolder)
                   ? AppConfig.metaFolder + pathLib.sep
                   : "") +
-                AppConfig.metaFolderFile;
+                AppConfig.metaFolderFile;*/
               try {
-                const folderMeta = fs.readJsonSync(folderMetaPath);
-                eentry.meta = folderMeta;
+                eentry.meta = fs.readJsonSync(folderMetaPath);
                 // console.log('Success reading meta folder file ' + folderMetaPath);
               } catch (err) {
-                // console.log('Failed reading meta folder file ' + folderMetaPath);
+                console.error(
+                  "Failed reading meta folder file " + folderMetaPath
+                );
               }
 
               // Loading thumbs for folders
               if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
                 // skipping meta folder
-                const folderTmbPath =
-                  eentry.path +
+                const folderTmbPath = tsPaths.getThumbFileLocationForDirectory(
+                  eentry.path,
+                  pathLib.sep
+                );
+                if (metaContent.includes(folderMetaPath)) {
+                  /*eentry.path +
                   pathLib.sep +
                   AppConfig.metaFolder +
                   pathLib.sep +
-                  AppConfig.folderThumbFile;
-                const tmbStats = fs.statSync(folderTmbPath);
-                if (tmbStats.isFile()) {
+                  AppConfig.folderThumbFile;*/
+                  // const tmbStats = fs.statSync(folderTmbPath);
+                  // if (tmbStats.isFile()) {
                   eentry.thumbPath = folderTmbPath;
+                  //}
                 }
               }
             }
@@ -356,7 +394,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
         });
 
         // Read the .ts meta content TODO extract read meta dir in listMetaDirectoryPromise()
-        if (containsMetaFolder && mode.includes("extractThumbPath")) {
+        /*if (containsMetaFolder && mode.includes("extractThumbPath")) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {
             if (err) {
@@ -365,71 +403,68 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
               );
               resolve(enhancedEntries); // returning results even if any promise fails
               return;
-            }
+            }*/
 
-            /*if (window.walkCanceled) {
+        /*if (window.walkCanceled) {
               resolve(enhancedEntries); // returning results even if walk canceled
               return;
             }*/
 
-            if (metaEntries) {
-              metaEntries.forEach((metaEntryName) => {
-                /* if (metaEntryName === metaFolderFile) {
-                            // Read meta folder path
-                          } */
-
-                // Reading meta json files with tags and description
-                if (metaEntryName.endsWith(AppConfig.metaFileExt)) {
-                  const fileNameWithoutMetaExt = metaEntryName.substr(
-                    0,
-                    metaEntryName.lastIndexOf(AppConfig.metaFileExt)
-                  );
-                  const origFile = enhancedEntries.find(
-                    (result) => result.name === fileNameWithoutMetaExt
-                  );
-                  if (origFile) {
-                    const metaFilePath =
-                      metaFolderPath + pathLib.sep + metaEntryName;
-                    const metaFileObj = fs.readJsonSync(metaFilePath);
-                    if (metaFileObj) {
-                      enhancedEntries.map((enhancedEntry) => {
-                        if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                          enhancedEntry.meta = metaFileObj;
-                        }
-                        return true;
-                      });
-                    }
-                  }
-                }
-
-                // Finding if thumbnail available
-                if (metaEntryName.endsWith(AppConfig.thumbFileExt)) {
-                  const fileNameWithoutMetaExt = metaEntryName.substr(
-                    0,
-                    metaEntryName.lastIndexOf(AppConfig.thumbFileExt)
-                  );
+        if (metaContent.length > 0) {
+          metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
+          metaContent.forEach((metaEntryName) => {
+            // Reading meta json files with tags and description
+            if (metaEntryName.endsWith(AppConfig.metaFileExt)) {
+              const fileNameWithoutMetaExt = metaEntryName.substr(
+                0,
+                metaEntryName.lastIndexOf(AppConfig.metaFileExt)
+              );
+              const origFile = enhancedEntries.find(
+                (result) => result.name === fileNameWithoutMetaExt
+              );
+              if (origFile) {
+                const metaFilePath =
+                  metaFolderPath + pathLib.sep + metaEntryName;
+                const metaFileObj = fs.readJsonSync(metaFilePath);
+                if (metaFileObj) {
                   enhancedEntries.map((enhancedEntry) => {
                     if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                      const thumbFilePath =
-                        metaFolderPath +
-                        pathLib.sep +
-                        encodeURIComponent(metaEntryName);
-                      enhancedEntry.thumbPath = thumbFilePath;
+                      enhancedEntry.meta = metaFileObj;
                     }
                     return true;
                   });
                 }
+              }
+            }
 
-                /*if (window.walkCanceled) {
-                  resolve(enhancedEntries);
-                }*/
+            // Finding if thumbnail available
+            if (metaEntryName.endsWith(AppConfig.thumbFileExt)) {
+              const fileNameWithoutMetaExt = metaEntryName.substr(
+                0,
+                metaEntryName.lastIndexOf(AppConfig.thumbFileExt)
+              );
+              enhancedEntries.map((enhancedEntry) => {
+                if (enhancedEntry.name === fileNameWithoutMetaExt) {
+                  const thumbFilePath =
+                    metaFolderPath +
+                    pathLib.sep +
+                    encodeURIComponent(metaEntryName);
+                  enhancedEntry.thumbPath = thumbFilePath;
+                }
+                return true;
               });
             }
-            resolve(enhancedEntries);
+
+            /*if (window.walkCanceled) {
+                  resolve(enhancedEntries);
+                }*/
           });
+        }
+        resolve(enhancedEntries);
+        /*});
         } else {
           resolve(enhancedEntries);
-        }
+        }*/
       }
     });
   });
@@ -736,6 +771,7 @@ function resolveFilePath(filePath) {
 }
 
 module.exports = {
+  listMetaDirectoryPromise,
   listDirectoryPromise,
   saveTextFilePromise,
   saveFilePromise,
