@@ -279,7 +279,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
 
   return new Promise(async (resolve) => {
     const loadMeta = mode.includes("extractThumbPath");
-    let metaContent;
+    let metaContent = [];
     if (loadMeta) {
       metaContent = await listMetaDirectoryPromise(param);
     }

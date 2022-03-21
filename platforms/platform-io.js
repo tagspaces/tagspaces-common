@@ -30,6 +30,7 @@ const {
   createDirectoryIndexInWorker,
   createThumbnailsInWorker,
   listDirectoryPromise,
+  listMetaDirectoryPromise,
   getPropertiesPromise,
   createDirectoryPromise,
   copyFilePromise,
@@ -239,6 +240,19 @@ function platformListDirectoryPromise(
     return webDavAPI.listDirectoryPromise(path, mode, ignorePatterns);
   }
   return listDirectoryPromise(path, mode, ignorePatterns);
+}
+
+function platformListMetaDirectoryPromise(path) {
+  if (objectStoreAPI) {
+    const param = {
+      path,
+      bucketName: objectStoreAPI.config().bucketName,
+    };
+    return objectStoreAPI.listMetaDirectoryPromise(param);
+  } else if (webDavAPI) {
+    return webDavAPI.listMetaDirectoryPromise(path);
+  }
+  return listMetaDirectoryPromise(path);
 }
 
 /**
@@ -564,6 +578,7 @@ module.exports = {
   platformCreateDirectoryIndexInWorker,
   platformCreateThumbnailsInWorker,
   platformListDirectoryPromise,
+  platformListMetaDirectoryPromise,
   platformListObjectStoreDir,
   platformGetPropertiesPromise,
   platformCreateDirectoryPromise,
