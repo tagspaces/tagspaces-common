@@ -8,6 +8,7 @@
     "install": "node install/platformIO.js",
     "install-node": "rimraf node_modules && npx cross-env PD_PLATFORM=node npm run install",
     "install-electron": "rimraf node_modules && npx cross-env PD_PLATFORM=electron npm run install",
+    "install-aws": "rimraf node_modules && npx cross-env PD_PLATFORM=aws npm run install",
     "install-web": "rimraf node_modules && npx cross-env PD_PLATFORM=web npm run install",
     "install-cordova": "rimraf node_modules && npx cross-env PD_PLATFORM=cordova npm run install",
     "pkg-publish": "npm publish --access public"
@@ -27,6 +28,11 @@
     "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "webDependencies": {
+    "@tagspaces/tagspaces-common-web": "1.0.0",
+    "@tagspaces/tagspaces-common-aws": "1.3.5",
+    "@tagspaces/tagspaces-common-webdav": "1.0.4"
+  },
+  "awsDependencies": {
     "@tagspaces/tagspaces-common-aws": "1.3.5",
     "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
