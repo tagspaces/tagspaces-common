@@ -14,23 +14,23 @@ const idb = require("idb-keyval");
     Movies: "videos",
   });*/
 
+function getPath(param) {
+  if (typeof param === "object" && param !== null) {
+    return param.path;
+  }
+  return param;
+}
+
 const listMetaDirectoryPromise = async (param) =>
   new Promise(async (resolve, reject) => {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
-    path = path + "/" + AppConfig.metaFolder;
+    const path = getPath(param) + "/" + AppConfig.metaFolder;
     const dirHandle = await getHandle(path); //window[path]; //.localStorage.getItem(path);
 
     const enhancedEntries = [];
 
     for await (const entry of dirHandle.values()) {
       const nestedPath = `${path}/${entry.name}`;
-      await idb.set(nestedPath, entry);
-      // window[nestedPath] = entry;
+      await setHandle(nestedPath, entry);
       if (entry.kind === "file") {
         enhancedEntries.push(
           entry.getFile().then((file) => ({
@@ -53,12 +53,7 @@ const listMetaDirectoryPromise = async (param) =>
  */
 const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
   new Promise(async (resolve, reject) => {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     const dirHandle = await getHandle(path); //window[path]; //.localStorage.getItem(path);
     /*if (!dirHandle) {
       await selectDirectoryDialog(path);
@@ -74,8 +69,7 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
         haveMetaFolder = true;
       }
       const nestedPath = `${path}/${entry.name}`;
-      await idb.set(nestedPath, entry);
-      // window[nestedPath] = entry;
+      await setHandle(nestedPath, entry);
       if (entry.kind === "file") {
         filePromises.push(
           entry.getFile().then((file) => {
@@ -143,12 +137,7 @@ function isFileSystemDirectoryHandle(handle) {
 
 function getPropertiesPromise(param) {
   return new Promise(async (resolve, reject) => {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     const handle = await getHandle(path);
     if (handle) {
       if (isFileSystemFileHandle(handle)) {
@@ -189,13 +178,8 @@ const getFileContentPromise = async (
   type = "text",
   isPreview = false
 ) => {
-  let path;
-  if (typeof param === "object" && param !== null) {
-    path = param.path;
-  } else {
-    path = param;
-  }
-  const fileHandle = await idb.get(path); //window[path];
+  const path = getPath(param);
+  const fileHandle = await getHandle(path);
   const file = await fileHandle.getFile();
   if (type === "text") {
     return file.text();
@@ -214,88 +198,72 @@ const getFileContentPromise = async (
   return file;
 };
 
+async function writeFile(fileHandle, contents) {
+  // Create a FileSystemWritableFileStream to write to.
+  const writable = await fileHandle.createWritable();
+  // Write the contents of the file to the stream.
+  await writable.write(contents);
+  // Close the file and write the contents to disk.
+  await writable.close();
+}
+
 /**
- * Persists a given content(binary supported) to a specified filepath (tested)
+ * Persists a given content(binary supported) to a specified filepath
  * @param param
  * @param content
  * @param overWrite
  * @param mode
- * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
+ * @returns {Promise<any>}
  */
 const saveFilePromise = (param, content, overWrite, mode) =>
-  new Promise((resolve, reject) => {
-    const path = param.path;
-    const bucketName = param.bucketName;
-    // let isNewFile = false;
-    // eslint-disable-next-line no-param-reassign
-    const filePath = normalizeRootPath(path);
-
-    /*return getPropertiesPromise({
-    path: filePath,
-    bucketName: bucketName,
-  }).then((result) => {
-    if (result === false) {
-      isNewFile = true;
-    }
-    if (isNewFile || overWrite === true) {
-      if (result.size !== content.length) {
-        console.log(
-          "Update index size:" +
-            result.size +
-            " old index size:" +
-            content.length
-        );*/
-    // || mode === 'text') {
-    const fileExt = tsPaths.extractFileExtension(filePath);
-
-    let mimeType;
-    if (fileExt === "md") {
-      mimeType = "text/markdown";
-    } else if (fileExt === "txt") {
-      mimeType = "text/plain";
-    } else if (fileExt === "html") {
-      mimeType = "text/html";
-    } else if (fileExt === "json") {
-      mimeType = "application/json";
-    } else {
-      // default type
-      mimeType = "text/plain";
-    }
-    const params = {
-      Bucket: bucketName,
-      Key: filePath,
-      Body: content,
-      ContentType: mimeType,
-    }; // fs.readFileSync(filePath)
-    s3().putObject(params, (err, data) => {
-      if (err) {
-        console.log("Error upload " + filePath); // an error occurred
-        console.log(err, err.stack); // an error occurred
-        resolve(false);
+  new Promise(async (resolve, reject) => {
+    const path = getPath(param);
+    const handle = await getHandle(path, true);
+    if (!handle) {
+      // new file
+      const parenDirPath = tsPaths.extractParentDirectoryPath(
+        path,
+        AppConfig.dirSeparator
+      );
+      const dirHandle = await getHandle(parenDirPath, true);
+      if (dirHandle) {
+        const fileName = path.substr(parenDirPath.length + 1);
+        const newFileHandle = await dirHandle.getFileHandle(fileName, {
+          create: true,
+        });
+        await setHandle(path, newFileHandle);
+        resolve({
+          name: newFileHandle.name,
+          isFile: true,
+          path: path,
+          extension: tsPaths.extractFileExtension(path, AppConfig.dirSeparator),
+          size: 0,
+          lmdt: new Date().getTime(),
+          tags: [],
+        });
+      } else {
+        reject("error saveFilePromise parentDirHandler not exist");
       }
+    } else if (isFileSystemFileHandle(handle)) {
+      await writeFile(handle, content);
+      const file = await handle.getFile();
       resolve({
-        uuid: data ? data.ETag : uuidv1(),
-        name:
-          data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
-        url: data ? data.Location : filePath,
+        name: file.name,
         isFile: true,
-        path: filePath,
-        extension: tsPaths.extractFileExtension(filePath, "/"),
-        size: content.length,
-        lmdt: new Date().getTime(),
-        // isNewFile,
+        path: path,
+        extension: tsPaths.extractFileExtension(path, AppConfig.dirSeparator),
+        size: file.size,
+        lmdt: file.lastModified,
+        tags: [],
       });
-    }); // .promise();
-    /*}
     }
-  });*/
   });
 
 /**
  * Persists a given text content to a specified filepath (tested)
  */
 function saveTextFilePromise(param, content, overWrite) {
-  console.log("Saving text file: " + param.path);
+  // console.log("Saving text file: " + param);
   return saveFilePromise(param, content, overWrite, "text");
 }
 
@@ -385,99 +353,90 @@ function saveBinaryFilePromise(
 }
 
 /**
- * Creates a directory. S3 does not have folders or files; it has buckets and objects. Buckets are used to store objects (tested)
+ * Creates a directory.
  * @param param = { path: newDirectory/ }
  * @returns {Promise<>}
  */
 function createDirectoryPromise(param) {
-  const dirPath = tsPaths.normalizePath(normalizeRootPath(param.path)) + "/";
-  console.log("Creating directory: " + dirPath);
-  return s3()
-    .putObject({
-      Bucket: param.bucketName,
-      Key: dirPath,
-    })
-    .promise()
-    .then((result) => {
-      const out = {
-        ...result,
-        dirPath,
-      };
-      if (dirPath.endsWith(AppConfig.metaFolder + "/")) {
-        return out;
-      }
-      const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
-      const metaContent = '{"id":"' + new Date().getTime() + '"}';
-      return saveTextFilePromise(
-        { ...param, path: metaFilePath },
-        metaContent,
-        false
-      ).then(() => out);
-    });
+  return new Promise(async (resolve, reject) => {
+    const path = getPath(param);
+    const parenDirPath = tsPaths.extractParentDirectoryPath(
+      path,
+      AppConfig.dirSeparator
+    );
+    const parentDirHandle = await getHandle(parenDirPath, true);
+    if (parentDirHandle) {
+      const newDirName = path.substr(parenDirPath.length + 1);
+      const newDirectoryHandle = await parentDirHandle.getDirectoryHandle(
+        newDirName,
+        {
+          create: true,
+        }
+      );
+      await setHandle(path, newDirectoryHandle);
+      resolve(path);
+    }
+  });
 }
 
 /**
- * Copies a given file to a specified location (tested)
+ * Copies a given file to a specified location
  * @param param
  * @param newFilePath
  * @returns {Promise<>}
  */
 function copyFilePromise(param, newFilePath) {
-  const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
-  const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
-  console.log("Copying file: " + nFilePath + " to " + nNewFilePath);
-  if (nFilePath.toLowerCase() === nNewFilePath.toLowerCase()) {
-    return new Promise((resolve, reject) => {
-      reject("Copying file failed, files have the same path");
-    });
-  }
-  return s3()
-    .copyObject({
-      Bucket: param.bucketName,
-      CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
-      Key: nNewFilePath, //encodeS3URI
-    })
-    .promise();
+  return new Promise(async (resolve, reject) => {
+    const path = getPath(param);
+    const fileHandle = await getHandle(path, true);
+    if (fileHandle) {
+      const parenDirPath = tsPaths.extractParentDirectoryPath(
+        path,
+        AppConfig.dirSeparator
+      );
+      const parentDirHandle = await getHandle(parenDirPath, true);
+      if (parentDirHandle) {
+        const targetDir = tsPaths.extractParentDirectoryPath(
+          path,
+          AppConfig.dirSeparator
+        );
+        const targetDirHandle = await getHandle(targetDir, true);
+        if (targetDirHandle) {
+          const same = await parentDirHandle.isSameEntry(targetDirHandle);
+          if (same) {
+            reject("Copying file failed, files have the same path");
+          } else {
+            await fileHandle.move(targetDirHandle);
+            resolve([path, newFilePath]);
+          }
+        } else {
+          reject("Copying file failed, targetDirHandle not exist:" + targetDir);
+        }
+      } else {
+        reject(
+          "Copying file failed, parentDirHandle not exist:" + parenDirPath
+        );
+      }
+    } else {
+      reject("Copying file failed, files not exist:" + path);
+    }
+  });
 }
 
 /**
- * Renames a given file (tested)
- * TODO for web minio copyObject -> The request signature we calculated does not match the signature you provided. Check your key and signing method.
+ * Renames a given file
  */
 function renameFilePromise(param, newFilePath) {
-  const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
-  const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
-  console.log("Renaming file: " + nFilePath + " to " + newFilePath);
-  if (nFilePath === nNewFilePath) {
-    return new Promise((resolve, reject) => {
-      reject("Renaming file failed, files have the same path");
-    });
-  }
-  // Copy the object to a new location
-  return new Promise((resolve, reject) => {
-    s3()
-      .copyObject({
-        Bucket: param.bucketName,
-        CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
-        Key: nNewFilePath, //encodeS3URI
-      })
-      .promise()
-      .then(() =>
-        // Delete the old object
-        s3()
-          .deleteObject({
-            Bucket: param.bucketName,
-            Key: nFilePath,
-          })
-          .promise()
-          .then(() => {
-            resolve([param.path, nNewFilePath]);
-          })
-      )
-      .catch((e) => {
-        console.log(e);
-        reject("Renaming file failed" + e.code);
-      });
+  return new Promise(async (resolve, reject) => {
+    const path = getPath(param);
+    const fileHandle = await getHandle(path, true);
+    if (fileHandle) {
+      const fileName = tsPaths.extractFileName(newFilePath);
+      await fileHandle.move(fileName);
+      resolve([path, newFilePath]);
+    } else {
+      reject("Copying file failed, files not exist:" + path);
+    }
   });
 }
 
@@ -485,75 +444,28 @@ function renameFilePromise(param, newFilePath) {
  * Rename a directory
  */
 function renameDirectoryPromise(param, newDirectoryPath) {
-  const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
-  const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirectoryPath);
-  console.log("Renaming directory: " + param.path + " to " + newDirPath);
-  if (param.path === newDirPath) {
-    return Promise.reject(
-      "Renaming directory failed, directories have the same path"
-    );
-  }
 
-  const listParams = {
-    Bucket: param.bucketName,
-    Prefix: param.path,
-    Delimiter: "/",
-  };
-  return s3()
-    .listObjectsV2(listParams)
-    .promise()
-    .then((listedObjects) => {
-      if (listedObjects.Contents.length > 0) {
-        const promises = [];
-        listedObjects.Contents.forEach(({ Key }) => {
-          if (Key.endsWith("/")) {
-            promises.push(
-              createDirectoryPromise({ ...param, path: newDirectoryPath })
-            );
-          } else {
-            promises.push(
-              copyFilePromise(
-                { ...param, path: Key },
-                parenDirPath +
-                  "/" +
-                  Key.replace(
-                    tsPaths.normalizePath(param.path),
-                    newDirectoryPath
-                  )
-              )
-            );
-          }
-        });
-
-        return Promise.all(promises).then(() =>
-          deleteDirectoryPromise(param).then(() => newDirectoryPath)
-        );
-      } else {
-        // empty Dir
-        return createDirectoryPromise({
-          ...param,
-          path: newDirectoryPath,
-        }).then(() =>
-          deleteDirectoryPromise(param).then(() => newDirectoryPath)
-        );
-      }
-    })
-    .catch((e) => {
-      console.log(e);
-      return Promise.reject("No directory exist:" + param.path);
-    });
 }
 
 /**
  * Delete a specified file
  */
 function deleteFilePromise(param) {
-  return s3()
-    .deleteObject({
-      Bucket: param.bucketName,
-      Key: param.path,
-    })
-    .promise();
+  return new Promise(async (resolve, reject) => {
+    const path = getPath(param);
+    const parenDirPath = tsPaths.extractParentDirectoryPath(
+      path,
+      AppConfig.dirSeparator
+    );
+    const dirHandle = await getHandle(parenDirPath, true);
+    if (dirHandle) {
+      const fileName = path.substr(parenDirPath.length + 1);
+      await dirHandle.removeEntry(fileName);
+      resolve(path);
+    } else {
+      reject("no dirHandle for path:" + path);
+    }
+  });
 }
 
 /**
@@ -561,27 +473,21 @@ function deleteFilePromise(param) {
  * @param param
  * @returns {Promise<*[]>}
  */
-function deleteDirectoryPromise(param) {
-  return getDirectoryPrefixes(param).then((prefixes) => {
-    if (prefixes.length > 0) {
-      const deleteParams = {
-        Bucket: param.bucketName,
-        Delete: { Objects: prefixes },
-      };
-
-      try {
-        return s3().deleteObjects(deleteParams).promise();
-      } catch (e) {
-        console.error(e);
-        return Promise.resolve();
-      }
+async function deleteDirectoryPromise(param) {
+  return new Promise(async (resolve, reject) => {
+    const path = getPath(param);
+    const parenDirPath = tsPaths.extractParentDirectoryPath(
+      path,
+      AppConfig.dirSeparator
+    );
+    const dirHandle = await getHandle(parenDirPath, true);
+    if (dirHandle) {
+      const dirName = path.substr(parenDirPath.length + 1);
+      await dirHandle.removeEntry(dirName, { recursive: true });
+      resolve(path);
+    } else {
+      reject("no dirHandle for path:" + path);
     }
-    return s3()
-      .deleteObject({
-        Bucket: param.bucketName,
-        Key: param.path,
-      })
-      .promise();
   });
 }
 
@@ -593,36 +499,55 @@ async function selectDirectoryDialog(startIn = "documents") {
     const directoryHandle = await window.showDirectoryPicker({
       startIn,
     });
-    await idb.set(directoryHandle.name, directoryHandle);
-    //window[directoryHandle.name] = directoryHandle; //.localStorage.setItem(directoryHandle.name, directoryHandle);
+    await setHandle(directoryHandle.name, directoryHandle, false); //.localStorage.setItem(directoryHandle.name, directoryHandle);
     return [directoryHandle.name];
-    /*const fsAccess = require("browser-fs-access");
-  const blobsInDirectory = await fsAccess.directoryOpen({
-    recursive: false,
-  });*/
   } catch (error) {
     console.error("selectDirectoryDialog", error);
   }
   return [];
 }
 
-async function getHandle(handleId) {
-  const handle = await idb.get(handleId.replace(/\/$/, "")); // remove potential slash from the end of the path
-  if (!handle || !(await verifyPermission(handle))) {
+async function setHandle(handleId, handle, temp = true) {
+  const key = handleId
+    .split(AppConfig.dirSeparator)
+    .filter((v) => v !== "")
+    .join(AppConfig.dirSeparator);
+  window["fsaLocations"] = window["fsaLocations"]
+    ? { ...window["fsaLocations"], [key]: handle }
+    : { [key]: handle };
+  if (!temp) {
+    await idb.set(key, handle);
+  }
+}
+
+async function getHandle(handleId, readWrite = false) {
+  // const key = handleId.replace(/\/$/, ""); // remove potential slash from the end of the path
+  const key = handleId
+    .split(AppConfig.dirSeparator)
+    .filter((v) => v !== "")
+    .join(AppConfig.dirSeparator);
+  let handle = window["fsaLocations"] ? window["fsaLocations"][key] : undefined;
+  if (!handle) {
+    handle = await idb.get(key);
+  }
+  if (!handle || !(await verifyPermission(handle, readWrite))) {
     console.log("no permissions to getHandle for:" + handleId);
     return undefined;
   }
   return handle;
 }
-async function verifyPermission(fileHandle, readWrite = true) {
+
+async function verifyPermission(fileHandle, readWrite = false) {
   const options = {};
   if (readWrite) {
     options.mode = "readwrite";
   }
   // Check if permission was already granted. If so, return true.
-  if ((await fileHandle.queryPermission(options)) === "granted") {
+  const permissions = await fileHandle.queryPermission(options);
+  if (permissions === "granted") {
     return true;
   }
+  // console.debug("no permissions:" + permissions);
   try {
     // Request permission. If the user grants permission, return true.
     if ((await fileHandle.requestPermission(options)) === "granted") {
@@ -633,64 +558,6 @@ async function verifyPermission(fileHandle, readWrite = true) {
   }
   // The user didn't grant permission, so return false.
   return false;
-}
-
-/**
- * get recursively all aws directory prefixes
- * @param param
- * @returns {Promise<[]>}
- */
-async function getDirectoryPrefixes(param) {
-  const prefixes = [];
-  const promises = [];
-  const listParams = {
-    Bucket: param.bucketName,
-    Prefix: tsPaths.normalizePath(normalizeRootPath(param.path)) + "/",
-    Delimiter: "/",
-  };
-  const listedObjects = await s3().listObjectsV2(listParams).promise();
-
-  if (
-    listedObjects.Contents.length > 0 ||
-    listedObjects.CommonPrefixes.length > 0
-  ) {
-    listedObjects.Contents.forEach(({ Key }) => {
-      prefixes.push({ Key });
-    });
-
-    listedObjects.CommonPrefixes.forEach(({ Prefix }) => {
-      prefixes.push({ Key: Prefix });
-      promises.push(getDirectoryPrefixes({ ...param, path: Prefix }));
-    });
-    // if (listedObjects.IsTruncated) await this.deleteDirectoryPromise(path);
-  }
-  const subPrefixes = await Promise.all(promises);
-  subPrefixes.map((arrPrefixes) => {
-    arrPrefixes.map((prefix) => {
-      prefixes.push(prefix);
-    });
-  });
-  return prefixes;
-}
-
-function openUrl(url) {
-  const tmpLink = document.createElement("a");
-  tmpLink.target = "_blank";
-  tmpLink.href = url;
-  tmpLink.rel = "noopener noreferrer";
-  document.body.appendChild(tmpLink);
-  tmpLink.click();
-  tmpLink.parentNode.removeChild(tmpLink);
-  // window.open(url, '_blank').opener = null;
-  // Object.assign(anchor, {
-  //   target: '_blank',
-  //   href: url,
-  //   rel: 'noopener noreferrer'
-  // }).click();
-}
-
-function openFile(filePath) {
-  openUrl(filePath);
 }
 
 module.exports = {
@@ -709,6 +576,4 @@ module.exports = {
   deleteFilePromise,
   deleteDirectoryPromise,
   selectDirectoryDialog,
-  openUrl,
-  openFile,
 };
