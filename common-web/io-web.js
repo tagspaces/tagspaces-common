@@ -386,7 +386,9 @@ function createDirectoryPromise(param) {
  * @returns {Promise<>}
  */
 function copyFilePromise(param, newFilePath) {
-  return new Promise(async (resolve, reject) => {
+  // https://github.com/WICG/file-system-access/pull/317
+  return Promise.reject('not supported');
+  /*return new Promise(async (resolve, reject) => {
     const path = getPath(param);
     const fileHandle = await getHandle(path, true);
     if (fileHandle) {
@@ -420,14 +422,16 @@ function copyFilePromise(param, newFilePath) {
     } else {
       reject("Copying file failed, files not exist:" + path);
     }
-  });
+  });*/
 }
 
 /**
  * Renames a given file
  */
 function renameFilePromise(param, newFilePath) {
-  return new Promise(async (resolve, reject) => {
+  // https://github.com/WICG/file-system-access/pull/317
+  return Promise.reject('not supported');
+  /*return new Promise(async (resolve, reject) => {
     const path = getPath(param);
     const fileHandle = await getHandle(path, true);
     if (fileHandle) {
@@ -437,14 +441,14 @@ function renameFilePromise(param, newFilePath) {
     } else {
       reject("Copying file failed, files not exist:" + path);
     }
-  });
+  });*/
 }
 
 /**
  * Rename a directory
  */
 function renameDirectoryPromise(param, newDirectoryPath) {
-
+  return Promise.reject('not supported');
 }
 
 /**
