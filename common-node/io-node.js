@@ -258,7 +258,11 @@ function listMetaDirectoryPromise(param) {
         resolve([]); // returning results even if any promise fails
         return;
       }
-      resolve(entries);
+      resolve(
+        entries.map((entry) => ({
+          path: entry,
+        }))
+      );
     });
   });
 }
@@ -332,7 +336,10 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
               eentry.path,
               pathLib.sep
             );
-            if (!eentry.isFile && metaContent.includes(folderMetaPath)) {
+            if (
+              !eentry.isFile &&
+              metaContent.some((meta) => meta.path === folderMetaPath)
+            ) {
               // mode.includes("extractThumbPath")) {
               /*const folderMetaPath =
                 eentry.path +
@@ -357,17 +364,17 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   eentry.path,
                   pathLib.sep
                 );
-                if (metaContent.includes(folderMetaPath)) {
-                  /*eentry.path +
+                //if (metaContent.includes(folderMetaPath)) {
+                /*eentry.path +
                   pathLib.sep +
                   AppConfig.metaFolder +
                   pathLib.sep +
                   AppConfig.folderThumbFile;*/
-                  // const tmbStats = fs.statSync(folderTmbPath);
-                  // if (tmbStats.isFile()) {
-                  eentry.thumbPath = folderTmbPath;
-                  //}
-                }
+                // const tmbStats = fs.statSync(folderTmbPath);
+                // if (tmbStats.isFile()) {
+                eentry.thumbPath = folderTmbPath;
+                //}
+                //}
               }
             }
 
@@ -412,19 +419,19 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
 
         if (metaContent.length > 0) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
-          metaContent.forEach((metaEntryName) => {
+          metaContent.forEach((metaEntry) => {
             // Reading meta json files with tags and description
-            if (metaEntryName.endsWith(AppConfig.metaFileExt)) {
-              const fileNameWithoutMetaExt = metaEntryName.substr(
+            if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
+              const fileNameWithoutMetaExt = metaEntry.path.substr(
                 0,
-                metaEntryName.lastIndexOf(AppConfig.metaFileExt)
+                metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
               );
               const origFile = enhancedEntries.find(
                 (result) => result.name === fileNameWithoutMetaExt
               );
               if (origFile) {
                 const metaFilePath =
-                  metaFolderPath + pathLib.sep + metaEntryName;
+                  metaFolderPath + pathLib.sep + metaEntry.path;
                 const metaFileObj = fs.readJsonSync(metaFilePath);
                 if (metaFileObj) {
                   enhancedEntries.map((enhancedEntry) => {
@@ -438,18 +445,17 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
             }
 
             // Finding if thumbnail available
-            if (metaEntryName.endsWith(AppConfig.thumbFileExt)) {
-              const fileNameWithoutMetaExt = metaEntryName.substr(
+            if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
+              const fileNameWithoutMetaExt = metaEntry.path.substr(
                 0,
-                metaEntryName.lastIndexOf(AppConfig.thumbFileExt)
+                metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
               );
               enhancedEntries.map((enhancedEntry) => {
                 if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                  const thumbFilePath =
+                  enhancedEntry.thumbPath =
                     metaFolderPath +
                     pathLib.sep +
-                    encodeURIComponent(metaEntryName);
-                  enhancedEntry.thumbPath = thumbFilePath;
+                    encodeURIComponent(metaEntry.path);
                 }
                 return true;
               });
