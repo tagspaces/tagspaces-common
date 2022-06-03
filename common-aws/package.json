@@ -1,15 +1,17 @@
 {
   "name": "@tagspaces/tagspaces-common-aws",
   "description": "TagSpaces common aws module",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "test": "jest",
+    "clean-install": "rimraf package-lock.json && rimraf node_modules && npm install",
+    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-aws-1.3.9.tgz && shx cp -rL package/** ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/node_modules/@tagspaces/tagspaces-common-aws && rimraf package",
     "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
   },
   "dependencies": {
-    "aws-sdk": "2.984.0",
+    "aws-sdk": "2.1148.0",
     "uuid": "8.3.2",
     "@tagspaces/tagspaces-common": "1.3.3"
   }

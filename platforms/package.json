@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.3.16",
+  "version": "1.3.17",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -10,6 +10,7 @@
     "install-electron": "rimraf node_modules && npx cross-env PD_PLATFORM=electron npm run install",
     "install-web": "rimraf node_modules && npx cross-env PD_PLATFORM=web npm run install",
     "install-cordova": "rimraf node_modules && npx cross-env PD_PLATFORM=cordova npm run install",
+    "copy_platform": "shx cp -rL platform-io.js ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/platform-io.js",
     "pkg-publish": "npm publish --access public"
   },
   "files": [
@@ -23,22 +24,22 @@
   ],
   "nodeDependencies": {
     "@tagspaces/tagspaces-common-node": "1.3.8",
-    "@tagspaces/tagspaces-common-aws": "1.3.8",
+    "@tagspaces/tagspaces-common-aws": "1.3.9",
     "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-aws": "1.3.8",
+    "@tagspaces/tagspaces-common-aws": "1.3.9",
     "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "cordovaDependencies": {
     "@tagspaces/tagspaces-common-cordova": "1.3.4",
-    "@tagspaces/tagspaces-common-aws": "1.3.8",
+    "@tagspaces/tagspaces-common-aws": "1.3.9",
     "@tagspaces/tagspaces-common-webdav": "1.0.4"
   },
   "electronDependencies": {
     "@tagspaces/tagspaces-common-node": "1.3.8",
     "@tagspaces/tagspaces-common-electron": "1.0.7",
-    "@tagspaces/tagspaces-common-aws": "1.3.8",
+    "@tagspaces/tagspaces-common-aws": "1.3.9",
     "@tagspaces/tagspaces-common-webdav": "1.0.4"
   }
 }
