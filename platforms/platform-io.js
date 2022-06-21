@@ -54,6 +54,7 @@ const {
   shareFiles,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const Indexer = require("./indexer");
 
 let objectStoreAPI, webDavAPI;
 
@@ -182,6 +183,28 @@ function platformGetURLforPath(path, expirationInSeconds) {
     };
     return objectStoreAPI.getURLforPath(param, expirationInSeconds);
   }
+}
+
+function platformCreateIndex(
+  param,
+  mode = ["extractThumbPath"],
+  ignorePatterns = [],
+  listDirectory = undefined,
+  loadTextFile = undefined
+) {
+  if (objectStoreAPI) {
+    param = {
+      ...param,
+      bucketName: objectStoreAPI.config().bucketName,
+    };
+  }
+  return Indexer.createIndex(
+    param,
+    mode,
+    ignorePatterns,
+    listDirectory,
+    loadTextFile
+  );
 }
 
 function platformCreateDirectoryTree(directoryPath) {
@@ -601,4 +624,5 @@ module.exports = {
   platformSelectFileDialog,
   platformSelectDirectoryDialog,
   platformShareFiles,
+  platformCreateIndex,
 };
