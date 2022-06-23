@@ -190,6 +190,22 @@ function getThumbFileLocationForDirectory(entryPath, dirSeparator = "/") {
   );
 }
 
+/**
+ * Remove Tags from fileName
+ * @param fileName: string
+ */
+function cleanFileName(fileName) {
+  const beginTagContainer = fileName.indexOf(AppConfig.beginTagContainer);
+  const endTagContainer = fileName.lastIndexOf(AppConfig.endTagContainer);
+  if (beginTagContainer >= 0 && beginTagContainer < endTagContainer) {
+    return (
+      fileName.slice(0, beginTagContainer) +
+      fileName.slice(endTagContainer + 1, fileName.length)
+    );
+  }
+  return fileName;
+}
+
 function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator = "/") {
   const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
   const tagArray = [];
@@ -245,5 +261,6 @@ module.exports = {
   extractFileName,
   extractDirectoryName,
   extractFileExtension,
+  cleanFileName,
   extractTagsAsObjects,
 };
