@@ -1,4 +1,5 @@
 import {
+    getLocationPath,
     listMetaDirectoryPromise,
     listDirectoryPromise,
     saveTextFilePromise,
@@ -39,6 +40,7 @@ import {
 } from "@tagspaces/tagspaces-common-electron/io-electron";
 
 export {
+    getLocationPath,
     listMetaDirectoryPromise,
     listDirectoryPromise,
     saveTextFilePromise,
