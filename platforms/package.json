@@ -17,6 +17,7 @@
     "index.js",
     "misc.js",
     "paths.js",
+    "utils-io.js",
     "aws.js",
     "webdav.js",
     "indexer.js",

@@ -10,6 +10,7 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "micromatch": "^4.0.4"
+    "micromatch": "^4.0.4",
+    "uuid": "^8.3.2"
   }
 }
