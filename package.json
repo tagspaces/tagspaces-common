@@ -5,7 +5,7 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer && npm run test-webdav",
+    "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer",
     "test-aws": "jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
     "test-webdav": "jest --config=jest.config.webdav.unit.js ./__tests__/common-webdav/unit/io-webdav.test.js",
@@ -15,6 +15,7 @@
     "husky-install": "husky install"
   },
   "devDependencies": {
+    "dotenv": "^16.0.1",
     "exec-sh": "^0.4.0",
     "fs-extra": "^10.0.0",
     "husky": "^7.0.4",
