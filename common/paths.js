@@ -535,6 +535,7 @@ module.exports = {
   extractTitle,
   cleanFileName,
   extractTagsAsObjects,
+  extractTags,
   tagsAsObjects,
   // extractLocation,
   joinPaths,
