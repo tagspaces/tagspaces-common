@@ -59,6 +59,10 @@ function listDirectoryPromise(entryPath) {
   return fsClient.listDirectoryPromise(entryPath);
 }
 
+function listMetaDirectoryPromise(entryPath) {
+  return fsClient.listMetaDirectoryPromise(entryPath);
+}
+
 function saveTextFilePromise(param, content, overwrite) {
   return fsClient.saveTextFilePromise(param, content, overwrite);
 }
@@ -123,6 +127,7 @@ module.exports = {
   configure,
   isDirectory,
   listDirectoryPromise,
+  listMetaDirectoryPromise,
   saveTextFilePromise,
   saveFilePromise,
   saveBinaryFilePromise,

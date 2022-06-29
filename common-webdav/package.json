@@ -5,6 +5,9 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
+    "webdav-start": "node ../scripts/webdav/webserver-start.js",
+    "clean-install": "rimraf package-lock.json && rimraf node_modules && npm install",
+    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-webdav-1.0.4.tgz && shx cp -rL ./package/** ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/node_modules/@tagspaces/tagspaces-common-webdav && rimraf package",
     "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
   },
   "dependencies": {
