@@ -63,4 +63,16 @@ function arrayBufferToBuffer(content) {
   return buffer;
 }
 
-module.exports = { prepareTagForExport, b64toBlob, arrayBufferToBuffer };
+function streamToBuffer(stream) {
+  const buffs = [];
+  return new Promise(function (resolve) {
+    stream.on("data", function (d) {
+      buffs.push(d);
+    });
+    stream.on("end", function () {
+      resolve(Buffer.concat(buffs));
+    });
+  });
+}
+
+module.exports = { prepareTagForExport, b64toBlob, arrayBufferToBuffer, streamToBuffer };

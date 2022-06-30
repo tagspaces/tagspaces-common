@@ -11,13 +11,19 @@ function configure(webDavConfig) {
   password = webDavConfig.password;
   port = webDavConfig.port;
 
-  const wfs = createAdapter("http://localhost:" + webDavConfig.port, {
-    username: webDavConfig.username,
-    password: webDavConfig.password,
-  });
+  const wfs = createAdapter(
+    "http://localhost:" + webDavConfig.port + "/webdav/server",
+    {
+      username: webDavConfig.username,
+      password: webDavConfig.password,
+    }
+  );
   wfs.lstat = wfs.stat;
   // https://github.com/jprichardson/node-fs-extra/blob/master/lib/mkdirs/make-dir.js
   wfs.mkdirp = wfs.mkdir;
+  wfs.move = function (filePath, targetPath, options, callback) {
+    wfs.rename(filePath, targetPath, callback);
+  };
   wfs.rm = function (targetPath, options, callback) {
     wfs.rmdir(targetPath, callback);
   };
@@ -72,7 +78,7 @@ function saveFilePromise(param, content, overwrite) {
 }
 
 function saveBinaryFilePromise(filePath, content, overwrite) {
-  return fsClient.saveFilePromise(filePath, content, overwrite);
+  return fsClient.saveBinaryFilePromise(filePath, content, overwrite);
 }
 
 function getPropertiesPromise(entryPath) {
@@ -142,5 +148,5 @@ module.exports = {
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,
-  createDirectoryTree
+  createDirectoryTree,
 };

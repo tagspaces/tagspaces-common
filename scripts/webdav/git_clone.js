@@ -1,19 +1,14 @@
-const path = require("path");
-const fs = require("fs");
+// const path = require("path");
+// const fs = require("fs");
 const spawn = require("child_process").spawn;
 
-module.exports = function clone(repo, targetPath, onSuccess) {
-  const target = path.resolve(__dirname, "..", targetPath);
-  const exists = fs.existsSync(target);
+function clone(repo, target, onSuccess) {
+  // const target = path.resolve(__dirname, "..", targetPath);
+  /*const exists = fs.existsSync(target);
 
   if (exists) {
     fs.rmSync(target, { recursive: true, force: true });
-    /*console.log(`${targetPath} already exists, git restore HEAD`);
-    args.push("restore");
-    args.push("--source=HEAD");
-    args.push("--staged", "--worktree");
-    args.push("--", target+"/testdata/file-structure/supported-filestypes");*/
-  }
+  }*/
   const args = ["clone"];
   args.push("--depth", "1");
   args.push("--", repo, target);
@@ -26,4 +21,17 @@ module.exports = function clone(repo, targetPath, onSuccess) {
       console.error("'git " + args + "' failed with status " + status);
     }
   });
-};
+}
+
+function clonePromise(repo, targetPath) {
+  return new Promise((resolve, reject) => {
+    clone(repo, targetPath, (path) => {
+      resolve(path);
+    });
+  }).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { clone, clonePromise };

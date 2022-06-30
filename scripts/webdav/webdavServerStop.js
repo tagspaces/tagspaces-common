@@ -1,3 +1,5 @@
 module.exports = async function () {
-  await global.WebDavInstance.stop();
+  if (global.WebDavInstance) {
+    await global.WebDavInstance.stop();
+  }
 };

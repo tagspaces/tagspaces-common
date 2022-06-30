@@ -1,6 +1,6 @@
 const pathLib = require("path");
 const tsPaths = require("./paths");
-const { arrayBufferToBuffer } = require("./misc");
+const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
 const AppConfig = require("./AppConfig");
 
 /**
@@ -233,9 +233,14 @@ function createFsClient(fs) {
    * @param content: any
    * @param overwrite: boolean
    */
-  function saveBinaryFilePromise(filePath, content, overwrite) {
+  async function saveBinaryFilePromise(filePath, content, overwrite) {
     console.log("Saving binary file: " + filePath);
-    const buff = arrayBufferToBuffer(content);
+    let buff;
+    if (content.readable) {
+      buff = await streamToBuffer(content);
+    } else {
+      buff = arrayBufferToBuffer(content);
+    }
     return saveFilePromise(filePath, buff, overwrite);
   }
 
@@ -434,24 +439,24 @@ function createFsClient(fs) {
               eentry.isFile = stats.isFile();
               eentry.size = stats.size;
               eentry.lmdt = stats.mtime.getTime
-                  ? stats.mtime.getTime()
-                  : stats.mtime;
+                ? stats.mtime.getTime()
+                : stats.mtime;
 
               // Read tsm.json from sub folders
               const folderMetaPath = tsPaths.getMetaFileLocationForDir(
-                  eentry.path,
-                  pathLib.sep
+                eentry.path,
+                pathLib.sep
               );
               if (
-                  !eentry.isFile &&
-                  metaContent.some((meta) => meta.path === folderMetaPath)
+                !eentry.isFile &&
+                metaContent.some((meta) => meta.path === folderMetaPath)
               ) {
                 try {
                   eentry.meta = fs.readJsonSync(folderMetaPath);
                   // console.log('Success reading meta folder file ' + folderMetaPath);
                 } catch (err) {
                   console.error(
-                      "Failed reading meta folder file " + folderMetaPath
+                    "Failed reading meta folder file " + folderMetaPath
                   );
                 }
 
@@ -459,10 +464,10 @@ function createFsClient(fs) {
                 if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
                   // skipping meta folder
                   const folderTmbPath =
-                      tsPaths.getThumbFileLocationForDirectory(
-                          eentry.path,
-                          pathLib.sep
-                      );
+                    tsPaths.getThumbFileLocationForDirectory(
+                      eentry.path,
+                      pathLib.sep
+                    );
                   eentry.thumbPath = folderTmbPath;
                 }
               }
@@ -470,14 +475,14 @@ function createFsClient(fs) {
               if (mode.includes("extractTextContent") && eentry.isFile) {
                 const fileName = eentry.name.toLowerCase();
                 if (
-                    fileName.endsWith(".txt") ||
-                    fileName.endsWith(".md") ||
-                    fileName.endsWith(".html")
+                  fileName.endsWith(".txt") ||
+                  fileName.endsWith(".md") ||
+                  fileName.endsWith(".html")
                 ) {
                   const fileContent = await fs.readFile(eentry.path, "utf8");
                   eentry.textContent = extractTextContent(
-                      fileName,
-                      fileContent
+                    fileName,
+                    fileContent
                   );
                 }
               }
@@ -488,7 +493,7 @@ function createFsClient(fs) {
                 }*/
             } catch (e) {
               console.warn(
-                  "Can not load properties for: " + entryPath + " " + e
+                "Can not load properties for: " + entryPath + " " + e
               );
             }
             enhancedEntries.push(eentry);
@@ -500,15 +505,15 @@ function createFsClient(fs) {
               // Reading meta json files with tags and description
               if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
                 const fileNameWithoutMetaExt = metaEntry.path.substr(
-                    0,
-                    metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
+                  0,
+                  metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
                 );
                 const origFile = enhancedEntries.find(
-                    (result) => result.name === fileNameWithoutMetaExt
+                  (result) => result.name === fileNameWithoutMetaExt
                 );
                 if (origFile) {
                   const metaFilePath =
-                      metaFolderPath + pathLib.sep + metaEntry.path;
+                    metaFolderPath + pathLib.sep + metaEntry.path;
                   const metaFileObj = fs.readJsonSync(metaFilePath);
                   if (metaFileObj) {
                     enhancedEntries.map((enhancedEntry) => {
@@ -524,15 +529,15 @@ function createFsClient(fs) {
               // Finding if thumbnail available
               if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
                 const fileNameWithoutMetaExt = metaEntry.path.substr(
-                    0,
-                    metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
+                  0,
+                  metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
                 );
                 enhancedEntries.map((enhancedEntry) => {
                   if (enhancedEntry.name === fileNameWithoutMetaExt) {
                     enhancedEntry.thumbPath =
-                        metaFolderPath +
-                        pathLib.sep +
-                        encodeURIComponent(metaEntry.path);
+                      metaFolderPath +
+                      pathLib.sep +
+                      encodeURIComponent(metaEntry.path);
                   }
                   return true;
                 });
@@ -791,9 +796,8 @@ function createFsClient(fs) {
     });
   }
 
-  // TODO
   function renameDirectoryPromise(dirPath, newDirName) {
-    dirPath = pathLib.resolve(dirPath);
+    // dirPath = pathLib.resolve(dirPath); TODO move for node only
     const newDirPath =
       tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
       AppConfig.dirSeparator +
@@ -805,7 +809,7 @@ function createFsClient(fs) {
         reject("Trying to move in the same directory. Moving failed");
         return;
       }
-      if (await fs.exists(newDirPath)) {
+      if (await exist(newDirPath)) {
         reject(
           'Directory "' +
             newDirPath +
@@ -815,8 +819,8 @@ function createFsClient(fs) {
         );
         return;
       }
-      const dirStatus = await fs.lstat(dirPath);
-      if (dirStatus.isDirectory) {
+      const dirProp = await getPropertiesPromise(dirPath);
+      if (!dirProp.isFile) {
         fs.rename(dirPath, newDirPath, (error) => {
           if (error) {
             reject('Renaming "' + dirPath + '" failed with: ' + error);
