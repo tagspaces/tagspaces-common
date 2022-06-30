@@ -18,6 +18,7 @@
 
 const {
   watchDirectory,
+  getLocationPath,
   setLanguage,
   isWorkerAvailable,
   setZoomFactorElectron,
@@ -117,6 +118,13 @@ function platformWatchDirectory(dirPath, listener) {
   } else {
     console.log("watchDirectory not supported");
   }
+}
+
+function platformGetLocationPath(location) {
+  if (getLocationPath) {
+    return getLocationPath(location);
+  }
+  return location ? location.path : "";
 }
 
 function platformSetLanguage(language) {
@@ -580,6 +588,7 @@ function platformShareFiles(files) {
 }
 
 module.exports = {
+  platformGetLocationPath,
   platformSetLanguage,
   platformIsWorkerAvailable,
   platformSetZoomFactorElectron,

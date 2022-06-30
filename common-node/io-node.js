@@ -26,6 +26,31 @@ function isDirectory(entryPath) {
   return paths;
 }*/
 
+/**
+ * @param location: TS.Location
+ * @returns {string|*}
+ */
+function getLocationPath(location) {
+  let locationPath = "";
+  if (location) {
+    if (location.path) {
+      locationPath = location.path;
+    }
+    if (location.paths && location.paths[0]) {
+      // eslint-disable-next-line prefer-destructuring
+      locationPath = location.paths[0];
+    }
+
+    if (locationPath && locationPath.startsWith("./")) {
+      // TODO test relative path (Directory Back) with other platforms
+      // relative paths
+      return pathLib.resolve(locationPath);
+    }
+  }
+
+  return locationPath;
+}
+
 function createDirectoryTree(directoryPath) {
   const generateDirectoryTree = (dirPath) => {
     try {
@@ -777,6 +802,7 @@ function resolveFilePath(filePath) {
 }
 
 module.exports = {
+  getLocationPath,
   listMetaDirectoryPromise,
   listDirectoryPromise,
   saveTextFilePromise,

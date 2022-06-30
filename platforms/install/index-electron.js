@@ -1,4 +1,6 @@
+/*
 import {
+    getLocationPath,
     listMetaDirectoryPromise,
     listDirectoryPromise,
     saveTextFilePromise,
@@ -39,6 +41,7 @@ import {
 } from "@tagspaces/tagspaces-common-electron/io-electron";
 
 export {
+    getLocationPath,
     listMetaDirectoryPromise,
     listDirectoryPromise,
     saveTextFilePromise,
@@ -73,4 +76,13 @@ export {
     isWorkerAvailable,
     createDirectoryIndexInWorker,
     createThumbnailsInWorker
+};
+*/
+
+const ioNode = require("@tagspaces/tagspaces-common-node/io-node");
+const ioElectron = require("@tagspaces/tagspaces-common-electron/io-electron");
+
+module.exports = {
+    ...ioNode,
+    ...ioElectron,
 };
