@@ -21,11 +21,25 @@ function configure(webDavConfig) {
   wfs.lstat = wfs.stat;
   // https://github.com/jprichardson/node-fs-extra/blob/master/lib/mkdirs/make-dir.js
   wfs.mkdirp = wfs.mkdir;
+  wfs.copy = wfs.rename; //todo remove after this is merged: https://github.com/perry-mitchell/webdav-fs/pull/86
   wfs.move = function (filePath, targetPath, options, callback) {
     wfs.rename(filePath, targetPath, callback);
   };
   wfs.rm = function (targetPath, options, callback) {
     wfs.rmdir(targetPath, callback);
+  };
+  wfs.readJson = async function (filePath) {
+    return JSON.parse(
+      await new Promise((resolve, reject) => {
+        wfs.readFile(filePath, "utf8", (error, content) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(content);
+          }
+        });
+      })
+    );
   };
   /**
    * https://github.com/jprichardson/node-fs-extra/blob/master/lib/output-file/index.js#L9

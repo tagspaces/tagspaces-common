@@ -452,7 +452,7 @@ function createFsClient(fs) {
                 metaContent.some((meta) => meta.path === folderMetaPath)
               ) {
                 try {
-                  eentry.meta = fs.readJsonSync(folderMetaPath);
+                  eentry.meta = await fs.readJson(folderMetaPath);
                   // console.log('Success reading meta folder file ' + folderMetaPath);
                 } catch (err) {
                   console.error(
@@ -501,7 +501,7 @@ function createFsClient(fs) {
 
           if (metaContent.length > 0) {
             metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
-            metaContent.forEach((metaEntry) => {
+            for (const metaEntry of metaContent) {
               // Reading meta json files with tags and description
               if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
                 const fileNameWithoutMetaExt = metaEntry.path.substr(
@@ -514,7 +514,7 @@ function createFsClient(fs) {
                 if (origFile) {
                   const metaFilePath =
                     metaFolderPath + pathLib.sep + metaEntry.path;
-                  const metaFileObj = fs.readJsonSync(metaFilePath);
+                  const metaFileObj = await fs.readJson(metaFilePath);
                   if (metaFileObj) {
                     enhancedEntries.map((enhancedEntry) => {
                       if (enhancedEntry.name === fileNameWithoutMetaExt) {
@@ -546,7 +546,7 @@ function createFsClient(fs) {
               /*if (window.walkCanceled) {
                     resolve(enhancedEntries);
                   }*/
-            });
+            }
           }
           resolve(enhancedEntries);
           /*});
