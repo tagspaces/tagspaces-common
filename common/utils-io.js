@@ -1,4 +1,5 @@
 const micromatch = require("micromatch");
+const { v1: uuidv1 } = require("uuid");
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
@@ -32,6 +33,7 @@ function walkDirectory(
     recursive: false,
     skipMetaFolder: true,
     skipDotHiddenFolder: false,
+    skipDotHiddenFiles: false,
     loadMetaData: true,
     extractText: false,
     mode: [],
@@ -40,11 +42,12 @@ function walkDirectory(
   return (
     listDirectoryPromise(param, mergedOptions.mode, mergedOptions.extractText)
       // @ts-ignore
-      .then((entries) =>
-        // if (window.walkCanceled) {
-        //     return false;
-        // }
-        Promise.all(
+      .then((entries) => {
+        if (/* window.walkCanceled || */ entries === undefined) {
+          return false;
+        }
+
+        return Promise.all(
           entries.map(async (entry) => {
             // if (window.walkCanceled) {
             //     return false;
@@ -57,13 +60,23 @@ function walkDirectory(
             }
 
             if (entry.isFile) {
-              if (fileCallback) {
+              if (
+                fileCallback &&
+                (!mergedOptions.skipDotHiddenFiles ||
+                  !entry.name.startsWith("."))
+              ) {
                 await fileCallback(entry);
               }
               return entry;
             }
 
-            if (dirCallback) {
+            if (
+              dirCallback &&
+              (!mergedOptions.skipDotHiddenFolder ||
+                !entry.name.startsWith(".")) &&
+              (!mergedOptions.skipMetaFolder ||
+                entry.name !== AppConfig.metaFolder)
+            ) {
               await dirCallback(entry);
             }
 
@@ -96,8 +109,8 @@ function walkDirectory(
             }
             return entry;
           })
-        )
-      )
+        );
+      })
       .catch((err) => {
         console.warn("Error walking directory " + err);
         return err;
@@ -105,17 +118,33 @@ function walkDirectory(
   );
 }
 
-function enhanceEntry(entry) {
+/**
+ * @param entry
+ * @param tagDelimiter: string
+ * @param dirSeparator: string
+ * @returns TS.FileSystemEntry {{path: *, extension: string|*, lmdt: *, isFile: *, size: *, name: *, uuid: *, isIgnored: *, tags}}
+ */
+function enhanceEntry(
+  entry,
+  tagDelimiter = AppConfig.tagDelimiter,
+  dirSeparator = AppConfig.dirSeparator
+) {
   let fileNameTags = [];
   if (entry.isFile) {
-    fileNameTags = paths.extractTagsAsObjects(entry.name, " ", "/");
+    fileNameTags = paths.extractTagsAsObjects(
+      entry.name,
+      tagDelimiter,
+      dirSeparator
+    );
   }
   let sidecarDescription = "";
   let sidecarColor = "";
+  let sidecarPerspective;
   let sidecarTags = [];
   if (entry.meta) {
     sidecarDescription = entry.meta.description || "";
     sidecarColor = entry.meta.color || "";
+    sidecarPerspective = entry.meta.perspective;
     if (entry.meta.tags && entry.meta.tags.length > 0) {
       entry.meta.tags.forEach((tag) => {
         const cleanedTag = {
@@ -132,18 +161,21 @@ function enhanceEntry(entry) {
     }
   }
   const enhancedEntry = {
+    uuid: uuidv1(),
     name: entry.name,
     isFile: entry.isFile,
-    extension: entry.isFile ? paths.extractFileExtension(entry.name) : "",
+    extension: entry.isFile
+      ? paths.extractFileExtension(entry.name, dirSeparator)
+      : "",
     tags: [...sidecarTags, ...fileNameTags],
     size: entry.size,
     lmdt: entry.lmdt,
     path: entry.path,
+    isIgnored: entry.isIgnored,
   };
   if (sidecarDescription) {
     enhancedEntry.description = sidecarDescription;
   }
-  // enhancedEntry.description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vitae magna rhoncus, rutrum dolor id, vestibulum arcu. Maecenas scelerisque nisl quis sollicitudin dapibus. Ut pulvinar est sed nunc finibus cursus. Nam semper felis eu ex auctor, nec semper lectus sagittis. Donec dictum volutpat lorem, in mollis turpis scelerisque in. Morbi pulvinar egestas turpis, euismod suscipit leo egestas eget. Nullam ac mollis sem. \n Quisque luctus dapibus elit, sed molestie ipsum tempor quis. Sed urna turpis, mattis quis orci ac, placerat lacinia est. Pellentesque quis arcu malesuada, consequat magna ut, tincidunt eros. Aenean sodales nisl finibus pharetra blandit. Pellentesque egestas magna et lectus tempor ultricies. Phasellus sed ornare leo. Vivamus sed massa erat. \n Mauris eu dignissim justo, eget luctus nisi. Ut nec arcu quis ligula tempor porttitor. Pellentesque in pharetra quam. Nulla nec ornare magna. Phasellus interdum dictum mauris eget laoreet. In vulputate massa sem, a mattis elit turpis duis.';
   if (entry && entry.thumbPath) {
     enhancedEntry.thumbPath = entry.thumbPath;
   }
@@ -153,7 +185,10 @@ function enhanceEntry(entry) {
   if (sidecarColor) {
     enhancedEntry.color = sidecarColor;
   }
-  // console.log('Enhancing ' + entry.path); console.log(enhancedEntry);
+  if (sidecarPerspective) {
+    enhancedEntry.perspective = sidecarPerspective;
+  }
+  // console.log('Enhancing ' + entry.path + ':' + JSON.stringify(enhancedEntry));
   return enhancedEntry;
 }
 
