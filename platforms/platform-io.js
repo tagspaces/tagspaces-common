@@ -60,6 +60,7 @@ const Indexer = require("./indexer");
 let objectStoreAPI, webDavAPI;
 
 function platformEnableObjectStoreSupport(objectStoreConfig) {
+  platformDisableWebdavSupport();
   return new Promise((resolve, reject) => {
     if (
       objectStoreAPI !== undefined &&
@@ -84,6 +85,7 @@ function platformDisableObjectStoreSupport() {
 }
 
 function platformEnableWebdavSupport(webdavConfig) {
+  platformDisableObjectStoreSupport();
   if (
     webDavAPI === undefined ||
     webDavAPI.username !== webdavConfig.username ||

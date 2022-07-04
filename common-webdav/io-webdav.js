@@ -4,20 +4,17 @@ const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 // const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
 // const { createFsClient } = require("./io-fsclient");
 
-let fsClient, username, password, port;
+let fsClient;
 
 function configure(webDavConfig) {
-  username = webDavConfig.username;
-  password = webDavConfig.password;
-  port = webDavConfig.port;
+  const webDavEndpoint = webDavConfig.port
+    ? "http://localhost:" + webDavConfig.port + "/webdav/server" // default for testing purposes
+    : webDavConfig.endpointURL;
 
-  const wfs = createAdapter(
-    "http://localhost:" + webDavConfig.port + "/webdav/server",
-    {
-      username: webDavConfig.username,
-      password: webDavConfig.password,
-    }
-  );
+  const wfs = createAdapter(webDavEndpoint, {
+    username: webDavConfig.username,
+    password: webDavConfig.password,
+  });
   wfs.lstat = wfs.stat;
   // https://github.com/jprichardson/node-fs-extra/blob/master/lib/mkdirs/make-dir.js
   wfs.mkdirp = wfs.mkdir;

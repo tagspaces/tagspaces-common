@@ -1,17 +1,17 @@
 {
   "name": "@tagspaces/tagspaces-common-webdav",
   "description": "TagSpaces common webdav module",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
     "webdav-start": "node ../scripts/webdav/webserver-start.js",
     "clean-install": "rimraf package-lock.json && rimraf node_modules && npm install",
-    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-webdav-1.0.8.tgz && shx cp -rL ./package/** ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/node_modules/@tagspaces/tagspaces-common-webdav && rimraf package",
-    "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
+    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-webdav-1.0.8.tgz && shx cp -rL ./package/** ../../tagspaces2/node_modules/@tagspaces/tagspaces-platforms/node_modules/@tagspaces/tagspaces-common-webdav && rimraf package",
+    "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "1.3.9",
+    "@tagspaces/tagspaces-common": "1.3.10",
     "webdav-fs": "^4.0.1"
   }
 }
