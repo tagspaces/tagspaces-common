@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-webdav",
   "description": "TagSpaces common webdav module",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -11,7 +11,7 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "1.3.10",
+    "@tagspaces/tagspaces-common": "1.3.11",
     "webdav-fs": "^4.0.1"
   }
 }

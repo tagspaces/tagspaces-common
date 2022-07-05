@@ -7,9 +7,9 @@ services:
       - "9988:80"
     environment:
       USERNAME: webdav-user
-      PASSWORD: pa$$w0rd!
+      PASSWORD: paswrd
       LOCATION: /webdav/server
       AUTH_TYPE: Basic
     volumes:
       # - ./user.passwd:/user.passwd
-      - /Users/sytolk/IdeaProjects/tagspaces-common/scripts/testContents:/var/lib/dav
+      - /Users/sytolk/IdeaProjects/tagspaces-common/scripts/testContents:/var/lib/dav/data

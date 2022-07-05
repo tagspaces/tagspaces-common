@@ -68,9 +68,9 @@ function createFsClient(fs) {
   function getTreeChildren(dirPath) {
     const children = [];
     return new Promise((resolve) => {
-      fs.readdir(path, async (error, dirList) => {
+      fs.readdir(dirPath, async (error, dirList) => {
         if (error) {
-          console.warn("Error listing directory " + path);
+          console.warn("Error listing directory " + dirPath);
           resolve(children); // returning results even if any promise fails
         } else {
           for (let i = 0; i < dirList.length; i += 1) {
