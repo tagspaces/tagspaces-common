@@ -1,3 +1,4 @@
+const { AuthType } = require("webdav/dist/node/types");
 const pathLib = require("path");
 const { createAdapter } = require("webdav-fs");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
@@ -10,11 +11,20 @@ function configure(webDavConfig) {
   const webDavEndpoint = webDavConfig.port
     ? "http://localhost:" + webDavConfig.port + "/webdav/server" // default for testing purposes
     : webDavConfig.endpointURL;
+  const options = {
+    authType: webDavConfig.authType,
+  };
+  if (
+    webDavConfig.authType === AuthType.Password ||
+    webDavConfig.authType === AuthType.Digest
+  ) {
+    options.username = webDavConfig.username;
+    options.password = webDavConfig.password;
+  } else if (webDavConfig.authType === AuthType.Token) {
+    options.token = webDavConfig.secretAccessKey;
+  }
 
-  const wfs = createAdapter(webDavEndpoint, {
-    username: webDavConfig.username,
-    password: webDavConfig.password,
-  });
+  const wfs = createAdapter(webDavEndpoint, options);
   wfs.lstat = wfs.stat;
   // https://github.com/jprichardson/node-fs-extra/blob/master/lib/mkdirs/make-dir.js
   wfs.mkdirp = wfs.mkdir;

@@ -28,6 +28,7 @@ const {
 describe("Webdav unit tests", () => {
   beforeAll(async () => {
     configure({
+      authType: "password",
       username: USERNAME, // "webdav",
       password: PASSWORD, // "1234",
       port: PORT, //8000,
