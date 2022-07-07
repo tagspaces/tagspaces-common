@@ -823,7 +823,7 @@ function renameFilePromise(filePath, newFilePath) {
 }
 
 function renameDirectoryPromise(dirPath, newDirName) {
-  return fsClient.renameDirectoryPromise(dirPath, newDirName);
+  return fsClient.renameDirectoryPromise(pathLib.resolve(dirPath), newDirName);
 }
 
 function deleteFilePromise(path) {

@@ -115,7 +115,7 @@ function platformIsMinio() {
 
 function platformGetDirSeparator() {
   // TODO rethink usage for S3 on Win
-  return platformHaveObjectStoreSupport() ? "/" : AppConfig.dirSeparator;
+  return platformHaveObjectStoreSupport() || platformHaveWebDavSupport() ? "/" : AppConfig.dirSeparator;
 }
 
 function platformWatchDirectory(dirPath, listener) {

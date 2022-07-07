@@ -75,7 +75,7 @@ function configure(webDavConfig) {
       });
     });
   };
-  fsClient = createFsClient(wfs);
+  fsClient = createFsClient(wfs,'/');
 }
 
 function isDirectory(entryPath) {

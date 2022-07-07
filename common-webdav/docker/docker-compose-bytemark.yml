@@ -12,4 +12,4 @@ services:
       AUTH_TYPE: Basic
     volumes:
       # - ./user.passwd:/user.passwd
-      - /Users/sytolk/IdeaProjects/tagspaces-common/scripts/testContents:/var/lib/dav/data
+      - ../../scripts/testContents:/var/lib/dav/data

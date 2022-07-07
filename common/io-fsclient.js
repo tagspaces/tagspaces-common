@@ -6,9 +6,10 @@ const AppConfig = require("./AppConfig");
 /**
  * this is common module with io-node
  * @param fs
+ * @param dirSeparator
  * @returns {{listDirectoryPromise: (function(*=, *=): Promise<unknown>), getPropertiesPromise: (function(*=): Promise<unknown>), loadTextFilePromise: (function(*=, *=): Promise<unknown>), extractTextContent: (function(*, *): string), isDirectory: (function(*=): Promise<unknown>)}}
  */
-function createFsClient(fs) {
+function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   function getPath(param) {
     if (typeof param === "object" && param !== null) {
@@ -130,7 +131,7 @@ function createFsClient(fs) {
         if (stats) {
           resolve({
             name: path.substring(
-              path.lastIndexOf(pathLib.sep) + 1,
+              path.lastIndexOf(dirSeparator) + 1,
               path.length
             ),
             isFile: stats.isFile(),
@@ -179,10 +180,10 @@ function createFsClient(fs) {
       }
       function getDefaultFile() {
         return {
-          name: tsPaths.extractFileName(filePath, pathLib.sep),
+          name: tsPaths.extractFileName(filePath, dirSeparator),
           isFile: true,
           path: filePath,
-          extension: tsPaths.extractFileExtension(filePath, pathLib.sep),
+          extension: tsPaths.extractFileExtension(filePath, dirSeparator),
           size: 0,
           lmdt: new Date().getTime(),
           isNewFile: true,
@@ -336,7 +337,7 @@ function createFsClient(fs) {
 
   function listMetaDirectoryPromise(param) {
     const path = getPath(param);
-    const metaPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
+    const metaPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
     return new Promise((resolve) => {
       fs.readdir(metaPath, (error, entries) => {
         if (error) {
@@ -393,7 +394,7 @@ function createFsClient(fs) {
   */
         if (entries) {
           for (const entry of entries) {
-            entryPath = path + pathLib.sep + entry;
+            entryPath = path + dirSeparator + entry;
             eentry = {};
             eentry.name = entry;
             eentry.path = entryPath;
@@ -420,7 +421,7 @@ function createFsClient(fs) {
               // Read tsm.json from sub folders
               const folderMetaPath = tsPaths.getMetaFileLocationForDir(
                 eentry.path,
-                pathLib.sep
+                dirSeparator
               );
               if (
                 !eentry.isFile &&
@@ -441,7 +442,7 @@ function createFsClient(fs) {
                   const folderTmbPath =
                     tsPaths.getThumbFileLocationForDirectory(
                       eentry.path,
-                      pathLib.sep
+                      dirSeparator
                     );
                   eentry.thumbPath = folderTmbPath;
                 }
@@ -475,7 +476,7 @@ function createFsClient(fs) {
           }
 
           if (metaContent.length > 0) {
-            metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
+            metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
             for (const metaEntry of metaContent) {
               // Reading meta json files with tags and description
               if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
@@ -488,7 +489,7 @@ function createFsClient(fs) {
                 );
                 if (origFile) {
                   const metaFilePath =
-                    metaFolderPath + pathLib.sep + metaEntry.path;
+                    metaFolderPath + dirSeparator + metaEntry.path;
                   const metaFileObj = await fs.readJson(metaFilePath);
                   if (metaFileObj) {
                     enhancedEntries.map((enhancedEntry) => {
@@ -511,7 +512,7 @@ function createFsClient(fs) {
                   if (enhancedEntry.name === fileNameWithoutMetaExt) {
                     enhancedEntry.thumbPath =
                       metaFolderPath +
-                      pathLib.sep +
+                      dirSeparator +
                       encodeURIComponent(metaEntry.path);
                   }
                   return true;

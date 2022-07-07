@@ -1,5 +1,4 @@
 // require('dotenv').config({path: __dirname + '/default.env', override: false, debug: true });
-
 const metaFolder = process.env.metaFolder || ".ts";
 const metaFolderFile = process.env.metaFolderFile || "tsm.json";
 const folderLocationsFile = process.env.folderLocationsFile || "tsl.json";
@@ -24,12 +23,28 @@ const defaultFolderColor = process.env.defaultFolderColor || "#582727"; // 555 t
 const isElectron =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes(" electron/");
+const isNode =
+  typeof process !== "undefined" &&
+  process.versions != null &&
+  process.versions.node != null;
+const isJsDom =
+    (typeof window !== "undefined" && window.name === "nodejs") ||
+    (typeof navigator !== "undefined" &&
+        (navigator.userAgent.includes("Node.js") ||
+            navigator.userAgent.includes("jsdom")));
+const isWeb =
+  !isJsDom &&
+  typeof document !== "undefined" &&
+  document.URL.startsWith("http") &&
+  !document.URL.startsWith("http://localhost:1212/");
 const isFirefox =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("firefox"); // typeof InstallTrigger !== 'undefined';
 const isWin =
-  process &&
-  (process.platform === "win32" || /^(msys|cygwin)$/.test(process.env.OSTYPE));
+  (typeof navigator !== "undefined" && navigator.appVersion.includes("Win")) ||
+  (process &&
+    (process.platform === "win32" ||
+      /^(msys|cygwin)$/.test(process.env.OSTYPE)));
 const isLinux =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("linux");
@@ -37,7 +52,7 @@ const isMacLike =
   typeof navigator !== "undefined" &&
   navigator.userAgent.match(/(Mac|iPhone|iPod|iPad)/i);
 const isMac = process && process.platform === "darwin";
-const dirSeparator = isWin ? "\\" : "/";
+const dirSeparator = isWin && !isWeb ? "\\" : "/";
 const isCordovaiOS =
   typeof window !== "undefined" &&
   /^file:\/{3}[^\/]/i.test(window.location.href) &&
@@ -53,10 +68,6 @@ const isIOS = iOSMatcher && iOSMatcher.length > 0;
 const isAndroid =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("android");
-const isWeb =
-  typeof document !== "undefined" &&
-  document.URL.startsWith("http") &&
-  !document.URL.startsWith("http://localhost:1212/");
 const isMobile = isCordovaiOS || isCordovaAndroid || isIOS || isAndroid;
 const isAmplify =
   typeof window !== "undefined" && window.ExtIsAmplify !== undefined
