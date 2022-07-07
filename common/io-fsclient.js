@@ -9,13 +9,18 @@ const AppConfig = require("./AppConfig");
  * @returns {{listDirectoryPromise: (function(*=, *=): Promise<unknown>), getPropertiesPromise: (function(*=): Promise<unknown>), loadTextFilePromise: (function(*=, *=): Promise<unknown>), extractTextContent: (function(*, *): string), isDirectory: (function(*=): Promise<unknown>)}}
  */
 function createFsClient(fs) {
-  function isDirectory(param) {
-    let path;
+
+  function getPath(param) {
     if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
+      return param.path;
+    } else if (param) {
+      return param;
     }
+    return "";
+  }
+
+  function isDirectory(param) {
+    const path = getPath(param);
     return new Promise((resolve, reject) => {
       fs.lstat(path, (err, fsStat) => {
         if (err !== null) {
@@ -28,12 +33,7 @@ function createFsClient(fs) {
   }
 
   function exist(param) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     return new Promise((resolve) => {
       fs.lstat(path, (err) => {
         if (err !== null) {
@@ -114,12 +114,7 @@ function createFsClient(fs) {
    *        on timeout: reject error
    */
   function getPropertiesPromise(param) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     const promise = new Promise((resolve) => {
       /* stats for file:
        * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
@@ -154,12 +149,7 @@ function createFsClient(fs) {
   }
 
   function saveTextFilePromise(param, content, overwrite) {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    const filePath = getPath(param);
     console.log("Saving file: " + filePath);
 
     // Handling the UTF8 support for text files
@@ -176,12 +166,7 @@ function createFsClient(fs) {
   }
 
   function saveFilePromise(param, content, overwrite = true) {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    const filePath = getPath(param);
     return new Promise((resolve, reject) => {
       function saveFile(entry, tContent) {
         fs.outputFile(entry.path, tContent, (error) => {
@@ -350,12 +335,7 @@ function createFsClient(fs) {
   }*/
 
   function listMetaDirectoryPromise(param) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     const metaPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
     return new Promise((resolve) => {
       fs.readdir(metaPath, (error, entries) => {
@@ -379,12 +359,7 @@ function createFsClient(fs) {
    * @returns {Promise<FileSystemEntry[]>}
    */
   function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    let path = getPath(param);
 
     return new Promise(async (resolve) => {
       const loadMeta = mode.includes("extractThumbPath");
@@ -564,12 +539,7 @@ function createFsClient(fs) {
    * @returns {Promise<string>}
    */
   function loadTextFilePromise(param, isPreview = false) {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    let filePath = getPath(param);
     if (filePath.startsWith("./") || filePath.startsWith("../")) {
       // relative paths
       filePath = pathLib.resolve(filePath);
@@ -614,12 +584,7 @@ function createFsClient(fs) {
    * @returns {Promise<ArrayBuffer>}
    */
   function getFileContentPromise(param, type = "arraybuffer") {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    let filePath = getPath(param);
     if (filePath.startsWith("./") || filePath.startsWith("../")) {
       // relative paths
       filePath = pathLib.resolve(filePath);

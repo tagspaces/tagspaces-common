@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-node",
   "description": "TagSpaces common node module",
-  "version": "1.3.16",
+  "version": "1.3.18",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -10,7 +10,7 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "1.3.11",
+    "@tagspaces/tagspaces-common": "1.3.13",
     "fs-extra": "^10.0.0",
     "path": "^0.12.7",
     "marked": "^3.0.8"

@@ -105,6 +105,10 @@ function platformHaveObjectStoreSupport() {
   return objectStoreAPI !== undefined;
 }
 
+function platformHaveWebDavSupport() {
+  return webDavAPI !== undefined;
+}
+
 function platformIsMinio() {
   return objectStoreAPI !== undefined && objectStoreAPI.config().endpointURL;
 }
@@ -192,6 +196,8 @@ function platformGetURLforPath(path, expirationInSeconds) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.getURLforPath(param, expirationInSeconds);
+  } else if(webDavAPI) {
+    return webDavAPI.getURLforPath(path);
   }
 }
 
@@ -602,6 +608,7 @@ module.exports = {
   platformDisableObjectStoreSupport,
   platformDisableWebdavSupport,
   platformHaveObjectStoreSupport,
+  platformHaveWebDavSupport,
   platformIsMinio,
   platformGetDirSeparator,
   platformWatchDirectory,

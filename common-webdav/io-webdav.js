@@ -1,11 +1,12 @@
 const { AuthType } = require("webdav/dist/node/types");
 const pathLib = require("path");
-const { createAdapter } = require("webdav-fs");
+const { createAdapter } = require("@tagspaces/webdav-fs");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 // const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
 // const { createFsClient } = require("./io-fsclient");
 
 let fsClient;
+let wfs;
 
 function configure(webDavConfig) {
   const webDavEndpoint = webDavConfig.port
@@ -24,11 +25,10 @@ function configure(webDavConfig) {
     options.token = webDavConfig.secretAccessKey;
   }
 
-  const wfs = createAdapter(webDavEndpoint, options);
+  wfs = createAdapter(webDavEndpoint, options);
   wfs.lstat = wfs.stat;
   // https://github.com/jprichardson/node-fs-extra/blob/master/lib/mkdirs/make-dir.js
   wfs.mkdirp = wfs.mkdir;
-  wfs.copy = wfs.rename; //todo remove after this is merged: https://github.com/perry-mitchell/webdav-fs/pull/86
   wfs.move = function (filePath, targetPath, options, callback) {
     wfs.rename(filePath, targetPath, callback);
   };
@@ -150,6 +150,10 @@ function createDirectoryTree(dirPath) {
   return fsClient.watchDirectory(dirPath);
 }
 
+function getURLforPath(filePath) {
+  return wfs.getSignedUrl(filePath);
+}
+
 module.exports = {
   configure,
   isDirectory,
@@ -170,4 +174,5 @@ module.exports = {
   deleteDirectoryPromise,
   watchDirectory,
   createDirectoryTree,
+  getURLforPath
 };
