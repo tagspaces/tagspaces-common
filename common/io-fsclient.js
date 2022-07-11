@@ -1,21 +1,27 @@
 const pathLib = require("path");
 const tsPaths = require("./paths");
-const { arrayBufferToBuffer } = require("./misc");
+const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
 const AppConfig = require("./AppConfig");
 
 /**
  * this is common module with io-node
  * @param fs
+ * @param dirSeparator
  * @returns {{listDirectoryPromise: (function(*=, *=): Promise<unknown>), getPropertiesPromise: (function(*=): Promise<unknown>), loadTextFilePromise: (function(*=, *=): Promise<unknown>), extractTextContent: (function(*, *): string), isDirectory: (function(*=): Promise<unknown>)}}
  */
-function createFsClient(fs) {
-  function isDirectory(param) {
-    let path;
+function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
+
+  function getPath(param) {
     if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
+      return param.path;
+    } else if (param) {
+      return param;
     }
+    return "";
+  }
+
+  function isDirectory(param) {
+    const path = getPath(param);
     return new Promise((resolve, reject) => {
       fs.lstat(path, (err, fsStat) => {
         if (err !== null) {
@@ -28,12 +34,7 @@ function createFsClient(fs) {
   }
 
   function exist(param) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     return new Promise((resolve) => {
       fs.lstat(path, (err) => {
         if (err !== null) {
@@ -68,9 +69,9 @@ function createFsClient(fs) {
   function getTreeChildren(dirPath) {
     const children = [];
     return new Promise((resolve) => {
-      fs.readdir(path, async (error, dirList) => {
+      fs.readdir(dirPath, async (error, dirList) => {
         if (error) {
-          console.warn("Error listing directory " + path);
+          console.warn("Error listing directory " + dirPath);
           resolve(children); // returning results even if any promise fails
         } else {
           for (let i = 0; i < dirList.length; i += 1) {
@@ -114,12 +115,7 @@ function createFsClient(fs) {
    *        on timeout: reject error
    */
   function getPropertiesPromise(param) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
+    const path = getPath(param);
     const promise = new Promise((resolve) => {
       /* stats for file:
        * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
@@ -135,12 +131,12 @@ function createFsClient(fs) {
         if (stats) {
           resolve({
             name: path.substring(
-              path.lastIndexOf(pathLib.sep) + 1,
+              path.lastIndexOf(dirSeparator) + 1,
               path.length
             ),
             isFile: stats.isFile(),
             size: stats.size,
-            lmdt: stats.mtime,
+            lmdt: stats.mtime.getTime ? stats.mtime.getTime() : stats.mtime,
             path,
           });
         } else {
@@ -149,18 +145,12 @@ function createFsClient(fs) {
       });
     });
 
-    return promise;
     // Returns a race between our timeout and the passed in promise
-    // return Promise.race([promise, timeout(2000)]);
+    return Promise.race([promise, timeout(2000)]);
   }
 
   function saveTextFilePromise(param, content, overwrite) {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    const filePath = getPath(param);
     console.log("Saving file: " + filePath);
 
     // Handling the UTF8 support for text files
@@ -177,12 +167,7 @@ function createFsClient(fs) {
   }
 
   function saveFilePromise(param, content, overwrite = true) {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    const filePath = getPath(param);
     return new Promise((resolve, reject) => {
       function saveFile(entry, tContent) {
         fs.outputFile(entry.path, tContent, (error) => {
@@ -195,10 +180,10 @@ function createFsClient(fs) {
       }
       function getDefaultFile() {
         return {
-          name: tsPaths.extractFileName(filePath, pathLib.sep),
+          name: tsPaths.extractFileName(filePath, dirSeparator),
           isFile: true,
           path: filePath,
-          extension: tsPaths.extractFileExtension(filePath, pathLib.sep),
+          extension: tsPaths.extractFileExtension(filePath, dirSeparator),
           size: 0,
           lmdt: new Date().getTime(),
           isNewFile: true,
@@ -234,9 +219,14 @@ function createFsClient(fs) {
    * @param content: any
    * @param overwrite: boolean
    */
-  function saveBinaryFilePromise(filePath, content, overwrite) {
+  async function saveBinaryFilePromise(filePath, content, overwrite) {
     console.log("Saving binary file: " + filePath);
-    const buff = arrayBufferToBuffer(content);
+    let buff;
+    if (content.readable) {
+      buff = await streamToBuffer(content);
+    } else {
+      buff = arrayBufferToBuffer(content);
+    }
     return saveFilePromise(filePath, buff, overwrite);
   }
 
@@ -280,7 +270,7 @@ function createFsClient(fs) {
     });
   }
 
-  async function enhanceEntry(entry, path, mode) {
+  /*async function enhanceEntry(entry, path, mode) {
     const entryPath = path + pathLib.sep + entry;
     const eentry = {};
     // let containsMetaFolder = false;
@@ -343,19 +333,48 @@ function createFsClient(fs) {
       console.warn("Can not load properties for: " + entryPath, e);
     }
     return eentry;
+  }*/
+
+  function listMetaDirectoryPromise(param) {
+    const path = getPath(param);
+    const metaPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
+    return new Promise((resolve) => {
+      fs.readdir(metaPath, (error, entries) => {
+        if (error) {
+          console.warn("Error listing meta directory " + metaPath);
+          resolve([]); // returning results even if any promise fails
+          return;
+        }
+        resolve(
+          entries.map((entry) => ({
+            path: entry,
+          }))
+        );
+      });
+    });
   }
 
+  /**
+   * @param param
+   * @param mode = ['extractTextContent', 'extractThumbPath']
+   * @returns {Promise<FileSystemEntry[]>}
+   */
   function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
-    let path;
-    if (typeof param === "object" && param !== null) {
-      path = param.path;
-    } else {
-      path = param;
-    }
-    return new Promise((resolve) => {
+    let path = getPath(param);
+
+    return new Promise(async (resolve) => {
+      const loadMeta = mode.includes("extractThumbPath");
+      let metaContent = [];
+      if (loadMeta) {
+        metaContent = await listMetaDirectoryPromise(param);
+      }
+
       const enhancedEntries = [];
+      let entryPath;
       let metaFolderPath;
-      let containsMetaFolder = false;
+      let stats;
+      let eentry;
+      // let containsMetaFolder = false;
       // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
       if (path.startsWith("./") || path.startsWith("../")) {
         // relative tsPaths
@@ -368,87 +387,148 @@ function createFsClient(fs) {
           return;
         }
 
+        /*if (window.walkCanceled) {
+              resolve(enhancedEntries); // returning results even if walk canceled
+              return;
+          }
+  */
         if (entries) {
-          const enhancedEntries = await Promise.all(
-            entries.map(async (entry) => {
-              const eentry = await enhanceEntry(entry, path, mode);
+          for (const entry of entries) {
+            entryPath = path + dirSeparator + entry;
+            eentry = {};
+            eentry.name = entry;
+            eentry.path = entryPath;
+            eentry.tags = [];
+            eentry.thumbPath = "";
+            eentry.meta = {};
+
+            try {
+              stats = await new Promise((resolve, rej) => {
+                fs.stat(entryPath, (err, data) => {
+                  if (err) {
+                    rej(err);
+                  } else {
+                    resolve(data);
+                  }
+                });
+              });
+              eentry.isFile = stats.isFile();
+              eentry.size = stats.size;
+              eentry.lmdt = stats.mtime.getTime
+                ? stats.mtime.getTime()
+                : stats.mtime;
+
+              // Read tsm.json from sub folders
+              const folderMetaPath = tsPaths.getMetaFileLocationForDir(
+                eentry.path,
+                dirSeparator
+              );
               if (
                 !eentry.isFile &&
-                eentry.name.endsWith(AppConfig.metaFolder)
+                metaContent.some((meta) => meta.path === folderMetaPath)
               ) {
-                containsMetaFolder = true;
-              }
-              return eentry;
-            })
-          );
+                try {
+                  eentry.meta = await fs.readJson(folderMetaPath);
+                  // console.log('Success reading meta folder file ' + folderMetaPath);
+                } catch (err) {
+                  console.error(
+                    "Failed reading meta folder file " + folderMetaPath
+                  );
+                }
 
-          // Read the .ts meta content
-          if (containsMetaFolder && mode.includes("extractThumbPath")) {
-            metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
-            fs.readdir(metaFolderPath, async (err, metaEntries) => {
-              if (err) {
-                console.log(
-                  "Error listing meta directory " + metaFolderPath + " - " + err
+                // Loading thumbs for folders
+                if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
+                  // skipping meta folder
+                  const folderTmbPath =
+                    tsPaths.getThumbFileLocationForDirectory(
+                      eentry.path,
+                      dirSeparator
+                    );
+                  eentry.thumbPath = folderTmbPath;
+                }
+              }
+
+              if (mode.includes("extractTextContent") && eentry.isFile) {
+                const fileName = eentry.name.toLowerCase();
+                if (
+                  fileName.endsWith(".txt") ||
+                  fileName.endsWith(".md") ||
+                  fileName.endsWith(".html")
+                ) {
+                  const fileContent = await fs.readFile(eentry.path, "utf8");
+                  eentry.textContent = extractTextContent(
+                    fileName,
+                    fileContent
+                  );
+                }
+              }
+
+              /*if (window.walkCanceled) {
+                  resolve(enhancedEntries);
+                  return;
+                }*/
+            } catch (e) {
+              console.warn(
+                "Can not load properties for: " + entryPath + " " + e
+              );
+            }
+            enhancedEntries.push(eentry);
+          }
+
+          if (metaContent.length > 0) {
+            metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
+            for (const metaEntry of metaContent) {
+              // Reading meta json files with tags and description
+              if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
+                const fileNameWithoutMetaExt = metaEntry.path.substr(
+                  0,
+                  metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
                 );
-                resolve(enhancedEntries); // returning results even if any promise fails
-                return;
-              }
-
-              if (metaEntries) {
-                await Promise.all(
-                  metaEntries.map(async (metaEntryName) => {
-                    // Reading meta json files with tags and description
-                    if (metaEntryName.endsWith(AppConfig.metaFileExt)) {
-                      const fileNameWithoutMetaExt = metaEntryName.substr(
-                        0,
-                        metaEntryName.lastIndexOf(AppConfig.metaFileExt)
-                      );
-                      const origFile = enhancedEntries.find(
-                        (result) => result.name === fileNameWithoutMetaExt
-                      );
-                      if (origFile) {
-                        const metaFilePath =
-                          metaFolderPath + pathLib.sep + metaEntryName;
-                        const metaFileString = await loadTextFilePromise(
-                          metaFilePath
-                        );
-                        if (metaFileString) {
-                          const metaFileObj = JSON.parse(metaFileString);
-                          enhancedEntries.map((enhancedEntry) => {
-                            if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                              enhancedEntry.meta = metaFileObj;
-                            }
-                            return true;
-                          });
-                        }
+                const origFile = enhancedEntries.find(
+                  (result) => result.name === fileNameWithoutMetaExt
+                );
+                if (origFile) {
+                  const metaFilePath =
+                    metaFolderPath + dirSeparator + metaEntry.path;
+                  const metaFileObj = await fs.readJson(metaFilePath);
+                  if (metaFileObj) {
+                    enhancedEntries.map((enhancedEntry) => {
+                      if (enhancedEntry.name === fileNameWithoutMetaExt) {
+                        enhancedEntry.meta = metaFileObj;
                       }
-                    }
-
-                    // Finding if thumbnail available
-                    if (metaEntryName.endsWith(AppConfig.thumbFileExt)) {
-                      const fileNameWithoutMetaExt = metaEntryName.substr(
-                        0,
-                        metaEntryName.lastIndexOf(AppConfig.thumbFileExt)
-                      );
-                      enhancedEntries.map((enhancedEntry) => {
-                        if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                          const thumbFilePath =
-                            metaFolderPath +
-                            pathLib.sep +
-                            encodeURIComponent(metaEntryName);
-                          enhancedEntry.thumbPath = thumbFilePath;
-                        }
-                        return true;
-                      });
-                    }
-                  })
-                );
+                      return true;
+                    });
+                  }
+                }
               }
-              resolve(enhancedEntries);
-            });
+
+              // Finding if thumbnail available
+              if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
+                const fileNameWithoutMetaExt = metaEntry.path.substr(
+                  0,
+                  metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
+                );
+                enhancedEntries.map((enhancedEntry) => {
+                  if (enhancedEntry.name === fileNameWithoutMetaExt) {
+                    enhancedEntry.thumbPath =
+                      metaFolderPath +
+                      dirSeparator +
+                      encodeURIComponent(metaEntry.path);
+                  }
+                  return true;
+                });
+              }
+
+              /*if (window.walkCanceled) {
+                    resolve(enhancedEntries);
+                  }*/
+            }
+          }
+          resolve(enhancedEntries);
+          /*});
           } else {
             resolve(enhancedEntries);
-          }
+          }*/
         }
       });
     });
@@ -460,12 +540,7 @@ function createFsClient(fs) {
    * @returns {Promise<string>}
    */
   function loadTextFilePromise(param, isPreview = false) {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    let filePath = getPath(param);
     if (filePath.startsWith("./") || filePath.startsWith("../")) {
       // relative paths
       filePath = pathLib.resolve(filePath);
@@ -510,12 +585,7 @@ function createFsClient(fs) {
    * @returns {Promise<ArrayBuffer>}
    */
   function getFileContentPromise(param, type = "arraybuffer") {
-    let filePath;
-    if (typeof param === "object" && param !== null) {
-      filePath = param.path;
-    } else {
-      filePath = param;
-    }
+    let filePath = getPath(param);
     if (filePath.startsWith("./") || filePath.startsWith("../")) {
       // relative paths
       filePath = pathLib.resolve(filePath);
@@ -692,21 +762,20 @@ function createFsClient(fs) {
     });
   }
 
-  // TODO
   function renameDirectoryPromise(dirPath, newDirName) {
-    dirPath = pathLib.resolve(dirPath);
+    // dirPath = pathLib.resolve(dirPath); TODO move for node only
     const newDirPath =
       tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
       AppConfig.dirSeparator +
       newDirName;
     console.log("Renaming dir: " + dirPath + " to " + newDirPath);
     // stopWatchingDirectories();
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (dirPath === newDirPath) {
         reject("Trying to move in the same directory. Moving failed");
         return;
       }
-      if (fs.existsSync(newDirPath)) {
+      if (await exist(newDirPath)) {
         reject(
           'Directory "' +
             newDirPath +
@@ -716,8 +785,8 @@ function createFsClient(fs) {
         );
         return;
       }
-      const dirStatus = fs.lstatSync(dirPath);
-      if (dirStatus.isDirectory) {
+      const dirProp = await getPropertiesPromise(dirPath);
+      if (!dirProp.isFile) {
         fs.rename(dirPath, newDirPath, (error) => {
           if (error) {
             reject('Renaming "' + dirPath + '" failed with: ' + error);
@@ -747,6 +816,7 @@ function createFsClient(fs) {
 
   return {
     isDirectory,
+    listMetaDirectoryPromise,
     listDirectoryPromise,
     saveTextFilePromise,
     saveFilePromise,
@@ -762,7 +832,7 @@ function createFsClient(fs) {
     deleteFilePromise,
     deleteDirectoryPromise,
     watchDirectory,
-    createDirectoryTree
+    createDirectoryTree,
   };
 }
 

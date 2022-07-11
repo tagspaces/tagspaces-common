@@ -232,6 +232,18 @@ function arrayBufferToBuffer(content) {
   return buffer;
 }
 
+function streamToBuffer(stream) {
+  const buffs = [];
+  return new Promise(function (resolve) {
+    stream.on("data", function (d) {
+      buffs.push(d);
+    });
+    stream.on("end", function () {
+      resolve(Buffer.concat(buffs));
+    });
+  });
+}
+
 /**
  * @param sizeInBytes: number
  * @returns {string}
@@ -974,6 +986,7 @@ module.exports = {
   b64toBlob,
   getRandomInt,
   arrayBufferToBuffer,
+  streamToBuffer,
   formatFileSize,
   formatFileSize2,
   formatDateTime,

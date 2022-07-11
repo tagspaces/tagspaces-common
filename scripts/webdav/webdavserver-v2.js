@@ -1,9 +1,16 @@
 const ws = require("webdav-server").v2;
+const path = require("path");
+const rimraf = require("rimraf").sync;
+const copyDir = require("copy-dir").sync;
+// const PASSWORD = "1234";
+// const USERNAME = "webdav";
+const {
+  PASSWORD,
+  PORT,
+  USERNAME,
+} = require("webdav/test/server/credentials.js");
 
-const PASSWORD = "1234";
-const USERNAME = "webdav";
-
-function createServer(dir, authType, PORT = 8000) {
+function createServer(dir, authType, port = PORT) {
   if (!dir) {
     throw new Error("Expected target directory");
   }
@@ -23,7 +30,7 @@ function createServer(dir, authType, PORT = 8000) {
   const privilegeManager = new ws.SimplePathPrivilegeManager();
   privilegeManager.setRights(user, "/", ["all"]);
   const server = new ws.WebDAVServer({
-    port: PORT,
+    port: port,
     httpAuthentication: auth,
     privilegeManager,
     maxRequestDepth: Infinity,
@@ -32,11 +39,11 @@ function createServer(dir, authType, PORT = 8000) {
       "Access-Control-Allow-Methods":
         "HEAD, GET, PUT, PROPFIND, DELETE, OPTIONS, MKCOL, MOVE, COPY",
       "Access-Control-Allow-Headers":
-        "Accept, Authorization, Content-Type, Content-Length, Depth",
+        "Accept, Authorization, Content-Type, Content-Length, Depth, Destination",
     },
   });
   console.log(
-    `Created server on localhost with port: ${PORT}, dir:${dir} and authType: ${authType}`
+    `Created server on localhost with port: ${port}, dir:${dir} and authType: ${authType}`
   );
   server.afterRequest((arg, next) => {
     // Display the method, the URI, the returned status code and the returned message
@@ -55,9 +62,13 @@ function createServer(dir, authType, PORT = 8000) {
   return {
     start: function start() {
       return new Promise((resolve) => {
-        server.setFileSystem("/", new ws.PhysicalFileSystem(dir), () => {
-          server.start(resolve);
-        });
+        server.setFileSystem(
+          "/webdav/server",
+          new ws.PhysicalFileSystem(dir),
+          () => {
+            server.start(resolve);
+          }
+        );
       });
     },
 
@@ -73,6 +84,46 @@ function createWebDAVServer(authType, dataDir, port) {
   return createServer(dataDir, authType, port);
 }
 
+/**
+ * @param sourceDir - testdata dir to copy from
+ * @returns {string}
+ */
+function clean(sourceDir) {
+  const targetDir = path.resolve(__dirname, "../testContents");
+  rimraf(targetDir);
+  copyDir(sourceDir, targetDir);
+  return targetDir;
+}
+
+/**
+ * @param dataDir - git repository data dir to copy from
+ */
+function startWebdav(dataDir) {
+  const dir = clean(
+    path.resolve(dataDir, "file-structure/supported-filestypes")
+  );
+  const server = createWebDAVServer("basic", dir);
+
+  server
+    .start()
+    .then(() => {
+      console.log("Server started");
+      return true;
+    })
+    .catch((e) => console.error(e));
+
+  process.on("SIGTERM", () => {
+    server.stop();
+    process.exit(0);
+  });
+  process.on("SIGINT", () => {
+    server.stop();
+    process.exit(0);
+  });
+  return server;
+}
+
 module.exports = {
-  createWebDAVServer,
+  clean,
+  startWebdav,
 };

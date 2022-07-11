@@ -1,25 +1,52 @@
+const { AuthType } = require("webdav/dist/node/types");
 const pathLib = require("path");
-const { createAdapter } = require("webdav-fs");
+const { createAdapter } = require("@tagspaces/webdav-fs");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 // const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
 // const { createFsClient } = require("./io-fsclient");
 
-let fsClient, username, password, port;
+let fsClient;
+let wfs;
 
 function configure(webDavConfig) {
-  username = webDavConfig.username;
-  password = webDavConfig.password;
-  port = webDavConfig.port;
+  const webDavEndpoint = webDavConfig.port
+    ? "http://localhost:" + webDavConfig.port + "/webdav/server" // default for testing purposes
+    : webDavConfig.endpointURL;
+  const options = {
+    authType: webDavConfig.authType,
+  };
+  if (
+    webDavConfig.authType === AuthType.Password ||
+    webDavConfig.authType === AuthType.Digest
+  ) {
+    options.username = webDavConfig.username;
+    options.password = webDavConfig.password;
+  } else if (webDavConfig.authType === AuthType.Token) {
+    options.token = webDavConfig.secretAccessKey;
+  }
 
-  const wfs = createAdapter("http://localhost:" + webDavConfig.port, {
-    username: webDavConfig.username,
-    password: webDavConfig.password,
-  });
+  wfs = createAdapter(webDavEndpoint, options);
   wfs.lstat = wfs.stat;
   // https://github.com/jprichardson/node-fs-extra/blob/master/lib/mkdirs/make-dir.js
   wfs.mkdirp = wfs.mkdir;
+  wfs.move = function (filePath, targetPath, options, callback) {
+    wfs.rename(filePath, targetPath, callback);
+  };
   wfs.rm = function (targetPath, options, callback) {
     wfs.rmdir(targetPath, callback);
+  };
+  wfs.readJson = async function (filePath) {
+    return JSON.parse(
+      await new Promise((resolve, reject) => {
+        wfs.readFile(filePath, "utf8", (error, content) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(content);
+          }
+        });
+      })
+    );
   };
   /**
    * https://github.com/jprichardson/node-fs-extra/blob/master/lib/output-file/index.js#L9
@@ -48,7 +75,7 @@ function configure(webDavConfig) {
       });
     });
   };
-  fsClient = createFsClient(wfs);
+  fsClient = createFsClient(wfs,'/');
 }
 
 function isDirectory(entryPath) {
@@ -57,6 +84,10 @@ function isDirectory(entryPath) {
 
 function listDirectoryPromise(entryPath) {
   return fsClient.listDirectoryPromise(entryPath);
+}
+
+function listMetaDirectoryPromise(entryPath) {
+  return fsClient.listMetaDirectoryPromise(entryPath);
 }
 
 function saveTextFilePromise(param, content, overwrite) {
@@ -68,7 +99,7 @@ function saveFilePromise(param, content, overwrite) {
 }
 
 function saveBinaryFilePromise(filePath, content, overwrite) {
-  return fsClient.saveFilePromise(filePath, content, overwrite);
+  return fsClient.saveBinaryFilePromise(filePath, content, overwrite);
 }
 
 function getPropertiesPromise(entryPath) {
@@ -119,10 +150,15 @@ function createDirectoryTree(dirPath) {
   return fsClient.watchDirectory(dirPath);
 }
 
+function getURLforPath(filePath) {
+  return wfs.getSignedUrl(filePath);
+}
+
 module.exports = {
   configure,
   isDirectory,
   listDirectoryPromise,
+  listMetaDirectoryPromise,
   saveTextFilePromise,
   saveFilePromise,
   saveBinaryFilePromise,
@@ -137,5 +173,6 @@ module.exports = {
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,
-  createDirectoryTree
+  createDirectoryTree,
+  getURLforPath
 };
