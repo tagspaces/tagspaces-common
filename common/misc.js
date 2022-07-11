@@ -160,6 +160,7 @@ function getUniqueTags(tags1, tags2) {
 }
 
 /**
+ * @deprecated TODO not used for remove
  * @param objArr: Array<Object>
  * @param func
  */
@@ -302,7 +303,7 @@ function formatFileSize2(sizeInBytes, siSystem) {
  * @param includeTime: boolean
  * @returns {string}
  */
-function formatDateTime(date, includeTime) {
+function  formatDateTime(date, includeTime) {
   if (date === undefined || date === "") {
     return "";
   }
@@ -673,6 +674,7 @@ const extend = (baseObject, ...restObjects) => {
 };
 
 /**
+ * @deprecated not used
  * @description Iterate recursively
  * @param handler
  * @param complete

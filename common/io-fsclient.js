@@ -10,7 +10,6 @@ const AppConfig = require("./AppConfig");
  * @returns {{listDirectoryPromise: (function(*=, *=): Promise<unknown>), getPropertiesPromise: (function(*=): Promise<unknown>), loadTextFilePromise: (function(*=, *=): Promise<unknown>), extractTextContent: (function(*, *): string), isDirectory: (function(*=): Promise<unknown>)}}
  */
 function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
-
   function getPath(param) {
     if (typeof param === "object" && param !== null) {
       return param.path;
@@ -20,12 +19,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return "";
   }
 
+  /**
+   * @param param
+   * @returns {Promise<boolean>} catch reject if path not exists
+   */
   function isDirectory(param) {
     const path = getPath(param);
     return new Promise((resolve, reject) => {
       fs.lstat(path, (err, fsStat) => {
         if (err !== null) {
-          reject("isDirectory error:" + path);
+          reject(err);
         } else {
           resolve(fsStat.isDirectory());
         }
@@ -76,17 +79,23 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         } else {
           for (let i = 0; i < dirList.length; i += 1) {
             const path = dirPath + AppConfig.dirSeparator + dirList[i];
-            const isDir = await isDirectory(path);
-            if (!isDir) {
-              children.push({
-                name: pathLib.basename(path),
-                isFile: true,
-                // size: stats.size,
-                // lmdt: stats.mtime,
-                path,
-              });
-            } else {
-              children.push(createDirectoryTree(path));
+            try {
+              const isDir = await isDirectory(path);
+              if (!isDir) {
+                children.push({
+                  name: pathLib.basename(path),
+                  isFile: true,
+                  // size: stats.size,
+                  // lmdt: stats.mtime,
+                  path,
+                });
+              } else {
+                children.push(createDirectoryTree(path));
+              }
+            } catch (ex) {
+              console.error(
+                "Error listing directory " + path + " not exist:" + ex
+              );
             }
           }
           resolve(children);

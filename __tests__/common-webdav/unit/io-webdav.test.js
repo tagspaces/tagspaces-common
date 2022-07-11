@@ -126,8 +126,8 @@ describe("Webdav unit tests", () => {
   });
 
   test("getFileContentPromise", async () => {
-    const jpg = await getFileContentPromise("sample.js");
-    expect(jpg).toEqual(
+    const js = await getFileContentPromise("sample.js");
+    expect(js).toEqual(
       fs
         .readFileSync(
           pathLib.join(__dirname, "../../../scripts/testContents/sample.js"),
@@ -140,6 +140,13 @@ describe("Webdav unit tests", () => {
   test("createDirectoryPromise", async () => {
     const dirPath = await createDirectoryPromise("/test_dir");
     expect(dirPath).toEqual("/test_dir");
+    /*  // TODO
+    const dPath = pathLib.resolve(
+        __dirname,
+        "../../../scripts/testContents/test_dir"
+    );
+    expect(await isDirectory(dPath)).toBe(true);
+    */
   });
 
   test("copyFilePromise", async () => {
@@ -149,6 +156,14 @@ describe("Webdav unit tests", () => {
     );
     expect(sourceFilePath).toEqual("/sample.txt");
     expect(targetFilePath).toEqual("/empty_folder/sample.txt");
+
+    const targetFile = fs.lstatSync(
+      pathLib.resolve(
+        __dirname,
+        "../../../scripts/testContents/empty_folder/sample.txt"
+      )
+    );
+    expect(targetFile.size).toBeGreaterThan(0);
   });
 
   test("renameFilePromise", async () => {
@@ -158,6 +173,14 @@ describe("Webdav unit tests", () => {
     );
     expect(sourceFilePath).toEqual("sample.txt");
     expect(targetFilePath).toEqual("sample-renamed.txt");
+
+    const targetFile = fs.lstatSync(
+      pathLib.resolve(
+        __dirname,
+        "../../../scripts/testContents/sample-renamed.txt"
+      )
+    );
+    expect(targetFile.size).toBeGreaterThan(0);
   });
 
   test("renameDirectoryPromise", async () => {
