@@ -17,7 +17,7 @@ const {
 } = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
-module.exports.processAllThumbnails = function (
+module.exports.processAllThumbnails = async function (
   entryPath,
   generatePdf = false
 ) {
@@ -92,7 +92,13 @@ module.exports.processAllThumbnails = function (
     });
   };
 
-  if (isDirectory(entryPath)) {
+  let isDir = false;
+  try {
+    isDir = await isDirectory(entryPath);
+  } catch (e) {
+    console.error(e);
+  }
+  if (isDir) {
     return walkDirectory(
       entryPath,
       listDirectoryPromise,
@@ -105,11 +111,11 @@ module.exports.processAllThumbnails = function (
       (fileEntry) => generateThumbnail(fileEntry.path),
 
       /*return fs.readFile(fileEntry.path, function (err, data) {
-                      if (err) {
-                          console.log('Error read image:' + fileEntry.path, err);
-                      }
-                      tsThumb.generateImageThumbnail(data, fileEntry.type, upload);
-                  })*/
+                        if (err) {
+                            console.log('Error read image:' + fileEntry.path, err);
+                        }
+                        tsThumb.generateImageThumbnail(data, fileEntry.type, upload);
+                    })*/
       (directoryEntry) => {
         if (directoryEntry.name !== AppConfig.metaFolder) {
         }

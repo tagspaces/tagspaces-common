@@ -2,13 +2,44 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const npm = require("npm");
+const spawn = require("child_process").spawn;
 const pkg = require("../package.json");
 
 let platform;
 
 if (process.env.PD_PLATFORM) {
   platform = process.env.PD_PLATFORM;
+}
+
+function install(packages, onFinish, extraArgs) {
+  const args = ["install"];
+  args.push("--no-save");
+  args.push("--no-package-lock");
+  if (extraArgs) {
+    args.push(...extraArgs);
+  }
+  args.push(...packages);
+  const proc = spawn("npm", args);
+  proc.on("close", (status) => {
+    if (status === 0) {
+      console.log("success npm install " + packages);
+      onFinish();
+    } else {
+      onFinish(new Error("'npm " + args + "' failed with status " + status));
+    }
+  });
+}
+
+function dedupe(onFinish) {
+  const proc = spawn("npm", ["dedupe"]);
+  proc.on("close", (status) => {
+    if (status === 0) {
+      console.log("success npm dedupe");
+      onFinish();
+    } else {
+      onFinish(new Error("'npm dedupe' failed with status " + status));
+    }
+  });
 }
 
 /*function checkSharpPlatform(targetPlatform, arch) {
@@ -47,13 +78,13 @@ const dependenciesObj = pkg[dependencies];
 
 if (dependenciesObj && Object.keys(dependenciesObj).length) {
   console.log("Installing dependencies for " + platform);
-  const npmArgs = []; //'install'];
+  const packages = []; //'install'];
   let npmInstall = false;
 
   for (const dep in dependenciesObj) {
     // eslint-disable-next-line no-prototype-builtins
     if (dependenciesObj.hasOwnProperty(dep)) {
-      npmArgs.push(dep.concat("@").concat(dependenciesObj[dep]));
+      packages.push(dep.concat("@").concat(dependenciesObj[dep]));
       const packagePath = path.join(__dirname, "..", "node_modules", dep);
       if (!fs.existsSync(packagePath)) {
         npmInstall = true;
@@ -68,34 +99,26 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
       }
     }
   }
-  // npmArgs.push('--no-save --force');
-  if (npmInstall && npmArgs.length > 0) {
-    npm.load(function (er) {
-      if (er) {
-        console.log("err:", er);
-        return; // handlError(er)
-      }
-      npm.config.set("save", false);
-      npm.config.set("package-lock", false);
-      if (process.env.TARGET_PLATFORM) {
-        npm.config.set("platform", process.env.TARGET_PLATFORM);
-      }
-      // npm.config.set('no-save', true);
-      // npm.config.set('no-package-lock', true);
-      npm.commands.install(npmArgs, function (er, data) {
+
+  if (npmInstall && packages.length > 0) {
+    const args = [];
+    if (process.env.TARGET_PLATFORM) {
+      args.push("platform=" + process.env.TARGET_PLATFORM);
+    }
+    install(
+      packages,
+      function (er) {
         if (er) {
           console.log("err:", er);
         }
-        npm.commands.dedupe([], function (er) {
+        dedupe(function (er) {
           if (er) {
             console.log("err:", er);
           }
         });
-      });
-      npm.on("log", function (message) {
-        console.log("npm:" + message);
-      });
-    });
+      },
+      args
+    );
   } else {
     console.log(
       "Installing dependencies for " + platform + " are already installed."
