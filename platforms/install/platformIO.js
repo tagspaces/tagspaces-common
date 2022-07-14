@@ -2,22 +2,24 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const spawn = require("child_process").spawn;
-const pkg = require("../package.json");
+// const spawn = require("child_process").spawn;
+// const pkg = require("../package.json");
 
-let platform; // = os.platform();
+// let platform; // = os.platform();
 
 if (process.env.PD_PLATFORM) {
-  platform = process.env.PD_PLATFORM;
+  const platform = process.env.PD_PLATFORM;
+  console.log("platform specified:", platform);
   fs.copySync(
     path.join(__dirname, "index-" + platform + ".js"),
     path.join(__dirname, "..", "index.js")
   );
 } else {
+  console.log("No platform specified");
   fs.removeSync(path.join(__dirname, "..", "index.js"));
 }
 
-const dependencies = platform + "Dependencies";
+/*const dependencies = platform + "Dependencies";
 const dependenciesObj = pkg[dependencies];
 
 function install(packages, onFinish) {
@@ -66,4 +68,4 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
 } else {
   console.log("No specific dependencies on this platform: " + platform);
   fs.removeSync(path.join(__dirname, "..", "node_modules"));
-}
+}*/

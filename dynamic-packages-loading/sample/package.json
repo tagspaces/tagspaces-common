@@ -1,0 +1,33 @@
+{
+  "name": "@tagspaces/tagspaces-dynamic-sample",
+  "description": "TagSpaces dynamic npm installation",
+  "version": "1.0.0",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "scripts": {
+    "install-node": "node ../cli.js ./ -p node",
+    "install-electron": "npx rimraf node_modules && node ../cli.js ./ -p electron",
+    "install-web": "npx rimraf node_modules && node ../cli.js ./ -p web",
+    "install-cordova": "npx rimraf node_modules && node ../cli.js ./ -p cordova"
+  },
+  "nodeDependencies": {
+    "@tagspaces/tagspaces-common-node": "1.3.21",
+    "@tagspaces/tagspaces-common-aws": "1.3.19",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "webDependencies": {
+    "@tagspaces/tagspaces-common-aws": "1.3.19",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "cordovaDependencies": {
+    "@tagspaces/tagspaces-common-cordova": "1.3.14",
+    "@tagspaces/tagspaces-common-aws": "1.3.19",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "electronDependencies": {
+    "@tagspaces/tagspaces-common-node": "1.3.21",
+    "@tagspaces/tagspaces-common-electron": "1.0.8",
+    "@tagspaces/tagspaces-common-aws": "1.3.19",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  }
+}

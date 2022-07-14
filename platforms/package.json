@@ -1,15 +1,17 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "1.3.36",
+  "version": "1.3.42",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "install": "node install/platformIO.js",
-    "install-node": "npx rimraf node_modules && npx cross-env PD_PLATFORM=node npm run install",
-    "install-electron": "npx rimraf node_modules && npx cross-env PD_PLATFORM=electron npm run install",
-    "install-web": "npx rimraf node_modules && npx cross-env PD_PLATFORM=web npm run install",
-    "install-cordova": "npx rimraf node_modules && npx cross-env PD_PLATFORM=cordova npm run install",
+    "postinstall": "node install/platformIO-new.js",
+    "install-new": "npx @tagspaces/dynamic-packages-loading ./",
+    "install-old": "node install/platformIO.js",
+    "install-node": "npx cross-env PD_PLATFORM=node npm run postinstall",
+    "install-electron": "npx cross-env PD_PLATFORM=electron npm run postinstall",
+    "install-web": "npx cross-env PD_PLATFORM=web npm run postinstall",
+    "install-cordova": "npx cross-env PD_PLATFORM=cordova npm run postinstall",
     "npmpack": "npm run install-electron && npm pack && tar -xvf tagspaces-tagspaces-platforms-1.3.27.tgz && npx shx cp -rL package/** ../../tagspaces2/node_modules/@tagspaces/tagspaces-platforms/ && npx rimraf package",
     "pkg-publish": "npm publish --access public"
   },
@@ -26,6 +28,9 @@
     "LICENSE",
     "install/**"
   ],
+  "devDependencies": {
+    "@tagspaces/dynamic-packages-loading": "^1.0.6"
+  },
   "nodeDependencies": {
     "@tagspaces/tagspaces-common-node": "1.3.21",
     "@tagspaces/tagspaces-common-aws": "1.3.19",
