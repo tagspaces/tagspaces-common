@@ -3,6 +3,7 @@ const spawn = require("child_process").spawn;
 function isInstalled(pkg, onFinish, cwd = ".") {
   const npm = spawn("npm", ["list", pkg], {
     cwd: cwd,
+    shell: true,
   });
   npm.stdout.on("data", function (data) {
     if (data.toString().indexOf(pkg) > -1) {
@@ -34,6 +35,7 @@ function install(packages, onFinish, extraArgs, cwd = ".") {
   args.push(...packages);
   const proc = spawn("npm", args, {
     cwd: cwd,
+    shell: true,
   });
   proc.on("close", (status) => {
     if (status === 0) {
@@ -48,6 +50,7 @@ function install(packages, onFinish, extraArgs, cwd = ".") {
 function dedupe(onFinish, cwd = ".") {
   const proc = spawn("npm", ["dedupe"], {
     cwd: cwd,
+    shell: true,
   });
   proc.on("close", (status) => {
     if (status === 0) {
@@ -63,6 +66,7 @@ function getPackageJsonPromise(cwd = ".") {
   return new Promise((resolve) => {
     const proc = spawn("npm", ["pkg", "get"], {
       cwd: cwd,
+      shell: true,
     });
     proc.stdout.on("data", function (data) {
       const pkg = data.toString();
@@ -78,73 +82,85 @@ function getPackageJsonPromise(cwd = ".") {
  */
 function installDependencies(cwd, platform, deduplicate = false) {
   return new Promise(async (resolve, reject) => {
-    const packageJson = await getPackageJsonPromise(cwd); // packageJson ||
+    // cwd = path.resolve(cwd);
+
     if (!platform) {
       platform = process.env.PD_PLATFORM || "";
     }
 
-    const dependencies = platform + "Dependencies";
-    const dependenciesObj = packageJson[dependencies];
+    if (platform) {
+      const packageJson = await getPackageJsonPromise(cwd);
 
-    if (dependenciesObj && Object.keys(dependenciesObj).length) {
-      console.log("Installing dependencies for " + platform);
-      const packages = [];
-      let npmInstall = false;
+      const dependencies = platform + "Dependencies";
+      const dependenciesObj = packageJson[dependencies];
 
-      for (const dep in dependenciesObj) {
-        // eslint-disable-next-line no-prototype-builtins
-        if (dependenciesObj.hasOwnProperty(dep)) {
-          const pkg = dep + "@" + dependenciesObj[dep];
-          packages.push(pkg);
-          if (!npmInstall && !(await isInstalledPromise(pkg, cwd))) {
-            npmInstall = true;
+      if (dependenciesObj && Object.keys(dependenciesObj).length) {
+        console.log("Installing dependencies for " + platform);
+        const packages = [];
+        let npmInstall = false;
+
+        for (const dep in dependenciesObj) {
+          // eslint-disable-next-line no-prototype-builtins
+          if (dependenciesObj.hasOwnProperty(dep)) {
+            const pkg = dep + "@" + dependenciesObj[dep];
+            packages.push(pkg);
+            if (!npmInstall && !(await isInstalledPromise(pkg, cwd))) {
+              npmInstall = true;
+            }
           }
         }
-      }
 
-      if (npmInstall && packages.length > 0) {
-        const args = [];
-        if (process.env.TARGET_PLATFORM) {
-          args.push("platform=" + process.env.TARGET_PLATFORM);
-        }
-        install(
-          packages,
-          function (er) {
-            if (er) {
-              console.log("err:", er);
-              reject(er);
-            } else {
-              if (deduplicate) {
-                dedupe(function (er) {
-                  if (er) {
-                    console.log("err:", er);
-                    reject(er);
-                  } else {
-                    resolve(true);
-                  }
-                }, cwd);
+        if (npmInstall && packages.length > 0) {
+          const args = [];
+          if (process.env.TARGET_PLATFORM) {
+            args.push("platform=" + process.env.TARGET_PLATFORM);
+          }
+          install(
+            packages,
+            function (er) {
+              if (er) {
+                console.log("err:", er);
+                reject(er);
               } else {
-                resolve(true);
+                if (deduplicate) {
+                  dedupe(function (er) {
+                    if (er) {
+                      console.log("err:", er);
+                      reject(er);
+                    } else {
+                      resolve(true);
+                    }
+                  }, cwd);
+                } else {
+                  resolve(true);
+                }
               }
-            }
-          },
-          args,
-          cwd
-        );
+            },
+            args,
+            cwd
+          );
+        } else {
+          console.log(
+            "Installing dependencies for " +
+              platform +
+              " are already installed."
+          );
+          resolve(false);
+        }
       } else {
-        console.log(
-          "Installing dependencies for " + platform + " are already installed."
-        );
+        console.log("No specific dependencies on this platform: " + platform);
         resolve(false);
+        // fs.removeSync(path.join(__dirname, "..", "node_modules"));
       }
     } else {
-      console.log("No specific dependencies on this platform: " + platform);
+      console.log("No platform defined you can set env PD_PLATFORM or '-p platform' param");
       resolve(false);
-      // fs.removeSync(path.join(__dirname, "..", "node_modules"));
     }
   });
 }
 
 module.exports = {
   installDependencies,
+  isInstalled,
+  isInstalledPromise,
 };
