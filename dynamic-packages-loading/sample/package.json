@@ -5,7 +5,7 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "install-node": "node ../cli.js ./ -p node",
+    "install-node": "npx rimraf node_modules && node ../cli.js ./ --package=node",
     "install-electron": "npx rimraf node_modules && node ../cli.js ./ -p electron",
     "install-web": "npx rimraf node_modules && node ../cli.js ./ -p web",
     "install-cordova": "npx rimraf node_modules && node ../cli.js ./ -p cordova"

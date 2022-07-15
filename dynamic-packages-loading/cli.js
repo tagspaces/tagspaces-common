@@ -6,25 +6,31 @@ const { installDependencies } = require("./index");
 
 console.log("start");
 const parser = yargs(hideBin(process.argv))
-  .usage("Usage: $0 -d [boolean] -p [string] ../")
+  .usage("Usage: $0 ../ -p [string] [extra npm arguments: --platform=linux --arch=x64]")
   .option("dedupe", {
     alias: "d",
     type: "boolean",
     default: false,
     description: "Dedupe npm dependencies",
   })
-  .option("platform", {
+  .option("package", {
     alias: "p",
     type: "string",
     default: "",
     description: "Switch packages installation groups",
   })
-  /*.check((a, b) => {
-    if (a._.length === 0) {
-      throw "please set package.json relative path !";
-    }
-    return true;
-  })*/
+  .option("platform", {
+    alias: "pl",
+    type: "string",
+    default: "",
+    description: "add --platform as npm argument",
+  })
+  .option("arch", {
+    alias: "a",
+    type: "string",
+    default: "",
+    description: "add --arch as npm argument",
+  })
   .help("h")
   .alias("h", "help")
   .fail(false);
@@ -32,17 +38,25 @@ const parser = yargs(hideBin(process.argv))
 async function processInstall() {
   try {
     const argv = await parser.parse();
-    if (argv._.length === 1) {
-      const cwd = argv._[0];
-      // const json = require(pkg);
-      const success = await installDependencies(
-        cwd,
-        argv.platform,
-        argv.dedupe
-      );
-      //const sum = (await processValue(argv.x)) + (await processValue(argv.y));
-      console.info(`success = ${success}`);
+    //if (argv._.length === 1) {
+    const cwd = argv._[0] || process.cwd();
+    const args = [];
+    if (argv.platform) {
+      args.push(`--platform=${argv.platform}`);
     }
+    if (argv.arch) {
+      args.push(`--arch=${argv.arch}`);
+    }
+    // const json = require(pkg);
+    const success = await installDependencies(
+      cwd,
+      argv.package,
+      args,
+      argv.dedupe
+    );
+    //const sum = (await processValue(argv.x)) + (await processValue(argv.y));
+    console.info(`success = ${success}`);
+    //}
   } catch (err) {
     console.info(`${err.message}\n ${await parser.getHelp()}`);
   }

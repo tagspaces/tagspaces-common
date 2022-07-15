@@ -77,25 +77,26 @@ function getPackageJsonPromise(cwd = ".") {
 
 /**
  * @param cwd working dir of the package.json file
- * @param platform
+ * @param pkgGroup
+ * @param args
  * @param deduplicate = true -> run npm dedupe after installing packages
  */
-function installDependencies(cwd, platform, deduplicate = false) {
+function installDependencies(cwd, pkgGroup, args = [], deduplicate = false) {
   return new Promise(async (resolve, reject) => {
     // cwd = path.resolve(cwd);
 
-    if (!platform) {
-      platform = process.env.PD_PLATFORM || "";
+    if (!pkgGroup) {
+      pkgGroup = process.env.PD_PLATFORM || "";
     }
 
-    if (platform) {
+    if (pkgGroup) {
       const packageJson = await getPackageJsonPromise(cwd);
 
-      const dependencies = platform + "Dependencies";
+      const dependencies = pkgGroup + "Dependencies";
       const dependenciesObj = packageJson[dependencies];
 
       if (dependenciesObj && Object.keys(dependenciesObj).length) {
-        console.log("Installing dependencies for " + platform);
+        console.log("Installing dependencies for " + pkgGroup);
         const packages = [];
         let npmInstall = false;
 
@@ -111,10 +112,9 @@ function installDependencies(cwd, platform, deduplicate = false) {
         }
 
         if (npmInstall && packages.length > 0) {
-          const args = [];
-          if (process.env.TARGET_PLATFORM) {
+          /*if (process.env.TARGET_PLATFORM) {
             args.push("platform=" + process.env.TARGET_PLATFORM);
-          }
+          }*/
           install(
             packages,
             function (er) {
@@ -142,18 +142,20 @@ function installDependencies(cwd, platform, deduplicate = false) {
         } else {
           console.log(
             "Installing dependencies for " +
-              platform +
+              pkgGroup +
               " are already installed."
           );
           resolve(false);
         }
       } else {
-        console.log("No specific dependencies on this platform: " + platform);
+        console.log("No specific dependencies on this packages group: " + pkgGroup);
         resolve(false);
         // fs.removeSync(path.join(__dirname, "..", "node_modules"));
       }
     } else {
-      console.log("No platform defined you can set env PD_PLATFORM or '-p platform' param");
+      console.log(
+        "No platform defined you can set env PD_PLATFORM or '-p package' param"
+      );
       resolve(false);
     }
   });
