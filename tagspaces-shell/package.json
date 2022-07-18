@@ -23,7 +23,7 @@
     "webpack-cli": "^4.8.0",
     "yargs": "^17.1.0",
     "rimraf": "^3.0.2",
-    "@tagspaces/tagspaces-workers": "1.2.2",
+    "@tagspaces/tagspaces-workers": "1.2.5",
     "@tagspaces/tagspaces-metacleaner": "1.0.0"
   },
   "files": [
