@@ -4,7 +4,7 @@ const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
 /**
- * @param param (path - deprecated or Object)
+ * @param param (path - string or Object)
  * @param listDirectoryPromise
  * @param options: {}
  * @param fileCallback: () => {}
