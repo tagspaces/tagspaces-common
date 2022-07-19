@@ -87,7 +87,7 @@ module.exports.processAllThumbnails = function (
         }
       } else {
         console.log("Thumbnail is up to Date: " + filePath);
-        return Promise.resolve(true);
+        return Promise.resolve(thumbGenResults(true));
       }
     });
   };
