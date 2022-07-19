@@ -2,23 +2,43 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const npm = require("npm");
-const pkg = require("../package.json");
+// const spawn = require("child_process").spawn;
+// const pkg = require("../package.json");
 
-let platform; // = os.platform();
+// let platform; // = os.platform();
 
 if (process.env.PD_PLATFORM) {
-  platform = process.env.PD_PLATFORM;
+  const platform = process.env.PD_PLATFORM;
+  console.log("platform specified:", platform);
   fs.copySync(
     path.join(__dirname, "index-" + platform + ".js"),
     path.join(__dirname, "..", "index.js")
   );
 } else {
+  console.log("No platform specified");
   fs.removeSync(path.join(__dirname, "..", "index.js"));
 }
 
-const dependencies = platform + "Dependencies";
+/*const dependencies = platform + "Dependencies";
 const dependenciesObj = pkg[dependencies];
+
+function install(packages, onFinish) {
+  const args = ["install"];
+  args.push("--no-save");
+  args.push("--no-package-lock");
+  args.push(...packages);
+  const proc = spawn("npm", args);
+  proc.on("close", (status) => {
+    if (status === 0) {
+      console.log("success npm install " + packages);
+      onFinish();
+    } else {
+      onFinish(
+        new Error("'npm " + args + "' failed with status " + status)
+      );
+    }
+  });
+}
 
 if (dependenciesObj && Object.keys(dependenciesObj).length) {
   console.log("Installing dependencies for " + platform);
@@ -32,35 +52,13 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
       }
     }
   }
-  // npmArgs.push('--no-save --force');
+
   if (packages.length > 0) {
     fs.removeSync(path.join(__dirname, "..", "node_modules"));
-
-    npm.load(function (er) {
+    install(packages, function (er) {
       if (er) {
-        console.log("err:", er);
-        return; // handlError(er)
+        console.log("Install error:", er);
       }
-      npm.config.set("save", false);
-      npm.config.set("package-lock", false);
-      // npm.config.set('no-save', true);
-      // npm.config.set('no-package-lock', true);
-      npm.commands.install(packages, function (er, data) {
-        if (er) {
-          console.log("err:", er);
-        }
-        /*
-        npm.commands.dedupe([], function (er) {
-          if (er) {
-            console.log("err:", er);
-          }
-        });
-        */
-      });
-
-      npm.on("log", function (message) {
-        console.log("npm:" + message);
-      });
     });
   } else {
     console.log(
@@ -70,4 +68,4 @@ if (dependenciesObj && Object.keys(dependenciesObj).length) {
 } else {
   console.log("No specific dependencies on this platform: " + platform);
   fs.removeSync(path.join(__dirname, "..", "node_modules"));
-}
+}*/

@@ -51,17 +51,24 @@ test("createIndex", async () => {
     index
   );
   expect(indexPersisted.name.endsWith("tsi.json")).toBe(true);
-});
+}, 20000);
 
 function uploadImage(pathFrom, pathTo) {
-  const params = {
-    Key: pathTo,
-    Bucket: "bucket1",
-    Body: fs.createReadStream(pathJs.resolve(__dirname, pathFrom)),
-  };
+  return new Promise(function (resolve, reject) {
+    const params = {
+      Key: pathTo,
+      Bucket: "bucket1",
+      Body: fs.createReadStream(pathJs.resolve(__dirname, pathFrom)),
+    };
 
-  s3().upload(params, function uploadCallback(err, data) {
-    console.log(err, data);
+    s3().upload(params, function uploadCallback(err, data) {
+      console.log(err, data);
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
   });
 }
 
