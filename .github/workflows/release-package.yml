@@ -11,7 +11,7 @@ jobs:
         with:
           node-version: 16
       - run: npm ci
-      - run: npm test
+      # - run: npm test
       - name: Build
         run: echo ${{ github.sha }} > Release.txt && npm run-script --prefix ./tagspaces-ws install-node && npm run-script --prefix ./tagspaces-ws build:prod
       - name: Test
