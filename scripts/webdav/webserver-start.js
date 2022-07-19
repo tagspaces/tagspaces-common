@@ -1,21 +1,15 @@
+// const { createWebDAVServer } = require("./webdavserver-v2");
+// const { createWebDAVServer } = require("webdav/test/server/index.js");
 const path = require("path");
-const { createWebDAVServer } = require("./webdavserver-v2");
+const { startWebdav } = require("./webdavserver-v2");
+const { clone } = require("./git_clone");
+const directoryExists = require("directory-exists").sync;
 
-const dataDir = path.resolve(__dirname, "../../__tests__/common-aws/buckets");
-const server = createWebDAVServer("basic", dataDir, 8080);
-server
-  .start()
-  .then(() => {
-    console.log("Server started");
-    return true;
-  })
-  .catch((e) => console.error(e));
-
-process.on("SIGTERM", () => {
-  server.stop();
-  process.exit(0);
-});
-process.on("SIGINT", () => {
-  server.stop();
-  process.exit(0);
-});
+const testDir = path.resolve(__dirname, "..", "testdata");
+if (!directoryExists(testDir)) {
+  clone("https://github.com/tagspaces/testdata", testDir, () => {
+    startWebdav(testDir);
+  });
+} else {
+  startWebdav(testDir);
+}

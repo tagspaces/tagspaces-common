@@ -1,4 +1,4 @@
-import http from "http";
+const http = require("http");
 const fetch = require("sync-fetch");
 const electron = require("electron");
 const ipcRenderer = electron.ipcRenderer;
@@ -166,7 +166,7 @@ function createThumbnailsInWorker(token, tmbGenerationList) {
   return postRequest(payload, "/thumb-gen", token);
 }
 
-export {
+module.exports = {
   getDevicePaths,
   setLanguage,
   showMainWindow,
