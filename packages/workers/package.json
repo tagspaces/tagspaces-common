@@ -10,9 +10,9 @@
     "pkg-publish": "npm run node-install-new && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^2.0.0",
-    "@tagspaces/tagspaces-common-node": "^2.0.0",
-    "@tagspaces/tagspaces-platforms": "^2.0.0",
-    "@tagspaces/tagspaces-thumbgen-image": "^2.0.0"
+    "@tagspaces/tagspaces-common": "*",
+    "@tagspaces/tagspaces-common-node": "*",
+    "@tagspaces/tagspaces-platforms": "*",
+    "@tagspaces/tagspaces-thumbgen-image": "*"
   }
 }
