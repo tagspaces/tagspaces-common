@@ -360,6 +360,31 @@ const getEntryMeta = async (eentry) => {
 
 /**
  * @param param
+ * @returns {Promise<boolean>}
+ */
+function isFileExist(param) {
+  try {
+    return s3()
+      .headObject({
+        Bucket: param.bucketName,
+        Key: normalizeRootPath(param.path),
+      })
+      .promise()
+      .then(
+        () => true,
+        (err) => {
+          if (err.code === "NotFound") {
+            return false;
+          }
+          throw err;
+        }
+      );
+  } catch (error) {
+    return Promise.resolve(false);
+  }
+}
+/**
+ * @param param
  * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
 function getPropertiesPromise(param) {
@@ -599,7 +624,7 @@ function saveBinaryFilePromise(
     let isNewFile = false;
     // eslint-disable-next-line no-param-reassign
     const filePath = normalizeRootPath(param.path);
-    getPropertiesPromise({ ...param, path: filePath })
+    isFileExist(param)
       .then((result) => {
         if (result === false) {
           isNewFile = true;
@@ -611,6 +636,7 @@ function saveBinaryFilePromise(
             Body: content,
           };
           const request = s3().upload(params);
+
           if (onUploadProgress) {
             request.on("httpUploadProgress", (progress) => {
               if (onUploadProgress) {
@@ -655,6 +681,169 @@ function saveBinaryFilePromise(
       })
       .catch((err) => reject(err));
   });
+}
+
+/**
+ * @param param
+ * @param file
+ * @param overWrite
+ * @param onUploadProgress
+ * @param onAbort
+ * @returns {Promise<TS.FileSystemEntry>}
+ */
+function uploadFileByMultiPart(
+  param,
+  file,
+  overWrite,
+  onUploadProgress,
+  onAbort
+) {
+  return new Promise(async (resolve, reject) => {
+    let isNewFile = (await isFileExist(param)) === false;
+    if (isNewFile || overWrite === true) {
+      createMultipartUpload(param).then(async (uploadId) => {
+        onUploadProgress({ key: param.path, loaded: 0, total: file.size }, () =>
+          abortMultipartUpload(param, uploadId)
+        );
+        let partNumber = 0;
+        const completedParts = [];
+        const chunkSize = 5 * 1024 * 1024; // https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
+        let offset = 0;
+        // const reader = file.stream().getReader(); //{mode: "byob"}); TODO create 5MB limit of chunks with stream
+        while (offset < file.size) {
+          const chunkFile = await file.slice(offset, offset + chunkSize);
+          const chunk = await chunkFile.arrayBuffer();
+          onUploadProgress(
+            { key: param.path, loaded: offset, total: file.size },
+            () => {
+              offset = file.size;
+              abortMultipartUpload(param, uploadId);
+              reject(new Error("stopped:" + file.name));
+            }
+          );
+          /* const { done, value } = await reader.read();
+          console.debug(value.length);
+          if (done) {
+            break;
+          } */
+          partNumber++;
+          completedParts.push(
+            uploadPart(
+              param,
+              new Uint8Array(chunk), // value.toString(),
+              partNumber,
+              uploadId
+            )
+          );
+          offset += chunkSize;
+        }
+        Promise.all(completedParts).then((parts) => {
+          completeMultipartUpload(param, uploadId, parts).then((fsEntry) => {
+            onUploadProgress(
+              { key: param.path, loaded: file.size, total: file.size },
+              () => abortMultipartUpload(param, uploadId)
+            );
+            resolve({ ...fsEntry, size: file.size, isNewFile });
+          });
+        });
+      });
+    } else {
+      reject(new Error("file exist:" + file.name));
+    }
+  });
+}
+
+/**
+ * @param param
+ * @param chunk: string
+ * @param partNumber: number
+ * @param uploadId: string
+ * @returns {Promise<unknown>}
+ */
+function uploadPart(param, chunk, partNumber, uploadId) {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Body: chunk,
+      Bucket: param.bucketName,
+      Key: param.path,
+      PartNumber: partNumber,
+      UploadId: uploadId,
+    };
+    s3().uploadPart(params, function (err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          ETag: data.ETag,
+          PartNumber: partNumber,
+        });
+      }
+    });
+  });
+}
+
+/**
+ * @param param
+ * @returns {Promise<string>}
+ */
+function createMultipartUpload(param) {
+  const params = {
+    Bucket: param.bucketName,
+    Key: param.path,
+  };
+  return new Promise((resolve, reject) => {
+    s3().createMultipartUpload(params, function (err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data.UploadId);
+      }
+    });
+  });
+}
+
+/**
+ * @param param
+ * @param uploadId: string
+ * @param parts: CompletedPart[]
+ * @returns {Promise<TS.FileSystemEntry>}
+ */
+function completeMultipartUpload(param, uploadId, parts) {
+  const filePath = normalizeRootPath(param.path);
+  if (Array.isArray(parts) && parts.length > 0) {
+    const params = {
+      Bucket: param.bucketName,
+      Key: param.path,
+      UploadId: uploadId,
+      MultipartUpload: {
+        Parts: parts,
+      },
+    };
+    return s3()
+      .completeMultipartUpload(params)
+      .promise()
+      .then((data) => ({
+        uuid: uuidv1(), // data.ETag,
+        name: data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+        url: data.Location,
+        isFile: true,
+        path: filePath,
+        extension: tsPaths.extractFileExtension(filePath, "/"),
+        lmdt: new Date().getTime(),
+        tags: [],
+      }));
+  }
+  return abortMultipartUpload(param, uploadId);
+}
+
+function abortMultipartUpload(param, uploadId) {
+  return s3()
+    .abortMultipartUpload({
+      Bucket: param.bucketName,
+      Key: param.path,
+      UploadId: uploadId,
+    })
+    .promise();
 }
 
 /**
@@ -929,6 +1118,7 @@ module.exports = {
   loadTextFilePromise,
   getFileContentPromise,
   saveBinaryFilePromise,
+  uploadFileByMultiPart,
   createDirectoryPromise,
   copyFilePromise,
   renameFilePromise,

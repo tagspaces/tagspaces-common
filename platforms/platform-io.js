@@ -524,6 +524,17 @@ function platformSaveBinaryFilePromise(
   );
 }
 
+
+function platformUploadFileByMultiPart(filePath, file, overwrite, onUploadProgress) {
+  if (objectStoreAPI) {
+    const param = {
+      path: filePath,
+      bucketName: objectStoreAPI.config().bucketName,
+    };
+    return objectStoreAPI.uploadFileByMultiPart(param, file, overwrite, onUploadProgress);
+  }
+}
+
 function platformDeleteFilePromise(path, useTrash) {
   if (objectStoreAPI) {
     const param = {
@@ -629,6 +640,7 @@ module.exports = {
   platformLoadTextFilePromise,
   platformGetFileContentPromise,
   platformSaveFilePromise,
+  platformUploadFileByMultiPart,
   saveTextFilePlatform,
   platformSaveTextFilePromise,
   platformSaveBinaryFilePromise,
