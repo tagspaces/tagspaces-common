@@ -28,7 +28,6 @@
     "prettier": "2.3.2",
     "rimraf": "^3.0.2",
     "s3rver": "^3.7.1",
-    "shx": "^0.3.3",
     "source-map-loader": "^3.0.0",
     "webpack": "^5.57.1",
     "webpack-cli": "^4.8.0",
