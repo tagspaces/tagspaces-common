@@ -1,18 +1,20 @@
 {
   "name": "tagspaces-commons-parent",
+  "private": true,
   "description": "TagSpaces common thumbnails module",
   "version": "1.0.0",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "lerna-install": "lerna bootstrap --no-ci",
-    "lerna-version": "lerna version",
+    "lerna-clean": "lerna clean",
+    "lerna-install-node": "npx cross-env PD_PLATFORM=node lerna bootstrap --no-ci",
+    "lerna-version": "npx lerna version",
+    "lerna-build": "npx lerna run build",
     "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer && npm run test-webdav",
-    "test-aws": "jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
+    "test-aws": "npx cross-env PD_PLATFORM=aws lerna bootstrap --no-ci && jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
-    "test-webdav": "jest --config=jest.config.webdav.unit.js ./__tests__/common-webdav/unit/io-webdav.test.js",
-    "test-platform-io-node": "npm run install-node && jest --runInBand --detectOpenHandles --config=jest.config.node.unit.js ./__tests__/platforms/unit/platform-io.test.js",
-    "install-node": "cd platforms && npm run install-node && cd ..",
+    "test-webdav": "npx cross-env PD_PLATFORM=web lerna bootstrap --no-ci && jest --config=jest.config.webdav.unit.js ./__tests__/common-webdav/unit/io-webdav.test.js",
+    "test-platform-io-node": "npm run lerna-install-node && jest --runInBand --detectOpenHandles --config=jest.config.node.unit.js ./__tests__/platforms/unit/platform-io.test.js",
     "code-format": "prettier --write .",
     "husky-install": "husky install"
   },
@@ -38,7 +40,9 @@
     "webpack": "^5.57.1",
     "webpack-cli": "^4.8.0"
   },
-  "workspaces": ["*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "yarn": "please-use-npm",
     "npm": ">= 6.14.15"

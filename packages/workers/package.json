@@ -1,0 +1,18 @@
+{
+  "name": "@tagspaces/tagspaces-workers",
+  "description": "utils for creating thumbnails and index used by the TagSpaces application",
+  "version": "1.2.7",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "scripts": {
+    "node-install": "rimraf package-lock.json && rimraf node_modules && npx cross-env PD_PLATFORM=node npm install && npm dedupe",
+    "node-install-new": "npx rimraf package-lock.json && npx rimraf node_modules && npm install && npx cross-env PD_PLATFORM=node npm run-script --prefix ./node_modules/@tagspaces/tagspaces-platforms install && npm dedupe",
+    "pkg-publish": "npm run node-install-new && npm publish --access public"
+  },
+  "dependencies": {
+    "@tagspaces/tagspaces-platforms": "*",
+    "@tagspaces/tagspaces-common": "*",
+    "@tagspaces/tagspaces-common-node": "*",
+    "@tagspaces/tagspaces-thumbgen-image": "*"
+  }
+}

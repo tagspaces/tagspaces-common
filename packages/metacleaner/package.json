@@ -1,0 +1,13 @@
+{
+  "name": "@tagspaces/tagspaces-metacleaner",
+  "description": "TagSpaces meta cleaner module",
+  "version": "1.0.0",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "scripts": {
+    "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
+  },
+  "dependencies": {
+    "@tagspaces/tagspaces-common-node": "*"
+  }
+}

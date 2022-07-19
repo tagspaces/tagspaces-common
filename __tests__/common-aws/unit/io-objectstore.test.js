@@ -14,7 +14,7 @@ const {
   renameDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-} = require("../../../common-aws/io-objectstore");
+} = require("@tagspaces/tagspaces-common-aws/io-objectstore");
 
 beforeAll(async () => {
   configure({

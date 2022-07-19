@@ -9,9 +9,9 @@ const { PORT } = require("webdav/test/server/credentials.js");
 module.exports = async function () {
   const portAvailable = await detect(PORT);
   if (PORT === portAvailable) {
-    await execSh("npm run install-web", {
+    /*await execSh("npm run install-web", {
       cwd: path.resolve(__dirname, "..", "..", "platforms"),
-    });
+    });*/
 
     const testDir = path.resolve(__dirname, "..", "testdata");
     if (!directoryExists(testDir)) {
