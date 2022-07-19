@@ -26,7 +26,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  * @param ignorePatterns: Array<string>
  * @param listDirectory function
  * @param loadTextFile function
- * @returns {*}
+ * @returns {Promise<*>}
  */
 function createIndex(
   param,

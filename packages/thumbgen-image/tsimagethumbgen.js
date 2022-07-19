@@ -1,6 +1,5 @@
 "use strict";
 
-// dependencies
 const async = require("async");
 const sharp = require("./sharp/index").sharp;
 // const sharp = require("sharp");

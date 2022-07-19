@@ -1,6 +1,5 @@
 "use strict";
 
-// dependencies
 const fs = require("fs-extra");
 const path = require("path");
 const tsThumb = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
