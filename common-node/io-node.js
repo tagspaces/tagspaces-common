@@ -1,31 +1,35 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
-const tsPaths = require("@tagspaces/tagspaces-common/paths");
-const { arrayBufferToBuffer } = require("@tagspaces/tagspaces-common/misc");
-const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-let fsWatcher;
 
-function isDirectory(entryPath) {
-  return fs.lstatSync(entryPath).isDirectory();
-}
+const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
+const fsClient = createFsClient(fs);
 
-/*function getDevicePaths() {
-  const { getPath } = require("platform-folders");
-  const paths = {
-    desktopFolder: getPath("desktop"),
-    documentsFolder: getPath("documents"),
-    downloadsFolder: getPath("downloads"),
-    musicFolder: getPath("music"),
-    picturesFolder: getPath("pictures"),
-    videosFolder: getPath("videos"),
-  };
-  if (AppConfig.isMac) {
-    paths.iCloudFolder =
-      getPath("home") + "/Library/Mobile Documents/com~apple~CloudDocs";
+/**
+ * TODO move it to the correct place
+ * @param location: TS.Location
+ * @returns {string|*}
+ */
+function getLocationPath(location) {
+  let locationPath = "";
+  if (location) {
+    if (location.path) {
+      locationPath = location.path;
+    }
+    if (location.paths && location.paths[0]) {
+      // eslint-disable-next-line prefer-destructuring
+      locationPath = location.paths[0];
+    }
+
+    if (locationPath && locationPath.startsWith("./")) {
+      // TODO test relative path (Directory Back) with other platforms
+      // relative paths
+      return pathLib.resolve(locationPath);
+    }
   }
-  return paths;
-}*/
 
+  return locationPath;
+}
+/*
 function createDirectoryTree(directoryPath) {
   const generateDirectoryTree = (dirPath) => {
     try {
@@ -61,10 +65,10 @@ function createDirectoryTree(directoryPath) {
   return generateDirectoryTree(directoryPath);
 }
 
-/**
+/!**
  * Create a promise that rejects in <ms> milliseconds
  * @param ms: number
- */
+ *!/
 function timeout(ms) {
   return new Promise((resolve, reject) => {
     const id = setTimeout(() => {
@@ -74,12 +78,12 @@ function timeout(ms) {
   });
 }
 
-/**
+/!**
  * @param param (path - deprecated or Object)
  * return on success: resolve Promise<TS.FileSystemEntry>
  *        on error:   resolve Promise<false> (file not exist) TODO rethink this to reject error too
  *        on timeout: reject error
- */
+ *!/
 function getPropertiesPromise(param) {
   let path;
   if (typeof param === "object" && param !== null) {
@@ -88,11 +92,11 @@ function getPropertiesPromise(param) {
     path = param;
   }
   const promise = new Promise((resolve) => {
-    /* stats for file:
+    /!* stats for file:
      * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
      * "blksize":4096, "ino":2634172, "size":230, "blocks":24,  "atime":"2015-11-24T09:56:41.932Z",
      * "mtime":"2015-11-23T14:29:29.689Z", "ctime":"2015-11-23T14:29:29.689Z",  "birthtime":"2015-11-23T14:29:29.689Z",
-     * "isFile":true, "path":"/home/somefile.txt" */
+     * "isFile":true, "path":"/home/somefile.txt" *!/
     fs.lstat(path, (err, stats) => {
       if (err) {
         resolve(false);
@@ -176,9 +180,9 @@ function saveFilePromise(param, content, overwrite = true) {
         } else if (overwrite) {
           if (entry.isFile) {
             saveFile({ ...entry, isNewFile: false, tags: [] }, content);
-          } /*else {  // directory exist!
+          } /!*else {  // directory exist!
             saveFile({ ...entry, isNewFile: true, tags: [] }, content);
-          }*/
+          }*!/
         }
         return true;
       })
@@ -192,20 +196,20 @@ function saveFilePromise(param, content, overwrite = true) {
   });
 }
 
-/**
+/!**
  * @param filePath: string
  * @param content: any
  * @param overwrite: boolean
- */
+ *!/
 function saveBinaryFilePromise(filePath, content, overwrite) {
   console.log("Saving binary file: " + filePath);
   const buff = arrayBufferToBuffer(content);
   return saveFilePromise(filePath, buff, overwrite);
 }
 
-/**
+/!**
  * @param path: string
- */
+ *!/
 function deleteFilePromise(path) {
   return new Promise((resolve, reject) => {
     fs.unlink(path, (error) => {
@@ -217,12 +221,12 @@ function deleteFilePromise(path) {
   });
 }
 
-/**
+/!**
  * @param path: string
  * deprecated useTrash -> use moveToTrash from electron-io
- */
+ *!/
 function deleteDirectoryPromise(path) {
-  /*if (useTrash) {
+  /!*if (useTrash) {
     return new Promise((resolve, reject) => {
       if (this.moveToTrash([path])) {
         resolve(path);
@@ -231,7 +235,7 @@ function deleteDirectoryPromise(path) {
         reject(new Error("deleteDirectoryPromise " + path + " failed"));
       }
     });
-  }*/
+  }*!/
 
   return new Promise((resolve, reject) => {
     fs.rm(path, { recursive: true, force: true }, (error) => {
@@ -267,12 +271,12 @@ function listMetaDirectoryPromise(param) {
   });
 }
 
-/**
+/!**
  *
  * @param param
  * @param mode = ['extractTextContent', 'extractThumbPath']
  * @returns {Promise<FileSystemEntry[]>}
- */
+ *!/
 function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
   let path;
   if (typeof param === "object" && param !== null) {
@@ -306,11 +310,11 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
         return;
       }
 
-      /*if (window.walkCanceled) {
+      /!*if (window.walkCanceled) {
             resolve(enhancedEntries); // returning results even if walk canceled
             return;
         }
-*/
+*!/
       if (entries) {
         entries.forEach((entry) => {
           entryPath = path + pathLib.sep + entry;
@@ -327,9 +331,9 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
             eentry.size = stats.size;
             eentry.lmdt = stats.mtime.getTime();
 
-            /*if (!eentry.isFile && eentry.name.endsWith(AppConfig.metaFolder)) {
+            /!*if (!eentry.isFile && eentry.name.endsWith(AppConfig.metaFolder)) {
               containsMetaFolder = true;
-            }*/
+            }*!/
 
             // Read tsm.json from sub folders
             const folderMetaPath = tsPaths.getMetaFileLocationForDir(
@@ -341,13 +345,13 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
               metaContent.some((meta) => meta.path === folderMetaPath)
             ) {
               // mode.includes("extractThumbPath")) {
-              /*const folderMetaPath =
+              /!*const folderMetaPath =
                 eentry.path +
                 pathLib.sep +
                 (!eentry.path.includes("/" + AppConfig.metaFolder)
                   ? AppConfig.metaFolder + pathLib.sep
                   : "") +
-                AppConfig.metaFolderFile;*/
+                AppConfig.metaFolderFile;*!/
               try {
                 eentry.meta = fs.readJsonSync(folderMetaPath);
                 // console.log('Success reading meta folder file ' + folderMetaPath);
@@ -365,11 +369,11 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   pathLib.sep
                 );
                 //if (metaContent.includes(folderMetaPath)) {
-                /*eentry.path +
+                /!*eentry.path +
                   pathLib.sep +
                   AppConfig.metaFolder +
                   pathLib.sep +
-                  AppConfig.folderThumbFile;*/
+                  AppConfig.folderThumbFile;*!/
                 // const tmbStats = fs.statSync(folderTmbPath);
                 // if (tmbStats.isFile()) {
                 eentry.thumbPath = folderTmbPath;
@@ -390,10 +394,10 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
               }
             }
 
-            /*if (window.walkCanceled) {
+            /!*if (window.walkCanceled) {
                 resolve(enhancedEntries);
                 return;
-              }*/
+              }*!/
           } catch (e) {
             console.warn("Can not load properties for: " + entryPath + " " + e);
           }
@@ -401,7 +405,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
         });
 
         // Read the .ts meta content TODO extract read meta dir in listMetaDirectoryPromise()
-        /*if (containsMetaFolder && mode.includes("extractThumbPath")) {
+        /!*if (containsMetaFolder && mode.includes("extractThumbPath")) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
           fs.readdir(metaFolderPath, (err, metaEntries) => {
             if (err) {
@@ -410,12 +414,12 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
               );
               resolve(enhancedEntries); // returning results even if any promise fails
               return;
-            }*/
+            }*!/
 
-        /*if (window.walkCanceled) {
+        /!*if (window.walkCanceled) {
               resolve(enhancedEntries); // returning results even if walk canceled
               return;
-            }*/
+            }*!/
 
         if (metaContent.length > 0) {
           metaFolderPath = tsPaths.getMetaDirectoryPath(path, pathLib.sep);
@@ -461,26 +465,26 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
               });
             }
 
-            /*if (window.walkCanceled) {
+            /!*if (window.walkCanceled) {
                   resolve(enhancedEntries);
-                }*/
+                }*!/
           });
         }
         resolve(enhancedEntries);
-        /*});
+        /!*});
         } else {
           resolve(enhancedEntries);
-        }*/
+        }*!/
       }
     });
   });
 }
 
-/**
+/!**
  * @param param: { path: }
  * @param isPreview: boolean
  * @returns {Promise<string>}
- */
+ *!/
 function loadTextFilePromise(param, isPreview = false) {
   let filePath;
   if (typeof param === "object" && param !== null) {
@@ -526,11 +530,11 @@ function loadTextFilePromise(param, isPreview = false) {
   });
 }
 
-/**
+/!**
  * @param param
  * @param type = text | arraybuffer (for text use loadTextFilePromise) text return type is not supported for node
  * @returns {Promise<ArrayBuffer>}
- */
+ *!/
 function getFileContentPromise(param, type = "arraybuffer") {
   let filePath;
   if (typeof param === "object" && param !== null) {
@@ -553,7 +557,7 @@ function getFileContentPromise(param, type = "arraybuffer") {
   });
 }
 
-/*function getFileContentPromise(param) {
+/!*function getFileContentPromise(param) {
   let fileURL;
   if (typeof param === "object" && param !== null) {
     fileURL = param.path;
@@ -583,7 +587,7 @@ function getFileContentPromise(param, type = "arraybuffer") {
     };
     xhr.send();
   });
-}*/
+}*!/
 
 function extractTextContent(fileName, textContent) {
   // Convert to lowercase
@@ -616,7 +620,7 @@ function extractTextContent(fileName, textContent) {
   // clear duplicate words
   contentArray = [...new Set(contentArray)];
 
-  /*if (fileName.endsWith(".html")) {
+  /!*if (fileName.endsWith(".html")) {
     // Use only the content in the body
     const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
     const matches = pattern.exec(fileContent);
@@ -627,7 +631,7 @@ function extractTextContent(fileName, textContent) {
     const span = document.createElement("span");
     span.innerHTML = fileContent;
     fileContent = span.textContent || span.innerText;
-  }*/
+  }*!/
 
   // Todo remove very long word e.g. dataUrls or other binary data which could be in the text
 
@@ -666,8 +670,8 @@ function copyFilePromise(sourceFilePath, targetFilePath) {
       );
     } else if (fs.lstatSync(sourceFilePath).isDirectory()) {
       reject("Trying to copy a file: " + sourceFilePath + ". Copying failed");
-      /* } else if (fs.existsSync(targetFilePath)) {
-      reject('File "' + targetFilePath + '" exists. Copying failed.'); */
+      /!* } else if (fs.existsSync(targetFilePath)) {
+      reject('File "' + targetFilePath + '" exists. Copying failed.'); *!/
     } else {
       fs.copy(sourceFilePath, targetFilePath, (error) => {
         if (error) {
@@ -760,23 +764,86 @@ function renameDirectoryPromise(dirPath, newDirName) {
       reject("Path is not a directory. Renaming of " + dirPath + " failed.");
     }
   });
-}
-
-// Experimental functionality
-function watchDirectory(dirPath, listener) {
-  // stopWatchingDirectories();
-  fsWatcher = fs.watch(
-    dirPath,
-    { persistent: true, recursive: false },
-    listener
-  );
-}
+}*/
 
 function resolveFilePath(filePath) {
   pathLib.resolve(filePath);
 }
 
+function isDirectory(entryPath) {
+  return fsClient.isDirectory(entryPath);
+}
+
+function listDirectoryPromise(entryPath) {
+  return fsClient.listDirectoryPromise(entryPath);
+}
+
+function listMetaDirectoryPromise(entryPath) {
+  return fsClient.listMetaDirectoryPromise(entryPath);
+}
+
+function saveTextFilePromise(param, content, overwrite) {
+  return fsClient.saveTextFilePromise(param, content, overwrite);
+}
+
+function saveFilePromise(param, content, overwrite) {
+  return fsClient.saveFilePromise(param, content, overwrite);
+}
+
+function saveBinaryFilePromise(filePath, content, overwrite) {
+  return fsClient.saveBinaryFilePromise(filePath, content, overwrite);
+}
+
+function getPropertiesPromise(entryPath) {
+  return fsClient.getPropertiesPromise(entryPath);
+}
+
+function loadTextFilePromise(entryPath) {
+  return fsClient.loadTextFilePromise(entryPath);
+}
+
+function getFileContentPromise(param, type) {
+  return fsClient.getFileContentPromise(param, type);
+}
+
+function extractTextContent(fileName, textContent) {
+  return fsClient.extractTextContent(fileName, textContent);
+}
+
+function createDirectoryPromise(dirPath) {
+  return fsClient.createDirectoryPromise(dirPath);
+}
+
+function copyFilePromise(sourceFilePath, targetFilePath) {
+  return fsClient.copyFilePromise(sourceFilePath, targetFilePath);
+}
+
+function renameFilePromise(filePath, newFilePath) {
+  return fsClient.renameFilePromise(filePath, newFilePath);
+}
+
+function renameDirectoryPromise(dirPath, newDirName) {
+  return fsClient.renameDirectoryPromise(pathLib.resolve(dirPath), newDirName);
+}
+
+function deleteFilePromise(path) {
+  return fsClient.deleteFilePromise(path);
+}
+
+function deleteDirectoryPromise(path) {
+  return fsClient.deleteDirectoryPromise(path);
+}
+
+function watchDirectory(dirPath, listener) {
+  return fsClient.watchDirectory(dirPath, listener);
+}
+
+function createDirectoryTree(dirPath) {
+  return fsClient.createDirectoryTree(dirPath);
+}
+
 module.exports = {
+  getLocationPath,
   listMetaDirectoryPromise,
   listDirectoryPromise,
   saveTextFilePromise,

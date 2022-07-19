@@ -18,6 +18,7 @@
 
 const {
   watchDirectory,
+  getLocationPath,
   setLanguage,
   isWorkerAvailable,
   setZoomFactorElectron,
@@ -54,10 +55,12 @@ const {
   shareFiles,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const Indexer = require("./indexer");
 
 let objectStoreAPI, webDavAPI;
 
 function platformEnableObjectStoreSupport(objectStoreConfig) {
+  platformDisableWebdavSupport();
   return new Promise((resolve, reject) => {
     if (
       objectStoreAPI !== undefined &&
@@ -82,6 +85,7 @@ function platformDisableObjectStoreSupport() {
 }
 
 function platformEnableWebdavSupport(webdavConfig) {
+  platformDisableObjectStoreSupport();
   if (
     webDavAPI === undefined ||
     webDavAPI.username !== webdavConfig.username ||
@@ -101,13 +105,17 @@ function platformHaveObjectStoreSupport() {
   return objectStoreAPI !== undefined;
 }
 
+function platformHaveWebDavSupport() {
+  return webDavAPI !== undefined;
+}
+
 function platformIsMinio() {
   return objectStoreAPI !== undefined && objectStoreAPI.config().endpointURL;
 }
 
 function platformGetDirSeparator() {
   // TODO rethink usage for S3 on Win
-  return platformHaveObjectStoreSupport() ? "/" : AppConfig.dirSeparator;
+  return platformHaveObjectStoreSupport() || platformHaveWebDavSupport() ? "/" : AppConfig.dirSeparator;
 }
 
 function platformWatchDirectory(dirPath, listener) {
@@ -116,6 +124,13 @@ function platformWatchDirectory(dirPath, listener) {
   } else {
     console.log("watchDirectory not supported");
   }
+}
+
+function platformGetLocationPath(location) {
+  if (getLocationPath) {
+    return getLocationPath(location);
+  }
+  return location ? location.path : "";
 }
 
 function platformSetLanguage(language) {
@@ -181,7 +196,31 @@ function platformGetURLforPath(path, expirationInSeconds) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.getURLforPath(param, expirationInSeconds);
+  } else if(webDavAPI) {
+    return webDavAPI.getURLforPath(path);
   }
+}
+
+function platformCreateIndex(
+  param,
+  mode = ["extractThumbPath"],
+  ignorePatterns = [],
+  listDirectory = undefined,
+  loadTextFile = undefined
+) {
+  if (objectStoreAPI) {
+    param = {
+      ...param,
+      bucketName: objectStoreAPI.config().bucketName,
+    };
+  }
+  return Indexer.createIndex(
+    param,
+    mode,
+    ignorePatterns,
+    listDirectory,
+    loadTextFile
+  );
 }
 
 function platformCreateDirectoryTree(directoryPath) {
@@ -568,6 +607,7 @@ function platformShareFiles(files) {
 }
 
 module.exports = {
+  platformGetLocationPath,
   platformSetLanguage,
   platformIsWorkerAvailable,
   platformSetZoomFactorElectron,
@@ -579,6 +619,7 @@ module.exports = {
   platformDisableObjectStoreSupport,
   platformDisableWebdavSupport,
   platformHaveObjectStoreSupport,
+  platformHaveWebDavSupport,
   platformIsMinio,
   platformGetDirSeparator,
   platformWatchDirectory,
@@ -613,4 +654,5 @@ module.exports = {
   platformSelectFileDialog,
   platformSelectDirectoryDialog,
   platformShareFiles,
+  platformCreateIndex,
 };
