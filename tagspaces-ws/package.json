@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "1.2.1",
+  "version": "1.2.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "build/index.js",
@@ -20,12 +20,12 @@
     "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js",
     "install-web": "npx cross-env PD_PLATFORM=web node install/ws.js",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
-    "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer yyy\" -X POST http://127.0.0.1:49352/thumb-gen",
+    "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/thumb-gen",
     "pkg-publish": "npm run install-node && npm run build:prod && npm publish --access public"
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "@tagspaces/tagspaces-workers": "1.2.2"
+    "@tagspaces/tagspaces-workers": "1.2.5"
   },
   "webDependencies": {},
   "peerDependencies": {

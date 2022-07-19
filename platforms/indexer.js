@@ -1,5 +1,5 @@
 const pathJS = require("path");
-const { getURLforPath } = require("./aws");
+// const { getURLforPath } = require("./aws");
 const {
   loadTextFilePromise,
   saveTextFilePromise,
@@ -279,13 +279,14 @@ function enhanceDirectoryIndex(
     if (entry.thumbPath) {
       let thumbPath;
       if (param.bucketName) {
+        /* don't use aws dependency for indexing
         thumbPath = getURLforPath(
           {
             path: entry.thumbPath,
             bucketName: param.bucketName,
           },
           604800
-        );
+        ); */
       } else {
         thumbPath =
           directoryPath + dirSeparator + toPlatformPath(entry.thumbPath);
