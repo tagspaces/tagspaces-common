@@ -22,11 +22,11 @@
     "install-web": "npx rimraf node_modules && npx rimraf package-lock.json && npx @tagspaces/dynamic-packages-loading ./ -p web",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
     "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/thumb-gen",
-    "pkg-publish": "npm run install-node && npm run build:prod && npm publish --access public"
+    "pkg-publish": "npm run install-node && npm run build && npm publish --access public"
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "@tagspaces/tagspaces-workers": "2.0.3"
+    "@tagspaces/tagspaces-workers": "2.0.4"
   },
   "webDependencies": {},
   "peerDependencies": {
