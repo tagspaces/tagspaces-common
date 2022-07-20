@@ -9,7 +9,7 @@
     "cors-proxy-start": "node local-cors-proxy/lcp.js --proxyUrl http://localhost:9988",
     "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
     "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-webdav-1.0.16.tgz && npx shx cp -rL ./package/** ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/node_modules/@tagspaces/tagspaces-common-webdav && npx rimraf package",
-    "pkg-publish": "npm run clean-install && npm publish --access public"
+    "pkg-publish": "npm publish --access public"
   },
   "files": [
     "io-webdav.js",
@@ -19,5 +19,5 @@
     "@tagspaces/tagspaces-common": "^2.0.2",
     "@tagspaces/webdav-fs": "^4.1.0"
   },
-  "gitHead": "669314b476e215da649287f1b530ecfb6cfa6ac3"
+  "gitHead": "eae66b59e9ece934c6f65bfbf51a29025d3f43d3"
 }
