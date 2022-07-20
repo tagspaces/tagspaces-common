@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-aws",
   "description": "TagSpaces common aws module",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -11,7 +11,7 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^2.0.5",
+    "@tagspaces/tagspaces-common": "^2.0.6",
     "aws-sdk": "2.1161.0"
   },
   "gitHead": "2d6584417ede8d7ae38fa4fadcb040ba251e0084"
