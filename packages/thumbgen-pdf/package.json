@@ -10,6 +10,5 @@
   "dependencies": {
     "pdf-thumbnail": "^1.0.6",
     "pdfjs-dist": "^2.10.377"
-  },
-  "gitHead": "d00e7f9efb18a73b9026586659ecb46c7f350fd3"
+  }
 }

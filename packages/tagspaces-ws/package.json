@@ -26,11 +26,10 @@
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "@tagspaces/tagspaces-workers": "2.0.6"
+    "@tagspaces/tagspaces-workers": "2.0.7"
   },
   "webDependencies": {},
   "peerDependencies": {
     "sharp": ">=0.29.3"
-  },
-  "gitHead": "d00e7f9efb18a73b9026586659ecb46c7f350fd3"
+  }
 }

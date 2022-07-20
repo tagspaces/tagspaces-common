@@ -14,6 +14,5 @@
     "fs-extra": "^10.0.0",
     "marked": "^3.0.8",
     "path": "^0.12.7"
-  },
-  "gitHead": "d00e7f9efb18a73b9026586659ecb46c7f350fd3"
+  }
 }

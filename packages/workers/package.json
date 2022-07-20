@@ -14,6 +14,5 @@
     "@tagspaces/tagspaces-common-node": "^2.0.7",
     "@tagspaces/tagspaces-platforms": "^2.0.7",
     "@tagspaces/tagspaces-thumbgen-image": "^2.0.7"
-  },
-  "gitHead": "d00e7f9efb18a73b9026586659ecb46c7f350fd3"
+  }
 }

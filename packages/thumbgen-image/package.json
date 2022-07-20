@@ -12,6 +12,5 @@
   "dependencies": {
     "async": "^3.2.4",
     "sharp": "^0.29.3"
-  },
-  "gitHead": "d00e7f9efb18a73b9026586659ecb46c7f350fd3"
+  }
 }
