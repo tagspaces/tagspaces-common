@@ -5,6 +5,7 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
+    "npm-install": "npx cross-env PD_PLATFORM=node npm install",
     "lerna-clean": "lerna clean -y",
     "lerna-install-node": "npx cross-env PD_PLATFORM=node lerna bootstrap --no-ci",
     "lerna-install-node-hoist": "npx cross-env PD_PLATFORM=node lerna bootstrap --no-ci --hoist",
