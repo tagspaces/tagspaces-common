@@ -14,5 +14,6 @@
     "dotenv": "^16.0.1",
     "micromatch": "^4.0.4",
     "uuid": "^8.3.2"
-  }
+  },
+  "gitHead": "669314b476e215da649287f1b530ecfb6cfa6ac3"
 }

@@ -18,5 +18,6 @@
   "dependencies": {
     "@tagspaces/tagspaces-common": "^2.0.2",
     "@tagspaces/webdav-fs": "^4.1.0"
-  }
+  },
+  "gitHead": "669314b476e215da649287f1b530ecfb6cfa6ac3"
 }

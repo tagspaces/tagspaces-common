@@ -13,5 +13,6 @@
   "dependencies": {
     "@tagspaces/tagspaces-common": "^2.0.2",
     "idb-keyval": "^6.1.0"
-  }
+  },
+  "gitHead": "669314b476e215da649287f1b530ecfb6cfa6ac3"
 }

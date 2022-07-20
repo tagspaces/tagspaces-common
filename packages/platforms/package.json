@@ -54,5 +54,6 @@
     "@tagspaces/tagspaces-common-electron": "2.0.0",
     "@tagspaces/tagspaces-common-aws": "2.0.2",
     "@tagspaces/tagspaces-common-webdav": "2.0.2"
-  }
+  },
+  "gitHead": "669314b476e215da649287f1b530ecfb6cfa6ac3"
 }

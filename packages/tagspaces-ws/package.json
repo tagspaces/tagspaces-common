@@ -31,5 +31,6 @@
   "webDependencies": {},
   "peerDependencies": {
     "sharp": "^0.29.3"
-  }
+  },
+  "gitHead": "669314b476e215da649287f1b530ecfb6cfa6ac3"
 }
