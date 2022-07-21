@@ -1,0 +1,24 @@
+{
+  "name": "@tagspaces/dynamic-packages-loading",
+  "description": "utils for dynamic-packages-loading used by the TagSpaces application",
+  "version": "2.0.7",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "scripts": {
+    "pkg-publish": "npm publish --access public"
+  },
+  "bin": {
+    "tscmd": "./cli.js"
+  },
+  "files": [
+    "cli.js",
+    "index.js"
+  ],
+  "dependencies": {
+    "yargs": "^17.5.1"
+  },
+  "engines": {
+    "yarn": "please-use-npm",
+    "npm": ">= 6.14.15"
+  }
+}

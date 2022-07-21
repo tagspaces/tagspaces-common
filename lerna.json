@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "packages/*"
+  ],
+  "useNx": false,
+  "useWorkspaces": true,
+  "version": "2.0.7"
+}

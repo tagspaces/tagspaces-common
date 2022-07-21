@@ -1,0 +1,58 @@
+{
+  "name": "@tagspaces/tagspaces-platforms",
+  "description": "TagSpaces platforms module",
+  "version": "2.0.7",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "scripts": {
+    "install": "node install/platformIO-new.js",
+    "install-new": "npx @tagspaces/dynamic-packages-loading ./",
+    "install-old": "node install/platformIO.js",
+    "install-node": "npx cross-env PD_PLATFORM=node npm run install",
+    "install-electron": "npx cross-env PD_PLATFORM=electron npm run install",
+    "install-aws": "rimraf node_modules && npx cross-env PD_PLATFORM=aws npm run install",
+    "install-web": "npx cross-env PD_PLATFORM=web npm run install",
+    "install-cordova": "npx cross-env PD_PLATFORM=cordova npm run install",
+    "npmpack": "npm run install-electron && npm pack && tar -xvf tagspaces-tagspaces-platforms-1.4.2.tgz && npx shx cp -rL package/** ../../tagspaces2/node_modules/@tagspaces/tagspaces-platforms/ && npx rimraf package",
+    "copy_platform": "shx cp -rL platform-io.js ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/platform-io.js",
+    "pkg-publish": "npm publish --access public"
+  },
+  "files": [
+    "index.js",
+    "misc.js",
+    "paths.js",
+    "utils-common.js",
+    "AppConfig.js",
+    "aws.js",
+    "webdav.js",
+    "indexer.js",
+    "platform-io.js",
+    "LICENSE",
+    "install/**"
+  ],
+  "nodeDependencies": {
+    "@tagspaces/tagspaces-common-node": "2.0.7",
+    "@tagspaces/tagspaces-common-aws": "2.0.7",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "webDependencies": {
+    "@tagspaces/tagspaces-common-web": "2.0.7",
+    "@tagspaces/tagspaces-common-aws": "2.0.7",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "awsDependencies": {
+    "@tagspaces/tagspaces-common-aws": "2.0.7",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "cordovaDependencies": {
+    "@tagspaces/tagspaces-common-cordova": "2.0.7",
+    "@tagspaces/tagspaces-common-aws": "2.0.7",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  },
+  "electronDependencies": {
+    "@tagspaces/tagspaces-common-node": "2.0.7",
+    "@tagspaces/tagspaces-common-electron": "2.0.7",
+    "@tagspaces/tagspaces-common-aws": "2.0.7",
+    "@tagspaces/tagspaces-common-webdav": "1.0.18"
+  }
+}

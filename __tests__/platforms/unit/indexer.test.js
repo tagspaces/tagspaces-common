@@ -3,14 +3,14 @@ const pathJs = require("path");
 const {
   createIndex,
   getMetaIndexFilePath,
-} = require("../../../platforms/indexer");
+} = require("@tagspaces/tagspaces-platforms/indexer");
 const {
   configure,
   s3,
   listDirectoryPromise,
   createDirectoryPromise,
   saveTextFilePromise,
-} = require("../../../common-aws/io-objectstore");
+} = require("@tagspaces/tagspaces-common-aws/io-objectstore");
 
 beforeAll(async () => {
   configure({

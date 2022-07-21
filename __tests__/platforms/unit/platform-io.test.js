@@ -1,6 +1,6 @@
 // const fs = require("fs");
 const pathJs = require("path");
-const { cleanTrailingDirSeparator } = require("../../../common/paths");
+const { cleanTrailingDirSeparator } = require("@tagspaces/tagspaces-common/paths");
 const {
   platformCreateDirectoryTree,
   platformListDirectoryPromise,
@@ -14,7 +14,7 @@ const {
   platformRenameDirectoryPromise,
   platformDeleteFilePromise,
   platformDeleteDirectoryPromise,
-} = require("../../../platforms/platform-io");
+} = require("@tagspaces/tagspaces-platforms/platform-io");
 
 const bucketDir = "./__tests__/common-aws/buckets/bucket1";
 const dirPath = bucketDir + "/dir/";

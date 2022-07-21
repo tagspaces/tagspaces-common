@@ -1,6 +1,6 @@
 const pathLib = require("path");
 const fs = require("fs-extra");
-const AppConfig = require("../../../common/AppConfig");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const { clean } = require("../../../scripts/webdav/webdavserver-v2");
 const {
   configure,
@@ -18,7 +18,7 @@ const {
   renameDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-} = require("../../../common-webdav/io-webdav");
+} = require("@tagspaces/tagspaces-common-webdav/io-webdav");
 
 const {
   PASSWORD,

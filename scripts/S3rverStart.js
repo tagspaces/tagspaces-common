@@ -3,9 +3,9 @@ const path = require("path");
 const execSh = require("exec-sh").promise;
 
 module.exports = async function () {
-  await execSh("npm run install-aws", {
+  /*await execSh("npm run install-aws", {
     cwd: path.resolve(__dirname, "..", "platforms"),
-  });
+  });*/
   global.S3instance = new S3rver({
     port: 4569,
     address: "localhost",
