@@ -76,7 +76,7 @@ const isFirefox =
   navigator.userAgent.toLowerCase().includes("firefox"); // typeof InstallTrigger !== 'undefined';
 const isWin =
   (typeof navigator !== "undefined" && navigator.appVersion.includes("Win")) ||
-  (process &&
+  (typeof process !== "undefined" &&
     (process.platform === "win32" ||
       /^(msys|cygwin)$/.test(process.env.OSTYPE)));
 const isLinux =
@@ -85,7 +85,7 @@ const isLinux =
 const isMacLike =
   typeof navigator !== "undefined" &&
   navigator.userAgent.match(/(Mac|iPhone|iPod|iPad)/i);
-const isMac = process && process.platform === "darwin";
+const isMac = typeof process !== "undefined" && process.platform === "darwin";
 const dirSeparator = isWin && !isWeb ? "\\" : "/";
 const isCordovaiOS =
   typeof window !== "undefined" &&
