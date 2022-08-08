@@ -1,25 +1,59 @@
 // require('dotenv').config({path: __dirname + '/default.env', override: false, debug: true });
-const metaFolder = process.env.metaFolder || ".ts";
-const metaFolderFile = process.env.metaFolderFile || "tsm.json";
-const folderLocationsFile = process.env.folderLocationsFile || "tsl.json";
-const folderIndexFile = process.env.folderIndexFile || "tsi.json";
-const folderThumbFile = process.env.folderThumbFile || "tst.jpg";
-const metaFileExt = process.env.metaFileExt || ".json";
-const thumbFileExt = process.env.thumbFileExt || ".jpg";
-const thumbType = process.env.thumbType || "image/jpeg";
-const contentFileExt = process.env.contentFileExt || ".txt";
-const beginTagContainer = process.env.beginTagContainer || "[";
-const endTagContainer = process.env.endTagContainer || "]";
-const tagDelimiter = process.env.tagDelimiter || " ";
-const prefixTagContainer = process.env.prefixTagContainer || "";
-const maxCollectedTag = parseInt(process.env.maxCollectedTag || 500);
-const maxThumbSize = parseInt(process.env.maxThumbSize || 400);
-const thumbBgColor = process.env.thumbBgColor || "#FFFFFF";
-const indexerLimit = parseInt(process.env.indexerLimit || 200000);
-const mainToolbarHeight = parseInt(process.env.mainToolbarHeight || 105);
-const maxIndexAge = parseInt(process.env.maxIndexAge || 600000); // 10 minutes
-const defaultFileColor = process.env.defaultFileColor || "#808080";
-const defaultFolderColor = process.env.defaultFolderColor || "#582727"; // 555 transparent #FDEEBD #ff791b #2c001e #880e4f
+let metaFolder = ".ts";
+let metaFolderFile = "tsm.json";
+let folderLocationsFile = "tsl.json";
+let folderIndexFile = "tsi.json";
+let folderThumbFile = "tst.jpg";
+let metaFileExt = ".json";
+let thumbFileExt = ".jpg";
+let thumbType = "image/jpeg";
+let contentFileExt = ".txt";
+let beginTagContainer = "[";
+let endTagContainer = "]";
+let tagDelimiter = " ";
+let prefixTagContainer = "";
+let maxCollectedTag = 500;
+let maxThumbSize = 400;
+let thumbBgColor = "#FFFFFF";
+let indexerLimit = 200000;
+let mainToolbarHeight = 105;
+let maxIndexAge = 600000; // 10 minutes
+let defaultFileColor = "#808080";
+let defaultFolderColor = "#582727";
+
+if (typeof process !== "undefined") {
+  if (process.env.metaFolder) metaFolder = process.env.metaFolder;
+  if (process.env.metaFolderFile) metaFolderFile = process.env.metaFolderFile;
+  if (process.env.folderLocationsFile)
+    folderLocationsFile = process.env.folderLocationsFile;
+  if (process.env.folderIndexFile)
+    folderIndexFile = process.env.folderIndexFile;
+  if (process.env.folderThumbFile)
+    folderThumbFile = process.env.folderThumbFile;
+  if (process.env.metaFileExt) metaFileExt = process.env.metaFileExt;
+  if (process.env.thumbFileExt) thumbFileExt = process.env.thumbFileExt;
+  if (process.env.thumbType) thumbType = process.env.thumbType;
+  if (process.env.contentFileExt) contentFileExt = process.env.contentFileExt;
+  if (process.env.beginTagContainer)
+    beginTagContainer = process.env.beginTagContainer;
+  if (process.env.endTagContainer)
+    endTagContainer = process.env.endTagContainer;
+  if (process.env.tagDelimiter) tagDelimiter = process.env.tagDelimiter;
+  if (process.env.prefixTagContainer)
+    prefixTagContainer = process.env.prefixTagContainer;
+  if (process.env.maxCollectedTag)
+    maxCollectedTag = process.env.maxCollectedTag;
+  if (process.env.maxThumbSize) maxThumbSize = process.env.maxThumbSize;
+  if (process.env.thumbBgColor) thumbBgColor = process.env.thumbBgColor;
+  if (process.env.indexerLimit) indexerLimit = process.env.indexerLimit;
+  if (process.env.mainToolbarHeight)
+    mainToolbarHeight = process.env.mainToolbarHeight;
+  if (process.env.maxIndexAge) maxIndexAge = process.env.maxIndexAge;
+  if (process.env.defaultFileColor)
+    defaultFileColor = process.env.defaultFileColor;
+  if (process.env.defaultFolderColor)
+    defaultFolderColor = process.env.defaultFolderColor;
+}
 const isElectron =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes(" electron/");
@@ -28,10 +62,10 @@ const isNode =
   process.versions != null &&
   process.versions.node != null;
 const isJsDom =
-    (typeof window !== "undefined" && window.name === "nodejs") ||
-    (typeof navigator !== "undefined" &&
-        (navigator.userAgent.includes("Node.js") ||
-            navigator.userAgent.includes("jsdom")));
+  (typeof window !== "undefined" && window.name === "nodejs") ||
+  (typeof navigator !== "undefined" &&
+    (navigator.userAgent.includes("Node.js") ||
+      navigator.userAgent.includes("jsdom")));
 const isWeb =
   !isJsDom &&
   typeof document !== "undefined" &&
