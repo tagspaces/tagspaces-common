@@ -42,18 +42,19 @@ if (typeof process !== "undefined") {
   if (process.env.prefixTagContainer)
     prefixTagContainer = process.env.prefixTagContainer;
   if (process.env.maxCollectedTag)
-    maxCollectedTag = process.env.maxCollectedTag;
-  if (process.env.maxThumbSize) maxThumbSize = process.env.maxThumbSize;
+    maxCollectedTag = parseInt(process.env.maxCollectedTag);
+  if (process.env.maxThumbSize) maxThumbSize = parseInt(process.env.maxThumbSize);
   if (process.env.thumbBgColor) thumbBgColor = process.env.thumbBgColor;
-  if (process.env.indexerLimit) indexerLimit = process.env.indexerLimit;
+  if (process.env.indexerLimit) indexerLimit = parseInt(process.env.indexerLimit);
   if (process.env.mainToolbarHeight)
-    mainToolbarHeight = process.env.mainToolbarHeight;
-  if (process.env.maxIndexAge) maxIndexAge = process.env.maxIndexAge;
+    mainToolbarHeight = parseInt(process.env.mainToolbarHeight);
+  if (process.env.maxIndexAge) maxIndexAge = parseInt(process.env.maxIndexAge);
   if (process.env.defaultFileColor)
     defaultFileColor = process.env.defaultFileColor;
   if (process.env.defaultFolderColor)
     defaultFolderColor = process.env.defaultFolderColor;
 }
+
 const isElectron =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes(" electron/");
