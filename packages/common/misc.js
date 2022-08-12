@@ -198,13 +198,14 @@ function immutablySwapItems(items, firstIndex, secondIndex) {
  * @param {string} contentType - content type of blob
  * @param {int} sliceSize - optional size of slices if omited 512 is used as default
  * @returns {Blob}
+ * TODO charCodeAt is not a function at Windows
  */
 function b64toBlob(b64Data, contentType = "", sliceSize = 512) {
   const byteCharacters = Buffer.from(b64Data, "base64"); // atob(b64Data);
   const byteArrays = [];
 
   for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
+    const slice = byteCharacters.subarray(offset, offset + sliceSize);
     const byteNumbers = new Array(slice.length);
     for (let i = 0; i < slice.length; i += 1) {
       byteNumbers[i] = slice.charCodeAt(i);
