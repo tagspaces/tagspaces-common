@@ -51,7 +51,7 @@ function configure(objectStoreConfig) {
  * @returns {string}
  */
 const getURLforPath = (param, expirationInSeconds = 900) => {
-  const path = param.path;
+  const path = normalizeRootPath(param.path);
   const bucketName = param.bucketName;
   if (!path || path.length < 1) {
     console.warn("Wrong path param for getURLforPath");
