@@ -67,7 +67,10 @@ function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
   if (!directoryPath) {
     return AppConfig.metaFolder;
   }
-  if (directoryPath.endsWith(AppConfig.metaFolder + dirSeparator)) {
+  if (
+    directoryPath.endsWith(AppConfig.metaFolder + dirSeparator) ||
+    directoryPath.endsWith(dirSeparator + AppConfig.metaFolder)
+  ) {
     return directoryPath;
   }
   return (
