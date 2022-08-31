@@ -19,7 +19,7 @@ let indexerLimit = 200000;
 let mainToolbarHeight = 105;
 let maxIndexAge = 600000; // 10 minutes
 let defaultFileColor = "#808080";
-let defaultFolderColor = "#582727";
+let defaultFolderColor = "#582727"; // # 555 transparent #FDEEBD #ff791b #2c001e #880e4f
 
 if (typeof process !== "undefined") {
   if (process.env.metaFolder) metaFolder = process.env.metaFolder;
