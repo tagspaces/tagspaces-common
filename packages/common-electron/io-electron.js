@@ -16,6 +16,10 @@ function setLanguage(language) {
   ipcRenderer.send("set-language", language);
 }
 
+function createNewInstance(url) {
+  ipcRenderer.send("create-new-window", url);
+}
+
 function showMainWindow() {
   ipcRenderer.send("show-main-window", "notNeededArgument");
 }
@@ -183,4 +187,5 @@ module.exports = {
   isWorkerAvailable,
   createDirectoryIndexInWorker,
   createThumbnailsInWorker,
+  createNewInstance,
 };

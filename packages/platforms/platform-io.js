@@ -53,6 +53,7 @@ const {
   selectFileDialog,
   selectDirectoryDialog,
   shareFiles,
+  createNewInstance,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -115,7 +116,9 @@ function platformIsMinio() {
 
 function platformGetDirSeparator() {
   // TODO rethink usage for S3 on Win
-  return platformHaveObjectStoreSupport() || platformHaveWebDavSupport() ? "/" : AppConfig.dirSeparator;
+  return platformHaveObjectStoreSupport() || platformHaveWebDavSupport()
+    ? "/"
+    : AppConfig.dirSeparator;
 }
 
 function platformWatchDirectory(dirPath, listener) {
@@ -196,7 +199,7 @@ function platformGetURLforPath(path, expirationInSeconds) {
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.getURLforPath(param, expirationInSeconds);
-  } else if(webDavAPI) {
+  } else if (webDavAPI) {
     return webDavAPI.getURLforPath(path);
   }
 }
@@ -524,14 +527,23 @@ function platformSaveBinaryFilePromise(
   );
 }
 
-
-function platformUploadFileByMultiPart(filePath, file, overwrite, onUploadProgress) {
+function platformUploadFileByMultiPart(
+  filePath,
+  file,
+  overwrite,
+  onUploadProgress
+) {
   if (objectStoreAPI) {
     const param = {
       path: filePath,
       bucketName: objectStoreAPI.config().bucketName,
     };
-    return objectStoreAPI.uploadFileByMultiPart(param, file, overwrite, onUploadProgress);
+    return objectStoreAPI.uploadFileByMultiPart(
+      param,
+      file,
+      overwrite,
+      onUploadProgress
+    );
   }
 }
 
@@ -606,6 +618,14 @@ function platformShareFiles(files) {
   }
 }
 
+function platformCreateNewInstance(url) {
+  if (AppConfig.isElectron) {
+    return createNewInstance(url);
+  } else {
+    console.log("Creating new instances is supported only on Electron.");
+  }
+}
+
 module.exports = {
   platformGetLocationPath,
   platformSetLanguage,
@@ -655,4 +675,5 @@ module.exports = {
   platformSelectDirectoryDialog,
   platformShareFiles,
   platformCreateIndex,
+  platformCreateNewInstance,
 };
