@@ -153,7 +153,7 @@ function getBgndFileLocationForDirectory(entryPath, dirSeparator = "/") {
     (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
     AppConfig.metaFolder +
     dirSeparator +
-    AppConfig.folderThumbFile
+    AppConfig.folderBgndFile
   );
 }
 
