@@ -147,6 +147,16 @@ function getThumbFileLocationForDirectory(entryPath, dirSeparator = "/") {
   );
 }
 
+function getBgndFileLocationForDirectory(entryPath, dirSeparator = "/") {
+  return (
+    entryPath +
+    (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
+    AppConfig.metaFolder +
+    dirSeparator +
+    AppConfig.folderThumbFile
+  );
+}
+
 function getMetaFileLocationForDir(
   entryPath,
   dirSeparator = "/", // = AppConfig.dirSeparator
@@ -522,6 +532,7 @@ module.exports = {
   getMetaDirectoryPath,
   getThumbFileLocationForFile,
   getThumbFileLocationForDirectory,
+  getBgndFileLocationForDirectory,
   getFileLocationFromMetaFile,
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,

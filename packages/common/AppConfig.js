@@ -4,6 +4,7 @@ let metaFolderFile = "tsm.json";
 let folderLocationsFile = "tsl.json";
 let folderIndexFile = "tsi.json";
 let folderThumbFile = "tst.jpg";
+let folderBgndFile = "tsb.jpg";
 let metaFileExt = ".json";
 let thumbFileExt = ".jpg";
 let thumbType = "image/jpeg";
@@ -30,6 +31,8 @@ if (typeof process !== "undefined") {
     folderIndexFile = process.env.folderIndexFile;
   if (process.env.folderThumbFile)
     folderThumbFile = process.env.folderThumbFile;
+  if (process.env.folderBgndFile)
+    folderBgndFile = process.env.folderBgndFile;
   if (process.env.metaFileExt) metaFileExt = process.env.metaFileExt;
   if (process.env.thumbFileExt) thumbFileExt = process.env.thumbFileExt;
   if (process.env.thumbType) thumbType = process.env.thumbType;
@@ -163,6 +166,7 @@ module.exports = {
   folderLocationsFile,
   folderIndexFile,
   folderThumbFile,
+  folderBgndFile,
   metaFileExt,
   thumbFileExt,
   thumbType,
