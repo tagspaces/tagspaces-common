@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-web",
   "description": "TagSpaces common browser module",
-  "version": "2.0.19",
+  "version": "2.0.20",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -11,7 +11,7 @@
     "pkg-publish": "rimraf package-lock.json && rimraf node_modules && npm install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^2.0.19",
+    "@tagspaces/tagspaces-common": "^2.0.20",
     "idb-keyval": "^6.1.0"
   }
 }
