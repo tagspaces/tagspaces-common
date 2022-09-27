@@ -15,6 +15,7 @@ let tagDelimiter = " ";
 let prefixTagContainer = "";
 let maxCollectedTag = 500;
 let maxThumbSize = 400;
+let maxBgndSize = 400;
 let thumbBgColor = "#FFFFFF";
 let indexerLimit = 200000;
 let mainToolbarHeight = 105;
@@ -47,6 +48,7 @@ if (typeof process !== "undefined") {
   if (process.env.maxCollectedTag)
     maxCollectedTag = parseInt(process.env.maxCollectedTag);
   if (process.env.maxThumbSize) maxThumbSize = parseInt(process.env.maxThumbSize);
+  if (process.env.maxBgndSize) maxBgndSize = parseInt(process.env.maxBgndSize);
   if (process.env.thumbBgColor) thumbBgColor = process.env.thumbBgColor;
   if (process.env.indexerLimit) indexerLimit = parseInt(process.env.indexerLimit);
   if (process.env.mainToolbarHeight)
@@ -177,6 +179,7 @@ module.exports = {
   prefixTagContainer,
   maxCollectedTag,
   maxThumbSize,
+  maxBgndSize,
   thumbBgColor,
   indexerLimit,
   mainToolbarHeight,
