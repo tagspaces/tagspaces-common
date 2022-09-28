@@ -2,6 +2,7 @@ const pathLib = require("path");
 const tsPaths = require("./paths");
 const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
 const AppConfig = require("./AppConfig");
+const micromatch = require("micromatch");
 
 /**
  * this is common module with io-node
@@ -366,9 +367,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   /**
    * @param param
    * @param mode = ['extractTextContent', 'extractThumbPath']
+   * @param ignorePatterns
    * @returns {Promise<FileSystemEntry[]>}
    */
-  function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
+  function listDirectoryPromise(
+    param,
+    mode = ["extractThumbPath"],
+    ignorePatterns = []
+  ) {
     let path = getPath(param);
 
     return new Promise(async (resolve) => {
@@ -404,6 +410,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         if (entries) {
           for (const entry of entries) {
             entryPath = path + dirSeparator + entry;
+
+            if (ignorePatterns.length > 0) {
+              const isIgnored = micromatch([entryPath, entry], ignorePatterns);
+              if (isIgnored.length !== 0) {
+                continue;
+              }
+            }
+
             eentry = {};
             eentry.name = entry;
             eentry.path = entryPath;
