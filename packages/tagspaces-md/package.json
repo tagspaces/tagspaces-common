@@ -1,0 +1,72 @@
+{
+  "name": "@tagspaces/tagspaces-md",
+  "description": "MD editor used by the TagSpaces application and extensions",
+  "version": "2.0.22",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "main": "build/index.js",
+  "files": [
+    "build/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "npx rimraf build",
+    "build": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
+    "code-format": "npx prettier --write .",
+    "pkg-publish": "npm run build && npm publish --access public"
+  },
+  "dependencies": {
+    "@emotion/react": "11.10.0",
+    "@emotion/styled": "11.10.0",
+    "@mui/icons-material": "^5.8.4",
+    "@mui/material": "^5.9.2",
+    "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/lang-markdown": "^0.20.1",
+    "@milkdown/core": "6.3.2",
+    "@milkdown/plugin-clipboard": "6.3.2",
+    "@milkdown/plugin-diagram": "6.3.2",
+    "@milkdown/plugin-emoji": "6.3.2",
+    "@milkdown/plugin-history": "6.3.2",
+    "@milkdown/plugin-listener": "6.3.2",
+    "@milkdown/plugin-math": "6.3.2",
+    "@milkdown/plugin-prism": "6.3.2",
+    "@milkdown/plugin-slash": "6.3.2",
+    "@milkdown/plugin-tooltip": "6.3.2",
+    "@milkdown/preset-commonmark": "6.3.2",
+    "@milkdown/preset-gfm": "6.3.2",
+    "@milkdown/prose": "6.3.2",
+    "@milkdown/react": "6.3.2",
+    "@milkdown/theme-nord": "6.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-loading-skeleton": "^3.1.0",
+    "remark-directive": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.17",
+    "@types/react-dom": "^18.0.6",
+    "babel-loader": "^8.2.5",
+    "ts-loader": "^9.4.1",
+    "typescript": "^4.8.4",
+    "prettier": "^2.7.1",
+    "css-loader": "^6.7.1"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
