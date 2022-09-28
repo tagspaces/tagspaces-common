@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const micromatch = require("micromatch");
 // const encodeS3URI = require("./encodeS3URI");
 // get reference to S3 client
 let S3;
@@ -119,9 +120,14 @@ const listMetaDirectoryPromise = async (param) => {
  *
  * @param param
  * @param mode = ['extractTextContent', 'extractThumbPath', 'extractThumbURL']
+ * @param ignorePatterns
  * @returns {Promise<unknown>}
  */
-const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
+const listDirectoryPromise = (
+  param,
+  mode = ["extractThumbPath"],
+  ignorePatterns = []
+) =>
   new Promise(async (resolve) => {
     const path = param.path;
     const bucketName = param.bucketName;
@@ -201,9 +207,21 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
 
         if (eentry.path !== params.Prefix) {
           // skipping the current directory
-          enhancedEntries.push(eentry);
-          if (loadMeta) {
-            metaPromises.push(getEntryMeta(eentry));
+          let ignored = false;
+          if (ignorePatterns.length > 0) {
+            const isIgnored = micromatch(
+              [eentry.path, eentry.name],
+              ignorePatterns
+            );
+            if (isIgnored.length !== 0) {
+              ignored = true;
+            }
+          }
+          if (!ignored) {
+            enhancedEntries.push(eentry);
+            if (loadMeta) {
+              metaPromises.push(getEntryMeta(eentry));
+            }
           }
         }
 
@@ -214,56 +232,72 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
 
       // Handling files
       data.Contents.forEach((file) => {
-        // console.warn(JSON.stringify(file));
-        let thumbPath;
-        if (loadMeta) {
-          thumbPath = tsPaths.getThumbFileLocationForFile(file.Key, "/", false);
-          if (thumbPath && thumbPath.startsWith("/")) {
-            thumbPath = thumbPath.substring(1);
-          }
-          const thumbAvailable = metaContent.find(
-            (obj) => obj.path === thumbPath
-          );
-          if (thumbAvailable) {
-            if (mode.includes("extractThumbURL")) {
-              thumbPath = getURLforPath(
-                {
-                  path: thumbPath,
-                  bucketName: bucketName,
-                },
-                604800
-              ); // 60 * 60 * 24 * 7 = 1 week
-            }
-          } /*else {
-            thumbPath = "";
-          }*/
-        }
-
         eentry = {};
         eentry.name = tsPaths.extractFileName(file.Key);
         eentry.path = file.Key;
         eentry.bucketName = bucketName;
         eentry.tags = [];
-        if (thumbPath) {
-          eentry.thumbPath = thumbPath;
+
+        let ignored = false;
+        if (ignorePatterns.length > 0) {
+          const isIgnored = micromatch(
+            [eentry.path, eentry.name],
+            ignorePatterns
+          );
+          if (isIgnored.length !== 0) {
+            ignored = true;
+          }
         }
-        eentry.meta = {};
-        eentry.isFile = true;
-        eentry.size = file.Size;
-        eentry.lmdt = Date.parse(file.LastModified);
-        if (file.Key !== params.Prefix) {
-          // skipping the current folder
-          enhancedEntries.push(eentry);
+        if (!ignored) {
+          let thumbPath;
           if (loadMeta) {
-            let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
-            if (metaFilePath.startsWith("/")) {
-              metaFilePath = metaFilePath.substring(1);
-            }
-            const metaFileAvailable = metaContent.find(
-              (obj) => obj.path === metaFilePath
+            thumbPath = tsPaths.getThumbFileLocationForFile(
+              file.Key,
+              "/",
+              false
             );
-            if (metaFileAvailable) {
-              metaPromises.push(getEntryMeta(eentry));
+            if (thumbPath && thumbPath.startsWith("/")) {
+              thumbPath = thumbPath.substring(1);
+            }
+            const thumbAvailable = metaContent.find(
+              (obj) => obj.path === thumbPath
+            );
+            if (thumbAvailable) {
+              if (mode.includes("extractThumbURL")) {
+                thumbPath = getURLforPath(
+                  {
+                    path: thumbPath,
+                    bucketName: bucketName,
+                  },
+                  604800
+                ); // 60 * 60 * 24 * 7 = 1 week
+              }
+            } /*else {
+            thumbPath = "";
+          }*/
+          }
+
+          if (thumbPath) {
+            eentry.thumbPath = thumbPath;
+          }
+          eentry.meta = {};
+          eentry.isFile = true;
+          eentry.size = file.Size;
+          eentry.lmdt = Date.parse(file.LastModified);
+          if (file.Key !== params.Prefix) {
+            // skipping the current folder
+            enhancedEntries.push(eentry);
+            if (loadMeta) {
+              let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+              if (metaFilePath.startsWith("/")) {
+                metaFilePath = metaFilePath.substring(1);
+              }
+              const metaFileAvailable = metaContent.find(
+                (obj) => obj.path === metaFilePath
+              );
+              if (metaFileAvailable) {
+                metaPromises.push(getEntryMeta(eentry));
+              }
             }
           }
         }

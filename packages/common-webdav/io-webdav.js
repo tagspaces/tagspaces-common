@@ -82,8 +82,8 @@ function isDirectory(entryPath) {
   return fsClient.isDirectory(entryPath);
 }
 
-function listDirectoryPromise(entryPath) {
-  return fsClient.listDirectoryPromise(entryPath);
+function listDirectoryPromise(entryPath, mode, ignorePatterns) {
+  return fsClient.listDirectoryPromise(entryPath, mode, ignorePatterns);
 }
 
 function listMetaDirectoryPromise(entryPath) {
