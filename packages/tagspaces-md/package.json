@@ -4,15 +4,25 @@
   "version": "2.0.23",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
-  "main": "build/index.js",
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "types": "lib/index.d.ts",
   "files": [
-    "build/",
+    "lib/",
+    "esm/",
+    "src/",
     "LICENSE"
   ],
   "scripts": {
-    "clean": "npx rimraf build",
-    "build": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
+    "clean": "npx rimraf build lib esm",
+    "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
+    "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
+    "copy-files": "npx shx cp src/style.module.css esm && npx shx cp src/style.module.css lib",
+    "build": "npm run clean && npm run lib:cjs && npm run lib:esm && npm run copy-files",
+    "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
+    "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development",
     "code-format": "npx prettier --write .",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-2.0.23.tgz && npx shx cp -rL package/** ../../../tagspaces2/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
@@ -38,14 +48,16 @@
     "@milkdown/prose": "6.3.2",
     "@milkdown/react": "6.3.2",
     "@milkdown/theme-nord": "6.3.2",
-    "@mui/icons-material": "^5.8.4",
-    "@mui/material": "^5.9.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-loading-skeleton": "^3.1.0",
     "remark-directive": "^2.0.1"
   },
   "devDependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.19.3",
+    "@babel/preset-env": "^7.19.3",
+    "@babel/preset-react": "^7.18.6",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "babel-loader": "^8.2.5",
