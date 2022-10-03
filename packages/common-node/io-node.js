@@ -811,7 +811,7 @@ function extractTextContent(fileName, textContent) {
 }
 
 function createDirectoryPromise(dirPath) {
-  return fsClient.createDirectoryPromise(dirPath).then((result) => {
+  return fsClient.createDirectoryPromise(dirPath); /*.then((result) => {
     if (AppConfig.isWin && dirPath.endsWith("\\" + AppConfig.metaFolder)) {
       // hide .ts folder on Windows
       import("winattr").then((winattr) => {
@@ -826,7 +826,7 @@ function createDirectoryPromise(dirPath) {
       return true;
     }
     return result;
-  });
+  });*/
 }
 
 function copyFilePromise(sourceFilePath, targetFilePath) {

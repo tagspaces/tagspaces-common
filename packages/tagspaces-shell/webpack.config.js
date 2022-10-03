@@ -59,9 +59,5 @@ module.exports = {
   // Tells webpack what file extesions it should look at.
   resolve: {
     extensions: [".js", ".json"],
-  },
-  stats: {
-    // Ignore warnings due to yarg's dynamic module loading
-    warningsFilter: [/node_modules\/yargs/],
-  },
+  }
 };
