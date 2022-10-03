@@ -219,12 +219,12 @@ function readMacOSTags(filename) {
   });
 }
 
-export function watchFolder(locationPath, options) {
+function watchFolder(locationPath, options) {
   const chokidar = require("chokidar");
   return chokidar.watch(locationPath, options);
 }
 
-export function tiffJs() {
+function tiffJs() {
   return require("tiff.js");
 }
 
