@@ -1,3 +1,4 @@
+import { exec } from "child_process";
 const http = require("http");
 const fetch = require("sync-fetch");
 const electron = require("electron");
@@ -170,6 +171,63 @@ function createThumbnailsInWorker(token, tmbGenerationList) {
   return postRequest(payload, "/thumb-gen", token);
 }
 
+/**
+ * @param filename
+ * @returns {Promise<TS.Tag[]>}
+ */
+function readMacOSTags(filename) {
+  const cmdArr = [
+    "mdls",
+    "-raw",
+    "-name",
+    "kMDItemUserTags",
+    '"' + filename + '"',
+  ];
+  const cmd = cmdArr.join(" ");
+
+  return new Promise((resolve, reject) => {
+    const foundTags = [];
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(error);
+        reject(error);
+      }
+      if (stderr) {
+        console.log(stderr);
+        reject(stderr);
+      }
+      if (stdout && stdout !== "(null)") {
+        stdout
+          .toString()
+          .replace(/^\(|\)$/g, "")
+          .split(",")
+          .map((item) => {
+            const newTag: TS.Tag = {
+              // id: uuidv1(),
+              title: item.trim(),
+            };
+            foundTags.push(newTag);
+            return newTag;
+          });
+
+        resolve(foundTags);
+        // console.log('Tags in file "' + filename + '": ' + JSON.stringify(foundTags));
+      } else {
+        resolve(foundTags);
+      }
+    });
+  });
+}
+
+export function watchFolder(locationPath, options) {
+  const chokidar = require("chokidar");
+  return chokidar.watch(locationPath, options);
+}
+
+export function tiffJs() {
+  return require("tiff.js");
+}
+
 module.exports = {
   getDevicePaths,
   setLanguage,
@@ -188,4 +246,7 @@ module.exports = {
   createDirectoryIndexInWorker,
   createThumbnailsInWorker,
   createNewInstance,
+  readMacOSTags,
+  watchFolder,
+  tiffJs
 };

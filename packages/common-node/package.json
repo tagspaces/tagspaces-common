@@ -13,6 +13,7 @@
     "@tagspaces/tagspaces-common": "^2.0.22",
     "fs-extra": "^10.0.0",
     "marked": "^3.0.8",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "winattr": "^3.0.0"
   }
 }

@@ -10,7 +10,9 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "sync-fetch": "^0.3.1"
+    "sync-fetch": "^0.3.1",
+    "chokidar": "^3.5.2",
+    "tiff.js": "^1.0.0"
   },
   "peerDependencies": {
     "electron": ">=15"

@@ -21,6 +21,9 @@ const {
   getLocationPath,
   setLanguage,
   isWorkerAvailable,
+  readMacOSTags,
+  watchFolder,
+  tiffJs,
   setZoomFactorElectron,
   setGlobalShortcuts,
   showMainWindow,
@@ -149,6 +152,27 @@ function platformIsWorkerAvailable() {
     return isWorkerAvailable();
   }
   return false;
+}
+
+function platformReadMacOSTags(filename) {
+  if (readMacOSTags) {
+    return readMacOSTags(filename);
+  }
+  return false;
+}
+
+function platformWatchFolder(locationPath, options) {
+  if (watchFolder) {
+    return watchFolder(locationPath, options);
+  }
+  return undefined;
+}
+
+function platformTiffJs() {
+  if (tiffJs) {
+    return tiffJs();
+  }
+  return undefined;
 }
 
 function platformSetZoomFactorElectron(zoomLevel) {
@@ -630,6 +654,9 @@ module.exports = {
   platformGetLocationPath,
   platformSetLanguage,
   platformIsWorkerAvailable,
+  platformReadMacOSTags,
+  platformWatchFolder,
+  platformTiffJs,
   platformSetZoomFactorElectron,
   platformSetGlobalShortcuts,
   platformShowMainWindow,
