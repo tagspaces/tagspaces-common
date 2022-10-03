@@ -1,4 +1,3 @@
-import { exec } from "child_process";
 const http = require("http");
 const fetch = require("sync-fetch");
 const electron = require("electron");
@@ -187,6 +186,7 @@ function readMacOSTags(filename) {
 
   return new Promise((resolve, reject) => {
     const foundTags = [];
+    const { exec } = require("child_process");
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.error(error);
@@ -248,5 +248,5 @@ module.exports = {
   createNewInstance,
   readMacOSTags,
   watchFolder,
-  tiffJs
+  tiffJs,
 };
