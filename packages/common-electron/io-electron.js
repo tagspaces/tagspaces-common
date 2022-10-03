@@ -202,7 +202,7 @@ function readMacOSTags(filename) {
           .replace(/^\(|\)$/g, "")
           .split(",")
           .map((item) => {
-            const newTag: TS.Tag = {
+            const newTag = {
               // id: uuidv1(),
               title: item.trim(),
             };
