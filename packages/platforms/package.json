@@ -31,7 +31,7 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "2.0.22",
+    "@tagspaces/tagspaces-common-node": "2.0.26",
     "@tagspaces/tagspaces-common-aws": "2.0.22",
     "@tagspaces/tagspaces-common-webdav": "2.0.22"
   },
@@ -50,8 +50,8 @@
     "@tagspaces/tagspaces-common-webdav": "2.0.22"
   },
   "electronDependencies": {
-    "@tagspaces/tagspaces-common-node": "2.0.22",
-    "@tagspaces/tagspaces-common-electron": "2.0.18",
+    "@tagspaces/tagspaces-common-node": "2.0.26",
+    "@tagspaces/tagspaces-common-electron": "2.0.26",
     "@tagspaces/tagspaces-common-aws": "2.0.22",
     "@tagspaces/tagspaces-common-webdav": "2.0.22"
   }
