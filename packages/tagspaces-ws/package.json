@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "2.0.30",
+  "version": "2.0.31",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "build/index.js",
