@@ -1,6 +1,7 @@
 const fs = require("fs");
 const pathJs = require("path");
 const {
+  cleanPath,
   createIndex,
   getMetaIndexFilePath,
 } = require("@tagspaces/tagspaces-platforms/indexer");
@@ -20,6 +21,11 @@ beforeAll(async () => {
     endpointURL: "http://localhost:4569",
     // signatureVersion: "v4",
   });
+});
+
+test("cleanPath", async () => {
+  const path = await cleanPath("/sdcard/Downloads/////DSCN1.jpg", "/sdcard/Downloads".length);
+  expect(path).toEqual("DSCN1.jpg");
 });
 
 test("createIndex", async () => {

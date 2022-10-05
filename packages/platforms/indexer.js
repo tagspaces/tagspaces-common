@@ -19,6 +19,21 @@ const {
   enhanceEntry,
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const {
+  cleanTrailingDirSeparator,
+} = require("@tagspaces/tagspaces-common/paths");
+
+function cleanPath(filePath, rootPathLength) {
+  const cleanPath = filePath
+    .substr(rootPathLength) // remove root location path from index
+    .replace(/\/\/+/g, "/");
+    // .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
+
+  if (cleanPath.startsWith("/")) {
+    return cleanPath.substr(1);
+  }
+  return cleanPath;
+}
 
 /**
  * @param param
@@ -46,17 +61,6 @@ function createIndex(
   const directoryIndex = [];
   let counter = 0;
 
-  function cleanPath(filePath) {
-    const cleanPath = filePath
-      .substr(path.length) // remove root location path from index
-      .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
-
-    if (cleanPath.startsWith("/")) {
-      return cleanPath.substr(1);
-    }
-    return cleanPath;
-  }
-
   return walkDirectory(
     param,
     listDirectory ? listDirectory : listDirectoryPromise,
@@ -75,15 +79,18 @@ function createIndex(
       const meta = await getEntryMeta(
         {
           ...param,
-          path: getMetaFileLocationForFile(fileEntry.path, AppConfig.dirSeparator),
+          path: getMetaFileLocationForFile(
+            fileEntry.path,
+            AppConfig.dirSeparator
+          ),
         },
         loadTextFile
       );
 
       const entry = {
         ...fileEntry,
-        path: cleanPath(fileEntry.path),
-        thumbPath: cleanPath(fileEntry.thumbPath),
+        path: cleanPath(fileEntry.path, path.length),
+        thumbPath: cleanPath(fileEntry.thumbPath, path.length),
         meta: meta,
       };
       directoryIndex.push(enhanceEntry(entry));
@@ -102,8 +109,8 @@ function createIndex(
           name: directoryEntry.name,
           isFile: directoryEntry.isFile,
           tags: directoryEntry.tags,
-          path: cleanPath(directoryEntry.path),
-          thumbPath: cleanPath(directoryEntry.thumbPath),
+          path: cleanPath(directoryEntry.path, path.length),
+          thumbPath: cleanPath(directoryEntry.thumbPath, path.length),
           meta: meta,
         };
         directoryIndex.push(enhanceEntry(entry));
@@ -274,6 +281,7 @@ function enhanceDirectoryIndex(
       // in cordova search results needs to start with dirSeparator
       directoryPath = dirSeparator + directoryPath;
     }
+    directoryPath = cleanTrailingDirSeparator(directoryPath);
   }
   return directoryIndex.map((entry) => {
     if (entry.thumbPath) {
@@ -425,6 +433,7 @@ function loadJSONFile(param, loadFilePromise) {
 }
 
 module.exports = {
+  cleanPath,
   createIndex,
   persistIndex,
   hasIndex,
