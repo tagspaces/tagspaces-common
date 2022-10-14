@@ -26,6 +26,10 @@
   color: var(--secondary);
 }
 
+.milkdown .slash-dropdown {
+  z-index: 5;
+}
+
 @media print {
   body {
     height: auto !important;
