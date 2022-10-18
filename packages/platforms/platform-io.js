@@ -57,6 +57,8 @@ const {
   selectDirectoryDialog,
   shareFiles,
   createNewInstance,
+  checkFileExist,
+  checkDirExist
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -650,6 +652,25 @@ function platformCreateNewInstance(url) {
   }
 }
 
+function platformCheckFileExist(file) {
+  if (AppConfig.isCordova) {
+    return checkFileExist(file);
+  }
+  return getPropertiesPromise(file).then(stats => {
+    return stats && stats.isFile;
+  })
+}
+
+function platformCheckDirExist(dir) {
+  if (AppConfig.isCordova) {
+    return checkDirExist(dir);
+  }
+  // In cordova this check is too expensive for dirs like /.ts
+  return getPropertiesPromise(dir).then(stats => {
+    return stats && !stats.isFile;
+  })
+}
+
 module.exports = {
   platformGetLocationPath,
   platformSetLanguage,
@@ -703,4 +724,6 @@ module.exports = {
   platformShareFiles,
   platformCreateIndex,
   platformCreateNewInstance,
+  platformCheckDirExist,
+  platformCheckFileExist,
 };

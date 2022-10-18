@@ -1496,18 +1496,3 @@ module.exports = {
   focusWindow,
   shareFiles,
 };
-
-/*module.exports = {
-  listDirectoryPromise,
-  saveTextFilePromise,
-  getPropertiesPromise,
-  loadTextFilePromise,
-  getFileContentPromise,
-  saveBinaryFilePromise,
-  createDirectoryPromise,
-  copyFilePromise,
-  renameFilePromise,
-  renameDirectoryPromise,
-  deleteFilePromise,
-  deleteDirectoryPromise,
-};*/
