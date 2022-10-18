@@ -441,33 +441,50 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 ? stats.mtime.getTime()
                 : stats.mtime;
 
-              // Read tsm.json from sub folders
-              const folderMetaPath = tsPaths.getMetaFileLocationForDir(
-                eentry.path,
-                dirSeparator
-              );
-              if (
-                !eentry.isFile &&
-                metaContent.some((meta) => meta.path === folderMetaPath)
-              ) {
-                try {
-                  eentry.meta = await fs.readJson(folderMetaPath);
-                  // console.log('Success reading meta folder file ' + folderMetaPath);
-                } catch (err) {
-                  console.error(
-                    "Failed reading meta folder file " + folderMetaPath
-                  );
+              // Load meta for dirs
+              if (!eentry.isFile) {
+                metaFolderPath = tsPaths.getMetaDirectoryPath(
+                  eentry.path,
+                  dirSeparator
+                );
+                // Read tsm.json from sub folders
+                const folderMetaPath = tsPaths.getMetaFileLocationForDir(
+                  eentry.path,
+                  dirSeparator
+                );
+                if (
+                  metaContent.some(
+                    (meta) =>
+                      metaFolderPath + dirSeparator + meta.path ===
+                      folderMetaPath
+                  )
+                ) {
+                  try {
+                    eentry.meta = await fs.readJson(folderMetaPath);
+                    // console.log('Success reading meta folder file ' + folderMetaPath);
+                  } catch (err) {
+                    console.error(
+                      "Failed reading meta folder file " + folderMetaPath
+                    );
+                  }
                 }
 
-                // Loading thumbs for folders
-                if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
-                  // skipping meta folder
-                  const folderTmbPath =
-                    tsPaths.getThumbFileLocationForDirectory(
-                      eentry.path,
-                      dirSeparator
-                    );
-                  eentry.thumbPath = folderTmbPath;
+                // Loading thumbs for folders tst.jpg
+                const folderTmbPath = tsPaths.getThumbFileLocationForDirectory(
+                  eentry.path,
+                  dirSeparator
+                );
+                if (
+                  metaContent.some(
+                    (meta) =>
+                      metaFolderPath + dirSeparator + meta.path ===
+                      folderTmbPath
+                  )
+                ) {
+                  if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
+                    // skipping meta folder
+                    eentry.thumbPath = folderTmbPath;
+                  }
                 }
               }
 

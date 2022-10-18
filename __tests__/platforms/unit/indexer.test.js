@@ -24,9 +24,21 @@ beforeAll(async () => {
 });
 
 test("cleanPath", async () => {
-  const path = await cleanPath("/sdcard/Downloads/////DSCN1.jpg", "/sdcard/Downloads".length);
+  const path = await cleanPath(
+    "/sdcard/Downloads/////DSCN1.jpg",
+    "/sdcard/Downloads".length
+  );
   expect(path).toEqual("DSCN1.jpg");
 });
+
+/*test("createIndex1", async () => {
+  const index = await createIndex(
+    { path: "C:\\Users\\smari\\Music\\sub" },
+    ["extractThumbPath"], //, "extractThumbURL"],
+    []
+  );
+  console.log(index);
+});*/
 
 test("createIndex", async () => {
   await uploadImage("../../img.jpg", "image.png");
