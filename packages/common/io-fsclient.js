@@ -632,7 +632,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       const marked = require("marked");
       const tokens = marked.lexer(fileContent, {});
       contentArray = tokens.map((token) => {
-        if (token.text) {
+        if (token.type === "text" && token.text) {
           return token.text;
         }
         return "";
@@ -643,7 +643,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       const tokens = lexer.inlineTokens(fileContent);
       // const tokens = marked.lexer(fileContent, { });
       contentArray = tokens.map((token) => {
-        if (token.type === "text") {
+        if (token.type === "text" && token.text) {
           return token.text;
         }
         return "";
