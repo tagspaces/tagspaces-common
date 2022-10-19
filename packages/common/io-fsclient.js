@@ -649,12 +649,21 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       const marked = require("marked");
       const tokens = marked.lexer(fileContent, {});
       contentArray = tokens.map((token) => {
-        if (token.type === "text" && token.text) {
+        if (token.type === "text") {
+          //  && token.text
           return token.text;
         }
         return "";
       });
     } else if (fileName.endsWith(".html")) {
+      const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m; // jshint ignore:line
+      try {
+        fileContent = fileContent.match(bodyRegex)[1];
+      } catch (e) {
+        console.log(
+          "Error parsing the body of this HTML document: " + fileName
+        );
+      }
       const marked = require("marked");
       const lexer = new marked.Lexer({});
       const tokens = lexer.inlineTokens(fileContent);
