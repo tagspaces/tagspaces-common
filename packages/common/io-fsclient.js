@@ -442,7 +442,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 : stats.mtime;
 
               // Load meta for dirs
-              if (!eentry.isFile) {
+              if (!eentry.isFile && loadMeta) {
+                const dirMetaContent = await listMetaDirectoryPromise({
+                  ...param,
+                  path: eentry.path,
+                });
                 metaFolderPath = tsPaths.getMetaDirectoryPath(
                   eentry.path,
                   dirSeparator
@@ -453,7 +457,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   dirSeparator
                 );
                 if (
-                  metaContent.some(
+                  dirMetaContent.some(
                     (meta) =>
                       metaFolderPath + dirSeparator + meta.path ===
                       folderMetaPath
@@ -475,7 +479,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   dirSeparator
                 );
                 if (
-                  metaContent.some(
+                  dirMetaContent.some(
                     (meta) =>
                       metaFolderPath + dirSeparator + meta.path ===
                       folderTmbPath
