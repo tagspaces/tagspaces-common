@@ -903,7 +903,8 @@ function createDirectoryPromise(param) {
         return out;
       }
       const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
-      const metaContent = '{"id":"' + new Date().getTime() + '"}';
+      const metaContent = '{"id":"' + uuidv1() + '"}';
+      // create meta file with id -> empty folders cannot be shown on S3
       return saveTextFilePromise(
         { ...param, path: metaFilePath },
         metaContent,
