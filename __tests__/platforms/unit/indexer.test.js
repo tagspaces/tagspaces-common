@@ -8,8 +8,8 @@ const {
 const {
   configure,
   s3,
-  listDirectoryPromise,
   createDirectoryPromise,
+  listDirectoryPromise,
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-aws/io-objectstore");
 
@@ -43,6 +43,9 @@ test("cleanPath", async () => {
 test("createIndex", async () => {
   await uploadImage("../../img.jpg", "image.png");
   await uploadImage("../../img.jpg", ".ts/image.png.jpg");
+  await createDirectory("subdir");
+  const subdirThumbnail = "subdir/.ts/tst.jpg";
+  await uploadImage("../../img.jpg", subdirThumbnail);
 
   const param = {
     path: "",
@@ -55,6 +58,9 @@ test("createIndex", async () => {
     listDirectoryPromise
   );
   expect(index.some(({ name }) => name === "image.png")).toBe(true);
+  const subdir = index.find((element) => element.name === "subdir");
+  expect(subdir !== undefined).toBe(true);
+  expect(subdir.thumbPath.includes(subdirThumbnail)).toBe(true);
   /*expect(index.some(({ thumbPath }) => thumbPath === ".ts/image.png.jpg")).toBe(
     true
   );*/
@@ -70,6 +76,10 @@ test("createIndex", async () => {
   );
   expect(indexPersisted.name.endsWith("tsi.json")).toBe(true);
 }, 20000);
+
+function createDirectory(path) {
+  return createDirectoryPromise({ path, bucketName: "bucket1" });
+}
 
 function uploadImage(pathFrom, pathTo) {
   return new Promise(function (resolve, reject) {
