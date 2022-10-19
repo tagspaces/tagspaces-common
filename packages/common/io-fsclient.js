@@ -646,19 +646,26 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   function extractTextContent(fileName, textContent) {
-    // Convert to lowercase
     let fileContent = textContent.toLowerCase();
     let contentArray;
+    let joinedTokens;
     if (fileName.endsWith(".md")) {
       const marked = require("marked");
-      const tokens = marked.lexer(fileContent, {});
+      const lexer = new marked.Lexer({});
+      const tokens = lexer.inlineTokens(fileContent);
       contentArray = tokens.map((token) => {
-        if (token.type === "text") {
-          //  && token.text
-          return token.text;
+        // console.log(JSON.stringify(token));
+        if (token.type === "text" && token.text) {
+          let cleanedText = token.text.replace(
+            /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
+            ""
+          );
+          cleanedText = cleanedText.replace(/\n/g, "");
+          return cleanedText.trim();
         }
         return "";
       });
+      joinedTokens = contentArray.join(" ");
     } else if (fileName.endsWith(".html")) {
       const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m; // jshint ignore:line
       try {
@@ -673,17 +680,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       const tokens = lexer.inlineTokens(fileContent);
       // const tokens = marked.lexer(fileContent, { });
       contentArray = tokens.map((token) => {
+        // console.log(JSON.stringify(token));
         if (token.type === "text" && token.text) {
           return token.text;
         }
         return "";
       });
+      joinedTokens = contentArray.join(" ");
     } else {
-      contentArray = fileContent.split(" ");
+      joinedTokens = fileContent;
     }
-
-    // clear duplicate words
-    contentArray = [...new Set(contentArray)];
 
     /*if (fileName.endsWith(".html")) {
       // Use only the content in the body
@@ -703,13 +709,15 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     // replace unnecessary chars. leave only chars, numbers and space
     // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
     // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
-    fileContent = contentArray.join(" ").trim();
-    fileContent = fileContent.replace(
-      /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
-      ""
-    );
-    fileContent = fileContent.replace(/\n/g, "");
-    return fileContent;
+
+    // clear duplicate string, remove spaces and empty string
+    const trimmedTokens = joinedTokens.split(" ").filter((s) => s.trim());
+    // console.log(JSON.stringify(trimmedTokens));
+    const noDuplicatesArray = [...new Set(trimmedTokens)];
+    // console.log(JSON.stringify(noDuplicatesArray));
+    cleanedContent = noDuplicatesArray.join(" ").trim();
+    // console.log("Extracted content: '" + cleanedContent + "'");
+    return cleanedContent;
   }
 
   function createDirectoryPromise(dirPath) {
