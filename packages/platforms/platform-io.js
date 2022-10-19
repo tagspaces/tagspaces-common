@@ -58,7 +58,7 @@ const {
   shareFiles,
   createNewInstance,
   checkFileExist,
-  checkDirExist
+  checkDirExist,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -579,9 +579,9 @@ function platformDeleteFilePromise(path, useTrash) {
       path,
       bucketName: objectStoreAPI.config().bucketName,
     };
-    return objectStoreAPI.deleteFilePromise(param, useTrash);
+    return objectStoreAPI.deleteFilePromise(param);
   } else if (webDavAPI) {
-    return webDavAPI.deleteFilePromise(path, useTrash);
+    return webDavAPI.deleteFilePromise(path);
   }
   if (useTrash && moveToTrash) {
     return moveToTrash([path]);
@@ -596,12 +596,16 @@ function platformDeleteDirectoryPromise(path, useTrash) {
       path,
       bucketName: objectStoreAPI.config().bucketName,
     };
-    return objectStoreAPI.deleteDirectoryPromise(param, useTrash);
+    return objectStoreAPI.deleteDirectoryPromise(param);
   } else if (webDavAPI) {
-    return webDavAPI.deleteDirectoryPromise(path, useTrash);
+    return webDavAPI.deleteDirectoryPromise(path);
   }
 
-  return deleteDirectoryPromise(path, useTrash);
+  if (useTrash && moveToTrash) {
+    return moveToTrash([path]);
+  } else {
+    return deleteDirectoryPromise(path);
+  }
 }
 
 function platformOpenDirectory(dirPath) {
@@ -656,9 +660,9 @@ function platformCheckFileExist(file) {
   if (AppConfig.isCordova) {
     return checkFileExist(file);
   }
-  return getPropertiesPromise(file).then(stats => {
+  return getPropertiesPromise(file).then((stats) => {
     return stats && stats.isFile;
-  })
+  });
 }
 
 function platformCheckDirExist(dir) {
@@ -666,9 +670,9 @@ function platformCheckDirExist(dir) {
     return checkDirExist(dir);
   }
   // In cordova this check is too expensive for dirs like /.ts
-  return getPropertiesPromise(dir).then(stats => {
+  return getPropertiesPromise(dir).then((stats) => {
     return stats && !stats.isFile;
-  })
+  });
 }
 
 module.exports = {
