@@ -900,7 +900,7 @@ function createDirectoryPromise(param) {
         dirPath,
       };
       if (dirPath.endsWith(AppConfig.metaFolder + "/")) {
-        return out;
+        return dirPath;
       }
       const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
       const metaContent = '{"id":"' + uuidv1() + '"}';
@@ -909,7 +909,7 @@ function createDirectoryPromise(param) {
         { ...param, path: metaFilePath },
         metaContent,
         false
-      ).then(() => out);
+      ).then(() => dirPath);
     });
 }
 

@@ -442,7 +442,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 : stats.mtime;
 
               // Load meta for dirs
-              if (!eentry.isFile && loadMeta) {
+              if (
+                !eentry.isFile &&
+                !eentry.path.endsWith(dirSeparator + AppConfig.metaFolder) &&
+                loadMeta
+              ) {
                 const dirMetaContent = await listMetaDirectoryPromise({
                   ...param,
                   path: eentry.path,
