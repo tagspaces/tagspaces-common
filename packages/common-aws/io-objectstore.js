@@ -331,12 +331,16 @@ const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
     const entryPath = tsPaths.normalizePath(eentry.path);
     if (eentry.isFile) {
-      const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
-      const metaFileContent = await loadTextFilePromise({
-        path: metaFilePath,
-        bucketName: eentry.bucketName,
-      });
-      eentry.meta = JSON.parse(metaFileContent.trim());
+      try {
+        const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
+        const metaFileContent = await loadTextFilePromise({
+          path: metaFilePath,
+          bucketName: eentry.bucketName,
+        });
+        eentry.meta = JSON.parse(metaFileContent.trim());
+      } catch (ex) {
+        console.warn("Error getEntryMeta for " + entryPath, ex);
+      }
       resolve(eentry);
       // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
     } else {
