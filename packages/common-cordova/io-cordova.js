@@ -668,8 +668,12 @@ function getEntryMeta(eentry, metaPath) {
   if (eentry.isFile) {
     // const metaFilePath = getMetaFileLocationForFile(eentry.path);
     return loadTextFilePromise(metaPath).then((result) => {
-      // eslint-disable-next-line no-param-reassign
-      eentry.meta = JSON.parse(result.trim());
+      try {
+        // eslint-disable-next-line no-param-reassign
+        eentry.meta = JSON.parse(result.trim());
+      } catch (ex) {
+        console.warn("Error getEntryMeta for " + metaPath, ex);
+      }
       return eentry;
     });
   }
@@ -677,8 +681,12 @@ function getEntryMeta(eentry, metaPath) {
   if (!eentry.path.endsWith(AppConfig.metaFolder + "/")) {
     // Skip the /.ts folder
     return loadTextFilePromise(metaPath).then((result) => {
-      // eslint-disable-next-line no-param-reassign
-      eentry.meta = JSON.parse(result.trim());
+      try {
+        // eslint-disable-next-line no-param-reassign
+        eentry.meta = JSON.parse(result.trim());
+      } catch (ex) {
+        console.warn("Error getEntryMeta for " + metaPath, ex);
+      }
       return eentry;
     });
   }

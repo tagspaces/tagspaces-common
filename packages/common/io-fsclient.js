@@ -538,7 +538,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 if (origFile) {
                   const metaFilePath =
                     metaFolderPath + dirSeparator + metaEntry.path;
-                  const metaFileObj = await fs.readJson(metaFilePath);
+                  let metaFileObj;
+                  try {
+                    metaFileObj = await fs.readJson(metaFilePath);
+                  } catch (ex) {
+                    console.warn("Error readJson for " + metaFilePath, ex);
+                  }
                   if (metaFileObj) {
                     enhancedEntries.map((enhancedEntry) => {
                       if (enhancedEntry.name === fileNameWithoutMetaExt) {

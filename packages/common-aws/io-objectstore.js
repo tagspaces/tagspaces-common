@@ -381,11 +381,15 @@ const getEntryMeta = async (eentry) => {
           bucketName: eentry.bucketName,
         });
         if (folderProps && folderProps.isFile) {
-          const metaFileContent = await loadTextFilePromise({
-            path: folderMetaPath,
-            bucketName: eentry.bucketName,
-          });
-          eentry.meta = JSON.parse(metaFileContent.trim());
+          try {
+            const metaFileContent = await loadTextFilePromise({
+              path: folderMetaPath,
+              bucketName: eentry.bucketName,
+            });
+            eentry.meta = JSON.parse(metaFileContent.trim());
+          } catch (ex) {
+            console.warn("Error getEntryMeta for " + folderMetaPath, ex);
+          }
           // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
         }
       }

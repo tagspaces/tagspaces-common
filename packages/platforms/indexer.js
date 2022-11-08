@@ -27,7 +27,7 @@ function cleanPath(filePath, rootPathLength) {
   const cleanPath = filePath
     .substr(rootPathLength) // remove root location path from index
     .replace(/\/\/+/g, "/");
-    // .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
+  // .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
 
   if (cleanPath.startsWith("/")) {
     return cleanPath.substr(1);
@@ -349,7 +349,11 @@ function addToIndex(param, size, LastModified, thumbPath) {
     console.info("addToIndex metaFileContent:" + metaFileContent);
     let tsi = [];
     if (metaFileContent) {
-      tsi = JSON.parse(metaFileContent.trim());
+      try {
+        tsi = JSON.parse(metaFileContent.trim());
+      } catch (ex) {
+        console.warn("Error JSON.parse for " + metaFilePath, ex);
+      }
     }
 
     const eentry = {
@@ -384,7 +388,12 @@ function removeFromIndex(param) {
     path: metaFilePath,
   }).then((metaFileContent) => {
     if (metaFileContent) {
-      const tsi = JSON.parse(metaFileContent.trim());
+      let tsi = [];
+      try {
+        tsi = JSON.parse(metaFileContent.trim());
+      } catch (ex) {
+        console.warn("Error JSON.parse for " + metaFilePath, ex);
+      }
       const newTsi = tsi.filter((item) => item.path !== param.path);
       if (tsi.size !== newTsi.size) {
         return persistIndex({ ...param, path: dirPath }, newTsi);

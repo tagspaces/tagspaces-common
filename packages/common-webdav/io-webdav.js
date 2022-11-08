@@ -36,17 +36,22 @@ function configure(webDavConfig) {
     wfs.rmdir(targetPath, callback);
   };
   wfs.readJson = async function (filePath) {
-    return JSON.parse(
-      await new Promise((resolve, reject) => {
-        wfs.readFile(filePath, "utf8", (error, content) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(content);
-          }
-        });
-      })
-    );
+    try {
+      return JSON.parse(
+        await new Promise((resolve, reject) => {
+          wfs.readFile(filePath, "utf8", (error, content) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(content);
+            }
+          });
+        })
+      );
+    } catch (ex) {
+      console.warn("Error readJson for " + filePath, ex);
+      return Promise.reject(ex);
+    }
   };
   /**
    * https://github.com/jprichardson/node-fs-extra/blob/master/lib/output-file/index.js#L9
@@ -75,7 +80,7 @@ function configure(webDavConfig) {
       });
     });
   };
-  fsClient = createFsClient(wfs,'/');
+  fsClient = createFsClient(wfs, "/");
 }
 
 function isDirectory(entryPath) {
@@ -174,5 +179,5 @@ module.exports = {
   deleteDirectoryPromise,
   watchDirectory,
   createDirectoryTree,
-  getURLforPath
+  getURLforPath,
 };
