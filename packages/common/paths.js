@@ -298,6 +298,9 @@ function extractParentDirectoryPath(dirPath, dirSeparator = "/") {
 function extractDirectoryName(dirPath, dirSeparator = "/") {
   if (!dirPath) return "";
   let directoryName = dirPath;
+  try {
+    directoryName = decodeURIComponent(dirPath);
+  } catch (ex) {}
   if (dirPath.indexOf(dirSeparator) !== -1) {
     if (dirPath.endsWith(dirSeparator)) {
       directoryName = directoryName.substring(

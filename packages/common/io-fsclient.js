@@ -194,7 +194,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           isFile: true,
           path: filePath,
           extension: tsPaths.extractFileExtension(filePath, dirSeparator),
-          size: 0,
+          size: content.length,
           lmdt: new Date().getTime(),
           isNewFile: true,
           tags: [],

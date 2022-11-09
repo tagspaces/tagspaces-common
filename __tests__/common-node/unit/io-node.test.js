@@ -205,7 +205,7 @@ describe("io-node unit tests", () => {
       lmdt: file.lmdt,
       name: "test.txt",
       path: filePath,
-      size: 0,
+      size: 5,
       tags: [],
     });
   });
@@ -229,7 +229,7 @@ describe("io-node unit tests", () => {
       lmdt: file.lmdt,
       name: "sample.bmp",
       path: targetPath,
-      size: 0,
+      size: 62262,
       tags: [],
     });
   });
