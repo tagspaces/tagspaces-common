@@ -158,12 +158,17 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
       if (editorLoading) return;
       const editor = getInstance();
       if (!editor) return;
-      editor.action(ctx => {
-        ctx
-          .get(themeManagerCtx)
-          .switch(ctx, dark ? nordDark : nordLight)
-          .then(() => console.log('theme switched ' + dark));
-      });
+
+      try {
+        editor.action(ctx => {
+          ctx
+            .get(themeManagerCtx)
+            .switch(ctx, dark ? nordDark : nordLight)
+            .then(() => console.log('theme switched ' + dark));
+        });
+      } catch (ex) {
+        console.error('Switch theme', ex);
+      }
     }, [editorLoading, getInstance, dark]);
 
     return (
