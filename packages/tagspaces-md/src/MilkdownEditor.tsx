@@ -1,5 +1,5 @@
 import React, { forwardRef, ReactNode } from 'react';
-import { editorViewCtx, parserCtx } from '@milkdown/core';
+import { editorViewCtx, parserCtx, themeManagerCtx } from '@milkdown/core';
 import { EditorRef, ReactEditor, useEditor, useNodeCtx } from '@milkdown/react';
 import { Slice } from 'prosemirror-model';
 
@@ -8,7 +8,6 @@ import { Loading } from './Loading';
 import className from './style.module.css';
 import { Content, useLazy } from './useLazy';
 import { gfm, image, link } from '@milkdown/preset-gfm';
-import { switchTheme } from '@milkdown/utils';
 import 'katex/dist/katex.css';
 import { nordDark, nordLight } from '@milkdown/theme-nord';
 
@@ -159,9 +158,12 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
       if (editorLoading) return;
       const editor = getInstance();
       if (!editor) return;
-      editor
-        .action(switchTheme(dark ? nordDark : nordLight))
-        .then(() => console.log('theme switched ' + dark));
+      editor.action(ctx => {
+        ctx
+          .get(themeManagerCtx)
+          .switch(ctx, dark ? nordDark : nordLight)
+          .then(() => console.log('theme switched ' + dark));
+      });
     }, [editorLoading, getInstance, dark]);
 
     return (

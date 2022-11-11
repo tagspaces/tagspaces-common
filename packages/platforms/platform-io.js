@@ -480,6 +480,10 @@ function platformGetFileContentPromise(filePath, type) {
   return getFileContentPromise(filePath, type);
 }
 
+function platformGetLocalFileContentPromise(filePath, type) {
+  return getFileContentPromise(filePath, type);
+}
+
 function platformSaveFilePromise(filePath, content, overwrite) {
   if (objectStoreAPI) {
     const param = {
@@ -711,6 +715,7 @@ module.exports = {
   platformRenameDirectoryPromise,
   platformLoadTextFilePromise,
   platformGetFileContentPromise,
+  platformGetLocalFileContentPromise,
   platformSaveFilePromise,
   platformUploadFileByMultiPart,
   saveTextFilePlatform,
