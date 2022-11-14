@@ -16,11 +16,12 @@ type Props = {
   readOnly?: boolean;
   dark?: boolean;
   onChange?: (markdown: string, prevMarkdown: string | null) => void;
+  onFocus?: () => void;
 };
 
 export type MilkdownRef = { update: (markdown: string) => void };
 const MilkdownEditor = forwardRef<MilkdownRef, Props>(
-  ({ content, readOnly, onChange, dark }, ref) => {
+  ({ content, readOnly, onChange, onFocus, dark }, ref) => {
     // const editorRef = React.useRef<EditorRef>(null);
     // const editorRef = React.useRef({} as EditorRef);
     // const [editorReady, setEditorReady] = React.useState(false);
@@ -148,10 +149,11 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
           readOnly,
           // setEditorReady,
           nodes,
-          onChange
+          onChange,
+          onFocus
         );
       },
-      [readOnly, md, onChange]
+      [readOnly, md, onChange, onFocus]
     );
 
     React.useEffect(() => {

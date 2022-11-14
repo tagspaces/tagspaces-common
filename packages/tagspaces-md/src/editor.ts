@@ -33,7 +33,8 @@ export const createEditor = (
   readOnly: boolean | undefined,
   // setEditorReady: (ready: boolean) => void,
   nodes: AtomList<MilkdownPlugin>,
-  onChange?: (markdown: string, prevMarkdown: string | null) => void
+  onChange?: (markdown: string, prevMarkdown: string | null) => void,
+  onFocus?: () => void
 ) => {
   return (
     Editor.make()
@@ -41,13 +42,23 @@ export const createEditor = (
         ctx.set(rootCtx, root);
         ctx.set(defaultValueCtx, defaultValue);
         // ctx.set(editorViewOptionsCtx, { editable: () => !readOnly });
-        ctx.update(editorViewOptionsCtx, (prev) => ({ ...prev, editable: () => !readOnly }));
+        ctx.update(editorViewOptionsCtx, prev => ({
+          ...prev,
+          editable: () => !readOnly
+        }));
         // ctx.set(listenerCtx, { markdown: onChange ? [onChange] : [] });
-        ctx.get(listenerCtx).markdownUpdated((ctx, markdown, prevMarkdown) => {
-          if (onChange) {
-            onChange(markdown, prevMarkdown);
-          }
-        });
+        ctx
+          .get(listenerCtx)
+          .markdownUpdated((ctx, markdown, prevMarkdown) => {
+            if (onChange) {
+              onChange(markdown, prevMarkdown);
+            }
+          })
+          .focus(ctx => {
+            if (onFocus) {
+              onFocus();
+            }
+          });
       })
       .use(nord)
       // .use(commonmark)
@@ -93,11 +104,14 @@ export const createEditor = (
                       }
                     : {
                         // @ts-ignore
-                        actions: actions.filter(({ keyword }) =>
-                          keyword.some((key: any) =>
-                            key.includes(content.slice(1).toLocaleLowerCase())
-                          )
-                        )
+                        actions: actions.filter(({ keyword }) => {
+                          return (
+                            keyword &&
+                            keyword.some((key: any) =>
+                              key.includes(content.slice(1).toLocaleLowerCase())
+                            )
+                          );
+                        })
                       };
                 }
               };
