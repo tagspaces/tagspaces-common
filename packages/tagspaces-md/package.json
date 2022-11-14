@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-md",
   "description": "MD editor used by the TagSpaces application and extensions",
-  "version": "2.0.46",
+  "version": "2.0.47",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "lib/index.js",
