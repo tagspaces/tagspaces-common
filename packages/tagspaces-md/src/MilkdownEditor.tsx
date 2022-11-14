@@ -10,6 +10,7 @@ import { Content, useLazy } from './useLazy';
 import { gfm, image, link } from '@milkdown/preset-gfm';
 import 'katex/dist/katex.css';
 import { nordDark, nordLight } from '@milkdown/theme-nord';
+import { replaceAll } from '@milkdown/utils';
 
 type Props = {
   content: Content;
@@ -34,7 +35,8 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
         if (editorLoading) return;
         const editor = getInstance();
         if (!editor) return;
-        editor.action(ctx => {
+        editor.action(replaceAll(markdown));
+        /*editor.action(ctx => {
           const view = ctx.get(editorViewCtx);
           const parser = ctx.get(parserCtx);
           const doc = parser(markdown);
@@ -47,6 +49,20 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
               new Slice(doc.content, 0, 0)
             )
           );
+        });*/
+      },
+      // https://github.com/Saul-Mirone/milkdown/issues/204#issuecomment-985977031
+      isEqualMarkdown: (prev: string, next: string) => {
+        if (editorLoading) return;
+        const editor = getInstance();
+        if (!editor) return;
+        return editor.action(ctx => {
+          const parser = ctx.get(parserCtx);
+          const prevDoc = parser(prev)?.toJSON();
+          const nextDoc = parser(next)?.toJSON();
+          console.log(JSON.stringify(prevDoc));
+          console.log(JSON.stringify(nextDoc));
+          return JSON.stringify(prevDoc) === JSON.stringify(nextDoc);
         });
       }
     }));
@@ -171,7 +187,7 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
       } catch (ex) {
         console.error('Switch theme', ex);
       }
-    }, [editorLoading, getInstance, dark]);
+    }, [editorLoading, dark]);
 
     return (
       <div className={className.editor}>
