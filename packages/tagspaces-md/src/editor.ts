@@ -17,6 +17,7 @@ import { defaultActions, slash, slashPlugin } from '@milkdown/plugin-slash';
 import { tooltip } from '@milkdown/plugin-tooltip';
 import { nord } from '@milkdown/theme-nord';
 import { AtomList } from '@milkdown/utils';
+import { block } from '@milkdown/plugin-block';
 
 /*const complete =
   (callback: () => void): MilkdownPlugin =>
@@ -75,6 +76,7 @@ export const createEditor = (
       .use(tooltip)
       .use(math)
       .use(emoji)
+      .use(block)
       .use(
         slash.configure(
           slashPlugin,

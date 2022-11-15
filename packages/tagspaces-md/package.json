@@ -22,7 +22,7 @@
     "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
     "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development",
     "code-format": "npx prettier --write .",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-2.0.47.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-2.0.48.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
@@ -41,6 +41,7 @@
     "@emotion/styled": "11.10.5",
     "@material-design-icons/font": "^0.13.1",
     "@milkdown/core": "6.5.2",
+    "@milkdown/plugin-block": "6.5.2",
     "@milkdown/plugin-clipboard": "6.5.2",
     "@milkdown/plugin-diagram": "6.5.2",
     "@milkdown/plugin-emoji": "6.5.2",
