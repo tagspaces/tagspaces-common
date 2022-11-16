@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-md",
   "description": "MD editor used by the TagSpaces application and extensions",
-  "version": "2.0.49",
+  "version": "2.0.50",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "lib/index.js",
@@ -42,8 +42,8 @@
     "@material-design-icons/font": "^0.13.1",
     "@milkdown/core": "6.5.2",
     "@milkdown/plugin-block": "6.5.2",
-    "@milkdown/plugin-cursor": "6.5.2",
     "@milkdown/plugin-clipboard": "6.5.2",
+    "@milkdown/plugin-cursor": "6.5.2",
     "@milkdown/plugin-diagram": "6.5.2",
     "@milkdown/plugin-emoji": "6.5.2",
     "@milkdown/plugin-history": "6.5.2",
