@@ -6,7 +6,6 @@ import {
   rootCtx
 } from '@milkdown/core';
 import { clipboard } from '@milkdown/plugin-clipboard';
-// import { cursor } from '@milkdown/plugin-cursor';
 import { diagram } from '@milkdown/plugin-diagram';
 import { emoji } from '@milkdown/plugin-emoji';
 import { history } from '@milkdown/plugin-history';
@@ -18,6 +17,7 @@ import { tooltip } from '@milkdown/plugin-tooltip';
 import { nord } from '@milkdown/theme-nord';
 import { AtomList } from '@milkdown/utils';
 import { block } from '@milkdown/plugin-block';
+import { cursor } from '@milkdown/plugin-cursor';
 
 /*const complete =
   (callback: () => void): MilkdownPlugin =>
@@ -69,7 +69,7 @@ export const createEditor = (
       .use(clipboard)
       .use(listener)
       .use(history)
-      // .use(cursor)
+      .use(cursor)
       .use(prism)
       .use(diagram)
       // .use(table)

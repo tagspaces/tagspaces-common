@@ -42,6 +42,7 @@
     "@material-design-icons/font": "^0.13.1",
     "@milkdown/core": "6.5.2",
     "@milkdown/plugin-block": "6.5.2",
+    "@milkdown/plugin-cursor": "6.5.2",
     "@milkdown/plugin-clipboard": "6.5.2",
     "@milkdown/plugin-diagram": "6.5.2",
     "@milkdown/plugin-emoji": "6.5.2",
