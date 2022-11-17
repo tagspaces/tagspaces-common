@@ -35,47 +35,50 @@ export const createEditor = (
   // setEditorReady: (ready: boolean) => void,
   nodes: AtomList<MilkdownPlugin>,
   onChange?: (markdown: string, prevMarkdown: string | null) => void,
-  onFocus?: () => void
+  onFocus?: () => void,
+  lightMode = false
 ) => {
-  return (
-    Editor.make()
-      .config(ctx => {
-        ctx.set(rootCtx, root);
-        ctx.set(defaultValueCtx, defaultValue);
-        // ctx.set(editorViewOptionsCtx, { editable: () => !readOnly });
-        ctx.update(editorViewOptionsCtx, prev => ({
-          ...prev,
-          editable: () => !readOnly
-        }));
-        // ctx.set(listenerCtx, { markdown: onChange ? [onChange] : [] });
-        ctx
-          .get(listenerCtx)
-          .markdownUpdated((ctx, markdown, prevMarkdown) => {
-            if (onChange) {
-              onChange(markdown, prevMarkdown);
-            }
-          })
-          .focus(ctx => {
-            if (onFocus) {
-              onFocus();
-            }
-          });
-      })
-      .use(nord)
-      // .use(commonmark)
-      .use(nodes)
-      // .use(gfm)
-      // .use(complete(() => setEditorReady(true)))
-      .use(clipboard)
-      .use(listener)
-      .use(history)
+  const editor: Editor = Editor.make()
+    .config(ctx => {
+      ctx.set(rootCtx, root);
+      ctx.set(defaultValueCtx, defaultValue);
+      // ctx.set(editorViewOptionsCtx, { editable: () => !readOnly });
+      ctx.update(editorViewOptionsCtx, prev => ({
+        ...prev,
+        editable: () => !readOnly
+      }));
+      // ctx.set(listenerCtx, { markdown: onChange ? [onChange] : [] });
+      ctx
+        .get(listenerCtx)
+        .markdownUpdated((ctx, markdown, prevMarkdown) => {
+          if (onChange) {
+            onChange(markdown, prevMarkdown);
+          }
+        })
+        .focus(ctx => {
+          if (onFocus) {
+            onFocus();
+          }
+        });
+    })
+    .use(nord)
+    // .use(commonmark)
+    .use(nodes)
+    // .use(gfm)
+    // .use(complete(() => setEditorReady(true)))
+    .use(clipboard)
+    .use(listener)
+    .use(history)
+    .use(prism)
+    .use(diagram)
+    // .use(table)
+    .use(tooltip)
+    .use(math)
+    .use(emoji);
+
+  if (!lightMode) {
+    editor
       .use(cursor)
-      .use(prism)
-      .use(diagram)
-      // .use(table)
-      .use(tooltip)
-      .use(math)
-      .use(emoji)
       .use(block)
       .use(
         slash.configure(
@@ -120,16 +123,17 @@ export const createEditor = (
             }
           }
           /*{
-        placeholder: {
-          [CursorStatus.Empty]: readOnly
-            ? 'Click the edit button or double click to start editing'
-            : 'Type / to use the slash commands...',
-          [CursorStatus.Slash]: 'Type to filter...'
-        }
-      }*/
+              placeholder: {
+                [CursorStatus.Empty]: readOnly
+                  ? 'Click the edit button or double click to start editing'
+                  : 'Type / to use the slash commands...',
+                [CursorStatus.Slash]: 'Type to filter...'
+              }
+            }*/
         )
-      )
-  );
+      );
+  }
+  return editor;
 
   /*Editor.make()
         .config((ctx) => {

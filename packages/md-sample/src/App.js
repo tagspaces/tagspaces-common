@@ -31,6 +31,7 @@ function App() {
             onChange={milkdownListener}
             readOnly={false}
             dark={dark}
+            lightMode={true}
           />
         </div>
       </header>
