@@ -7,28 +7,28 @@ const notFound = `# 404
 💖 We're grateful if you're willing to help us improve it.`;
 
 export const useLazy = (content: Content) => {
-    const [md, setMd] = React.useState('');
-    const [loading, setLoading] = React.useState(true);
+  const [md, setMd] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
 
-    React.useEffect(() => {
-        if (typeof content === 'string') {
-            setMd(content);
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        content()
-            .then((s) => {
-                setMd(s.default);
-                setLoading(false);
-                return;
-            })
-            .catch((e) => {
-                console.error(e);
-                setMd(notFound);
-                setLoading(false);
-            });
-    }, [content]);
+  React.useEffect(() => {
+    if (typeof content === 'string') {
+      setMd(content);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    content()
+      .then(s => {
+        setMd(s.default);
+        setLoading(false);
+        return;
+      })
+      .catch(e => {
+        console.error(e);
+        setMd(notFound);
+        setLoading(false);
+      });
+  }, [content]);
 
-    return [loading, md] as const;
+  return [loading, typeof content === 'string' ? content : md] as const;
 };

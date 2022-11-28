@@ -427,6 +427,13 @@ function tagsAsObjects(tags) {
   }));
 }
 
+/**
+ * extract tags from filename
+ * @param filePath
+ * @param tagDelimiter
+ * @param dirSeparator
+ * @returns {string[]}
+ */
 function extractTags(filePath, tagDelimiter, dirSeparator = "/") {
   // console.log('Extracting tags from: ' + filePath);
   const fileName = extractFileName(filePath, dirSeparator);

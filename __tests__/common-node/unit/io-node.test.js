@@ -188,8 +188,8 @@ describe("io-node unit tests", () => {
       __dirname,
       "../../../scripts/testContents"
     );
-    const list = await listDirectoryPromise({ path: filePath });
-    expect(list.length).toBe(35);
+    const list = await listDirectoryPromise({ path: filePath }, []);
+    expect(list.length).toBe(36);
   });
 
   test("io-node.saveTextFilePromise", async () => {
