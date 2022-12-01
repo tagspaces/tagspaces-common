@@ -1,12 +1,22 @@
 ### Install
 
-`npm install`
+    npm install
 
-#### (Note: this is npm project dont use yarn to install packages) 
+> Note: this is npm project don't use yarn to install packages)
+
+### Publishing new version
+
+Execute Lerna's versioning script
+
+    npm run lerna-version
+
+Execute Lerna's publishing script
+
+    npm run lerna-publish
 
 ### Testing
 
-`npm run-script test`
+    npm run-script test
 
 ### module workers Node scripts
 
