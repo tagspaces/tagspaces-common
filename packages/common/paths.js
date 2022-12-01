@@ -533,7 +533,9 @@ function generateSharingLink(locationID, entryPath, directoryPath, entryID) {
   if (entryID) {
     tseid = "&tseid=" + entryID;
   }
-  return "ts:?tslid=" + locationID + tsepath + tsdpath + tseid;
+  return (
+    AppConfig.tsProtocol + "?tslid=" + locationID + tsepath + tsdpath + tseid
+  );
 }
 
 module.exports = {

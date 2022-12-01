@@ -22,8 +22,10 @@ let mainToolbarHeight = 105;
 let maxIndexAge = 600000; // 10 minutes
 let defaultFileColor = "#808080";
 let defaultFolderColor = "#582727"; // # 555 transparent #FDEEBD #ff791b #2c001e #880e4f
+let tsProtocol = "ts://";
 
 if (typeof process !== "undefined") {
+  if (process.env.tsProtocol) tsProtocol = process.env.tsProtocol;
   if (process.env.metaFolder) metaFolder = process.env.metaFolder;
   if (process.env.metaFolderFile) metaFolderFile = process.env.metaFolderFile;
   if (process.env.folderLocationsFile)
@@ -32,8 +34,7 @@ if (typeof process !== "undefined") {
     folderIndexFile = process.env.folderIndexFile;
   if (process.env.folderThumbFile)
     folderThumbFile = process.env.folderThumbFile;
-  if (process.env.folderBgndFile)
-    folderBgndFile = process.env.folderBgndFile;
+  if (process.env.folderBgndFile) folderBgndFile = process.env.folderBgndFile;
   if (process.env.metaFileExt) metaFileExt = process.env.metaFileExt;
   if (process.env.thumbFileExt) thumbFileExt = process.env.thumbFileExt;
   if (process.env.thumbType) thumbType = process.env.thumbType;
@@ -47,10 +48,12 @@ if (typeof process !== "undefined") {
     prefixTagContainer = process.env.prefixTagContainer;
   if (process.env.maxCollectedTag)
     maxCollectedTag = parseInt(process.env.maxCollectedTag);
-  if (process.env.maxThumbSize) maxThumbSize = parseInt(process.env.maxThumbSize);
+  if (process.env.maxThumbSize)
+    maxThumbSize = parseInt(process.env.maxThumbSize);
   if (process.env.maxBgndSize) maxBgndSize = parseInt(process.env.maxBgndSize);
   if (process.env.thumbBgColor) thumbBgColor = process.env.thumbBgColor;
-  if (process.env.indexerLimit) indexerLimit = parseInt(process.env.indexerLimit);
+  if (process.env.indexerLimit)
+    indexerLimit = parseInt(process.env.indexerLimit);
   if (process.env.mainToolbarHeight)
     mainToolbarHeight = parseInt(process.env.mainToolbarHeight);
   if (process.env.maxIndexAge) maxIndexAge = parseInt(process.env.maxIndexAge);
@@ -216,4 +219,5 @@ module.exports = {
   lightThemeMainColor,
   darkThemeLightColor,
   darkThemeMainColor,
+  tsProtocol,
 };
