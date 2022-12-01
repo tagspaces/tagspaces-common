@@ -19,11 +19,15 @@ type Props = {
   onChange?: (markdown: string, prevMarkdown: string | null) => void;
   onFocus?: () => void;
   lightMode?: boolean;
+  currentFolder?: string;
 };
 
 export type MilkdownRef = { update: (markdown: string) => void };
 const MilkdownEditor = forwardRef<MilkdownRef, Props>(
-  ({ content, readOnly, onChange, onFocus, dark, lightMode }, ref) => {
+  (
+    { content, readOnly, onChange, onFocus, dark, lightMode, currentFolder },
+    ref
+  ) => {
     // const editorRef = React.useRef<EditorRef>(null);
     // const editorRef = React.useRef({} as EditorRef);
     // const [editorReady, setEditorReady] = React.useState(false);
@@ -74,6 +78,7 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
         url.startsWith('https://') ||
         url.startsWith('file://') ||
         url.startsWith('data:') ||
+        url.startsWith('ts://?ts') ||
         url.startsWith('ts:?ts')
       );
     }
@@ -92,12 +97,13 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
 
         let path;
         if (!hasURLProtocol(node.attrs.href)) {
-          path =
-            (isWeb ? '' : 'file://') +
-            // @ts-ignore
-            window.fileDirectory +
-            '/' +
-            encodeURIComponent(node.attrs.href);
+          // const workFolder = currentFolder || window.fileDirectory;
+          // path =
+          //   (isWeb ? '' : 'file://') +
+          //   workFolder +
+          //   '/' +
+          //   encodeURIComponent(node.attrs.href);
+          path = encodeURIComponent(node.attrs.href);
         } else {
           path = node.attrs.href;
         }
@@ -121,34 +127,17 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
 
     const TSImage: React.FC<{ children: ReactNode }> = ({ children }) => {
       const { node } = useNodeCtx();
-
       let path;
       if (!hasURLProtocol(node.attrs.src)) {
-        path =
-          (isWeb ? '' : 'file://') +
-          // @ts-ignore
-          window.fileDirectory +
-          '/' +
-          node.attrs.src;
+        // @ts-ignore
+        const workFolder = currentFolder || window.fileDirectory;
+        path = (isWeb ? '' : 'file://') + workFolder + '/' + node.attrs.src;
       } else {
         path = node.attrs.src;
       }
 
-      return (
-        <img
-          // className="ts-image"
-          src={path}
-          alt={node.attrs.alt}
-          title={node.attrs.title}
-        />
-      );
+      return <img src={path} alt={node.attrs.alt} title={node.attrs.title} />;
     };
-
-    /*const TSParagraph: React.FC = ({ children }) => (
-          <p>
-              <div style={{ display: 'inline-flex' }}>{children}</div>
-          </p>
-      );*/
 
     const {
       editor,
@@ -157,14 +146,12 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
     } = useEditor(
       (root, renderReact) => {
         const nodes = gfm
-          // .configure(paragraph, { view: renderReact(TSParagraph) })
           .configure(link, { view: renderReact(TSLink) })
           .configure(image, { view: renderReact(TSImage) });
         return createEditor(
           root,
           md,
           readOnly,
-          // setEditorReady,
           nodes,
           onChange,
           onFocus,
