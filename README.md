@@ -10,6 +10,8 @@ Execute Lerna's versioning script
 
     npm run lerna-version
 
+Commit the changes in the package.json files
+
 Execute Lerna's publishing script
 
     npm run lerna-publish
