@@ -98,7 +98,7 @@ function platformEnableWebdavSupport(webdavConfig) {
     webDavAPI.password !== webdavConfig.password ||
     webDavAPI.port !== webdavConfig.port
   ) {
-    webDavAPI = require("./webdav");
+    webDavAPI = require("@tagspaces/tagspaces-common-webdav");
     webDavAPI.configure(webdavConfig);
   }
 }
