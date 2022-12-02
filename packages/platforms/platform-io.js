@@ -79,7 +79,7 @@ function platformEnableObjectStoreSupport(objectStoreConfig) {
     ) {
       resolve();
     } else {
-      objectStoreAPI = require("./aws");
+      objectStoreAPI = require("@tagspaces/tagspaces-common-aws");
       objectStoreAPI.configure(objectStoreConfig);
       resolve();
     }
