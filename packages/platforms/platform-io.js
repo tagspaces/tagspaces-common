@@ -79,7 +79,7 @@ function platformEnableObjectStoreSupport(objectStoreConfig) {
     ) {
       resolve();
     } else {
-      objectStoreAPI = require("@tagspaces/tagspaces-common-aws");
+      objectStoreAPI = require("@tagspaces/tagspaces-common-aws/io-objectstore");
       objectStoreAPI.configure(objectStoreConfig);
       resolve();
     }
@@ -98,7 +98,7 @@ function platformEnableWebdavSupport(webdavConfig) {
     webDavAPI.password !== webdavConfig.password ||
     webDavAPI.port !== webdavConfig.port
   ) {
-    webDavAPI = require("@tagspaces/tagspaces-common-webdav");
+    webDavAPI = require("@tagspaces/tagspaces-common-webdav/io-webdav");
     webDavAPI.configure(webdavConfig);
   }
 }
