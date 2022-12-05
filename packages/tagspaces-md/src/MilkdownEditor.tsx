@@ -116,12 +116,10 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
           '*'
         );
       };
-      return readOnly ? (
+      return (
         <a href="#" onClick={clickLink}>
           {children}
         </a>
-      ) : (
-        <a href="#">{children}</a>
       );
     };
 
@@ -179,7 +177,10 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
     }, [editorLoading, dark]);
 
     return (
-      <div className={className.editor}>
+      <div
+        style={{ minHeight: readOnly ? 100 : 400 }}
+        className={className.editor}
+      >
         {loading ? (
           <Loading />
         ) : (

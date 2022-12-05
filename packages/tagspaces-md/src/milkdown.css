@@ -3,11 +3,9 @@
 .milkdown {
   zoom: 90%;
   width: 100% !important;
-  min-height: 400px;
   max-width: 70rem !important;
   box-shadow: none !important;
   padding-top: 0;
-  padding-left: 15px;
 }
 
 .milkdown h1 {
