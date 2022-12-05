@@ -125,7 +125,7 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
       return readOnly ? (
         <a href="#" title={href} onClick={clickLink}>
           {children}
-          {isExternal && <>&nbsp;⧉</>};
+          {isExternal && <>&nbsp;⧉</>}
         </a>
       ) : (
         <a href="#">{children}</a>
@@ -187,9 +187,11 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
 
     return (
       <div
-        style={{
-          paddingLeft: lightMode || readOnly ? 0 : 15
-        }}
+        // style={
+        //   {
+        //     paddingLeft: lightMode || readOnly ? 0 : 15
+        //   }
+        // }
         className={className.editor}
       >
         {loading ? (
