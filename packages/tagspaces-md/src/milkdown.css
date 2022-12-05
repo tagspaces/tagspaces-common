@@ -3,6 +3,7 @@
 .milkdown {
   zoom: 90%;
   width: 100% !important;
+  min-height: 200px;
   max-width: 70rem !important;
   box-shadow: none !important;
   padding-top: 0;

@@ -83,6 +83,10 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
       );
     }
 
+    function isExternalLink(url: any) {
+      return url.startsWith('http://') || url.startsWith('https://');
+    }
+
     // @ts-ignore
     const isWeb = window.isWeb;
     //https://github.com/Saul-Mirone/milkdown/blob/main/examples/react/component/milkdown/index.tsx
@@ -90,22 +94,24 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
     const TSLink: React.FC<{ children: ReactNode }> = ({ children }) => {
       const { node } = useNodeCtx();
 
+      const href = node.attrs.href;
       // title={node.attrs.title}
+      const isExternal = isExternalLink(href);
 
       const clickLink = (evt: any) => {
         evt.preventDefault();
 
         let path;
-        if (!hasURLProtocol(node.attrs.href)) {
+        if (!hasURLProtocol(href)) {
           // const workFolder = currentFolder || window.fileDirectory;
           // path =
           //   (isWeb ? '' : 'file://') +
           //   workFolder +
           //   '/' +
           //   encodeURIComponent(node.attrs.href);
-          path = encodeURIComponent(node.attrs.href);
+          path = encodeURIComponent(href);
         } else {
-          path = node.attrs.href;
+          path = href;
         }
 
         window.parent.postMessage(
@@ -117,8 +123,9 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
         );
       };
       return readOnly ? (
-        <a href="#" onClick={clickLink}>
+        <a href="#" title={href} onClick={clickLink}>
           {children}
+          {isExternal && <>&nbsp;⧉</>};
         </a>
       ) : (
         <a href="#">{children}</a>
@@ -180,7 +187,9 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
 
     return (
       <div
-        style={{ minHeight: readOnly ? 100 : 400 }}
+        style={{
+          paddingLeft: lightMode || readOnly ? 0 : 15
+        }}
         className={className.editor}
       >
         {loading ? (
