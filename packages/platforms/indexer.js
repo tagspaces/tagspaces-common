@@ -287,6 +287,7 @@ function enhanceDirectoryIndex(
     if (entry.thumbPath) {
       let thumbPath;
       if (param.bucketName) {
+        thumbPath = entry.thumbPath;
         /* don't use aws dependency for indexing
         thumbPath = getURLforPath(
           {
