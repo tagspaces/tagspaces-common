@@ -12,6 +12,7 @@ const {
   extractFileName,
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,
+  joinPaths,
 } = require("@tagspaces/tagspaces-common/paths");
 const {
   loadJSONString,
@@ -297,21 +298,20 @@ function enhanceDirectoryIndex(
           604800
         ); */
       } else {
-        thumbPath =
-          directoryPath + dirSeparator + toPlatformPath(entry.thumbPath);
+        thumbPath = joinPaths(dirSeparator, directoryPath, toPlatformPath(entry.thumbPath));
       }
 
       return {
         ...entry,
         locationID,
-        path: directoryPath + dirSeparator + toPlatformPath(entry.path),
+        path: joinPaths(dirSeparator, directoryPath, toPlatformPath(entry.path)),
         thumbPath: thumbPath,
       };
     }
     return {
       ...entry,
       locationID,
-      path: directoryPath + dirSeparator + toPlatformPath(entry.path),
+      path: joinPaths(dirSeparator, directoryPath, toPlatformPath(entry.path)),
     };
   });
 }
