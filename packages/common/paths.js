@@ -509,6 +509,19 @@ function joinPaths(...paths) {
   return result;
 }
 
+function cleanFrontDirSeparator(dirPath) {
+  if (dirPath) {
+    if (dirPath.startsWith("\\")) {
+      return dirPath.substring(1);
+    }
+    if (dirPath.startsWith("/")) {
+      return dirPath.substring(1);
+    }
+    return dirPath;
+  }
+  return "";
+}
+
 /**
  * for files ts:?tslid=53ea7417-6267-4f7c-9c25-dc44aa41f6c8&tsepath=%2FSelect-Dion%5B20210901%5D.jpeg
  * for folders ts:?tslid=53ea7417-6267-4f7c-9c25-dc44aa41f6c8&tsepath=%2FMath
@@ -565,5 +578,6 @@ module.exports = {
   tagsAsObjects,
   // extractLocation,
   joinPaths,
+  cleanFrontDirSeparator,
   generateSharingLink,
 };
