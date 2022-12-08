@@ -423,7 +423,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             eentry.path = entryPath;
             eentry.tags = [];
             eentry.thumbPath = "";
-            eentry.meta = {};
+            // eentry.meta = {};
 
             try {
               stats = await new Promise((resolve, rej) => {
