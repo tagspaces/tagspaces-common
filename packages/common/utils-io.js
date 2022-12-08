@@ -141,6 +141,7 @@ function enhanceEntry(
   let sidecarColor = "";
   let sidecarPerspective;
   let sidecarTags = [];
+  let meta;
   if (entry.meta && Object.keys(entry.meta).length > 0) {
     sidecarDescription = entry.meta.description || "";
     sidecarColor = entry.meta.color || "";
@@ -159,9 +160,16 @@ function enhanceEntry(
         sidecarTags.push(cleanedTag);
       });
     }
+    meta = { ...entry.meta, description: undefined };
   }
   return {
-    ...entry,
+    name: entry.name,
+    isFile: entry.isFile,
+    size: entry.size,
+    lmdt: entry.lmdt,
+    path: entry.path,
+    ...(meta && { meta: meta }),
+    // isIgnored: entry.isIgnored,
     ...(!entry.uuid && { uuid: uuidv1() }),
     ...(!entry.extension && {
       extension: entry.isFile
@@ -172,21 +180,9 @@ function enhanceEntry(
     ...(sidecarDescription && { description: sidecarDescription }),
     ...(sidecarColor && { color: sidecarColor }),
     ...(sidecarPerspective && { perspective: sidecarPerspective }),
-    // name: entry.name,
-    // isFile: entry.isFile,
-    // size: entry.size,
-    // lmdt: entry.lmdt,
-    // path: entry.path,
-    // isIgnored: entry.isIgnored,
+    ...(entry.thumbPath && { thumbPath: entry.thumbPath }),
+    ...(entry.textContent && { textContent: entry.textContent }),
   };
-  /*if (entry && entry.thumbPath) {
-    enhancedEntry.thumbPath = entry.thumbPath;
-  }
-  if (entry && entry.textContent) {
-    enhancedEntry.textContent = entry.textContent;
-  }*/
-  // console.log('Enhancing ' + entry.path + ':' + JSON.stringify(enhancedEntry));
-  // return enhancedEntry;
 }
 
 /**
