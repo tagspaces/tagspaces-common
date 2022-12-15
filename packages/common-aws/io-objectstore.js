@@ -1110,11 +1110,11 @@ async function getDirectoryPrefixes(param) {
     listedObjects.CommonPrefixes.length > 0
   ) {
     listedObjects.Contents.forEach(({ Key }) => {
-      prefixes.push({ Key });
+      addPrefix(prefixes, { Key });
     });
 
     listedObjects.CommonPrefixes.forEach(({ Prefix }) => {
-      prefixes.push({ Key: Prefix });
+      addPrefix(prefixes, { Key: Prefix });
       promises.push(getDirectoryPrefixes({ ...param, path: Prefix }));
     });
     // if (listedObjects.IsTruncated) await this.deleteDirectoryPromise(path);
@@ -1122,10 +1122,16 @@ async function getDirectoryPrefixes(param) {
   const subPrefixes = await Promise.all(promises);
   subPrefixes.map((arrPrefixes) => {
     arrPrefixes.map((prefix) => {
-      prefixes.push(prefix);
+      addPrefix(prefixes, prefix);
     });
   });
   return prefixes;
+}
+
+function addPrefix(prefixes, prefix) {
+  if (!prefixes.some((obj) => obj.Key === prefix.Key)) {
+    prefixes.push(prefix);
+  }
 }
 
 function openUrl(url) {
