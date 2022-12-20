@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-webdav",
   "description": "TagSpaces common webdav module",
-  "version": "2.1.10",
+  "version": "2.1.11",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -16,7 +16,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^2.1.10",
+    "@tagspaces/tagspaces-common": "^2.1.11",
     "@tagspaces/webdav-fs": "^4.1.0"
   }
 }
