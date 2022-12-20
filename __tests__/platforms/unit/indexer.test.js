@@ -1,10 +1,10 @@
 const fs = require("fs");
 const pathJs = require("path");
 const {
-  cleanPath,
   createIndex,
   getMetaIndexFilePath,
 } = require("@tagspaces/tagspaces-platforms/indexer");
+const { cleanRootPath } = require("@tagspaces/tagspaces-common/paths");
 const {
   configure,
   s3,
@@ -23,10 +23,11 @@ beforeAll(async () => {
   });
 });
 
-test("cleanPath", async () => {
-  const path = await cleanPath(
+test("cleanRootPath", async () => {
+  const path = await cleanRootPath(
     "/sdcard/Downloads/////DSCN1.jpg",
-    "/sdcard/Downloads".length
+    "sdcard/Downloads",
+    "/"
   );
   expect(path).toEqual("DSCN1.jpg");
 });

@@ -551,6 +551,32 @@ function generateSharingLink(locationID, entryPath, directoryPath, entryID) {
   );
 }
 
+/**
+ * used for indexer to create path in index
+ * @param filePath
+ * @param rootPath
+ * @param dirSeparator
+ * @returns {string} Path without root with dirSeparators subFolder/Select-Dion[20210901].jpeg
+ */
+function cleanRootPath(
+  filePath,
+  rootPath,
+  dirSeparator // = AppConfig.dirSeparator
+) {
+  if (!filePath || !rootPath) {
+    return cleanTrailingDirSeparator(cleanFrontDirSeparator(filePath));
+  }
+  const filePathArr = filePath
+    .split(dirSeparator)
+    .filter((pathPart) => pathPart);
+  const rootPathArr = rootPath
+    .split(dirSeparator)
+    .filter((pathPart) => pathPart);
+  const cleanPath = filePathArr.slice(rootPathArr.length);
+
+  return cleanPath.join(dirSeparator);
+}
+
 module.exports = {
   baseName,
   extractFileExtension,
@@ -580,4 +606,5 @@ module.exports = {
   joinPaths,
   cleanFrontDirSeparator,
   generateSharingLink,
+  cleanRootPath,
 };

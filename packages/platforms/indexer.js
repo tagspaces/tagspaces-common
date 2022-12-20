@@ -21,10 +21,11 @@ const {
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const {
+  cleanRootPath,
   cleanTrailingDirSeparator,
 } = require("@tagspaces/tagspaces-common/paths");
 
-function cleanPath(filePath, rootPathLength) {
+/*function cleanPath(filePath, rootPathLength) {
   const cleanPath = filePath
     .substr(rootPathLength) // remove root location path from index
     .replace(/\/\/+/g, "/");
@@ -34,7 +35,7 @@ function cleanPath(filePath, rootPathLength) {
     return cleanPath.substr(1);
   }
   return cleanPath;
-}
+}*/
 
 /**
  * @param param
@@ -90,8 +91,12 @@ function createIndex(
 
       const entry = {
         ...fileEntry,
-        path: cleanPath(fileEntry.path, path.length),
-        thumbPath: cleanPath(fileEntry.thumbPath, path.length),
+        path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
+        thumbPath: cleanRootPath(
+          fileEntry.thumbPath,
+          path,
+          AppConfig.dirSeparator
+        ),
         meta: meta,
       };
       directoryIndex.push(enhanceEntry(entry));
@@ -110,8 +115,16 @@ function createIndex(
           name: directoryEntry.name,
           isFile: directoryEntry.isFile,
           tags: directoryEntry.tags,
-          path: cleanPath(directoryEntry.path, path.length),
-          thumbPath: cleanPath(directoryEntry.thumbPath, path.length),
+          path: cleanRootPath(
+            directoryEntry.path,
+            path,
+            AppConfig.dirSeparator
+          ),
+          thumbPath: cleanRootPath(
+            directoryEntry.thumbPath,
+            path,
+            AppConfig.dirSeparator
+          ),
           meta: meta,
         };
         directoryIndex.push(enhanceEntry(entry));
@@ -298,13 +311,21 @@ function enhanceDirectoryIndex(
           604800
         ); */
       } else {
-        thumbPath = joinPaths(dirSeparator, directoryPath, toPlatformPath(entry.thumbPath));
+        thumbPath = joinPaths(
+          dirSeparator,
+          directoryPath,
+          toPlatformPath(entry.thumbPath)
+        );
       }
 
       return {
         ...entry,
         locationID,
-        path: joinPaths(dirSeparator, directoryPath, toPlatformPath(entry.path)),
+        path: joinPaths(
+          dirSeparator,
+          directoryPath,
+          toPlatformPath(entry.path)
+        ),
         thumbPath: thumbPath,
       };
     }
@@ -443,7 +464,6 @@ function loadJSONFile(param, loadFilePromise) {
 }
 
 module.exports = {
-  cleanPath,
   createIndex,
   persistIndex,
   hasIndex,
