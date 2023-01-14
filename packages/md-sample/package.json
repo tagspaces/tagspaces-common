@@ -1,6 +1,6 @@
 {
   "name": "md-sample",
-  "version": "2.1.6",
+  "version": "2.1.12",
   "private": true,
   "dependencies": {
     "@tagspaces/tagspaces-md": "*",
