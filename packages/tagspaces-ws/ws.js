@@ -40,6 +40,17 @@ module.exports.createWS = function (port, key) {
     return false;
   };
 
+  function handleError(res, err) {
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify({
+        success: false,
+        error: err && err.message ? err.message : err,
+      })
+    );
+  }
+
   const requestHandler = (req, res) => {
     const baseURL = "http://" + req.headers.host + "/";
     const reqUrl = new URL(req.url, baseURL);
@@ -108,7 +119,7 @@ module.exports.createWS = function (port, key) {
           body += data;
           // console.log("Partial body: " + body);
         });
-        req.on("end", async () => {
+        req.on("end", () => {
           try {
             // let directoryPath;
             /*if (body.startsWith("directoryPath=")) {
@@ -123,27 +134,37 @@ module.exports.createWS = function (port, key) {
             if (extractText) {
               mode.push("extractTextContent");
             }
-            createIndex(
+            return createIndex(
               directoryPath,
               mode,
               ignorePatterns ? ignorePatterns : []
-            ).then((directoryIndex) => {
-              persistIndex(directoryPath, directoryIndex).then((success) => {
-                if (success) {
-                  console.log("Index generated in folder: " + directoryPath);
-                  res.statusCode = 200;
-                  res.setHeader("Content-Type", "application/json");
-                  res.setHeader("Cache-Control", "no-store, must-revalidate");
-                  // res.write(JSON.stringify(thumbs));
-                  res.end(JSON.stringify({ success }));
-                }
+            )
+              .then((directoryIndex) => {
+                return persistIndex(directoryPath, directoryIndex)
+                  .then((success) => {
+                    if (success) {
+                      console.log(
+                        "Index generated in folder: " + directoryPath
+                      );
+                      res.statusCode = 200;
+                      res.setHeader("Content-Type", "application/json");
+                      res.setHeader(
+                        "Cache-Control",
+                        "no-store, must-revalidate"
+                      );
+                      // res.write(JSON.stringify(thumbs));
+                      res.end(JSON.stringify({ success }));
+                    }
+                  })
+                  .catch((err) => {
+                    handleError(res, err);
+                  });
+              })
+              .catch((err) => {
+                handleError(res, err);
               });
-            });
           } catch (e) {
-            console.log(e);
-            res.statusCode = 400;
-            res.setHeader("Content-Type", "application/json");
-            res.end({ success: false, error: e.message });
+            handleError(res, e);
           }
         });
       }
