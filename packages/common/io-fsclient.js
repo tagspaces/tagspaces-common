@@ -377,213 +377,222 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   ) {
     let path = getPath(param);
 
-    return new Promise(async (resolve) => {
-      const loadMeta = mode.includes("extractThumbPath");
-      let metaContent = [];
-      if (loadMeta) {
-        metaContent = await listMetaDirectoryPromise(param);
-      }
-
-      const enhancedEntries = [];
-      let entryPath;
-      let metaFolderPath;
-      let stats;
-      let eentry;
-      // let containsMetaFolder = false;
-      // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
-      if (path.startsWith("./") || path.startsWith("../")) {
-        // relative tsPaths
-        path = pathLib.resolve(path);
-      }
-      fs.readdir(path, async (error, entries) => {
-        if (error) {
-          console.warn("Error listing directory " + path);
-          resolve(enhancedEntries); // returning results even if any promise fails
-          return;
+    return new Promise(async (resolve, reject) => {
+      try {
+        const loadMeta = mode.includes("extractThumbPath");
+        let metaContent = [];
+        if (loadMeta) {
+          metaContent = await listMetaDirectoryPromise(param);
         }
 
-        /*if (window.walkCanceled) {
-              resolve(enhancedEntries); // returning results even if walk canceled
-              return;
+        const enhancedEntries = [];
+        let entryPath;
+        let metaFolderPath;
+        let stats;
+        let eentry;
+        // let containsMetaFolder = false;
+        // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
+        if (path.startsWith("./") || path.startsWith("../")) {
+          // relative tsPaths
+          path = pathLib.resolve(path);
+        }
+        fs.readdir(path, async (error, entries) => {
+          if (error) {
+            console.warn("Error listing directory " + path);
+            resolve(enhancedEntries); // returning results even if any promise fails
+            return;
           }
-  */
-        if (entries) {
-          for (const entry of entries) {
-            entryPath = path + dirSeparator + entry;
 
-            if (ignorePatterns.length > 0) {
-              const isIgnored = micromatch([entryPath, entry], ignorePatterns);
-              if (isIgnored.length !== 0) {
-                continue;
-              }
+          /*if (window.walkCanceled) {
+                resolve(enhancedEntries); // returning results even if walk canceled
+                return;
             }
+    */
+          if (entries) {
+            for (const entry of entries) {
+              entryPath = path + dirSeparator + entry;
 
-            eentry = {};
-            eentry.name = entry;
-            eentry.path = entryPath;
-            eentry.tags = [];
-            eentry.thumbPath = "";
-            // eentry.meta = {};
-
-            try {
-              stats = await new Promise((resolve, rej) => {
-                fs.stat(entryPath, (err, data) => {
-                  if (err) {
-                    rej(err);
-                  } else {
-                    resolve(data);
-                  }
-                });
-              });
-              eentry.isFile = stats.isFile();
-              eentry.size = stats.size;
-              eentry.lmdt = stats.mtime.getTime
-                ? stats.mtime.getTime()
-                : stats.mtime;
-
-              // Load meta for dirs
-              if (
-                !eentry.isFile &&
-                !eentry.path.endsWith(dirSeparator + AppConfig.metaFolder) &&
-                loadMeta
-              ) {
-                const dirMetaContent = await listMetaDirectoryPromise({
-                  ...param,
-                  path: eentry.path,
-                });
-                metaFolderPath = tsPaths.getMetaDirectoryPath(
-                  eentry.path,
-                  dirSeparator
+              if (ignorePatterns.length > 0) {
+                const isIgnored = micromatch(
+                  [entryPath, entry],
+                  ignorePatterns
                 );
-                // Read tsm.json from sub folders
-                const folderMetaPath = tsPaths.getMetaFileLocationForDir(
-                  eentry.path,
-                  dirSeparator
-                );
+                if (isIgnored.length !== 0) {
+                  continue;
+                }
+              }
+
+              eentry = {};
+              eentry.name = entry;
+              eentry.path = entryPath;
+              eentry.tags = [];
+              eentry.thumbPath = "";
+              // eentry.meta = {};
+
+              try {
+                stats = await new Promise((resolve, rej) => {
+                  fs.stat(entryPath, (err, data) => {
+                    if (err) {
+                      rej(err);
+                    } else {
+                      resolve(data);
+                    }
+                  });
+                });
+                eentry.isFile = stats.isFile();
+                eentry.size = stats.size;
+                eentry.lmdt = stats.mtime.getTime
+                  ? stats.mtime.getTime()
+                  : stats.mtime;
+
+                // Load meta for dirs
                 if (
-                  dirMetaContent.some(
-                    (meta) =>
-                      metaFolderPath + dirSeparator + meta.path ===
-                      folderMetaPath
-                  )
+                  !eentry.isFile &&
+                  !eentry.path.endsWith(dirSeparator + AppConfig.metaFolder) &&
+                  loadMeta
                 ) {
-                  try {
-                    eentry.meta = await fs.readJson(folderMetaPath);
-                    // console.log('Success reading meta folder file ' + folderMetaPath);
-                  } catch (err) {
-                    console.error(
-                      "Failed reading meta folder file " + folderMetaPath
+                  const dirMetaContent = await listMetaDirectoryPromise({
+                    ...param,
+                    path: eentry.path,
+                  });
+                  metaFolderPath = tsPaths.getMetaDirectoryPath(
+                    eentry.path,
+                    dirSeparator
+                  );
+                  // Read tsm.json from sub folders
+                  const folderMetaPath = tsPaths.getMetaFileLocationForDir(
+                    eentry.path,
+                    dirSeparator
+                  );
+                  if (
+                    dirMetaContent.some(
+                      (meta) =>
+                        metaFolderPath + dirSeparator + meta.path ===
+                        folderMetaPath
+                    )
+                  ) {
+                    try {
+                      eentry.meta = await fs.readJson(folderMetaPath);
+                      // console.log('Success reading meta folder file ' + folderMetaPath);
+                    } catch (err) {
+                      console.error(
+                        "Failed reading meta folder file " + folderMetaPath
+                      );
+                    }
+                  }
+
+                  // Loading thumbs for folders tst.jpg
+                  const folderTmbPath =
+                    tsPaths.getThumbFileLocationForDirectory(
+                      eentry.path,
+                      dirSeparator
+                    );
+                  if (
+                    dirMetaContent.some(
+                      (meta) =>
+                        metaFolderPath + dirSeparator + meta.path ===
+                        folderTmbPath
+                    )
+                  ) {
+                    if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
+                      // skipping meta folder
+                      eentry.thumbPath = folderTmbPath;
+                    }
+                  }
+                }
+
+                if (mode.includes("extractTextContent") && eentry.isFile) {
+                  const fileName = eentry.name.toLowerCase();
+                  if (
+                    fileName.endsWith(".txt") ||
+                    fileName.endsWith(".md") ||
+                    fileName.endsWith(".html")
+                  ) {
+                    const fileContent = await fs.readFile(eentry.path, "utf8");
+                    eentry.textContent = extractTextContent(
+                      fileName,
+                      fileContent
                     );
                   }
                 }
 
-                // Loading thumbs for folders tst.jpg
-                const folderTmbPath = tsPaths.getThumbFileLocationForDirectory(
-                  eentry.path,
-                  dirSeparator
-                );
-                if (
-                  dirMetaContent.some(
-                    (meta) =>
-                      metaFolderPath + dirSeparator + meta.path ===
-                      folderTmbPath
-                  )
-                ) {
-                  if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
-                    // skipping meta folder
-                    eentry.thumbPath = folderTmbPath;
-                  }
-                }
-              }
-
-              if (mode.includes("extractTextContent") && eentry.isFile) {
-                const fileName = eentry.name.toLowerCase();
-                if (
-                  fileName.endsWith(".txt") ||
-                  fileName.endsWith(".md") ||
-                  fileName.endsWith(".html")
-                ) {
-                  const fileContent = await fs.readFile(eentry.path, "utf8");
-                  eentry.textContent = extractTextContent(
-                    fileName,
-                    fileContent
-                  );
-                }
-              }
-
-              /*if (window.walkCanceled) {
-                  resolve(enhancedEntries);
-                  return;
-                }*/
-            } catch (e) {
-              console.warn(
-                "Can not load properties for: " + entryPath + " " + e
-              );
-            }
-            enhancedEntries.push(eentry);
-          }
-
-          if (metaContent.length > 0) {
-            metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
-            for (const metaEntry of metaContent) {
-              // Reading meta json files with tags and description
-              if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
-                const fileNameWithoutMetaExt = metaEntry.path.substr(
-                  0,
-                  metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
-                );
-                const origFile = enhancedEntries.find(
-                  (result) => result.name === fileNameWithoutMetaExt
-                );
-                if (origFile) {
-                  const metaFilePath =
-                    metaFolderPath + dirSeparator + metaEntry.path;
-                  let metaFileObj;
-                  try {
-                    metaFileObj = await fs.readJson(metaFilePath);
-                  } catch (ex) {
-                    console.warn("Error readJson for " + metaFilePath, ex);
-                  }
-                  if (metaFileObj) {
-                    enhancedEntries.map((enhancedEntry) => {
-                      if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                        enhancedEntry.meta = metaFileObj;
-                      }
-                      return true;
-                    });
-                  }
-                }
-              }
-
-              // Finding if thumbnail available
-              if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
-                const fileNameWithoutMetaExt = metaEntry.path.substr(
-                  0,
-                  metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
-                );
-                enhancedEntries.map((enhancedEntry) => {
-                  if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                    enhancedEntry.thumbPath =
-                      metaFolderPath +
-                      dirSeparator +
-                      encodeURIComponent(metaEntry.path);
-                  }
-                  return true;
-                });
-              }
-
-              /*if (window.walkCanceled) {
+                /*if (window.walkCanceled) {
                     resolve(enhancedEntries);
+                    return;
                   }*/
+              } catch (e) {
+                console.warn(
+                  "Can not load properties for: " + entryPath + " " + e
+                );
+              }
+              enhancedEntries.push(eentry);
             }
-          }
-          resolve(enhancedEntries);
-          /*});
-          } else {
+
+            if (metaContent.length > 0) {
+              metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
+              for (const metaEntry of metaContent) {
+                // Reading meta json files with tags and description
+                if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
+                  const fileNameWithoutMetaExt = metaEntry.path.substr(
+                    0,
+                    metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
+                  );
+                  const origFile = enhancedEntries.find(
+                    (result) => result.name === fileNameWithoutMetaExt
+                  );
+                  if (origFile) {
+                    const metaFilePath =
+                      metaFolderPath + dirSeparator + metaEntry.path;
+                    let metaFileObj;
+                    try {
+                      metaFileObj = await fs.readJson(metaFilePath);
+                    } catch (ex) {
+                      console.warn("Error readJson for " + metaFilePath, ex);
+                    }
+                    if (metaFileObj) {
+                      enhancedEntries.map((enhancedEntry) => {
+                        if (enhancedEntry.name === fileNameWithoutMetaExt) {
+                          enhancedEntry.meta = metaFileObj;
+                        }
+                        return true;
+                      });
+                    }
+                  }
+                }
+
+                // Finding if thumbnail available
+                if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
+                  const fileNameWithoutMetaExt = metaEntry.path.substr(
+                    0,
+                    metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
+                  );
+                  enhancedEntries.map((enhancedEntry) => {
+                    if (enhancedEntry.name === fileNameWithoutMetaExt) {
+                      enhancedEntry.thumbPath =
+                        metaFolderPath +
+                        dirSeparator +
+                        encodeURIComponent(metaEntry.path);
+                    }
+                    return true;
+                  });
+                }
+
+                /*if (window.walkCanceled) {
+                      resolve(enhancedEntries);
+                    }*/
+              }
+            }
             resolve(enhancedEntries);
-          }*/
-        }
-      });
+            /*});
+            } else {
+              resolve(enhancedEntries);
+            }*/
+          }
+        });
+      } catch (e) {
+        console.warn("Error listing directory " + path, e);
+        reject(new Error("Error listing directory " + path)); // returning results even if any promise fails
+      }
     });
   }
 

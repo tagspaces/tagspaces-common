@@ -41,6 +41,7 @@ module.exports.createWS = function (port, key) {
   };
 
   function handleError(res, err) {
+    console.error(err);
     res.statusCode = 400;
     res.setHeader("Content-Type", "application/json");
     res.end(
