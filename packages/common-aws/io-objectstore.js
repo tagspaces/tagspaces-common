@@ -557,20 +557,23 @@ const getFileContentPromise = async (
 /**
  * Persists a given content(binary supported) to a specified filepath (tested)
  * @param param
- * @param content
+ * @param content string if undefined reject error
  * @param overWrite
  * @param mode
  * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
 const saveFilePromise = (param, content, overWrite, mode) =>
   new Promise((resolve, reject) => {
-    const path = param.path;
-    const bucketName = param.bucketName;
-    // let isNewFile = false;
-    // eslint-disable-next-line no-param-reassign
-    const filePath = normalizeRootPath(path);
+    if (content === undefined) {
+      reject(new Error("content is undefined"));
+    } else {
+      const path = param.path;
+      const bucketName = param.bucketName;
+      // let isNewFile = false;
+      // eslint-disable-next-line no-param-reassign
+      const filePath = normalizeRootPath(path);
 
-    /*return getPropertiesPromise({
+      /*return getPropertiesPromise({
     path: filePath,
     bucketName: bucketName,
   }).then((result) => {
@@ -585,50 +588,50 @@ const saveFilePromise = (param, content, overWrite, mode) =>
             " old index size:" +
             content.length
         );*/
-    // || mode === 'text') {
-    const fileExt = tsPaths.extractFileExtension(filePath);
+      // || mode === 'text') {
+      const fileExt = tsPaths.extractFileExtension(filePath);
 
-    let mimeType;
-    if (fileExt === "md") {
-      mimeType = "text/markdown";
-    } else if (fileExt === "txt") {
-      mimeType = "text/plain";
-    } else if (fileExt === "html") {
-      mimeType = "text/html";
-    } else if (fileExt === "json") {
-      mimeType = "application/json";
-    } else {
-      // default type
-      mimeType = "text/plain";
-    }
-    const params = {
-      Bucket: bucketName,
-      Key: filePath,
-      Body: content,
-      ContentType: mimeType,
-    }; // fs.readFileSync(filePath)
-    s3().putObject(params, (err, data) => {
-      if (err) {
-        console.log("Error upload " + filePath); // an error occurred
-        console.log(err, err.stack); // an error occurred
-        resolve(false);
+      let mimeType;
+      if (fileExt === "md") {
+        mimeType = "text/markdown";
+      } else if (fileExt === "txt") {
+        mimeType = "text/plain";
+      } else if (fileExt === "html") {
+        mimeType = "text/html";
+      } else if (fileExt === "json") {
+        mimeType = "application/json";
+      } else {
+        // default type
+        mimeType = "text/plain";
       }
-      resolve({
-        uuid: data ? data.ETag : uuidv1(),
-        name:
-          data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
-        url: data ? data.Location : filePath,
-        isFile: true,
-        path: filePath,
-        extension: tsPaths.extractFileExtension(filePath, "/"),
-        size: content.length,
-        lmdt: new Date().getTime(),
-        // isNewFile,
+      const params = {
+        Bucket: bucketName,
+        Key: filePath,
+        Body: content,
+        ContentType: mimeType,
+      }; // fs.readFileSync(filePath)
+      s3().putObject(params, (err, data) => {
+        if (err) {
+          console.log("Error upload " + filePath); // an error occurred
+          console.log(err, err.stack); // an error occurred
+          resolve(false);
+        }
+        resolve({
+          uuid: data ? data.ETag : uuidv1(),
+          name:
+            data && data.Key
+              ? data.Key
+              : tsPaths.extractFileName(filePath, "/"),
+          url: data ? data.Location : filePath,
+          isFile: true,
+          path: filePath,
+          extension: tsPaths.extractFileExtension(filePath, "/"),
+          size: content.length,
+          lmdt: new Date().getTime(),
+          // isNewFile,
+        });
       });
-    }); // .promise();
-    /*}
     }
-  });*/
   });
 
 /**
