@@ -32,27 +32,27 @@
   ],
   "nodeDependencies": {
     "@tagspaces/tagspaces-common-node": "2.1.13",
-    "@tagspaces/tagspaces-common-aws": "2.1.13",
+    "@tagspaces/tagspaces-common-aws": "2.1.14",
     "@tagspaces/tagspaces-common-webdav": "2.1.13"
   },
   "webDependencies": {
     "@tagspaces/tagspaces-common-web": "2.1.13",
-    "@tagspaces/tagspaces-common-aws": "2.1.13",
+    "@tagspaces/tagspaces-common-aws": "2.1.14",
     "@tagspaces/tagspaces-common-webdav": "2.1.13"
   },
   "awsDependencies": {
-    "@tagspaces/tagspaces-common-aws": "2.1.13",
+    "@tagspaces/tagspaces-common-aws": "2.1.14",
     "@tagspaces/tagspaces-common-webdav": "2.1.13"
   },
   "cordovaDependencies": {
     "@tagspaces/tagspaces-common-cordova": "2.1.13",
-    "@tagspaces/tagspaces-common-aws": "2.1.13",
+    "@tagspaces/tagspaces-common-aws": "2.1.14",
     "@tagspaces/tagspaces-common-webdav": "2.1.13"
   },
   "electronDependencies": {
     "@tagspaces/tagspaces-common-node": "2.1.13",
     "@tagspaces/tagspaces-common-electron": "2.0.44",
-    "@tagspaces/tagspaces-common-aws": "2.1.13",
+    "@tagspaces/tagspaces-common-aws": "2.1.14",
     "@tagspaces/tagspaces-common-webdav": "2.1.13"
   }
 }
