@@ -157,6 +157,22 @@ function getBgndFileLocationForDirectory(entryPath, dirSeparator = "/") {
   );
 }
 
+function getBackupFileLocation(entryPath, uuid, dirSeparator = "/") {
+  const extension = extractFileExtension(entryPath, dirSeparator);
+  const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
+  return (
+    dirPath +
+    (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
+    AppConfig.metaFolder +
+    dirSeparator +
+    uuid +
+    dirSeparator +
+    new Date().getTime() +
+    "." +
+    extension
+  );
+}
+
 function getMetaFileLocationForDir(
   entryPath,
   dirSeparator = "/", // = AppConfig.dirSeparator
@@ -584,6 +600,7 @@ module.exports = {
   getThumbFileLocationForFile,
   getThumbFileLocationForDirectory,
   getBgndFileLocationForDirectory,
+  getBackupFileLocation,
   getFileLocationFromMetaFile,
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,
