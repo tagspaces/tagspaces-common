@@ -1,5 +1,5 @@
 const micromatch = require("micromatch");
-const { v1: uuidv1 } = require("uuid");
+const { v1: uuidv1, v4: uuidv4 } = require("uuid");
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
@@ -118,6 +118,11 @@ function walkDirectory(
   );
 }
 
+function getUuid(version = 4) {
+  const uuid = version === 4 ? uuidv4() : uuidv1();
+  return uuid.replaceAll("-", "");
+}
+
 /**
  * @param entry
  * @param tagDelimiter: string
@@ -160,9 +165,11 @@ function enhanceEntry(
         sidecarTags.push(cleanedTag);
       });
     }
+    entry.uuid = entry.meta.id;
     meta = { ...entry.meta, description: undefined };
   }
   return {
+    uuid: entry.uuid || getUuid(),
     name: entry.name,
     isFile: entry.isFile,
     size: entry.size,
@@ -170,7 +177,6 @@ function enhanceEntry(
     path: entry.path,
     ...(meta && { meta: meta }),
     // isIgnored: entry.isIgnored,
-    ...(!entry.uuid && { uuid: uuidv1() }),
     ...(!entry.extension && {
       extension: entry.isFile
         ? paths.extractFileExtension(entry.name, dirSeparator)
@@ -211,4 +217,4 @@ function loadJSONString(jsonContent) {
   return jsonObject;
 }
 
-module.exports = { walkDirectory, enhanceEntry, loadJSONString };
+module.exports = { getUuid, walkDirectory, enhanceEntry, loadJSONString };
