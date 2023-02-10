@@ -1,6 +1,8 @@
 // const fs = require("fs");
 const pathJs = require("path");
-const { cleanTrailingDirSeparator } = require("@tagspaces/tagspaces-common/paths");
+const {
+  cleanTrailingDirSeparator,
+} = require("@tagspaces/tagspaces-common/paths");
 const {
   platformCreateDirectoryTree,
   platformListDirectoryPromise,
@@ -32,7 +34,7 @@ test("listDirectoryPromise", async () => {
 });
 
 test("saveFilePromise/saveTextFilePromise", async () => {
-  const file = await platformSaveFilePromise(filePath, "test");
+  const file = await platformSaveFilePromise({ path: filePath }, "test");
   expect(file.path === filePath).toBe(true);
   // console.log("file:" + JSON.stringify(file));
 });

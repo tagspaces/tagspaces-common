@@ -484,52 +484,60 @@ function platformGetLocalFileContentPromise(filePath, type) {
   return getFileContentPromise(filePath, type);
 }
 
-function platformSaveFilePromise(filePath, content, overwrite) {
+function platformSaveFilePromise(param, content, overwrite) {
   if (objectStoreAPI) {
     const param = {
-      path: filePath,
+      ...param,
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.saveFilePromise(param, content, overwrite);
   } else if (webDavAPI) {
-    return webDavAPI.saveFilePromise(filePath, content, overwrite);
+    return webDavAPI.saveFilePromise(param, content, overwrite);
   }
 
-  return saveFilePromise(filePath, content, overwrite);
+  return saveFilePromise(param, content, overwrite);
 }
 
 function saveTextFilePlatform(param, content, overwrite) {
   if (objectStoreAPI) {
     return objectStoreAPI.saveTextFilePromise(param, content, overwrite);
   } else if (webDavAPI) {
-    return webDavAPI.saveTextFilePromise(param.path, content, overwrite);
+    return webDavAPI.saveTextFilePromise(
+      param,
+      content,
+      overwrite
+    );
   }
-  return platformSaveTextFilePromise(param.path, content, overwrite);
+  return platformSaveTextFilePromise(
+    param,
+    content,
+    overwrite
+  );
 }
 
-function platformSaveTextFilePromise(filePath, content, overwrite) {
+function platformSaveTextFilePromise(param, content, overwrite) {
   if (objectStoreAPI) {
     const param = {
-      path: filePath,
+      ...param,
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.saveTextFilePromise(param, content, overwrite);
   } else if (webDavAPI) {
-    return webDavAPI.saveTextFilePromise(filePath, content, overwrite);
+    return webDavAPI.saveTextFilePromise(param, content, overwrite);
   }
 
-  return saveTextFilePromise(filePath, content, overwrite);
+  return saveTextFilePromise(param, content, overwrite);
 }
 
 function platformSaveBinaryFilePromise(
-  filePath,
+  param,
   content,
   overwrite,
   onUploadProgress
 ) {
   if (objectStoreAPI) {
     const param = {
-      path: filePath,
+      ...param,
       bucketName: objectStoreAPI.config().bucketName,
     };
     return objectStoreAPI.saveBinaryFilePromise(
@@ -540,21 +548,19 @@ function platformSaveBinaryFilePromise(
     );
   } else if (webDavAPI) {
     return webDavAPI.saveBinaryFilePromise(
-      filePath,
+      param,
       content,
       overwrite,
       onUploadProgress
     );
   }
 
-  return saveBinaryFilePromise(filePath, content, overwrite).then(
-    (succeeded) => {
-      if (succeeded && onUploadProgress) {
-        onUploadProgress({ key: filePath, loaded: 1, total: 1 }, undefined);
-      }
-      return succeeded;
+  return saveBinaryFilePromise(param, content, overwrite).then((succeeded) => {
+    if (succeeded && onUploadProgress) {
+      onUploadProgress({ key: filePath, loaded: 1, total: 1 }, undefined);
     }
-  );
+    return succeeded;
+  });
 }
 
 function platformUploadFileByMultiPart(

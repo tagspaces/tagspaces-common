@@ -20,6 +20,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return "";
   }
 
+  function getLmdt(param) {
+    if (typeof param === "object" && param !== null) {
+      return param.lmdt;
+    }
+    return undefined;
+  }
+
   /**
    * @param param
    * @returns {Promise<boolean>} catch reject if path not exists
@@ -176,8 +183,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return saveFilePromise(param, textContent, overwrite);
   }
 
+  /**
+   * @param param {path, lmdt} - last modified date; if provided will not saveFile if lmdt != file.lmdt
+   * @param content
+   * @param overwrite
+   * @param
+   * @returns {Promise<unknown>}
+   */
   function saveFilePromise(param, content, overwrite = true) {
     const filePath = getPath(param);
+    const lmdt = getLmdt(param);
     return new Promise((resolve, reject) => {
       function saveFile(entry, tContent) {
         fs.outputFile(entry.path, tContent, (error) => {
@@ -203,6 +218,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
       getPropertiesPromise(param)
         .then((entry) => {
+          if (lmdt && lmdt !== entry.lmdt) {
+            reject(new Error("File was modified externally"));
+            return false;
+          }
           if (!entry) {
             saveFile(getDefaultFile(), content);
           } else if (overwrite) {
@@ -229,15 +248,15 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * @param content: any
    * @param overwrite: boolean
    */
-  async function saveBinaryFilePromise(filePath, content, overwrite) {
-    console.log("Saving binary file: " + filePath);
+  async function saveBinaryFilePromise(param, content, overwrite) {
+    // console.log("Saving binary file: " + filePath);
     let buff;
     if (content.readable) {
       buff = await streamToBuffer(content);
     } else {
       buff = arrayBufferToBuffer(content);
     }
-    return saveFilePromise(filePath, buff, overwrite);
+    return saveFilePromise(param, buff, overwrite);
   }
 
   /**

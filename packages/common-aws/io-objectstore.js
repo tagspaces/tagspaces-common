@@ -563,16 +563,27 @@ const getFileContentPromise = async (
  * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
 const saveFilePromise = (param, content, overWrite, mode) =>
-  new Promise((resolve, reject) => {
+  new Promise(async (resolve, reject) => {
     if (content === undefined) {
       reject(new Error("content is undefined"));
     } else {
       const path = param.path;
       const bucketName = param.bucketName;
+      const lmdt = param.lmdt;
       // let isNewFile = false;
       // eslint-disable-next-line no-param-reassign
       const filePath = normalizeRootPath(path);
 
+      if (lmdt) {
+        const fileProps = await getPropertiesPromise({
+          path: filePath,
+          bucketName: bucketName,
+        });
+        if (fileProps && fileProps.lmdt !== lmdt) {
+          reject(new Error("File was modified externally"));
+          return false;
+        }
+      }
       /*return getPropertiesPromise({
     path: filePath,
     bucketName: bucketName,
