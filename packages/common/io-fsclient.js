@@ -244,7 +244,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   /**
-   * @param filePath: string
+   * @param param: {path}
    * @param content: any
    * @param overwrite: boolean
    */
@@ -865,7 +865,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     const newDirPath =
       tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
       AppConfig.dirSeparator +
-      newDirName;
+      newDirName.trim();
     console.log("Renaming dir: " + dirPath + " to " + newDirPath);
     // stopWatchingDirectories();
     return new Promise(async (resolve, reject) => {

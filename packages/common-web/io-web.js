@@ -119,7 +119,10 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
             (obj) => obj.path === thumbPath
           );
           if (thumbAvailable) {
-            file.thumbPath = await getFileContentPromise(thumbPath, "DataURL");
+            file.thumbPath = await getFileContentPromise(
+              { path: thumbPath },
+              "DataURL"
+            );
           }
         }
       }
@@ -387,7 +390,7 @@ function createDirectoryPromise(param) {
  */
 function copyFilePromise(param, newFilePath) {
   // https://github.com/WICG/file-system-access/pull/317
-  return Promise.reject('not supported');
+  return Promise.reject("not supported");
   /*return new Promise(async (resolve, reject) => {
     const path = getPath(param);
     const fileHandle = await getHandle(path, true);
@@ -430,7 +433,7 @@ function copyFilePromise(param, newFilePath) {
  */
 function renameFilePromise(param, newFilePath) {
   // https://github.com/WICG/file-system-access/pull/317
-  return Promise.reject('not supported');
+  return Promise.reject("not supported");
   /*return new Promise(async (resolve, reject) => {
     const path = getPath(param);
     const fileHandle = await getHandle(path, true);
@@ -448,7 +451,7 @@ function renameFilePromise(param, newFilePath) {
  * Rename a directory
  */
 function renameDirectoryPromise(param, newDirectoryPath) {
-  return Promise.reject('not supported');
+  return Promise.reject("not supported");
 }
 
 /**

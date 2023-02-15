@@ -237,14 +237,13 @@ function platformCreateIndex(
   listDirectory = undefined,
   loadTextFile = undefined
 ) {
-  if (objectStoreAPI) {
-    param = {
-      ...param,
-      bucketName: objectStoreAPI.config().bucketName,
-    };
-  }
   return Indexer.createIndex(
-    param,
+    objectStoreAPI
+      ? {
+          ...param,
+          bucketName: objectStoreAPI.config().bucketName,
+        }
+      : param,
     mode,
     ignorePatterns,
     listDirectory,
@@ -486,11 +485,14 @@ function platformGetLocalFileContentPromise(filePath, type) {
 
 function platformSaveFilePromise(param, content, overwrite) {
   if (objectStoreAPI) {
-    const param = {
-      ...param,
-      bucketName: objectStoreAPI.config().bucketName,
-    };
-    return objectStoreAPI.saveFilePromise(param, content, overwrite);
+    return objectStoreAPI.saveFilePromise(
+      {
+        ...param,
+        bucketName: objectStoreAPI.config().bucketName,
+      },
+      content,
+      overwrite
+    );
   } else if (webDavAPI) {
     return webDavAPI.saveFilePromise(param, content, overwrite);
   }
@@ -502,26 +504,21 @@ function saveTextFilePlatform(param, content, overwrite) {
   if (objectStoreAPI) {
     return objectStoreAPI.saveTextFilePromise(param, content, overwrite);
   } else if (webDavAPI) {
-    return webDavAPI.saveTextFilePromise(
-      param,
-      content,
-      overwrite
-    );
+    return webDavAPI.saveTextFilePromise(param, content, overwrite);
   }
-  return platformSaveTextFilePromise(
-    param,
-    content,
-    overwrite
-  );
+  return platformSaveTextFilePromise(param, content, overwrite);
 }
 
 function platformSaveTextFilePromise(param, content, overwrite) {
   if (objectStoreAPI) {
-    const param = {
-      ...param,
-      bucketName: objectStoreAPI.config().bucketName,
-    };
-    return objectStoreAPI.saveTextFilePromise(param, content, overwrite);
+    return objectStoreAPI.saveTextFilePromise(
+      {
+        ...param,
+        bucketName: objectStoreAPI.config().bucketName,
+      },
+      content,
+      overwrite
+    );
   } else if (webDavAPI) {
     return webDavAPI.saveTextFilePromise(param, content, overwrite);
   }
@@ -536,12 +533,11 @@ function platformSaveBinaryFilePromise(
   onUploadProgress
 ) {
   if (objectStoreAPI) {
-    const param = {
-      ...param,
-      bucketName: objectStoreAPI.config().bucketName,
-    };
     return objectStoreAPI.saveBinaryFilePromise(
-      param,
+      {
+        ...param,
+        bucketName: objectStoreAPI.config().bucketName,
+      },
       content,
       overwrite,
       onUploadProgress
