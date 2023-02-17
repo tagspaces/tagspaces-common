@@ -304,7 +304,7 @@ function formatFileSize2(sizeInBytes, siSystem) {
  * @param includeTime: boolean
  * @returns {string}
  */
-function  formatDateTime(date, includeTime) {
+function formatDateTime(date, includeTime) {
   if (date === undefined || date === "") {
     return "";
   }
@@ -498,7 +498,7 @@ function sortBySize(a, b) {
  * @returns {number}
  */
 function sortByDateModified(a, b) {
-  return a.lmdt - b.lmdt;
+  return a.lmdt === b.lmdt ? sortAlphaNum(a, b) : a.lmdt - b.lmdt;
 }
 
 /**
@@ -507,7 +507,9 @@ function sortByDateModified(a, b) {
  * @returns {number}
  */
 function sortByExtension(a, b) {
-  return a.extension.toString().localeCompare(b.extension);
+  return a.extension === b.extension
+    ? sortAlphaNum(a, b)
+    : a.extension.toString().localeCompare(b.extension);
 }
 
 /**
@@ -517,7 +519,7 @@ function sortByExtension(a, b) {
  */
 function sortByFirstTag(a, b) {
   if ((!a.tags && !b.tags) || (a.tags.length < 1 && b.tags.length < 1)) {
-    return 0;
+    return sortAlphaNum(a, b);
   }
   if (!a.tags || a.tags.length < 1) {
     return -1;
