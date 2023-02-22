@@ -553,7 +553,7 @@ function platformSaveBinaryFilePromise(
 
   return saveBinaryFilePromise(param, content, overwrite).then((succeeded) => {
     if (succeeded && onUploadProgress) {
-      onUploadProgress({ key: filePath, loaded: 1, total: 1 }, undefined);
+      onUploadProgress({ key: param.path, loaded: 1, total: 1 }, undefined);
     }
     return succeeded;
   });
