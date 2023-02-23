@@ -249,10 +249,52 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * @param overwrite: boolean
    */
   async function saveBinaryFilePromise(param, content, overwrite) {
+
+    function isStream(stream) {
+      return stream !== null
+          && typeof stream === 'object'
+          && typeof stream.pipe === 'function';
+    }
+
+    /**
+     * check if is node readable stream
+     * @param stream
+     * @returns {*|boolean}
+     */
+    function isReadableStream(stream) {
+      return isStream(stream)
+          && stream.readable !== false
+          && typeof stream._read === 'function'
+          && typeof stream._readableState === 'object';
+    }
+
+    async function readWebStreamToBuffer(webStream) {
+      const reader = webStream.getReader();
+      const chunks = [];
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          chunks.push(value);
+        }
+
+        // Concatenate the chunks into a single buffer
+        return Buffer.concat(chunks);
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
     // console.log("Saving binary file: " + filePath);
     let buff;
-    if (content.readable) {
+    if (isReadableStream(content)){//content.readable) {
       buff = await streamToBuffer(content);
+    } else if(content instanceof ReadableStream){
+      // it is ReadableStream from web streams API
+      buff = await readWebStreamToBuffer(content);
     } else {
       buff = arrayBufferToBuffer(content);
     }
