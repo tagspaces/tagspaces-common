@@ -51,7 +51,7 @@
   },
   "electronDependencies": {
     "@tagspaces/tagspaces-common-node": "2.1.19",
-    "@tagspaces/tagspaces-common-electron": "2.0.44",
+    "@tagspaces/tagspaces-common-electron": "2.1.20",
     "@tagspaces/tagspaces-common-aws": "2.1.19",
     "@tagspaces/tagspaces-common-webdav": "2.1.19"
   }
