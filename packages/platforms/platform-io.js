@@ -59,6 +59,7 @@ const {
   createNewInstance,
   checkFileExist,
   checkDirExist,
+  loadExtensions,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -681,6 +682,14 @@ function platformCheckDirExist(dir) {
   });
 }
 
+function platformLoadExtensions() {
+  if (AppConfig.isElectron) {
+    return loadExtensions();
+  } else {
+    console.log("Load extensions is supported only on Electron.");
+  }
+}
+
 module.exports = {
   platformGetLocationPath,
   platformSetLanguage,
@@ -737,4 +746,5 @@ module.exports = {
   platformCreateNewInstance,
   platformCheckDirExist,
   platformCheckFileExist,
+  platformLoadExtensions,
 };

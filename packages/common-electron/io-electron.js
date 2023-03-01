@@ -24,6 +24,10 @@ function showMainWindow() {
   ipcRenderer.send("show-main-window", "notNeededArgument");
 }
 
+function loadExtensions() {
+  ipcRenderer.send("load-extensions", "notNeededArgument");
+}
+
 /**
  * @param zoomLevel: number
  */
@@ -249,4 +253,5 @@ module.exports = {
   readMacOSTags,
   watchFolder,
   tiffJs,
+  loadExtensions
 };
