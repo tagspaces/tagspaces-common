@@ -78,11 +78,11 @@ function platformEnableObjectStoreSupport(objectStoreConfig) {
       objectStoreAPI.config().endpointURL === objectStoreConfig.endpointURL &&
       objectStoreAPI.config().accessKeyId === objectStoreConfig.accessKeyId
     ) {
-      resolve();
+      resolve(true);
     } else {
       objectStoreAPI = require("@tagspaces/tagspaces-common-aws/io-objectstore");
       objectStoreAPI.configure(objectStoreConfig);
-      resolve();
+      resolve(true);
     }
   });
 }

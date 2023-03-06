@@ -579,7 +579,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
           path: filePath,
           bucketName: bucketName,
         });
-        if (fileProps && fileProps.lmdt !== lmdt) {
+        if (fileProps && fileProps.lmdt.getTime() !== lmdt.getTime()) {
           reject(new Error("File was modified externally"));
           return false;
         }
