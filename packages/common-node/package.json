@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-node",
   "description": "TagSpaces common node module",
-  "version": "2.1.19",
+  "version": "2.1.22",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -12,8 +12,8 @@
   "dependencies": {
     "@tagspaces/tagspaces-common": "^2.1.19",
     "fs-extra": "^10.0.0",
-    "marked": "^3.0.8",
     "jszip": "^3.10.1",
-    "jszip-utils": "^0.1.0"
+    "jszip-utils": "^0.1.0",
+    "marked": "^3.0.8"
   }
 }
