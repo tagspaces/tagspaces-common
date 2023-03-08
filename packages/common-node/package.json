@@ -6,12 +6,14 @@
   "license": "MIT",
   "scripts": {
     "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
-    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-node-2.0.21.tgz && npx shx cp -rL package/** ../../../tagspaces2/node_modules/@tagspaces/tagspaces-common-node && rimraf package",
+    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-node-2.1.19.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common-node && rimraf package",
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
     "@tagspaces/tagspaces-common": "^2.1.19",
     "fs-extra": "^10.0.0",
-    "marked": "^3.0.8"
+    "marked": "^3.0.8",
+    "jszip": "^3.10.1",
+    "jszip-utils": "^0.1.0"
   }
 }

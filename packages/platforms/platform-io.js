@@ -60,6 +60,9 @@ const {
   checkFileExist,
   checkDirExist,
   loadExtensions,
+  removeExtension,
+  getUserDataDir,
+  unZip
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -690,6 +693,30 @@ function platformLoadExtensions() {
   }
 }
 
+function platformRemoveExtension(extensionId) {
+  if (AppConfig.isElectron) {
+    return removeExtension(extensionId);
+  } else {
+    console.log("remove extensions is supported only on Electron.");
+  }
+}
+
+function platformGetUserDataDir() {
+  if (AppConfig.isElectron) {
+    return getUserDataDir();
+  } else {
+    console.log("getUserDataDir is supported only on Electron.");
+  }
+}
+
+function platformUnZip(filePath, targetPath) {
+  if (AppConfig.isElectron) {
+    return unZip(filePath, targetPath);
+  } else {
+    console.log("platformUnZip is supported only on Electron.");
+  }
+}
+
 module.exports = {
   platformGetLocationPath,
   platformSetLanguage,
@@ -747,4 +774,7 @@ module.exports = {
   platformCheckDirExist,
   platformCheckFileExist,
   platformLoadExtensions,
+  platformRemoveExtension,
+  platformGetUserDataDir,
+  platformUnZip
 };

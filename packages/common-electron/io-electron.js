@@ -28,6 +28,14 @@ function loadExtensions() {
   ipcRenderer.send("load-extensions", "notNeededArgument");
 }
 
+function removeExtension(extensionId) {
+  ipcRenderer.send("remove-extension", extensionId);
+}
+
+function getUserDataDir() {
+  return ipcRenderer.invoke("get-user-data");
+}
+
 /**
  * @param zoomLevel: number
  */
@@ -253,5 +261,7 @@ module.exports = {
   readMacOSTags,
   watchFolder,
   tiffJs,
-  loadExtensions
+  loadExtensions,
+  removeExtension,
+  getUserDataDir,
 };
