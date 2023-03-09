@@ -58,31 +58,33 @@ function unZip(filePath, targetPath) {
         JSZip.loadAsync(data).then((zip) => {
           // Iterate through the files and extract them
           const promises = Object.keys(zip.files).map((filename) => {
-            if (!filename.startsWith("__MACOSX")) {
-              const dirName = tsPaths.extractFileName(filePath).split(".").slice(0, -1).join(".");
-              const targetFile = pathLib.join(targetPath, dirName, filename);
-              // Check if the file is a directory
-              if (zip.files[filename].dir) {
-                // Create the directory if it doesn't exist
-                mkdirpSync(targetFile);
-                return true;
-              } else {
-                const dir = pathLib.dirname(targetFile);
-                if (dir) {
-                  mkdirpSync(dir);
-                }
-                // Extract the file
-                return zip
-                  .file(filename)
-                  .async("nodebuffer")
-                  .then((content) => {
-                    // Save the file to disk
-                    fs.writeFileSync(targetFile, content);
-                    return true;
-                  });
+            // if (!filename.startsWith("__MACOSX")) {
+            const dirName = tsPaths
+              .extractFileName(filePath)
+              .split(".")
+              .slice(0, -1)
+              .join(".");
+            const targetFile = pathLib.join(targetPath, dirName, filename);
+            // Check if the file is a directory
+            if (zip.files[filename].dir) {
+              // Create the directory if it doesn't exist
+              mkdirpSync(targetFile);
+              return true;
+            } else {
+              const dir = pathLib.dirname(targetFile);
+              if (dir) {
+                mkdirpSync(dir);
               }
+              // Extract the file
+              return zip
+                .file(filename)
+                .async("nodebuffer")
+                .then((content) => {
+                  // Save the file to disk
+                  fs.writeFileSync(targetFile, content);
+                  return true;
+                });
             }
-            return true;
           });
           Promise.all(promises).then(() => resolve(filePath));
         });
