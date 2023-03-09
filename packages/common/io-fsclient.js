@@ -200,7 +200,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             reject(error);
             return;
           }
-          resolve(entry);
+          if (entry.lmdt) {
+            resolve(entry);
+          } else {
+            getPropertiesPromise(param).then((entryProps) => {
+              resolve({ ...entry, ...entryProps });
+            });
+          }
         });
       }
       function getDefaultFile() {
@@ -210,7 +216,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           path: filePath,
           extension: tsPaths.extractFileExtension(filePath, dirSeparator),
           size: content.length,
-          lmdt: new Date().getTime(),
+          // lmdt: new Date().getTime(),
           isNewFile: true,
           tags: [],
         };
@@ -249,11 +255,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * @param overwrite: boolean
    */
   async function saveBinaryFilePromise(param, content, overwrite) {
-
     function isStream(stream) {
-      return stream !== null
-          && typeof stream === 'object'
-          && typeof stream.pipe === 'function';
+      return (
+        stream !== null &&
+        typeof stream === "object" &&
+        typeof stream.pipe === "function"
+      );
     }
 
     /**
@@ -262,10 +269,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
      * @returns {*|boolean}
      */
     function isReadableStream(stream) {
-      return isStream(stream)
-          && stream.readable !== false
-          && typeof stream._read === 'function'
-          && typeof stream._readableState === 'object';
+      return (
+        isStream(stream) &&
+        stream.readable !== false &&
+        typeof stream._read === "function" &&
+        typeof stream._readableState === "object"
+      );
     }
 
     async function readWebStreamToBuffer(webStream) {
@@ -290,9 +299,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
     // console.log("Saving binary file: " + filePath);
     let buff;
-    if (isReadableStream(content)){//content.readable) {
+    if (isReadableStream(content)) {
+      //content.readable) {
       buff = await streamToBuffer(content);
-    } else if(content instanceof ReadableStream){
+    } else if (content instanceof ReadableStream) {
       // it is ReadableStream from web streams API
       buff = await readWebStreamToBuffer(content);
     } else {
