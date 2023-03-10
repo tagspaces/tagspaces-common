@@ -173,6 +173,17 @@ function getBackupFileLocation(entryPath, uuid, dirSeparator = "/") {
   );
 }
 
+function getBackupFileDir(entryPath, uuid, dirSeparator = "/") {
+  const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
+  return (
+    dirPath +
+    (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
+    AppConfig.metaFolder +
+    dirSeparator +
+    uuid
+  );
+}
+
 function getMetaFileLocationForDir(
   entryPath,
   dirSeparator = "/", // = AppConfig.dirSeparator
@@ -601,6 +612,7 @@ module.exports = {
   getThumbFileLocationForDirectory,
   getBgndFileLocationForDirectory,
   getBackupFileLocation,
+  getBackupFileDir,
   getFileLocationFromMetaFile,
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,

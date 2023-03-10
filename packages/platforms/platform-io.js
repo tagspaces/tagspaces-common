@@ -40,6 +40,7 @@ const {
   copyFilePromise,
   renameFilePromise,
   renameDirectoryPromise,
+  moveDirectoryPromise,
   loadTextFilePromise,
   getFileContentPromise,
   saveFilePromise,
@@ -457,6 +458,24 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
   });
 }
 
+function platformMoveDirectoryPromise(dirPath, newDirName) {
+  if (objectStoreAPI) {
+    const param = {
+      path: dirPath,
+      bucketName: objectStoreAPI.config().bucketName,
+    };
+    return objectStoreAPI.moveDirectoryPromise(param, newDirName);
+  } else if (webDavAPI) {
+    return webDavAPI.moveDirectoryPromise(dirPath, newDirName);
+  }
+  // PlatformIO.ignoreByWatcher(dirPath, newDirName);
+
+  return moveDirectoryPromise(dirPath, newDirName).then((result) => {
+    // PlatformIO.deignoreByWatcher(dirPath, newDirName);
+    return result;
+  });
+}
+
 function platformLoadTextFilePromise(filePath, isPreview) {
   if (objectStoreAPI) {
     const param = {
@@ -751,6 +770,7 @@ module.exports = {
   platformCopyFilePromise,
   platformRenameFilePromise,
   platformRenameDirectoryPromise,
+  platformMoveDirectoryPromise,
   platformLoadTextFilePromise,
   platformGetFileContentPromise,
   platformGetLocalFileContentPromise,

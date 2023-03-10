@@ -1000,10 +1000,15 @@ function renameFilePromise(param, newFilePath) {
   });
 }
 
+function renameDirectoryPromise(param, newDirName) {
+  const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
+  const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirName);
+  return moveDirectoryPromise(param, newDirPath);
+}
 /**
  * Rename a directory
  */
-function renameDirectoryPromise(param, newDirectoryPath) {
+function moveDirectoryPromise(param, newDirectoryPath) {
   const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
   const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirectoryPath);
   console.log("Renaming directory: " + param.path + " to " + newDirPath);
@@ -1186,6 +1191,7 @@ module.exports = {
   copyFilePromise,
   renameFilePromise,
   renameDirectoryPromise,
+  moveDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   openUrl,

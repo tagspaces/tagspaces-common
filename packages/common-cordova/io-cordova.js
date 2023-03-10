@@ -1182,9 +1182,6 @@ function checkDirExist(dirPath) {
   });
 }
 
-/**
- * Rename a directory
- */
 function renameDirectoryPromise(param, newDirName) {
   let path;
   if (typeof param === "object" && param !== null) {
@@ -1192,21 +1189,31 @@ function renameDirectoryPromise(param, newDirName) {
   } else {
     path = param;
   }
+  const newDirPath =
+    extractParentDirectoryPath(path, "/") + AppConfig.dirSeparator + newDirName;
+
+  return moveDirectoryPromise(param, normalizePath(newDirPath));
+}
+/**
+ * Rename a directory
+ */
+function moveDirectoryPromise(param, newDirPath) {
+  let path;
+  if (typeof param === "object" && param !== null) {
+    path = param.path;
+  } else {
+    path = param;
+  }
+  // eslint-disable-next-line no-param-reassign
+  const dirPath = normalizePath(path);
+  const newDirParentPath = normalizePath(
+    newDirPath.substring(0, newDirPath.lastIndexOf("/"))
+  );
   return new Promise((resolve, reject) => {
-    let newDirPath =
-      extractParentDirectoryPath(path, "/") +
-      AppConfig.dirSeparator +
-      newDirName;
-    // eslint-disable-next-line no-param-reassign
-    const dirPath = normalizePath(path);
-    const newDirParentPath = normalizePath(
-      newDirPath.substring(0, newDirPath.lastIndexOf("/"))
-    );
-    newDirPath = normalizePath(newDirPath);
 
     checkDirExist(newDirPath).then((exist) => {
       if (exist) {
-        reject("error renaming: " + newDirName + " exist!");
+        reject("error renaming: " + newDirPath + " exist!");
         return;
       }
 
@@ -1227,7 +1234,7 @@ function renameDirectoryPromise(param, newDirName) {
             (entry) => {
               entry.moveTo(
                 parentDirEntry,
-                newDirName,
+                newDirPath, //newDirName, todo test this
                 () => {
                   console.log(
                     "Directory renamed to: " +
@@ -1492,6 +1499,7 @@ module.exports = {
   checkFileExist,
   checkDirExist,
   renameDirectoryPromise,
+  moveDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   selectDirectory,

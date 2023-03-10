@@ -222,6 +222,10 @@ function renameDirectoryPromise(dirPath, newDirName) {
   return fsClient.renameDirectoryPromise(pathLib.resolve(dirPath), newDirName);
 }
 
+function moveDirectoryPromise(dirPath, newDirName) {
+  return fsClient.moveDirectoryPromise(pathLib.resolve(dirPath), newDirName);
+}
+
 function deleteFilePromise(path) {
   return fsClient.deleteFilePromise(path);
 }
@@ -254,6 +258,7 @@ module.exports = {
   copyFilePromise,
   renameFilePromise,
   renameDirectoryPromise,
+  moveDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,

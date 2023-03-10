@@ -913,11 +913,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   function renameDirectoryPromise(dirPath, newDirName) {
-    // dirPath = pathLib.resolve(dirPath); TODO move for node only
     const newDirPath =
       tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
       AppConfig.dirSeparator +
       newDirName.trim();
+    return moveDirectoryPromise(dirPath, newDirPath, true);
+  }
+
+  function moveDirectoryPromise(dirPath, newDirPath, isRename = false) {
     console.log("Renaming dir: " + dirPath + " to " + newDirPath);
     // stopWatchingDirectories();
     return new Promise(async (resolve, reject) => {
@@ -926,13 +929,24 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return;
       }
       if (await exist(newDirPath)) {
-        reject(
-          'Directory "' +
-            newDirPath +
-            '" exists. Renaming of "' +
-            dirPath +
-            '" failed'
-        );
+        if (isRename) {
+          reject(
+            'Directory "' +
+              newDirPath +
+              '" exists. Renaming of "' +
+              dirPath +
+              '" failed'
+          );
+        } else {
+          fs.move(dirPath, newDirPath, { clobber: true }, (error) => {
+            // TODO webdav impl
+            if (error) {
+              reject("Move: " + dirPath + " failed:" + error);
+              return;
+            }
+            resolve(newDirPath);
+          });
+        }
         return;
       }
       const dirProp = await getPropertiesPromise(dirPath);
@@ -979,6 +993,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     copyFilePromise,
     renameFilePromise,
     renameDirectoryPromise,
+    moveDirectoryPromise,
     deleteFilePromise,
     deleteDirectoryPromise,
     watchDirectory,

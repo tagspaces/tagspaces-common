@@ -455,6 +455,13 @@ function renameDirectoryPromise(param, newDirectoryPath) {
 }
 
 /**
+ * Move a directory
+ */
+function moveDirectoryPromise(param, newDirectoryPath) {
+  return Promise.reject("not supported");
+}
+
+/**
  * Delete a specified file
  */
 function deleteFilePromise(param) {
@@ -580,6 +587,7 @@ module.exports = {
   copyFilePromise,
   renameFilePromise,
   renameDirectoryPromise,
+  moveDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   selectDirectoryDialog,
