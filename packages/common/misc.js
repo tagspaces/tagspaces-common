@@ -247,6 +247,21 @@ function streamToBuffer(stream) {
 }
 
 /**
+ * @param bytes: number
+ * @param decimals
+ * @returns {string}
+ */
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+/**
+ * @deprecated use formatBytes instead
  * @param sizeInBytes: number
  * @returns {string}
  */
@@ -276,6 +291,7 @@ function formatFileSize(sizeInBytes) {
 }
 
 /**
+ * @deprecated use formatBytes instead
  * @param sizeInBytes: number
  * @param siSystem: boolean
  * @returns {string}
@@ -992,6 +1008,7 @@ module.exports = {
   getRandomInt,
   arrayBufferToBuffer,
   streamToBuffer,
+  formatBytes,
   formatFileSize,
   formatFileSize2,
   formatDateTime,

@@ -267,7 +267,7 @@ describe("io-node unit tests", () => {
   test("io-node.createDirectoryPromise", async () => {
     const filePath = pathLib.resolve(
       __dirname,
-      "../../../scripts/testContents/empty_folder/test"
+      "../../../scripts/testContents/empty_folder/testDir"
     );
     await createDirectoryPromise(filePath);
     expect(await isDirectory(filePath)).toBe(true);
@@ -320,13 +320,13 @@ describe("io-node unit tests", () => {
     );
     const destPath = pathLib.resolve(
       __dirname,
-      "../../../scripts/testContents/new"
+      "../../../scripts/testContents/new/empty_folder2"
     );
-    await createDirectoryPromise(destPath);
+    // await createDirectoryPromise(destPath);
     await moveDirectoryPromise(sourcePath, destPath);
     expect(
       await isDirectory(
-        pathLib.resolve(__dirname, "../../../scripts/testContents/new/test")
+        pathLib.resolve(__dirname, "../../../scripts/testContents/new/empty_folder2")
       )
     ).toBe(true);
   });

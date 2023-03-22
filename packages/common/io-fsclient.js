@@ -912,15 +912,35 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
-  function renameDirectoryPromise(dirPath, newDirName) {
+  function renameDirectoryPromise(
+    dirPath,
+    newDirName,
+    onProgress = undefined,
+    onAbort = undefined
+  ) {
     const newDirPath =
       tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
       AppConfig.dirSeparator +
       newDirName.trim();
-    return moveDirectoryPromise(dirPath, newDirPath, true);
+    return moveDirectoryPromise(dirPath, newDirPath, onProgress, onAbort, true);
   }
 
-  function moveDirectoryPromise(dirPath, newDirPath, isRename = false) {
+  /**
+   * todo not work with onProgress https://github.com/jprichardson/node-fs-extra/issues/594
+   * @param dirPath
+   * @param newDirPath
+   * @param onProgress
+   * @param onAbort
+   * @param isRename
+   * @returns {Promise<unknown>}
+   */
+  function moveDirectoryPromise(
+    dirPath,
+    newDirPath,
+    onProgress = undefined,
+    onAbort = undefined,
+    isRename = false
+  ) {
     console.log("Renaming dir: " + dirPath + " to " + newDirPath);
     // stopWatchingDirectories();
     return new Promise(async (resolve, reject) => {
@@ -938,14 +958,47 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               '" failed'
           );
         } else {
-          fs.move(dirPath, newDirPath, { clobber: true }, (error) => {
-            // TODO webdav impl
-            if (error) {
-              reject("Move: " + dirPath + " failed:" + error);
-              return;
+          let part = 0;
+          let processedSize = 0;
+          fs.move(
+            dirPath,
+            newDirPath,
+            {
+              clobber: true, // todo clobber is deprecated in copy replace with overwrite
+              filter: async (src, dest) => {
+                if (onProgress) {
+                  const processedFile = await getPropertiesPromise({
+                    path: src,
+                  });
+                  if (processedFile) {
+                    processedSize += processedFile.size;
+                  }
+                  part += 1;
+                  const progress = {
+                    loaded: processedSize,
+                    //total: 2048,
+                    part: part,
+                    key: src,
+                  };
+                  onProgress(progress, () => {
+                    throw new Error("Aborted: move " + src + " to " + dest);
+                  });
+                }
+                /*const progress = (processedSize / totalSize) * 100;
+                console.log(`Progress: ${progress.toFixed(2)}%`);*/
+
+                return true;
+              },
+            },
+            (error) => {
+              // TODO webdav impl
+              if (error) {
+                reject("Move: " + dirPath + " failed:" + error);
+                return;
+              }
+              resolve(newDirPath);
             }
-            resolve(newDirPath);
-          });
+          );
         }
         return;
       }

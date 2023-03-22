@@ -1,8 +1,7 @@
 const pathLib = require("path");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const fs = require("fs-extra");
-// const zlib = require("minizlib");
-// const zlib = require("zlib");
+const klaw = require("klaw");
 const JSZip = require("jszip");
 const JSZipUtils = require("jszip-utils");
 //const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
@@ -42,6 +41,28 @@ function mkdirpSync(dir) {
   mkdirpSync(pathLib.dirname(dir));
   fs.mkdirSync(dir);
 }
+
+async function dirSize(directoryPath) {
+  let totalSize = 0;
+
+  await new Promise((resolve, reject) => {
+    klaw(directoryPath)
+      .on("data", (item) => {
+        if (item.stats.isFile()) {
+          totalSize += item.stats.size;
+        }
+      })
+      .on("end", () => {
+        resolve();
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+  });
+
+  return totalSize;
+}
+
 /**
  * @param filePath like /home/user/file.zip
  * @param targetPath /home/user/targetDir
@@ -218,13 +239,161 @@ function renameFilePromise(filePath, newFilePath) {
   return fsClient.renameFilePromise(filePath, newFilePath);
 }
 
-function renameDirectoryPromise(dirPath, newDirName) {
-  return fsClient.renameDirectoryPromise(pathLib.resolve(dirPath), newDirName);
+function renameDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
+  return fsClient.renameDirectoryPromise(
+    pathLib.resolve(dirPath),
+    newDirName,
+    onProgress,
+    onAbort
+  );
 }
 
-function moveDirectoryPromise(dirPath, newDirName) {
-  return fsClient.moveDirectoryPromise(pathLib.resolve(dirPath), newDirName);
+/*function moveDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
+  return fsClient.moveDirectoryPromise(
+    pathLib.resolve(dirPath),
+    newDirName,
+    onProgress,
+    onAbort
+  );
+}*/
+
+/**
+ * @param srcDir
+ * @param targetDir
+ * @param onProgress
+ * @param onAbort
+ * @returns {Promise<string>} targetDir
+ */
+function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
+  return new Promise((resolve, reject) => {
+    const files = [];
+    const dirs = [];
+    let totalSize = {};
+    klaw(srcDir)
+      .on("data", (item) => {
+        if (item.stats.isFile()) {
+          totalSize[item.path] = item.stats.size;
+          files.push(item.path);
+        } else {
+          dirs.push(item.path);
+        }
+      })
+      .on("end", () => {
+        const promises = [];
+        // fs.ensureDir(targetDir, (err) => {
+        dirs.forEach((dir) => {
+          const relativePath = pathLib.relative(srcDir, dir);
+          const targetPath = pathLib.join(targetDir, relativePath);
+          mkdirpSync(targetPath);
+        });
+        files.forEach((item) => {
+          const relativePath = pathLib.relative(srcDir, item);
+          const targetPath = pathLib.join(targetDir, relativePath);
+          // const targetDirname = pathLib.dirname(targetPath);
+
+          promises.push(
+            new Promise((resolve, reject) => {
+              let completedSize = 0;
+              // fs.mkdirs(targetDirname).then(() => {
+              const readStream = fs.createReadStream(item);
+              const writeStream = fs.createWriteStream(targetPath);
+
+              readStream.on("error", reject);
+              writeStream.on("error", reject);
+
+              readStream.on("data", (chunk) => {
+                if (onProgress) {
+                  completedSize += chunk.length;
+
+                  const progress = {
+                    loaded: completedSize,
+                    total: totalSize[item],
+                    //part: part,
+                    key: item,
+                  };
+                  onProgress(progress, () => {
+                    throw new Error(
+                      "Aborted: move " + item + " to " + targetPath
+                    );
+                  });
+                }
+                if (onAbort) {
+                  onAbort = () => {
+                    throw new Error(
+                      "Aborted: move " + item + " to " + targetPath
+                    );
+                  };
+                }
+              });
+
+              /*writeStream.on("finish", resolve);*/
+
+              readStream
+                .pipe(writeStream) //, { end: false });
+                .on("finish", () => {
+                  fs.unlink(item, (err) => {
+                    if (err) {
+                      reject(err);
+                    } else {
+                      resolve();
+                    }
+                  });
+                });
+            })
+          );
+        });
+        Promise.allSettled(promises).then(() => {
+          resolve();
+        });
+        /*.catch((err) => {
+              console.debug('error:',err);
+              resolve();
+              //reject(err);
+            });*/
+        // });
+      });
+  }).then(() => deleteDirectoryPromise(srcDir).then(() => targetDir));
 }
+
+/*function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
+  return new Promise((resolve, reject) => {
+    const items = [];
+
+    klaw(srcDir)
+      .on("data", (item) => {
+        items.push(item.path);
+      })
+      .on("end", () => {
+        const promises = [];
+        let count = 0;
+
+        items.forEach((item) => {
+          const relativePath = path.relative(srcDir, item);
+          const targetPath = path.join(targetDir, relativePath);
+
+          promises.push(
+            fs
+              .move(item, targetPath, { overwrite: true })
+              .on("progress", (progress) => {
+                count++;
+                const progress_percent = Math.round(
+                  (count / items.length) * 100
+                );
+                console.log(progress_percent);
+              })
+          );
+        });
+
+        Promise.all(promises)
+          .then(() => {
+            resolve();
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      });
+  });
+}*/
 
 function deleteFilePromise(path) {
   return fsClient.deleteFilePromise(path);
@@ -264,4 +433,5 @@ module.exports = {
   watchDirectory,
   createDirectoryTree,
   unZip,
+  dirSize,
 };

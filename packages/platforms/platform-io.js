@@ -63,7 +63,8 @@ const {
   loadExtensions,
   removeExtension,
   getUserDataDir,
-  unZip
+  unZip,
+  dirSize,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -458,7 +459,7 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
   });
 }
 
-function platformMoveDirectoryPromise(dirPath, newDirName) {
+function platformMoveDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
   if (objectStoreAPI) {
     const param = {
       path: dirPath,
@@ -470,10 +471,12 @@ function platformMoveDirectoryPromise(dirPath, newDirName) {
   }
   // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
-  return moveDirectoryPromise(dirPath, newDirName).then((result) => {
-    // PlatformIO.deignoreByWatcher(dirPath, newDirName);
-    return result;
-  });
+  return moveDirectoryPromise(dirPath, newDirName, onProgress, onAbort).then(
+    (result) => {
+      // PlatformIO.deignoreByWatcher(dirPath, newDirName);
+      return result;
+    }
+  );
 }
 
 function platformLoadTextFilePromise(filePath, isPreview) {
@@ -736,6 +739,14 @@ function platformUnZip(filePath, targetPath) {
   }
 }
 
+function platformDirSize(filePath) {
+  if (AppConfig.isElectron) {
+    return dirSize(filePath);
+  } else {
+    console.log("platformDirSize is supported only on Electron.");
+  }
+}
+
 module.exports = {
   platformGetLocationPath,
   platformSetLanguage,
@@ -796,5 +807,6 @@ module.exports = {
   platformLoadExtensions,
   platformRemoveExtension,
   platformGetUserDataDir,
-  platformUnZip
+  platformUnZip,
+  platformDirSize,
 };
