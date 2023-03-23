@@ -41,6 +41,7 @@ const {
   renameFilePromise,
   renameDirectoryPromise,
   moveDirectoryPromise,
+  copyDirectoryPromise,
   loadTextFilePromise,
   getFileContentPromise,
   saveFilePromise,
@@ -64,7 +65,7 @@ const {
   removeExtension,
   getUserDataDir,
   unZip,
-  dirSize,
+  getDirProperties,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const Indexer = require("./indexer");
@@ -459,19 +460,32 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
   });
 }
 
-function platformMoveDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
+function platformCopyDirectoryPromise(param, newDirName, onProgress) {
   if (objectStoreAPI) {
-    const param = {
-      path: dirPath,
-      bucketName: objectStoreAPI.config().bucketName,
-    };
-    return objectStoreAPI.moveDirectoryPromise(param, newDirName);
+    console.log("copyDirectoryPromise is implemented in Electron only.");
   } else if (webDavAPI) {
-    return webDavAPI.moveDirectoryPromise(dirPath, newDirName);
+    console.log("copyDirectoryPromise is implemented in Electron only.");
+  }
+
+  return copyDirectoryPromise(param, newDirName, onProgress).then(
+    (result) => {
+      return result;
+    }
+  );
+}
+
+function platformMoveDirectoryPromise(param, newDirName, onProgress) {
+  if (objectStoreAPI) {
+    return objectStoreAPI.moveDirectoryPromise({
+      ...param,
+      bucketName: objectStoreAPI.config().bucketName,
+    }, newDirName);
+  } else if (webDavAPI) {
+    return webDavAPI.moveDirectoryPromise(param, newDirName);
   }
   // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
-  return moveDirectoryPromise(dirPath, newDirName, onProgress, onAbort).then(
+  return moveDirectoryPromise(param, newDirName, onProgress).then(
     (result) => {
       // PlatformIO.deignoreByWatcher(dirPath, newDirName);
       return result;
@@ -739,11 +753,11 @@ function platformUnZip(filePath, targetPath) {
   }
 }
 
-function platformDirSize(filePath) {
+function platformDirProperties(filePath) {
   if (AppConfig.isElectron) {
-    return dirSize(filePath);
+    return getDirProperties(filePath);
   } else {
-    console.log("platformDirSize is supported only on Electron.");
+    console.log("platformDirProperties is supported only on Electron.");
   }
 }
 
@@ -782,6 +796,7 @@ module.exports = {
   platformRenameFilePromise,
   platformRenameDirectoryPromise,
   platformMoveDirectoryPromise,
+  platformCopyDirectoryPromise,
   platformLoadTextFilePromise,
   platformGetFileContentPromise,
   platformGetLocalFileContentPromise,
@@ -808,5 +823,5 @@ module.exports = {
   platformRemoveExtension,
   platformGetUserDataDir,
   platformUnZip,
-  platformDirSize,
+  platformDirProperties,
 };

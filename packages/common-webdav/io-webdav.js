@@ -139,8 +139,12 @@ function renameDirectoryPromise(dirPath, newDirName) {
   return fsClient.renameDirectoryPromise(dirPath, newDirName);
 }
 
-function moveDirectoryPromise(dirPath, newDirPath) {
-  return fsClient.moveDirectoryPromise(dirPath, newDirPath);
+function moveDirectoryPromise(param, newDirName, onProgress) {
+  return fsClient.moveDirectoryPromise(param, newDirName, onProgress);
+}
+
+function copyDirectoryPromise(param, newDirName, onProgress) {
+  return fsClient.copyDirectoryPromise(param, newDirName, onProgress);
 }
 
 function deleteFilePromise(path) {
@@ -180,6 +184,7 @@ module.exports = {
   renameFilePromise,
   renameDirectoryPromise,
   moveDirectoryPromise,
+  copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,

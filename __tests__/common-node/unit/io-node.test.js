@@ -12,6 +12,7 @@ const {
   renameFilePromise,
   renameDirectoryPromise,
   moveDirectoryPromise,
+  copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
@@ -323,10 +324,30 @@ describe("io-node unit tests", () => {
       "../../../scripts/testContents/new/empty_folder2"
     );
     // await createDirectoryPromise(destPath);
-    await moveDirectoryPromise(sourcePath, destPath);
+    await moveDirectoryPromise({ path: sourcePath }, destPath);
     expect(
       await isDirectory(
-        pathLib.resolve(__dirname, "../../../scripts/testContents/new/empty_folder2")
+        pathLib.resolve(
+          __dirname,
+          "../../../scripts/testContents/new/empty_folder2"
+        )
+      )
+    ).toBe(true);
+  });
+  test("io-node.copyDirectoryPromise", async () => {
+    const sourcePath = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/new"
+    );
+    const destPath = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/new_copied"
+    );
+    // await createDirectoryPromise(destPath);
+    await copyDirectoryPromise({ path: sourcePath }, destPath);
+    expect(
+      await isDirectory(
+        pathLib.resolve(__dirname, "../../../scripts/testContents/new_copied")
       )
     ).toBe(true);
   });

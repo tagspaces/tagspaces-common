@@ -34,22 +34,28 @@ function getLocationPath(location) {
   return locationPath;
 }
 
-function mkdirpSync(dir) {
-  if (fs.existsSync(dir)) {
+/*function mkdirpSync(dir) {
+  /!*if (fs.existsSync(dir)) {
     return;
-  }
-  mkdirpSync(pathLib.dirname(dir));
-  fs.mkdirSync(dir);
-}
+  }*!/
+  // mkdirpSync(pathLib.dirname(dir));
+  fs.ensureDirSync(dir);
+  //fs.mkdirSync(dir);
+}*/
 
-async function dirSize(directoryPath) {
+async function getDirProperties(directoryPath) {
   let totalSize = 0;
+  let filesCount = 0;
+  let dirsCount = 0;
 
   await new Promise((resolve, reject) => {
     klaw(directoryPath)
       .on("data", (item) => {
         if (item.stats.isFile()) {
           totalSize += item.stats.size;
+          filesCount += 1;
+        } else {
+          dirsCount += 1;
         }
       })
       .on("end", () => {
@@ -60,7 +66,7 @@ async function dirSize(directoryPath) {
       });
   });
 
-  return totalSize;
+  return { totalSize, filesCount, dirsCount };
 }
 
 /**
@@ -172,6 +178,10 @@ function resolveFilePath(filePath) {
   pathLib.resolve(filePath);
 }
 
+function mkdirpSync(dir) {
+  fsClient.mkdirpSync(dir);
+}
+
 function isDirectory(entryPath) {
   return fsClient.isDirectory(entryPath);
 }
@@ -239,23 +249,25 @@ function renameFilePromise(filePath, newFilePath) {
   return fsClient.renameFilePromise(filePath, newFilePath);
 }
 
-function renameDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
-  return fsClient.renameDirectoryPromise(
-    pathLib.resolve(dirPath),
-    newDirName,
-    onProgress,
-    onAbort
+function renameDirectoryPromise(dirPath, newDirName) {
+  return fsClient.renameDirectoryPromise(pathLib.resolve(dirPath), newDirName);
+}
+
+function copyDirectoryPromise(param, newDirName, onProgress) {
+  return fsClient.copyDirectoryPromise(
+      { ...param, path: pathLib.resolve(param.path) },
+      newDirName,
+      onProgress
   );
 }
 
-/*function moveDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
+function moveDirectoryPromise(param, newDirName, onProgress) {
   return fsClient.moveDirectoryPromise(
-    pathLib.resolve(dirPath),
+    { ...param, path: pathLib.resolve(param.path) },
     newDirName,
-    onProgress,
-    onAbort
+    onProgress
   );
-}*/
+}
 
 /**
  * @param srcDir
@@ -264,7 +276,7 @@ function renameDirectoryPromise(dirPath, newDirName, onProgress, onAbort) {
  * @param onAbort
  * @returns {Promise<string>} targetDir
  */
-function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
+/*function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
   return new Promise((resolve, reject) => {
     const files = [];
     const dirs = [];
@@ -279,81 +291,88 @@ function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
         }
       })
       .on("end", () => {
-        const promises = [];
         // fs.ensureDir(targetDir, (err) => {
         dirs.forEach((dir) => {
           const relativePath = pathLib.relative(srcDir, dir);
           const targetPath = pathLib.join(targetDir, relativePath);
           mkdirpSync(targetPath);
         });
-        files.forEach((item) => {
+        const promises = files.map((item) => {
           const relativePath = pathLib.relative(srcDir, item);
           const targetPath = pathLib.join(targetDir, relativePath);
           // const targetDirname = pathLib.dirname(targetPath);
 
-          promises.push(
-            new Promise((resolve, reject) => {
-              let completedSize = 0;
-              // fs.mkdirs(targetDirname).then(() => {
-              const readStream = fs.createReadStream(item);
-              const writeStream = fs.createWriteStream(targetPath);
+          return new Promise((resolve, reject) => {
+            let completedSize = 0;
+            // fs.ensureDir(targetDirname, (err) => {
+            const readStream = fs.createReadStream(item);
+            const writeStream = fs.createWriteStream(targetPath);
 
-              readStream.on("error", reject);
-              writeStream.on("error", reject);
+            readStream.on("error", reject);
+            writeStream.on("error", reject);
 
-              readStream.on("data", (chunk) => {
-                if (onProgress) {
-                  completedSize += chunk.length;
+            readStream.on("data", (chunk) => {
+              if (onProgress) {
+                completedSize += chunk.length;
 
-                  const progress = {
-                    loaded: completedSize,
-                    total: totalSize[item],
-                    //part: part,
-                    key: item,
-                  };
-                  onProgress(progress, () => {
-                    throw new Error(
-                      "Aborted: move " + item + " to " + targetPath
-                    );
-                  });
-                }
-                if (onAbort) {
-                  onAbort = () => {
-                    throw new Error(
-                      "Aborted: move " + item + " to " + targetPath
-                    );
-                  };
-                }
-              });
+                const progress = {
+                  loaded: completedSize,
+                  total: totalSize[item],
+                  //part: part,
+                  key: item,
+                };
+                onProgress(progress);
+              }
+              if (onAbort) {
+                onAbort = () => {
+                  throw new Error(
+                    "Aborted: move " + item + " to " + targetPath
+                  );
+                };
+              }
+            });
 
-              /*writeStream.on("finish", resolve);*/
-
-              readStream
-                .pipe(writeStream) //, { end: false });
-                .on("finish", () => {
-                  fs.unlink(item, (err) => {
-                    if (err) {
-                      reject(err);
-                    } else {
-                      resolve();
-                    }
-                  });
+            readStream
+              .pipe(writeStream) //, { end: false });
+              .on("finish", () => {
+                fs.unlink(item, (err) => {
+                  if (err) {
+                    reject(err);
+                  } else {
+                    resolve();
+                  }
                 });
-            })
-          );
+              });
+          });
         });
-        Promise.allSettled(promises).then(() => {
+
+        // divide the promises into sub-arrays of 10
+        const promisesChunks = [];
+        for (let i = 0; i < promises.length; i += 10) {
+          const chunk = promises.slice(i, i + 10);
+          promisesChunks.push(chunk);
+        }
+
+        // call Promise.all() on each sub-array
+        (async () => {
+          for (const chunk of promisesChunks) {
+            const results = await Promise.allSettled(chunk);
+            console.log(results);
+          }
           resolve();
-        });
-        /*.catch((err) => {
+        })();
+        /!*Promise.allSettled(promises).then(() => {
+          resolve();
+        });*!/
+        /!*.catch((err) => {
               console.debug('error:',err);
               resolve();
               //reject(err);
-            });*/
+            });*!/
         // });
       });
   }).then(() => deleteDirectoryPromise(srcDir).then(() => targetDir));
-}
+}*/
 
 /*function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
   return new Promise((resolve, reject) => {
@@ -428,10 +447,12 @@ module.exports = {
   renameFilePromise,
   renameDirectoryPromise,
   moveDirectoryPromise,
+  copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   watchDirectory,
   createDirectoryTree,
   unZip,
-  dirSize,
+  getDirProperties,
+  mkdirpSync,
 };

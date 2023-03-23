@@ -20,6 +20,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return "";
   }
 
+  function mkdirpSync(dir) {
+    fs.ensureDirSync(dir);
+  }
+
   function getLmdt(param) {
     if (typeof param === "object" && param !== null) {
       return param.lmdt;
@@ -912,44 +916,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
-  function renameDirectoryPromise(
-    dirPath,
-    newDirName,
-    onProgress = undefined,
-    onAbort = undefined
-  ) {
+  function renameDirectoryPromise(dirPath, newDirName) {
     const newDirPath =
       tsPaths.extractParentDirectoryPath(dirPath, AppConfig.dirSeparator) +
       AppConfig.dirSeparator +
       newDirName.trim();
-    return moveDirectoryPromise(dirPath, newDirPath, onProgress, onAbort, true);
-  }
-
-  /**
-   * todo not work with onProgress https://github.com/jprichardson/node-fs-extra/issues/594
-   * @param dirPath
-   * @param newDirPath
-   * @param onProgress
-   * @param onAbort
-   * @param isRename
-   * @returns {Promise<unknown>}
-   */
-  function moveDirectoryPromise(
-    dirPath,
-    newDirPath,
-    onProgress = undefined,
-    onAbort = undefined,
-    isRename = false
-  ) {
-    console.log("Renaming dir: " + dirPath + " to " + newDirPath);
-    // stopWatchingDirectories();
-    return new Promise(async (resolve, reject) => {
-      if (dirPath === newDirPath) {
-        reject("Trying to move in the same directory. Moving failed");
-        return;
-      }
-      if (await exist(newDirPath)) {
-        if (isRename) {
+    return getPropertiesPromise(dirPath).then((dirProp) => {
+      return new Promise(async (resolve, reject) => {
+        if (await exist(newDirPath)) {
           reject(
             'Directory "' +
               newDirPath +
@@ -958,51 +932,66 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               '" failed'
           );
         } else {
-          let part = 0;
-          let processedSize = 0;
-          fs.move(
-            dirPath,
-            newDirPath,
-            {
-              clobber: true, // todo clobber is deprecated in copy replace with overwrite
-              filter: async (src, dest) => {
-                if (onProgress) {
-                  const processedFile = await getPropertiesPromise({
-                    path: src,
-                  });
-                  if (processedFile) {
-                    processedSize += processedFile.size;
-                  }
-                  part += 1;
-                  const progress = {
-                    loaded: processedSize,
-                    //total: 2048,
-                    part: part,
-                    key: src,
-                  };
-                  onProgress(progress, () => {
-                    throw new Error("Aborted: move " + src + " to " + dest);
-                  });
-                }
-                /*const progress = (processedSize / totalSize) * 100;
-                console.log(`Progress: ${progress.toFixed(2)}%`);*/
-
-                return true;
+          if (!dirProp.isFile) {
+            fs.move(
+              dirPath,
+              newDirPath,
+              {
+                clobber: true,
               },
-            },
-            (error) => {
-              // TODO webdav impl
-              if (error) {
-                reject("Move: " + dirPath + " failed:" + error);
-                return;
+              (error) => {
+                if (error) {
+                  reject('Renaming "' + dirPath + '" failed with: ' + error);
+                  return;
+                }
+                resolve(newDirPath);
               }
-              resolve(newDirPath);
-            }
-          );
+            );
+          } else {
+            reject(
+              "Path is not a directory. Renaming of " + dirPath + " failed."
+            );
+          }
         }
+      });
+    });
+
+    /* return moveDirectoryPromise(
+      { path: dirPath, rename: true },
+      newDirPath,
+      onProgress,
+      onAbort
+    );*/
+  }
+
+  /**
+   * https://github.com/jprichardson/node-fs-extra/issues/594
+   * @param param
+   * @param newDirPath
+   * @param onProgress
+   * @returns {Promise<string>} newDirPath
+   */
+  function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
+    let dirPath = getPath(param);
+    console.log("Renaming dir: " + dirPath + " to " + newDirPath);
+    // stopWatchingDirectories();
+    return new Promise((resolve, reject) => {
+      if (dirPath === newDirPath) {
+        reject("Trying to move in the same directory. Moving failed");
         return;
       }
-      const dirProp = await getPropertiesPromise(dirPath);
+      mkdirpSync(newDirPath);
+      copyDirectoryPromise(param, newDirPath, onProgress)
+        .then(() => deleteDirectoryPromise(dirPath))
+        .then(() => {
+          resolve(newDirPath);
+        })
+        .catch((error) => {
+          console.debug("copyDirectoryPromise", error);
+          resolve(newDirPath);
+        });
+      // newDirPath not exist -> Rename directory
+      /*const dirProp = await getPropertiesPromise(dirPath);
       if (!dirProp.isFile) {
         fs.rename(dirPath, newDirPath, (error) => {
           if (error) {
@@ -1013,7 +1002,73 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         });
       } else {
         reject("Path is not a directory. Renaming of " + dirPath + " failed.");
+      }*/
+    });
+  }
+
+  /**
+   * https://github.com/jprichardson/node-fs-extra/issues/594
+   * @param param
+   * @param newDirPath
+   * @param onProgress
+   * @returns {Promise<string>} newDirPath
+   */
+  function copyDirectoryPromise(param, newDirPath, onProgress = undefined) {
+    let dirPath = getPath(param);
+    console.log("Copy dir: " + dirPath + " to " + newDirPath);
+    // stopWatchingDirectories();
+    return new Promise(async (resolve, reject) => {
+      if (dirPath === newDirPath) {
+        reject("Trying to copy in the same directory. Copy failed");
+        return;
       }
+      fs.ensureDir(newDirPath, (err) => {
+        // if (await exist(newDirPath)) {
+        let part = 0;
+        let running = true;
+        // let processedSize = 0;
+        fs.copy(
+          dirPath,
+          newDirPath,
+          {
+            clobber: true, // todo clobber is deprecated in copy replace with overwrite
+            filter: async (src, dest) => {
+              if (onProgress && running) {
+                /*const processedFile = await getPropertiesPromise({
+                  path: src,
+                });
+                if (processedFile && processedFile.isFile) {
+                processedSize += processedFile.size; */
+                part += 1;
+                const progress = {
+                  loaded: part, //processedSize,
+                  total: param.total,
+                  // part: part,
+                  key: newDirPath, //src,
+                };
+                onProgress(progress, () => {
+                  running = false;
+                });
+              }
+              /*const progress = (processedSize / totalSize) * 100;
+                console.log(`Progress: ${progress.toFixed(2)}%`);*/
+
+              return running;
+            },
+          },
+          (error) => {
+            if (error) {
+              reject("Copy: " + dirPath + " failed:" + error);
+              return;
+            }
+            if (running) {
+              resolve(newDirPath);
+            } else {
+              reject(new Error("Aborted"));
+            }
+          }
+        );
+      });
     });
   }
 
@@ -1047,10 +1102,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     renameFilePromise,
     renameDirectoryPromise,
     moveDirectoryPromise,
+    copyDirectoryPromise,
     deleteFilePromise,
     deleteDirectoryPromise,
     watchDirectory,
     createDirectoryTree,
+    mkdirpSync,
   };
 }
 
