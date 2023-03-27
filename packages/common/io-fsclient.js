@@ -1046,9 +1046,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   // part: part,
                   key: newDirPath, //src,
                 };
-                onProgress(progress, () => {
-                  running = false;
-                });
+                onProgress(
+                  progress,
+                  () => {
+                    running = false;
+                  },
+                  src
+                );
               }
               /*const progress = (processedSize / totalSize) * 100;
                 console.log(`Progress: ${progress.toFixed(2)}%`);*/
