@@ -45,7 +45,7 @@
     "@tagspaces/tagspaces-common-webdav": "2.1.27"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "2.1.27",
+    "@tagspaces/tagspaces-common-cordova": "2.1.28",
     "@tagspaces/tagspaces-common-aws": "2.1.27",
     "@tagspaces/tagspaces-common-webdav": "2.1.27"
   },
