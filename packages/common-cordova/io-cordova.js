@@ -1197,7 +1197,7 @@ function renameDirectoryPromise(param, newDirName) {
 /**
  * Rename a directory
  */
-function moveDirectoryPromise(param, newDirPath) {
+function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
   let path;
   if (typeof param === "object" && param !== null) {
     path = param.path;
@@ -1210,7 +1210,6 @@ function moveDirectoryPromise(param, newDirPath) {
     newDirPath.substring(0, newDirPath.lastIndexOf("/"))
   );
   return new Promise((resolve, reject) => {
-
     checkDirExist(newDirPath).then((exist) => {
       if (exist) {
         reject("error renaming: " + newDirPath + " exist!");
@@ -1242,6 +1241,14 @@ function moveDirectoryPromise(param, newDirPath) {
                       " from: " +
                       entry.fullPath
                   );
+                  if (onProgress) {
+                    const progress = {
+                      loaded: 1,
+                      total: 1,
+                      key: newDirPath,
+                    };
+                    onProgress(progress, () => {}, entry.fullPath);
+                  }
                   resolve("/" + newDirPath);
                 },
                 (err) => {
@@ -1264,6 +1271,67 @@ function moveDirectoryPromise(param, newDirPath) {
           reject(error);
         }
       );
+    });
+  });
+}
+
+function copyDirectoryPromise(param, targetDir, onProgress = undefined) {
+  let sourceDir;
+  if (typeof param === "object" && param !== null) {
+    sourceDir = param.path;
+  } else {
+    sourceDir = param;
+  }
+  return new Promise(function (resolve, reject) {
+    // Check if source directory exists
+    getDirSystemPromise(normalizePath(sourceDir)).then((dirEntry) => {
+      createDirectoryPromise(normalizePath(targetDir)).then((newDirPath) => {
+        // Get a directory reader to read files in the source directory
+        const dirReader = dirEntry.createReader();
+        dirReader.readEntries(
+          async function (entries) {
+            // Recursively copy each file in the source directory
+            const fileCount = entries.length;
+            let part = 0;
+            let running = true;
+            for (let i = 0; i < entries.length; i++) {
+              if (running) {
+                const entry = entries[i];
+                if (entry.isDirectory) {
+                  await copyDirectoryPromise(
+                    entry.fullPath,
+                    newDirPath + AppConfig.dirSeparator + entry.name
+                  );
+                } else {
+                  await copyFilePromise(
+                    entry.fullPath,
+                    newDirPath + AppConfig.dirSeparator + entry.name
+                  );
+                }
+                part += 1;
+                if (onProgress && running) {
+                  const progress = {
+                    loaded: part,
+                    total: fileCount,
+                    key: newDirPath,
+                  };
+                  onProgress(
+                    progress,
+                    () => {
+                      running = false;
+                    },
+                    entry.fullPath
+                  );
+                }
+              }
+            }
+            resolve(newDirPath);
+          },
+          function (error) {
+            reject(error);
+          }
+        );
+      });
     });
   });
 }
@@ -1500,6 +1568,7 @@ module.exports = {
   checkDirExist,
   renameDirectoryPromise,
   moveDirectoryPromise,
+  copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   selectDirectory,

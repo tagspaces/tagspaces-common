@@ -467,30 +467,29 @@ function platformCopyDirectoryPromise(param, newDirName, onProgress) {
     console.log("copyDirectoryPromise is implemented in Electron only.");
   }
 
-  return copyDirectoryPromise(param, newDirName, onProgress).then(
-    (result) => {
-      return result;
-    }
-  );
+  return copyDirectoryPromise(param, newDirName, onProgress).then((result) => {
+    return result;
+  });
 }
 
 function platformMoveDirectoryPromise(param, newDirName, onProgress) {
   if (objectStoreAPI) {
-    return objectStoreAPI.moveDirectoryPromise({
-      ...param,
-      bucketName: objectStoreAPI.config().bucketName,
-    }, newDirName);
+    return objectStoreAPI.moveDirectoryPromise(
+      {
+        ...param,
+        bucketName: objectStoreAPI.config().bucketName,
+      },
+      newDirName
+    );
   } else if (webDavAPI) {
     return webDavAPI.moveDirectoryPromise(param, newDirName);
   }
   // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
-  return moveDirectoryPromise(param, newDirName, onProgress).then(
-    (result) => {
-      // PlatformIO.deignoreByWatcher(dirPath, newDirName);
-      return result;
-    }
-  );
+  return moveDirectoryPromise(param, newDirName, onProgress).then((result) => {
+    // PlatformIO.deignoreByWatcher(dirPath, newDirName);
+    return result;
+  });
 }
 
 function platformLoadTextFilePromise(filePath, isPreview) {
@@ -757,7 +756,9 @@ function platformDirProperties(filePath) {
   if (AppConfig.isElectron) {
     return getDirProperties(filePath);
   } else {
-    console.log("platformDirProperties is supported only on Electron.");
+    return Promise.reject(
+      new Error("platformDirProperties is supported only on Electron.")
+    );
   }
 }
 
