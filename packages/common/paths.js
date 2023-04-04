@@ -34,7 +34,7 @@ function baseName(
   return fileName || dirPath;
 }
 
-function extractFileExtension(filePath, dirSeparator = "/") {
+function extractFileExtension(filePath, dirSeparator = AppConfig.dirSeparator) {
   const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
   const lastIndexEndTagContainer = filePath.lastIndexOf(
     AppConfig.endTagContainer
@@ -63,7 +63,10 @@ function extractFileExtension(filePath, dirSeparator = "/") {
   return extension;
 }
 
-function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
+function getMetaDirectoryPath(
+  directoryPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
   if (!directoryPath) {
     return AppConfig.metaFolder;
   }
@@ -79,7 +82,10 @@ function getMetaDirectoryPath(directoryPath, dirSeparator = "/") {
   );
 }
 
-function getMetaFileLocationForFile(entryPath, dirSeparator = "/") {
+function getMetaFileLocationForFile(
+  entryPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
   const containingFolder = extractContainingDirectoryPath(
     entryPath,
     dirSeparator
@@ -114,7 +120,7 @@ function getFileLocationFromMetaFile(
 
 function getThumbFileLocationForFile(
   entryPath,
-  dirSeparator = "/",
+  dirSeparator = AppConfig.dirSeparator,
   encoded = true
 ) {
   if (entryPath.indexOf(dirSeparator + AppConfig.metaFolder) > -1) {
@@ -137,7 +143,10 @@ function getThumbFileLocationForFile(
   );
 }
 
-function getThumbFileLocationForDirectory(entryPath, dirSeparator = "/") {
+function getThumbFileLocationForDirectory(
+  entryPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
   return (
     entryPath +
     (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
@@ -147,7 +156,10 @@ function getThumbFileLocationForDirectory(entryPath, dirSeparator = "/") {
   );
 }
 
-function getBgndFileLocationForDirectory(entryPath, dirSeparator = "/") {
+function getBgndFileLocationForDirectory(
+  entryPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
   return (
     entryPath +
     (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
@@ -157,7 +169,11 @@ function getBgndFileLocationForDirectory(entryPath, dirSeparator = "/") {
   );
 }
 
-function getBackupFileLocation(entryPath, uuid, dirSeparator = "/") {
+function getBackupFileLocation(
+  entryPath,
+  uuid,
+  dirSeparator = AppConfig.dirSeparator
+) {
   const extension = extractFileExtension(entryPath, dirSeparator);
   const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
   return (
@@ -173,7 +189,11 @@ function getBackupFileLocation(entryPath, uuid, dirSeparator = "/") {
   );
 }
 
-function getBackupFileDir(entryPath, uuid, dirSeparator = "/") {
+function getBackupFileDir(
+  entryPath,
+  uuid,
+  dirSeparator = AppConfig.dirSeparator
+) {
   const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
   return (
     dirPath +
@@ -186,7 +206,7 @@ function getBackupFileDir(entryPath, uuid, dirSeparator = "/") {
 
 function getMetaFileLocationForDir(
   entryPath,
-  dirSeparator = "/", // = AppConfig.dirSeparator
+  dirSeparator = AppConfig.dirSeparator,
   metaFile = AppConfig.metaFolderFile
 ) {
   const metaFolder = getMetaDirectoryPath(entryPath, dirSeparator);
@@ -197,7 +217,7 @@ function getMetaFileLocationForDir(
   );
 }
 
-function extractFileName(filePath, dirSeparator = "/") {
+function extractFileName(filePath, dirSeparator = AppConfig.dirSeparator) {
   if (filePath.endsWith(dirSeparator)) {
     return "";
   }
@@ -291,7 +311,10 @@ function extractFileNameWithoutExt(
   return fileName;
 }
 
-function extractContainingDirectoryPath(filePath, dirSeparator = "/") {
+function extractContainingDirectoryPath(
+  filePath,
+  dirSeparator = AppConfig.dirSeparator
+) {
   if (filePath.indexOf(dirSeparator) === -1) {
     return dirSeparator;
   }
@@ -303,7 +326,10 @@ function extractContainingDirectoryPath(filePath, dirSeparator = "/") {
  * @param dirSeparator: string
  * @returns {string}
  */
-function extractParentDirectoryPath(dirPath, dirSeparator = "/") {
+function extractParentDirectoryPath(
+  dirPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
   if (!dirPath) return;
   let path = dirPath;
   if (path.endsWith(dirSeparator)) {
@@ -322,7 +348,7 @@ function extractParentDirectoryPath(dirPath, dirSeparator = "/") {
  * @param dirSeparator: string
  * @returns {string}
  */
-function extractDirectoryName(dirPath, dirSeparator = "/") {
+function extractDirectoryName(dirPath, dirSeparator = AppConfig.dirSeparator) {
   if (!dirPath) return "";
   let directoryName = dirPath;
   try {
@@ -438,7 +464,11 @@ function cleanFileName(fileName) {
   return fileName;
 }
 
-function extractTagsAsObjects(filePath, tagDelimiter, dirSeparator = "/") {
+function extractTagsAsObjects(
+  filePath,
+  tagDelimiter,
+  dirSeparator = AppConfig.dirSeparator
+) {
   const tagsInFileName = extractTags(filePath, tagDelimiter, dirSeparator);
   return tagsAsObjects(tagsInFileName);
 }
@@ -461,7 +491,11 @@ function tagsAsObjects(tags) {
  * @param dirSeparator
  * @returns {string[]}
  */
-function extractTags(filePath, tagDelimiter, dirSeparator = "/") {
+function extractTags(
+  filePath,
+  tagDelimiter,
+  dirSeparator = AppConfig.dirSeparator
+) {
   // console.log('Extracting tags from: ' + filePath);
   const fileName = extractFileName(filePath, dirSeparator);
   // WithoutExt

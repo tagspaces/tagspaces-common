@@ -255,9 +255,9 @@ function renameDirectoryPromise(dirPath, newDirName) {
 
 function copyDirectoryPromise(param, newDirName, onProgress) {
   return fsClient.copyDirectoryPromise(
-      { ...param, path: pathLib.resolve(param.path) },
-      newDirName,
-      onProgress
+    { ...param, path: pathLib.resolve(param.path) },
+    newDirName,
+    onProgress
   );
 }
 
