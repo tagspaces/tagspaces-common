@@ -865,7 +865,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
-  function renameFilePromise(filePath, newFilePath) {
+  function renameFilePromise(filePath, newFilePath, onProgress = undefined) {
     console.log("Renaming file: " + filePath + " to " + newFilePath);
     // stopWatchingDirectories();
     return new Promise((resolve, reject) => {
@@ -880,11 +880,19 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       isDirectory(filePath)
         .then((isDir) => {
           if (isDir) {
-            reject(
+            /*reject(
               'Trying to rename a directory. Renaming of "' +
                 filePath +
                 '" failed'
+            );*/
+            console.debug(
+              "move a directory:" + filePath + " to:" + newFilePath
             );
+            moveDirectoryPromise(
+              { path: filePath },
+              newFilePath,
+              onProgress
+            ).then(() => resolve([filePath, newFilePath]));
           } else {
             exist(newFilePath).then((exist) => {
               if (exist) {
@@ -973,7 +981,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    */
   function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
     let dirPath = getPath(param);
-    console.log("Renaming dir: " + dirPath + " to " + newDirPath);
+    console.log("Move dir: " + dirPath + " to " + newDirPath);
     // stopWatchingDirectories();
     return new Promise((resolve, reject) => {
       if (dirPath === newDirPath) {

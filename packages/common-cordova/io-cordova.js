@@ -1074,7 +1074,7 @@ function copyFilePromise(param, newFilePath, override = true) {
 /**
  * Renames a given file
  */
-function renameFilePromise(param, newFilePath) {
+function renameFilePromise(param, newFilePath, onProgress = undefined) {
   let filePath;
   if (typeof param === "object" && param !== null) {
     filePath = param.path;

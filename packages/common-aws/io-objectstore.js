@@ -963,7 +963,7 @@ function copyFilePromise(param, newFilePath) {
  * Renames a given file (tested)
  * TODO for web minio copyObject -> The request signature we calculated does not match the signature you provided. Check your key and signing method.
  */
-function renameFilePromise(param, newFilePath) {
+function renameFilePromise(param, newFilePath, onProgress = undefined) {
   const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
   const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
   console.log("Renaming file: " + nFilePath + " to " + newFilePath);

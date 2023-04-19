@@ -431,7 +431,7 @@ function copyFilePromise(param, newFilePath) {
 /**
  * Renames a given file
  */
-function renameFilePromise(param, newFilePath) {
+function renameFilePromise(param, newFilePath, onProgress = undefined) {
   // https://github.com/WICG/file-system-access/pull/317
   return Promise.reject("not supported");
   /*return new Promise(async (resolve, reject) => {

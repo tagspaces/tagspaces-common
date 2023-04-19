@@ -423,20 +423,20 @@ function copyFilePromiseOverwrite(sourceFilePath, targetFilePath) {
   });
 }
 
-function platformRenameFilePromise(filePath, newFilePath) {
+function platformRenameFilePromise(filePath, newFilePath, onProgress = undefined) {
   if (objectStoreAPI) {
     const param = {
       path: filePath,
       bucketName: objectStoreAPI.config().bucketName,
     };
-    return objectStoreAPI.renameFilePromise(param, newFilePath);
+    return objectStoreAPI.renameFilePromise(param, newFilePath, onProgress);
     // .then(result => result);
   } else if (webDavAPI) {
-    return webDavAPI.renameFilePromise(filePath, newFilePath);
+    return webDavAPI.renameFilePromise(filePath, newFilePath, onProgress);
   }
   // PlatformIO.ignoreByWatcher(filePath, newFilePath);
 
-  return renameFilePromise(filePath, newFilePath).then((result) => {
+  return renameFilePromise(filePath, newFilePath, onProgress).then((result) => {
     // PlatformIO.deignoreByWatcher(filePath, newFilePath);
     return result;
   });
