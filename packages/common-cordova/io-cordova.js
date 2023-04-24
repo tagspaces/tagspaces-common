@@ -131,10 +131,6 @@ function onDeviceBackButton(e) {
   // send event to main app
 }
 
-function isWorkerAvailable() {
-  return false;
-}
-
 // Register ios file open handler
 function handleOpenURL(url) {
   // const fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
@@ -1533,7 +1529,6 @@ function shareFiles(files) {
 module.exports = {
   onDeviceReady,
   onDeviceBackButton,
-  isWorkerAvailable,
   handleOpenURL,
   normalizePath,
   onDeviceResume,

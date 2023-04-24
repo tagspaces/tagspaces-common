@@ -156,9 +156,9 @@ function platformSetLanguage(language) {
   }
 }
 
-function platformIsWorkerAvailable() {
-  if (isWorkerAvailable) {
-    return isWorkerAvailable();
+function platformIsWorkerAvailable(wsPort) {
+  if (isWorkerAvailable && wsPort) {
+    return isWorkerAvailable(wsPort);
   }
   return false;
 }
@@ -270,18 +270,21 @@ function platformCreateDirectoryTree(directoryPath) {
  * @param directoryPath: string
  * @param extractText: boolean
  * @param ignorePatterns: Array<string>
+ * @param wsPort: number
  */
 function platformCreateDirectoryIndexInWorker(
   token,
   directoryPath,
   extractText,
-  ignorePatterns
+  ignorePatterns,
+  wsPort
 ) {
   return createDirectoryIndexInWorker(
     token,
     directoryPath,
     extractText,
-    ignorePatterns
+    ignorePatterns,
+    wsPort
   );
 }
 
@@ -289,8 +292,8 @@ function platformCreateDirectoryIndexInWorker(
  * @param token
  * @param tmbGenerationList: Array<string>
  */
-function platformCreateThumbnailsInWorker(token, tmbGenerationList) {
-  return createThumbnailsInWorker(token, tmbGenerationList);
+function platformCreateThumbnailsInWorker(token, tmbGenerationList, wsPort) {
+  return createThumbnailsInWorker(token, tmbGenerationList, wsPort);
 }
 
 /**
@@ -423,7 +426,11 @@ function copyFilePromiseOverwrite(sourceFilePath, targetFilePath) {
   });
 }
 
-function platformRenameFilePromise(filePath, newFilePath, onProgress = undefined) {
+function platformRenameFilePromise(
+  filePath,
+  newFilePath,
+  onProgress = undefined
+) {
   if (objectStoreAPI) {
     const param = {
       path: filePath,

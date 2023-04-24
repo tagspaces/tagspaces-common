@@ -3,7 +3,6 @@ const fetch = require("sync-fetch");
 const electron = require("electron");
 const ipcRenderer = electron.ipcRenderer;
 const webFrame = electron.webFrame;
-const wsPort = 49352;
 
 function getDevicePaths() {
   return ipcRenderer.invoke("get-device-paths");
@@ -97,7 +96,7 @@ function selectDirectoryDialog() {
 }
 
 // web service
-function isWorkerAvailable() {
+function isWorkerAvailable(wsPort) {
   try {
     const res = fetch("http://127.0.0.1:" + wsPort, {
       method: "HEAD",
@@ -113,8 +112,9 @@ function isWorkerAvailable() {
  * @param payload: string
  * @param endpoint: string
  * @param token: string
+ * @param wsPort: number
  */
-function postRequest(payload, endpoint, token) {
+function postRequest(payload, endpoint, token, wsPort) {
   return new Promise((resolve, reject) => {
     const option = {
       hostname: "127.0.0.1",
@@ -164,29 +164,32 @@ function postRequest(payload, endpoint, token) {
  * @param directoryPath: string
  * @param extractText: boolean
  * @param ignorePatterns: Array<string>
+ * @param wsPort: number
  */
 function createDirectoryIndexInWorker(
   token,
   directoryPath,
   extractText,
-  ignorePatterns
+  ignorePatterns,
+  wsPort
 ) {
   const payload = JSON.stringify({
     directoryPath,
     extractText,
     ignorePatterns,
   });
-  return postRequest(payload, "/indexer", token);
+  return postRequest(payload, "/indexer", token, wsPort);
 }
 
 /**
  * @param token
  * @param tmbGenerationList: Array<string>
+ * @param wsPort: number
  */
-function createThumbnailsInWorker(token, tmbGenerationList) {
+function createThumbnailsInWorker(token, tmbGenerationList, wsPort) {
   // const search = new URLSearchParams(tmbGenerationList.map(s => ['p', s]));
   const payload = JSON.stringify(tmbGenerationList);
-  return postRequest(payload, "/thumb-gen", token);
+  return postRequest(payload, "/thumb-gen", token, wsPort);
 }
 
 /**
