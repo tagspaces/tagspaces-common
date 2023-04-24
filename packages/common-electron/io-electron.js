@@ -139,8 +139,15 @@ function postRequest(payload, endpoint, token) {
 
         // The whole response has been received. Print out the result.
         resp.on("end", () => {
-          // console.log(JSON.parse(data).explanation);
-          resolve(JSON.parse(data));
+          if (data) {
+            try {
+              resolve(JSON.parse(data));
+            } catch (ex) {
+              reject(ex);
+            }
+          } else {
+            reject(new Error("Error: no data"));
+          }
         });
       })
       .on("error", (err) => {
