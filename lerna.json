@@ -2,5 +2,5 @@
   "packages": ["packages/*"],
   "useNx": false,
   "useWorkspaces": true,
-  "version": "2.1.30"
+  "version": "2.1.31"
 }
