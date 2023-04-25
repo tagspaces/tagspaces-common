@@ -1003,21 +1003,25 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
 function renameDirectoryPromise(param, newDirName) {
   const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
   const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirName);
+  if (param.path === newDirPath) {
+    return Promise.reject(
+      "Renaming directory failed, directories have the same path"
+    );
+  }
   return moveDirectoryPromise(param, newDirPath);
 }
 /**
  * Rename a directory
  */
 function moveDirectoryPromise(param, newDirectoryPath) {
-  const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
-  const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirectoryPath);
-  console.log("Renaming directory: " + param.path + " to " + newDirPath);
-  if (param.path === newDirPath) {
-    return Promise.reject(
-      "Renaming directory failed, directories have the same path"
-    );
-  }
-
+  // const dirName = tsPaths.extractDirectoryName(param.path, "/");
+  //const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
+  //const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirectoryPath);
+  console.log("Move directory: " + param.path + " to " + newDirectoryPath);
+  return copyDirectoryPromise(param, newDirectoryPath).then(() =>
+    deleteDirectoryPromise(param).then(() => newDirectoryPath)
+  );
+  /*
   const listParams = {
     Bucket: param.bucketName,
     Prefix: param.path,
@@ -1032,19 +1036,23 @@ function moveDirectoryPromise(param, newDirectoryPath) {
         listedObjects.Contents.forEach(({ Key }) => {
           if (Key.endsWith("/")) {
             promises.push(
-              createDirectoryPromise({ ...param, path: newDirectoryPath })
+              createDirectoryPromise({
+                ...param,
+                path:
+                  tsPaths.cleanTrailingDirSeparator(newDirectoryPath) +
+                  "/" +
+                  dirName,
+              })
             );
           } else {
+            const newFilePath =
+              tsPaths.cleanTrailingDirSeparator(newDirectoryPath) +
+              "/" +
+              dirName +
+              "/" +
+              tsPaths.extractFileName(Key, "/");
             promises.push(
-              copyFilePromise(
-                { ...param, path: Key },
-                parenDirPath +
-                  "/" +
-                  Key.replace(
-                    tsPaths.normalizePath(param.path),
-                    newDirectoryPath
-                  )
-              )
+              copyFilePromise({ ...param, path: Key }, newFilePath)
             );
           }
         });
@@ -1065,7 +1073,58 @@ function moveDirectoryPromise(param, newDirectoryPath) {
     .catch((e) => {
       console.log(e);
       return Promise.reject("No directory exist:" + param.path);
-    });
+    });*/
+}
+
+function copyDirectoryPromise(param, newDirPath, onProgress = undefined) {
+  return getDirectoryPrefixes(param).then((prefixes) => {
+    if (prefixes.length > 0) {
+      const files = prefixes.filter((file) => !file.Key.endsWith("/"));
+      const copyParams = {
+        Bucket: param.bucketName,
+        CopySource: files.map((file) => param.bucketName + "/" + file.Key),
+        Key: files.map((file) => {
+          return (
+            tsPaths.cleanTrailingDirSeparator(newDirPath) +
+            "/" +
+            tsPaths.extractDirectoryName(param.path) +
+            "/" +
+            tsPaths.extractFileName(file.Key)
+          );
+        }),
+      };
+      /*const copyParams = prefixes
+        .filter((file) => !file.Key.endsWith("/"))
+        .map((file) => {
+          const filePath = file.Key;
+          const destFile =
+            tsPaths.cleanTrailingDirSeparator(newDirPath) +
+            "/" +
+            tsPaths.extractDirectoryName(param.path) +
+            "/" +
+            tsPaths.extractFileName(filePath);
+          return {
+            Bucket: param.bucketName,
+            CopySource: {
+              Bucket: param.bucketName,
+              Key: filePath,
+            },
+            Key: destFile,
+          };
+        });*/
+      return new Promise((resolve, reject) => {
+        s3().copyObjects(copyParams, function (err, data) {
+          if (err) {
+            console.log("Error copying objects: ", err);
+            reject(err);
+          } else {
+            console.log("Objects copied successfully: ", data);
+            resolve(newDirPath);
+          }
+        });
+      });
+    }
+  });
 }
 
 /**
@@ -1192,6 +1251,7 @@ module.exports = {
   renameFilePromise,
   renameDirectoryPromise,
   moveDirectoryPromise,
+  copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
   openUrl,
