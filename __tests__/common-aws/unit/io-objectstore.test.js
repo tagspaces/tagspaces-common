@@ -12,6 +12,8 @@ const {
   copyFilePromise,
   renameFilePromise,
   renameDirectoryPromise,
+  moveDirectoryPromise,
+  copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
 } = require("@tagspaces/tagspaces-common-aws/io-objectstore");
@@ -130,10 +132,32 @@ test("renameFilePromise", async () => {
 test("renameDirectoryPromise", async () => {
   const content = await renameDirectoryPromise(
     {
-      path: "dir/subdir2/",
+      path: "dir/subdir/",
       bucketName: "bucket1",
     },
-    "dir/subdir4/"
+    "subdir4"
+  );
+  console.log("content:" + JSON.stringify(content));
+});
+
+test("moveDirectoryPromise", async () => {
+  const content = await moveDirectoryPromise(
+    {
+      path: "dir/subdir4/",
+      bucketName: "bucket1",
+    },
+    "subdir5"
+  );
+  console.log("content:" + JSON.stringify(content));
+});
+
+test("copyDirectoryPromise", async () => {
+  const content = await copyDirectoryPromise(
+    {
+      path: "subdir5",
+      bucketName: "bucket1",
+    },
+    "dir/subdir_copy/"
   );
   console.log("content:" + JSON.stringify(content));
 });
