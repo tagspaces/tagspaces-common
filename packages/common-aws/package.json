@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-aws",
   "description": "TagSpaces common aws module",
-  "version": "2.1.30",
+  "version": "2.1.32",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
