@@ -468,10 +468,8 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
 }
 
 function platformCopyDirectoryPromise(param, newDirName, onProgress) {
-  if (objectStoreAPI) {
-    console.log("copyDirectoryPromise is implemented in Electron only.");
-  } else if (webDavAPI) {
-    console.log("copyDirectoryPromise is implemented in Electron only.");
+  if (webDavAPI) {
+    console.log("copyDirectoryPromise is not implemented.");
   }
 
   return copyDirectoryPromise(param, newDirName, onProgress).then((result) => {
