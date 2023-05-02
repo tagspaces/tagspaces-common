@@ -476,9 +476,13 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
 
 function platformCopyDirectoryPromise(param, newDirName, onProgress) {
   if (objectStoreAPI) {
-    console.log("copyDirectoryPromise is implemented in Electron only.");
+    const params = {
+      ...param,
+      bucketName: objectStoreAPI.config().bucketName,
+    };
+    return objectStoreAPI.copyDirectoryPromise(params, newDirName, onProgress);
   } else if (webDavAPI) {
-    console.log("copyDirectoryPromise is implemented in Electron only.");
+    return webDavAPI.copyDirectoryPromise(param, newDirName, onProgress);
   }
 
   return copyDirectoryPromise(param, newDirName, onProgress).then((result) => {
@@ -767,11 +771,11 @@ function platformUnZip(filePath, targetPath) {
 }
 
 function platformDirProperties(filePath) {
-  if (AppConfig.isElectron) {
+  if (AppConfig.isElectron && !objectStoreAPI && !webDavAPI) {
     return getDirProperties(filePath);
   } else {
     return Promise.reject(
-      new Error("platformDirProperties is supported only on Electron.")
+      new Error("platformDirProperties is supported on Electron local storage.")
     );
   }
 }

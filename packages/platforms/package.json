@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "2.1.32",
+  "version": "2.1.34",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -13,7 +13,7 @@
     "install-aws": "rimraf node_modules && npx cross-env PD_PLATFORM=aws npm run install",
     "install-web": "npx cross-env PD_PLATFORM=web npm run install",
     "install-cordova": "npx cross-env PD_PLATFORM=cordova npm run install",
-    "npmpack": "npm pack && tar -xvf tagspaces-tagspaces-platforms-2.1.32.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/ && npx rimraf package",
+    "npmpack": "npm pack && tar -xvf tagspaces-tagspaces-platforms-2.1.33.tgz && npx shx cp -rL package/** ../../../tagspaces2/node_modules/@tagspaces/tagspaces-platforms/ && npx rimraf package",
     "copy_platform": "shx cp -rL platform-io.js ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/platform-io.js",
     "pkg-publish": "npm publish --access public"
   },
@@ -32,27 +32,27 @@
   ],
   "nodeDependencies": {
     "@tagspaces/tagspaces-common-node": "2.1.30",
-    "@tagspaces/tagspaces-common-aws": "2.1.32",
+    "@tagspaces/tagspaces-common-aws": "2.1.34",
     "@tagspaces/tagspaces-common-webdav": "2.1.30"
   },
   "webDependencies": {
     "@tagspaces/tagspaces-common-web": "2.1.30",
-    "@tagspaces/tagspaces-common-aws": "2.1.32",
+    "@tagspaces/tagspaces-common-aws": "2.1.34",
     "@tagspaces/tagspaces-common-webdav": "2.1.30"
   },
   "awsDependencies": {
-    "@tagspaces/tagspaces-common-aws": "2.1.32",
+    "@tagspaces/tagspaces-common-aws": "2.1.34",
     "@tagspaces/tagspaces-common-webdav": "2.1.30"
   },
   "cordovaDependencies": {
     "@tagspaces/tagspaces-common-cordova": "2.1.31",
-    "@tagspaces/tagspaces-common-aws": "2.1.32",
+    "@tagspaces/tagspaces-common-aws": "2.1.34",
     "@tagspaces/tagspaces-common-webdav": "2.1.30"
   },
   "electronDependencies": {
     "@tagspaces/tagspaces-common-node": "2.1.30",
     "@tagspaces/tagspaces-common-electron": "2.1.31",
-    "@tagspaces/tagspaces-common-aws": "2.1.32",
+    "@tagspaces/tagspaces-common-aws": "2.1.34",
     "@tagspaces/tagspaces-common-webdav": "2.1.30"
   }
 }
