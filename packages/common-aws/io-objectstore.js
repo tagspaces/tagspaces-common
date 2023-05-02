@@ -4,6 +4,9 @@ const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const micromatch = require("micromatch");
+const {
+  runPromisesSynchronously,
+} = require("@tagspaces/tagspaces-common/utils-io");
 // const encodeS3URI = require("./encodeS3URI");
 // get reference to S3 client
 let S3;
@@ -1176,7 +1179,7 @@ function copyDirectoryInternal(
         );
       }
     }
-    return Promise.all(promises).then(() => newDirPath);
+    return runPromisesSynchronously(promises).then(() => newDirPath);
   }
   return Promise.reject(new Error("No dir content in:" + param.path));
 }

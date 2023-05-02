@@ -217,4 +217,18 @@ function loadJSONString(jsonContent) {
   return jsonObject;
 }
 
-module.exports = { getUuid, walkDirectory, enhanceEntry, loadJSONString };
+async function runPromisesSynchronously(resolvables) {
+  const results = [];
+  for (const resolvable of resolvables) {
+    results.push(await resolvable);
+  }
+  return results;
+}
+
+module.exports = {
+  getUuid,
+  walkDirectory,
+  enhanceEntry,
+  loadJSONString,
+  runPromisesSynchronously,
+};
