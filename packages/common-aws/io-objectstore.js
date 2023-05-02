@@ -1134,6 +1134,25 @@ function copyDirectoryInternal(
   prefixes,
   onProgress = undefined
 ) {
+  let part = 0;
+  let running = true;
+  function handleProgress(Key) {
+    if (onProgress && running) {
+      part += 1;
+      const progress = {
+        loaded: part,
+        total: prefixes.length,
+        key: newDirPath,
+      };
+      onProgress(
+        progress,
+        () => {
+          running = false;
+        },
+        Key
+      );
+    }
+  }
   if (prefixes.length > 0) {
     const promises = [];
     for (const { Key } of prefixes) {
@@ -1142,6 +1161,8 @@ function copyDirectoryInternal(
           createDirectoryPromise({
             ...param,
             path: Key.replace(tsPaths.normalizePath(param.path), newDirPath),
+          }).then(() => {
+            handleProgress(Key);
           })
         );
       } else {
@@ -1149,11 +1170,13 @@ function copyDirectoryInternal(
           copyFilePromise(
             { ...param, path: Key },
             Key.replace(tsPaths.normalizePath(param.path), newDirPath)
-          )
+          ).then(() => {
+            handleProgress(Key);
+          })
         );
       }
     }
-    return Promise.all(promises);
+    return Promise.all(promises).then(() => newDirPath);
   }
   return Promise.reject(new Error("No dir content in:" + param.path));
 }
