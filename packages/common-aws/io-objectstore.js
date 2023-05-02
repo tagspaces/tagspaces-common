@@ -117,16 +117,17 @@ const listMetaDirectoryPromise = async (param) => {
 };
 
 /**
- *
  * @param param
  * @param mode = ['extractTextContent', 'extractThumbPath', 'extractThumbURL']
  * @param ignorePatterns
- * @returns {Promise<unknown>}
+ * @param resultsLimit = {maxLoops: number, IsTruncated: boolean}
+ * @returns {Promise<>}
  */
 const listDirectoryPromise = (
   param,
   mode = ["extractThumbPath"],
-  ignorePatterns = []
+  ignorePatterns = [],
+  resultsLimit = {}
 ) =>
   new Promise(async (resolve) => {
     const path = param.path;
@@ -151,62 +152,62 @@ const listDirectoryPromise = (
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
     };
-    s3().listObjectsV2(params, (error, data) => {
-      // console.warn(data);
-      /* data = {
-                        Contents: [
-                           {
-                          ETag: "\"70ee1738b6b21\"",
-                          Key: "example11.jpg",
-                          LastModified: <Date Representation>,
-                          Owner: {
-                           DisplayName: "myname12",
-                           ID: "12345example251"
-                          },
-                          Size: 112311,
-                          StorageClass: "STANDARD"
-                         },..
-                        ],
-                        NextMarker: "eyJNYXJrZXIiOiBudWxsLCAiYm90b190cnVuY2F0ZV9hbW91bnQiOiAyfQ=="
-                       }
-                       */
-      if (error) {
-        console.error(
-          "Error listing directory " +
-            params.Prefix +
-            " bucketName:" +
-            bucketName,
-          error
-        );
-        resolve(enhancedEntries); // returning results even if any promise fails
-        return;
-      }
+    listDirectoryAll(params, resultsLimit.maxLoops)
+      .then((data) => {
+        const metaPromises = [];
 
-      // if (window.walkCanceled) {
-      //     resolve(enhancedEntries); // returning results even if walk canceled
-      //     return;
-      // }
+        if (data.IsTruncated) {
+          resultsLimit.IsTruncated = data.IsTruncated;
+        }
+        // Handling "directories"
+        data.CommonPrefixes.forEach((dir) => {
+          // console.warn(JSON.stringify(dir));
+          const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
+          eentry = {};
+          const prefixArray = prefix.replace(/\/$/, "").split("/");
+          eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
+          eentry.path = prefix;
+          eentry.bucketName = bucketName;
+          eentry.tags = [];
+          eentry.thumbPath = "";
+          eentry.meta = {};
+          eentry.isFile = false;
+          eentry.size = 0;
+          eentry.lmdt = 0;
 
-      const metaPromises = [];
+          if (eentry.path !== params.Prefix) {
+            // skipping the current directory
+            let ignored = false;
+            if (ignorePatterns.length > 0) {
+              const isIgnored = micromatch(
+                [eentry.path, eentry.name],
+                ignorePatterns
+              );
+              if (isIgnored.length !== 0) {
+                ignored = true;
+              }
+            }
+            if (!ignored) {
+              enhancedEntries.push(eentry);
+              if (loadMeta) {
+                metaPromises.push(getEntryMeta(eentry));
+              }
+            }
+          }
 
-      // Handling "directories"
-      data.CommonPrefixes.forEach((dir) => {
-        // console.warn(JSON.stringify(dir));
-        const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
-        eentry = {};
-        const prefixArray = prefix.replace(/\/$/, "").split("/");
-        eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
-        eentry.path = prefix;
-        eentry.bucketName = bucketName;
-        eentry.tags = [];
-        eentry.thumbPath = "";
-        eentry.meta = {};
-        eentry.isFile = false;
-        eentry.size = 0;
-        eentry.lmdt = 0;
+          // if (window.walkCanceled) {
+          //     resolve(enhancedEntries);
+          // }
+        });
 
-        if (eentry.path !== params.Prefix) {
-          // skipping the current directory
+        // Handling files
+        data.Contents.forEach((file) => {
+          eentry = {};
+          eentry.name = tsPaths.extractFileName(file.Key);
+          eentry.path = file.Key;
+          eentry.bucketName = bucketName;
+          eentry.tags = [];
+
           let ignored = false;
           if (ignorePatterns.length > 0) {
             const isIgnored = micromatch(
@@ -218,114 +219,145 @@ const listDirectoryPromise = (
             }
           }
           if (!ignored) {
-            enhancedEntries.push(eentry);
+            let thumbPath;
             if (loadMeta) {
-              metaPromises.push(getEntryMeta(eentry));
-            }
-          }
-        }
-
-        // if (window.walkCanceled) {
-        //     resolve(enhancedEntries);
-        // }
-      });
-
-      // Handling files
-      data.Contents.forEach((file) => {
-        eentry = {};
-        eentry.name = tsPaths.extractFileName(file.Key);
-        eentry.path = file.Key;
-        eentry.bucketName = bucketName;
-        eentry.tags = [];
-
-        let ignored = false;
-        if (ignorePatterns.length > 0) {
-          const isIgnored = micromatch(
-            [eentry.path, eentry.name],
-            ignorePatterns
-          );
-          if (isIgnored.length !== 0) {
-            ignored = true;
-          }
-        }
-        if (!ignored) {
-          let thumbPath;
-          if (loadMeta) {
-            thumbPath = tsPaths.getThumbFileLocationForFile(
-              file.Key,
-              "/",
-              false
-            );
-            if (thumbPath && thumbPath.startsWith("/")) {
-              thumbPath = thumbPath.substring(1);
-            }
-            const thumbAvailable = metaContent.find(
-              (obj) => obj.path === thumbPath
-            );
-            if (thumbAvailable) {
-              if (mode.includes("extractThumbURL")) {
-                thumbPath = getURLforPath(
-                  {
-                    path: thumbPath,
-                    bucketName: bucketName,
-                  },
-                  604800
-                ); // 60 * 60 * 24 * 7 = 1 week
+              thumbPath = tsPaths.getThumbFileLocationForFile(
+                file.Key,
+                "/",
+                false
+              );
+              if (thumbPath && thumbPath.startsWith("/")) {
+                thumbPath = thumbPath.substring(1);
               }
-            } /*else {
+              const thumbAvailable = metaContent.find(
+                (obj) => obj.path === thumbPath
+              );
+              if (thumbAvailable) {
+                if (mode.includes("extractThumbURL")) {
+                  thumbPath = getURLforPath(
+                    {
+                      path: thumbPath,
+                      bucketName: bucketName,
+                    },
+                    604800
+                  ); // 60 * 60 * 24 * 7 = 1 week
+                }
+              } /*else {
             thumbPath = "";
           }*/
-          }
+            }
 
-          if (thumbPath) {
-            eentry.thumbPath = thumbPath;
-          }
-          eentry.meta = {};
-          eentry.isFile = true;
-          eentry.size = file.Size;
-          eentry.lmdt = Date.parse(file.LastModified);
-          if (file.Key !== params.Prefix) {
-            // skipping the current folder
-            enhancedEntries.push(eentry);
-            if (loadMeta) {
-              let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
-              if (metaFilePath.startsWith("/")) {
-                metaFilePath = metaFilePath.substring(1);
-              }
-              const metaFileAvailable = metaContent.find(
-                (obj) => obj.path === metaFilePath
-              );
-              if (metaFileAvailable) {
-                metaPromises.push(getEntryMeta(eentry));
+            if (thumbPath) {
+              eentry.thumbPath = thumbPath;
+            }
+            eentry.meta = {};
+            eentry.isFile = true;
+            eentry.size = file.Size;
+            eentry.lmdt = Date.parse(file.LastModified);
+            if (file.Key !== params.Prefix) {
+              // skipping the current folder
+              enhancedEntries.push(eentry);
+              if (loadMeta) {
+                let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+                if (metaFilePath.startsWith("/")) {
+                  metaFilePath = metaFilePath.substring(1);
+                }
+                const metaFileAvailable = metaContent.find(
+                  (obj) => obj.path === metaFilePath
+                );
+                if (metaFileAvailable) {
+                  metaPromises.push(getEntryMeta(eentry));
+                }
               }
             }
           }
-        }
-      });
+        });
 
-      if (metaPromises.length > 0) {
-        Promise.all(metaPromises)
-          .then((entriesMeta) => {
-            entriesMeta.forEach((entryMeta) => {
-              enhancedEntries.some((enhancedEntry) => {
-                if (enhancedEntry.path === entryMeta.path) {
-                  enhancedEntry = entryMeta;
-                  return true;
-                }
-                return false;
+        if (metaPromises.length > 0) {
+          Promise.all(metaPromises)
+            .then((entriesMeta) => {
+              entriesMeta.forEach((entryMeta) => {
+                enhancedEntries.some((enhancedEntry) => {
+                  if (enhancedEntry.path === entryMeta.path) {
+                    enhancedEntry = entryMeta;
+                    return true;
+                  }
+                  return false;
+                });
               });
+              resolve(enhancedEntries);
+              return true;
+            })
+            .catch(() => {
+              resolve(enhancedEntries);
             });
-            resolve(enhancedEntries);
-            return true;
-          })
-          .catch(() => {
-            resolve(enhancedEntries);
-          });
-      } else {
+        } else {
+          resolve(enhancedEntries);
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Error listing directory " +
+            params.Prefix +
+            " bucketName:" +
+            bucketName,
+          error
+        );
         resolve(enhancedEntries);
-      }
-    });
+      });
   });
+
+/**
+ * @param params
+ * @param maxLoops
+ * @returns {Promise<data>}
+ */
+function listDirectoryAll(params, maxLoops = 5) {
+  return new Promise((resolve, reject) => {
+    let allObjects = undefined;
+    let loop = 0;
+
+    function listObjects(token) {
+      s3().listObjectsV2(
+        {
+          ...params,
+          ...(token && {
+            ContinuationToken: token,
+          }),
+        },
+        (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            if (allObjects) {
+              allObjects.CommonPrefixes = [
+                ...allObjects.CommonPrefixes,
+                ...data.CommonPrefixes,
+              ];
+              allObjects.Contents = [...allObjects.Contents, ...data.Contents];
+              allObjects.IsTruncated = data.IsTruncated;
+            } else {
+              allObjects = { ...data };
+            }
+            loop += 1;
+
+            if (data.IsTruncated && loop < maxLoops) {
+              if (data.NextContinuationToken) {
+                listObjects(data.NextContinuationToken);
+              } else {
+                resolve(allObjects);
+              }
+            } else {
+              resolve(allObjects);
+            }
+          }
+        }
+      );
+    }
+
+    listObjects();
+  });
+}
 
 const getEntryMeta = async (eentry) => {
   const promise = new Promise(async (resolve) => {
@@ -1183,6 +1215,9 @@ async function getDirectoryPrefixes(param) {
     Bucket: param.bucketName,
     Prefix: tsPaths.normalizePath(normalizeRootPath(param.path)) + "/",
     Delimiter: "/",
+    ...(param.ContinuationToken && {
+      ContinuationToken: param.ContinuationToken,
+    }),
   };
   const listedObjects = await s3().listObjectsV2(listParams).promise();
 
@@ -1198,7 +1233,17 @@ async function getDirectoryPrefixes(param) {
       addPrefix(prefixes, { Key: Prefix });
       promises.push(getDirectoryPrefixes({ ...param, path: Prefix }));
     });
-    // if (listedObjects.IsTruncated) await this.deleteDirectoryPromise(path);
+  }
+  if (listedObjects.IsTruncated) {
+    // console.log('More files available');
+    if (listedObjects.NextContinuationToken) {
+      promises.push(
+        getDirectoryPrefixes({
+          ...param,
+          ContinuationToken: listedObjects.NextContinuationToken,
+        })
+      );
+    }
   }
   const subPrefixes = await Promise.all(promises);
   subPrefixes.map((arrPrefixes) => {

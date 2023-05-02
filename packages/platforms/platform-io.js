@@ -301,18 +301,25 @@ function platformCreateThumbnailsInWorker(token, tmbGenerationList, wsPort) {
  * @param path: string
  * @param mode = ['extractTextContent', 'extractThumbPath']
  * @param ignorePatterns: Array<string> = []
+ * @param resultsLimit
  */
 function platformListDirectoryPromise(
   path,
   mode = ["extractThumbPath"],
-  ignorePatterns
+  ignorePatterns,
+  resultsLimit
 ) {
   if (objectStoreAPI) {
     const param = {
       path,
       bucketName: objectStoreAPI.config().bucketName,
     };
-    return objectStoreAPI.listDirectoryPromise(param, mode, ignorePatterns);
+    return objectStoreAPI.listDirectoryPromise(
+      param,
+      mode,
+      ignorePatterns,
+      resultsLimit
+    );
   } else if (webDavAPI) {
     return webDavAPI.listDirectoryPromise(path, mode, ignorePatterns);
   }
