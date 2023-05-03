@@ -583,6 +583,23 @@ function cleanFrontDirSeparator(dirPath) {
   return "";
 }
 
+function isPathStartsWith(
+  subDir,
+  rootDir,
+  dirSeparator = AppConfig.dirSeparator
+) {
+  const splitSubDir = subDir.split(dirSeparator).filter(Boolean); // .split(/[\\/]/)
+  const splitRootDir = rootDir.split(dirSeparator).filter(Boolean);
+  // Compare the remaining path segments
+  for (let i = 0; i < Math.min(splitSubDir.length, splitRootDir.length); i++) {
+    if (splitSubDir[i] !== splitRootDir[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * for files ts:?tslid=53ea7417-6267-4f7c-9c25-dc44aa41f6c8&tsepath=%2FSelect-Dion%5B20210901%5D.jpeg
  * for folders ts:?tslid=53ea7417-6267-4f7c-9c25-dc44aa41f6c8&tsepath=%2FMath
@@ -653,6 +670,8 @@ module.exports = {
   extractFileName,
   encodeFileName,
   cleanTrailingDirSeparator,
+  cleanFrontDirSeparator,
+  isPathStartsWith,
   normalizePath,
   extractFileNameWithoutExt,
   extractContainingDirectoryPath,
@@ -667,7 +686,6 @@ module.exports = {
   tagsAsObjects,
   // extractLocation,
   joinPaths,
-  cleanFrontDirSeparator,
   generateSharingLink,
   cleanRootPath,
 };
