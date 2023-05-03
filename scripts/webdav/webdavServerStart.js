@@ -15,7 +15,7 @@ module.exports = async function () {
 
     const testDir = path.resolve(__dirname, "..", "testdata");
     if (!directoryExists(testDir)) {
-      await clonePromise("https://github.com/tagspaces/testdata", "testdata");
+      await clonePromise("https://github.com/tagspaces/testdata", testDir);
     }
     global.WebDavInstance = startWebdav(testDir);
 

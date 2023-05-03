@@ -26,7 +26,7 @@ describe("io-node unit tests", () => {
       clean(
         pathLib.resolve(
           __dirname,
-          "../../../testdata/file-structure/supported-filestypes"
+          "../../../scripts/testdata/file-structure/supported-filestypes"
         )
       );
     } catch (ex) {
