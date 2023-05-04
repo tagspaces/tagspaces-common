@@ -1163,7 +1163,10 @@ function copyDirectoryInternal(
         promises.push(
           createDirectoryPromise({
             ...param,
-            path: Key.replace(tsPaths.normalizePath(param.path), newDirPath),
+            path: Key.replace(
+              tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
+              tsPaths.cleanFrontDirSeparator(newDirPath)
+            ),
           }).then(() => {
             handleProgress(Key);
           })
@@ -1172,7 +1175,10 @@ function copyDirectoryInternal(
         promises.push(
           copyFilePromise(
             { ...param, path: Key },
-            Key.replace(tsPaths.normalizePath(param.path), newDirPath)
+            Key.replace(
+              tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
+              tsPaths.cleanFrontDirSeparator(newDirPath)
+            )
           ).then(() => {
             handleProgress(Key);
           })
