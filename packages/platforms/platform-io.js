@@ -733,7 +733,10 @@ function platformCheckDirExist(dir) {
     return checkDirExist(dir);
   }
   // In cordova this check is too expensive for dirs like /.ts
-  return getPropertiesPromise(dir).then((stats) => {
+  return getPropertiesPromise({
+    path: dir,
+    ...(objectStoreAPI && { bucketName: objectStoreAPI.config().bucketName }),
+  }).then((stats) => {
     return stats && !stats.isFile;
   });
 }
