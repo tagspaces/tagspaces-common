@@ -557,7 +557,9 @@ function joinPaths(...paths) {
     for (let i = 1; i < paths.length; i += 1) {
       result =
         result +
-        (result.endsWith(dirSeparator) || paths[i].startsWith(dirSeparator)
+        (result.endsWith(dirSeparator) ||
+        paths[i].startsWith(dirSeparator) ||
+        paths[i].startsWith(".")
           ? ""
           : dirSeparator) +
         paths[i];
