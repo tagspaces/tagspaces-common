@@ -31,28 +31,28 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "2.1.37",
-    "@tagspaces/tagspaces-common-aws": "2.1.38",
-    "@tagspaces/tagspaces-common-webdav": "2.1.37"
+    "@tagspaces/tagspaces-common-node": "2.1.40",
+    "@tagspaces/tagspaces-common-aws": "2.1.40",
+    "@tagspaces/tagspaces-common-webdav": "2.1.40"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-web": "2.1.37",
-    "@tagspaces/tagspaces-common-aws": "2.1.38",
-    "@tagspaces/tagspaces-common-webdav": "2.1.37"
+    "@tagspaces/tagspaces-common-web": "2.1.40",
+    "@tagspaces/tagspaces-common-aws": "2.1.40",
+    "@tagspaces/tagspaces-common-webdav": "2.1.40"
   },
   "awsDependencies": {
-    "@tagspaces/tagspaces-common-aws": "2.1.38",
-    "@tagspaces/tagspaces-common-webdav": "2.1.37"
+    "@tagspaces/tagspaces-common-aws": "2.1.40",
+    "@tagspaces/tagspaces-common-webdav": "2.1.40"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "2.1.37",
-    "@tagspaces/tagspaces-common-aws": "2.1.38",
-    "@tagspaces/tagspaces-common-webdav": "2.1.37"
+    "@tagspaces/tagspaces-common-cordova": "2.1.40",
+    "@tagspaces/tagspaces-common-aws": "2.1.40",
+    "@tagspaces/tagspaces-common-webdav": "2.1.40"
   },
   "electronDependencies": {
-    "@tagspaces/tagspaces-common-node": "2.1.37",
+    "@tagspaces/tagspaces-common-node": "2.1.40",
     "@tagspaces/tagspaces-common-electron": "2.1.31",
-    "@tagspaces/tagspaces-common-aws": "2.1.38",
-    "@tagspaces/tagspaces-common-webdav": "2.1.37"
+    "@tagspaces/tagspaces-common-aws": "2.1.40",
+    "@tagspaces/tagspaces-common-webdav": "2.1.40"
   }
 }
