@@ -1,5 +1,6 @@
 const path = require("path");
 const { getPackages } = require("@lerna/project");
+const lerna = require("../lerna.json");
 
 const packagesDir = path.resolve(__dirname, "..", "packages");
 const dynamicDependencies = ["node", "web", "aws", "cordova", "electron"];
@@ -30,6 +31,7 @@ getPackages(packagesDir).then(async (packages) => {
     }
     if (packageChanged) {
       console.log(`Package changed: ${pkg.name}`);
+      pkg.version = lerna.version;
       // Write changes to disk
       await pkg.serialize();
     } /*else {
