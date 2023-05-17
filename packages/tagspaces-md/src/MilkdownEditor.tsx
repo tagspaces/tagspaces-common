@@ -1,6 +1,7 @@
 import React, { forwardRef, ReactNode } from 'react';
 import { editorViewCtx, parserCtx, themeManagerCtx } from '@milkdown/core';
 import { EditorRef, ReactEditor, useEditor, useNodeCtx } from '@milkdown/react';
+import { usePluginViewFactory } from '@prosemirror-adapter/react';
 import { Slice } from 'prosemirror-model';
 
 import { createEditor } from './editor';
@@ -33,6 +34,8 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
     // const [editorReady, setEditorReady] = React.useState(false);
 
     const [loading, md] = useLazy(content);
+
+    const pluginViewFactory = usePluginViewFactory();
 
     React.useImperativeHandle(ref, () => ({
       update: (markdown: string) => {
@@ -156,6 +159,7 @@ const MilkdownEditor = forwardRef<MilkdownRef, Props>(
           .configure(link, { view: renderReact(TSLink) })
           .configure(image, { view: renderReact(TSImage) });
         return createEditor(
+          pluginViewFactory,
           root,
           md,
           readOnly,

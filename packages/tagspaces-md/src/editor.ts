@@ -2,9 +2,9 @@ import {
   defaultValueCtx,
   Editor,
   editorViewOptionsCtx,
-  MilkdownPlugin,
   rootCtx
 } from '@milkdown/core';
+import type { MilkdownPlugin } from '@milkdown/ctx';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { diagram } from '@milkdown/plugin-diagram';
 import { emoji } from '@milkdown/plugin-emoji';
@@ -12,12 +12,12 @@ import { history } from '@milkdown/plugin-history';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { math } from '@milkdown/plugin-math';
 import { prism } from '@milkdown/plugin-prism';
-import { defaultActions, slash, slashPlugin } from '@milkdown/plugin-slash';
-import { tooltip } from '@milkdown/plugin-tooltip';
 import { nord } from '@milkdown/theme-nord';
 import { AtomList } from '@milkdown/utils';
 import { block } from '@milkdown/plugin-block';
 import { cursor } from '@milkdown/plugin-cursor';
+import { slash, SlashView } from './plugins/SlashView';
+import { tooltip, TooltipView } from './plugins/TooltipView';
 
 /*const complete =
   (callback: () => void): MilkdownPlugin =>
@@ -29,6 +29,7 @@ import { cursor } from '@milkdown/plugin-cursor';
   };*/
 
 export const createEditor = (
+  pluginViewFactory,
   root: HTMLElement | null,
   defaultValue: string,
   readOnly: boolean | undefined,
@@ -42,6 +43,18 @@ export const createEditor = (
     .config(ctx => {
       ctx.set(rootCtx, root);
       ctx.set(defaultValueCtx, defaultValue);
+      if (!lightMode) {
+        ctx.set(slash.key, {
+          view: pluginViewFactory({
+            component: SlashView
+          })
+        });
+      }
+      ctx.set(tooltip.key, {
+        view: pluginViewFactory({
+          component: TooltipView
+        })
+      });
       // ctx.set(editorViewOptionsCtx, { editable: () => !readOnly });
       ctx.update(editorViewOptionsCtx, prev => ({
         ...prev,
@@ -61,7 +74,7 @@ export const createEditor = (
           }
         });
     })
-    .use(nord)
+    .config(nord)
     // .use(commonmark)
     .use(nodes)
     // .use(gfm)
@@ -77,61 +90,7 @@ export const createEditor = (
     .use(emoji);
 
   if (!lightMode) {
-    editor
-      .use(cursor)
-      .use(block)
-      .use(
-        slash.configure(
-          slashPlugin,
-          {
-            config: ctx => {
-              // Get default slash plugin items
-              const actions = defaultActions(ctx);
-              // Define a status builder
-              return ({ isTopLevel, content, parentNode }) => {
-                // You can only show something at root level
-                if (!isTopLevel) return null;
-
-                // Empty content ? Set your custom empty placeholder !
-                if (!content) {
-                  return {
-                    placeholder: readOnly
-                      ? 'Click the edit button or double click to start editing'
-                      : 'Type / to use the slash commands...'
-                  };
-                }
-
-                if (content.startsWith('/')) {
-                  return content === '/'
-                    ? {
-                        placeholder: 'Type to filter...',
-                        actions
-                      }
-                    : {
-                        // @ts-ignore
-                        actions: actions.filter(({ keyword }) => {
-                          return (
-                            keyword &&
-                            keyword.some((key: any) =>
-                              key.includes(content.slice(1).toLocaleLowerCase())
-                            )
-                          );
-                        })
-                      };
-                }
-              };
-            }
-          }
-          /*{
-              placeholder: {
-                [CursorStatus.Empty]: readOnly
-                  ? 'Click the edit button or double click to start editing'
-                  : 'Type / to use the slash commands...',
-                [CursorStatus.Slash]: 'Type to filter...'
-              }
-            }*/
-        )
-      );
+    editor.use(cursor).use(block).use(slash);
   }
   return editor;
 
