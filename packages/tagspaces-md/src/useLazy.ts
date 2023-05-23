@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 
 export type Content = string | (() => Promise<{ default: string }>);
@@ -32,3 +33,4 @@ export const useLazy = (content: Content) => {
 
   return [loading, typeof content === 'string' ? content : md] as const;
 };
+*/

@@ -1,4 +1,4 @@
-import MilkdownEditor, { MilkdownRef } from './MilkdownEditor';
+import MilkdownEditor from './MilkdownEditor';
 import { CodeMirror, CodeMirrorRef } from './CodeMirror';
 export { MilkdownEditor, CodeMirror };
-export type { MilkdownRef, CodeMirrorRef };
+export type { CodeMirrorRef };

@@ -29,6 +29,13 @@ function App() {
     current.update(value);
   }, []);
 
+  const markdown = `# Milkdown React Custom Component
+
+> You're scared of a world where you're needed.
+
+This is a demo for using Milkdown with **React**.
+The quote is built by a custom react component.`;
+
   return (
     <div className="App">
       <header className="App-header">
@@ -42,15 +49,16 @@ function App() {
           </button>
           <MilkdownEditor
             ref={fileDescriptionRef}
-            content={"Test content"}
+            content={markdown}
             onChange={milkdownListener}
             readOnly={false}
             dark={dark}
             lightMode={true}
           />
+          <hr />
           <CodeMirror
             ref={codeMirrorRef}
-            value={"Test content"}
+            value={markdown}
             onChange={onCodeChange}
             dark={dark}
             editable={true}

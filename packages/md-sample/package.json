@@ -13,8 +13,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "npm run build-lib && npm run build && react-scripts start",
     "build": "react-scripts build",
+    "build-lib": "npm run build --prefix ../tagspaces-md",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "run-build": "npx serve -s build"
