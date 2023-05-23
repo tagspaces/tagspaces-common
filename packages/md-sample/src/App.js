@@ -10,7 +10,7 @@ function App() {
   const lockCode = useRef(false);
 
   const milkdownListener = useCallback(
-    (markdown: string, prevMarkdown: string | null) => {
+    (markdown, prevMarkdown) => {
       const lock = lockCode.current;
       if (lock) return;
       // console.log(markdown);
@@ -21,7 +21,7 @@ function App() {
     []
   );
 
-  const onCodeChange = useCallback((getCode: () => string) => {
+  const onCodeChange = useCallback((getCode) => {
     // console.log(markdown);
     const { current } = fileDescriptionRef;
     if (!current) return;
@@ -54,6 +54,16 @@ The quote is built by a custom react component.`;
             readOnly={false}
             dark={dark}
             lightMode={true}
+          />
+          <hr />
+            <p>not lightMode</p>
+          <MilkdownEditor
+            ref={fileDescriptionRef}
+            content={markdown}
+            onChange={milkdownListener}
+            readOnly={false}
+            dark={dark}
+            lightMode={false}
           />
           <hr />
           <CodeMirror

@@ -11,7 +11,7 @@ import { Loading } from './Loading';
 import className from './style.module.css';
 // import { Content, useLazy } from './useLazy';
 // import { gfm, image, link } from '@milkdown/preset-gfm';
-// import 'katex/dist/katex.css';
+import 'katex/dist/katex.css';
 // import { nordDark, nordLight } from '@milkdown/theme-nord';
 import {
   usePluginViewFactory,
