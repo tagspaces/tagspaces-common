@@ -18,6 +18,7 @@ import {
   useWidgetViewFactory
 } from '@prosemirror-adapter/react';
 import { replaceAll } from '@milkdown/utils';
+import { useSlash } from './plugins/slash-menu';
 
 type Props = {
   content: string; // Content;
@@ -39,6 +40,7 @@ const UseMilkdownEditor: React.FC<Props> = ({
   lightMode,
   currentFolder
 }) => {
+  const slash = useSlash();
   const widgetViewFactory = useWidgetViewFactory();
   const pluginViewFactory = usePluginViewFactory();
   // const editorRef = React.useRef<EditorRef>(null);
@@ -174,6 +176,7 @@ const UseMilkdownEditor: React.FC<Props> = ({
       return createEditor(
         pluginViewFactory,
         widgetViewFactory,
+        slash,
         root,
         content,
         readOnly,

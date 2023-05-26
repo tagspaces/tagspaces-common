@@ -47,14 +47,14 @@ The quote is built by a custom react component.`;
           >
             Switch theme
           </button>
-          <MilkdownEditor
+          {/*<MilkdownEditor
             ref={fileDescriptionRef}
             content={markdown}
             onChange={milkdownListener}
             readOnly={false}
             dark={dark}
             lightMode={true}
-          />
+          />*/}
           <hr />
             <p>not lightMode</p>
           <MilkdownEditor

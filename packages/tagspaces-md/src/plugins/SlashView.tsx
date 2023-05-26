@@ -1,8 +1,9 @@
+/*
 import React, { useCallback, useEffect, useRef } from 'react';
-import { editorViewCtx } from '@milkdown/core';
+import {commandsCtx, editorViewCtx} from '@milkdown/core';
 import { Ctx } from '@milkdown/ctx';
 import { slashFactory, SlashProvider } from '@milkdown/plugin-slash';
-import { createCodeBlockCommand } from '@milkdown/preset-commonmark';
+import {createCodeBlockCommand, insertHrCommand, wrapInHeadingCommand} from '@milkdown/preset-commonmark';
 import { useInstance } from '@milkdown/react';
 import { callCommand } from '@milkdown/utils';
 import { usePluginViewContext } from '@prosemirror-adapter/react';
@@ -65,7 +66,7 @@ export const SlashView = () => {
       aria-expanded="false"
     >
       <div ref={ref} aria-expanded="false">
-        <button
+        {/!*<button
           className="text-gray-600 bg-slate-200 px-2 py-1 rounded-lg hover:bg-slate-300 border hover:text-gray-900"
           onKeyDown={e => command(e)}
           onMouseDown={e => {
@@ -73,12 +74,100 @@ export const SlashView = () => {
           }}
         >
           Code Block
-        </button>
+        </button>*!/}
+        <ul className="m-0 list-none">
+          <li
+              onClick={() => {
+                if (loading)
+                  return
+
+                get().action((ctx) => {
+                  // remove slash
+                  const view = ctx.get(editorViewCtx)
+                  view.dispatch(view.state.tr.delete(view.state.selection.from - 1, view.state.selection.from))
+
+                  ctx.get(commandsCtx).call(wrapInHeadingCommand.key, 1)
+                })
+              }}
+              className="cursor-pointer px-6 py-3 hover:bg-gray-200 hover:dark:bg-gray-700"
+          >
+            Heading 1
+          </li>
+          <li
+              onClick={() => {
+                if (loading)
+                  return
+
+                get().action((ctx) => {
+                  // remove slash
+                  const view = ctx.get(editorViewCtx)
+                  view.dispatch(view.state.tr.delete(view.state.selection.from - 1, view.state.selection.from))
+
+                  ctx.get(commandsCtx).call(wrapInHeadingCommand.key, 2)
+                })
+              }}
+              className="cursor-pointer px-6 py-3 hover:bg-gray-200 hover:dark:bg-gray-700"
+          >
+            Heading 2
+          </li>
+          <li
+              onClick={() => {
+                if (loading)
+                  return
+
+                get().action((ctx) => {
+                  // remove slash
+                  const view = ctx.get(editorViewCtx)
+                  view.dispatch(view.state.tr.delete(view.state.selection.from - 1, view.state.selection.from))
+
+                  ctx.get(commandsCtx).call(wrapInHeadingCommand.key, 3)
+                })
+              }}
+              className="cursor-pointer px-6 py-3 hover:bg-gray-200 hover:dark:bg-gray-700"
+          >
+            Heading 3
+          </li>
+          <li
+              onClick={() => {
+                if (loading)
+                  return
+
+                get().action((ctx) => {
+                  // remove slash
+                  const view = ctx.get(editorViewCtx)
+                  view.dispatch(view.state.tr.delete(view.state.selection.from - 1, view.state.selection.from))
+
+                  ctx.get(commandsCtx).call(createCodeBlockCommand.key)
+                })
+              }}
+              className="cursor-pointer px-6 py-3 hover:bg-gray-200 hover:dark:bg-gray-700"
+          >
+            Code Block
+          </li>
+          <li
+              onMouseDown={(e) => {
+                if (loading)
+                  return
+
+                e.preventDefault()
+                get().action((ctx) => {
+                  // remove slash
+                  const view = ctx.get(editorViewCtx)
+                  view.dispatch(view.state.tr.delete(view.state.selection.from - 1, view.state.selection.from))
+
+                  ctx.get(commandsCtx).call(insertHrCommand.key)
+                })
+              }}
+              className="cursor-pointer px-6 py-3 hover:bg-gray-200 hover:dark:bg-gray-700"
+          >
+            Horizontal Rule
+          </li>
+        </ul>
       </div>
     </div>
   );
 };
-/*
+/!*
 slash.configure(
     slashPlugin,
     {
@@ -120,4 +209,5 @@ slash.configure(
         };
       }
     }
-)*/
+)*!/
+*/

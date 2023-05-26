@@ -8,7 +8,7 @@ import {
 import { $prose } from '@milkdown/utils';
 import type { MilkdownPlugin } from '@milkdown/ctx';
 // import { gfm } from '@milkdown/preset-gfm';
-import { Plugin } from '@milkdown/prose/state';
+// import { Plugin } from '@milkdown/prose/state';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { diagram } from '@milkdown/plugin-diagram';
 import { emoji } from '@milkdown/plugin-emoji';
@@ -20,9 +20,9 @@ import { nord } from '@milkdown/theme-nord';
 // import { AtomList } from '@milkdown/utils';
 import { block } from '@milkdown/plugin-block';
 import { cursor } from '@milkdown/plugin-cursor';
-import { Decoration, DecorationSet } from '@milkdown/prose/view';
+// import { Decoration, DecorationSet } from '@milkdown/prose/view';
 import { headingSchema, commonmark } from '@milkdown/preset-commonmark';
-import { slash, SlashView } from './plugins/SlashView';
+//import { slash, SlashView } from './plugins/SlashView';
 import { tooltip, TooltipView } from './plugins/TooltipView';
 import { HeadingAnchor } from './nodes/HeadingAnchor';
 
@@ -38,6 +38,7 @@ import { HeadingAnchor } from './nodes/HeadingAnchor';
 export const createEditor = (
   pluginViewFactory: any,
   widgetViewFactory: any,
+  slash: any,
   root: HTMLElement | null,
   defaultValue: string,
   readOnly: boolean | undefined,
@@ -48,15 +49,17 @@ export const createEditor = (
   lightMode = false
 ) => {
   const editor: Editor = Editor.make()
+    // .enableInspector()
     .config(ctx => {
       ctx.set(rootCtx, root);
       ctx.set(defaultValueCtx, defaultValue);
       if (!lightMode) {
-        ctx.set(slash.key, {
+        slash.config(ctx);
+        /*ctx.set(slash.key, {
           view: pluginViewFactory({
             component: SlashView
           })
-        });
+        });*/
       }
       ctx.set(tooltip.key, {
         view: pluginViewFactory({
@@ -97,7 +100,7 @@ export const createEditor = (
     .use(math)
     .use(emoji)
     // Add a custom widget view
-    .use(
+    /*.use(
       $prose(() => {
         const getAnchorWidget = widgetViewFactory({
           as: 'span',
@@ -125,10 +128,10 @@ export const createEditor = (
           }
         });
       })
-    );
+    );*/
 
   if (!lightMode) {
-    editor.use(cursor).use(block).use(slash);
+    editor.use(cursor).use(block).use(slash.plugins);
   }
   return editor;
 
