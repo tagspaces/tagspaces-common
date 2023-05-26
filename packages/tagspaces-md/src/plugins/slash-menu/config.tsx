@@ -2,14 +2,16 @@ import { commandsCtx, editorViewCtx } from '@milkdown/core';
 import { Ctx, MilkdownPlugin } from '@milkdown/ctx';
 import { slashFactory } from '@milkdown/plugin-slash';
 import {
-  createCodeBlockCommand,
-  insertHrCommand,
-  wrapInHeadingCommand
+    createCodeBlockCommand,
+    insertHrCommand,
+    toggleStrongCommand, wrapInBulletListCommand,
+    wrapInHeadingCommand, wrapInOrderedListCommand
 } from '@milkdown/preset-commonmark';
 import { ReactNode } from 'react';
 import CodeIcon from '@mui/icons-material/Code';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
 import { ListItemIcon, ListItemText } from '@mui/material';
+import { insertTableCommand } from '@milkdown/preset-gfm';
 
 type ConfigItem = {
   renderer: ReactNode;
@@ -46,7 +48,7 @@ export const config: Array<ConfigItem> = [
     renderer: (
       <>
         <ListItemIcon>H2</ListItemIcon>
-        <ListItemText primary="Medium Heading"/>
+        <ListItemText primary="Medium Heading" />
       </>
     )
   },
@@ -69,6 +71,39 @@ export const config: Array<ConfigItem> = [
           <CodeIcon />
         </ListItemIcon>
         <ListItemText primary="Code Block" />
+      </>
+    )
+  },
+  {
+    onSelect: (ctx: Ctx) => ctx.get(commandsCtx).call(insertTableCommand.key),
+    renderer: (
+      <>
+        <ListItemIcon>
+          <CodeIcon />
+        </ListItemIcon>
+        <ListItemText primary="Insert Table" />
+      </>
+    )
+  },
+    {
+    onSelect: (ctx: Ctx) => ctx.get(commandsCtx).call(wrapInBulletListCommand.key),
+    renderer: (
+      <>
+        <ListItemIcon>
+          <CodeIcon />
+        </ListItemIcon>
+        <ListItemText primary="Bullet list" />
+      </>
+    )
+  },
+    {
+    onSelect: (ctx: Ctx) => ctx.get(commandsCtx).call(wrapInOrderedListCommand.key),
+    renderer: (
+      <>
+        <ListItemIcon>
+          <CodeIcon />
+        </ListItemIcon>
+        <ListItemText primary="Ordered list" />
       </>
     )
   },

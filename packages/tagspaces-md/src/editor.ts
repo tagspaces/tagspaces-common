@@ -5,10 +5,7 @@ import {
   rootCtx
 } from '@milkdown/core';
 
-import { $prose } from '@milkdown/utils';
-import type { MilkdownPlugin } from '@milkdown/ctx';
-// import { gfm } from '@milkdown/preset-gfm';
-// import { Plugin } from '@milkdown/prose/state';
+import { gfm } from '@milkdown/preset-gfm';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { diagram } from '@milkdown/plugin-diagram';
 import { emoji } from '@milkdown/plugin-emoji';
@@ -17,23 +14,11 @@ import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { math } from '@milkdown/plugin-math';
 import { prism } from '@milkdown/plugin-prism';
 import { nord } from '@milkdown/theme-nord';
-// import { AtomList } from '@milkdown/utils';
 import { block } from '@milkdown/plugin-block';
 import { cursor } from '@milkdown/plugin-cursor';
-// import { Decoration, DecorationSet } from '@milkdown/prose/view';
-import { headingSchema, commonmark } from '@milkdown/preset-commonmark';
+import { commonmark } from '@milkdown/preset-commonmark';
 //import { slash, SlashView } from './plugins/SlashView';
 import { tooltip, TooltipView } from './plugins/TooltipView';
-import { HeadingAnchor } from './nodes/HeadingAnchor';
-
-/*const complete =
-  (callback: () => void): MilkdownPlugin =>
-  () =>
-  async ctx => {
-    await ctx.wait(EditorViewReady);
-
-    callback();
-  };*/
 
 export const createEditor = (
   pluginViewFactory: any,
@@ -55,23 +40,28 @@ export const createEditor = (
       ctx.set(defaultValueCtx, defaultValue);
       if (!lightMode) {
         slash.config(ctx);
-        /*ctx.set(slash.key, {
-          view: pluginViewFactory({
-            component: SlashView
-          })
-        });*/
       }
       ctx.set(tooltip.key, {
         view: pluginViewFactory({
           component: TooltipView
         })
       });
+      /*ctx.set('link', {
+        // Set your link attributes here
+        onClick: () => console.log('Link clicked!')
+      });*/
+      /*ctx.set(linkAttr.key, (mark) => {/!*
+            const level = node.attrs.level;
+            if (level === 1) return { class: 'text-4xl', data-el-type: 'h1' };
+            if (level === 2) return { class: 'text-3xl', data-el-type: 'h2' };
+            // ...*!/
+            return { class: 'text-4xl', data-el-type: 'link' }
+        })*/
       // ctx.set(editorViewOptionsCtx, { editable: () => !readOnly });
       ctx.update(editorViewOptionsCtx, prev => ({
         ...prev,
         editable: () => !readOnly
       }));
-      // ctx.set(listenerCtx, { markdown: onChange ? [onChange] : [] });
       ctx
         .get(listenerCtx)
         .markdownUpdated((ctx, markdown, prevMarkdown) => {
@@ -88,7 +78,7 @@ export const createEditor = (
     .config(nord)
     .use(commonmark)
     // .use(nodes)
-    //.use(gfm)
+    .use(gfm)
     // .use(complete(() => setEditorReady(true)))
     .use(clipboard)
     .use(listener)
@@ -98,9 +88,11 @@ export const createEditor = (
     // .use(table)
     .use(tooltip)
     .use(math)
-    .use(emoji)
-    // Add a custom widget view
-    /*.use(
+    .use(emoji);
+  //.use(linkPlugin(widgetViewFactory));
+  // .use(linkPlugin(widgetViewFactory))
+  // Add a custom widget view
+  /* .use(
       $prose(() => {
         const getAnchorWidget = widgetViewFactory({
           as: 'span',

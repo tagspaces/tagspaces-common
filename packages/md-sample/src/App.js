@@ -1,29 +1,26 @@
 import "./App.css";
-import "@tagspaces/tagspaces-md/lib/milkdown.css";
+//import "@tagspaces/tagspaces-md/lib/milkdown.css";
 import { MilkdownEditor, CodeMirror } from "@tagspaces/tagspaces-md";
 import { useCallback, useRef, useState } from "react";
 
 function App() {
-  const fileDescriptionRef = useRef(null);
+  const milkdownEditorRef = useRef(null);
   const codeMirrorRef = useRef(null);
   const [dark, setDark] = useState(false);
   const lockCode = useRef(false);
 
-  const milkdownListener = useCallback(
-    (markdown, prevMarkdown) => {
-      const lock = lockCode.current;
-      if (lock) return;
-      // console.log(markdown);
-      const { current } = codeMirrorRef;
-      if (!current) return;
-      current.update(markdown);
-    },
-    []
-  );
+  const milkdownListener = useCallback((markdown, prevMarkdown) => {
+    const lock = lockCode.current;
+    if (lock) return;
+    // console.log(markdown);
+    const { current } = codeMirrorRef;
+    if (!current) return;
+    current.update(markdown);
+  }, []);
 
   const onCodeChange = useCallback((getCode) => {
     // console.log(markdown);
-    const { current } = fileDescriptionRef;
+    const { current } = milkdownEditorRef;
     if (!current) return;
     const value = getCode();
     current.update(value);
@@ -56,9 +53,9 @@ The quote is built by a custom react component.`;
             lightMode={true}
           />*/}
           <hr />
-            <p>not lightMode</p>
+          <p>not lightMode</p>
           <MilkdownEditor
-            ref={fileDescriptionRef}
+            ref={milkdownEditorRef}
             content={markdown}
             onChange={milkdownListener}
             readOnly={false}

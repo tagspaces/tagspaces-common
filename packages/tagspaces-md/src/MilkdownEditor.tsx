@@ -3,7 +3,11 @@ import { MilkdownProvider } from '@milkdown/react';
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react';
 import UseMilkdownEditor from './UseMilkdownEditor';
 
-type Props = {
+export interface MilkdownRef {
+  update: (markdown: string) => void;
+}
+
+interface Props {
   content: string; // Content;
   readOnly?: boolean;
   dark?: boolean;
@@ -11,16 +15,16 @@ type Props = {
   onFocus?: () => void;
   lightMode?: boolean;
   currentFolder?: string;
-};
+}
 
-const MilkdownEditor: React.FC<Props> = props => {
+const MilkdownEditor = React.forwardRef<MilkdownRef, Props>((props, ref) => {
   return (
     <MilkdownProvider>
       <ProsemirrorAdapterProvider>
-        <UseMilkdownEditor {...props} />
+        <UseMilkdownEditor milkdownRef={ref} {...props} />
       </ProsemirrorAdapterProvider>
     </MilkdownProvider>
   );
-};
+});
 
 export default MilkdownEditor;

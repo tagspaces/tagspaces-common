@@ -1,27 +1,20 @@
-import React from 'react';
-// import { editorViewCtx, parserCtx } from '@milkdown/core'; // themeManagerCtx
+import React, { ForwardedRef } from 'react';
 import { Milkdown, useEditor } from '@milkdown/react';
-import { MilkdownProvider } from '@milkdown/react';
-import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react';
-import { StrictMode } from 'react';
-// import { Slice } from 'prosemirror-model';
-
 import { createEditor } from './editor';
-import { Loading } from './Loading';
-import className from './style.module.css';
-// import { Content, useLazy } from './useLazy';
-// import { gfm, image, link } from '@milkdown/preset-gfm';
 import 'katex/dist/katex.css';
-// import { nordDark, nordLight } from '@milkdown/theme-nord';
 import {
   usePluginViewFactory,
   useWidgetViewFactory
 } from '@prosemirror-adapter/react';
 import { replaceAll } from '@milkdown/utils';
 import { useSlash } from './plugins/slash-menu';
+import { MilkdownRef } from './MilkdownEditor';
+import { AppBar, Toolbar } from '@mui/material';
+import ToolbarButtons from './ToolbarButtons';
 
 type Props = {
   content: string; // Content;
+  milkdownRef: ForwardedRef<MilkdownRef>;
   readOnly?: boolean;
   dark?: boolean;
   onChange?: (markdown: string, prevMarkdown: string | null) => void;
@@ -33,6 +26,7 @@ type Props = {
 // export type MilkdownRef = { update: (markdown: string) => void };
 const UseMilkdownEditor: React.FC<Props> = ({
   content,
+  milkdownRef,
   readOnly,
   onChange,
   onFocus,
@@ -43,20 +37,38 @@ const UseMilkdownEditor: React.FC<Props> = ({
   const slash = useSlash();
   const widgetViewFactory = useWidgetViewFactory();
   const pluginViewFactory = usePluginViewFactory();
-  // const editorRef = React.useRef<EditorRef>(null);
-  // const editorRef = React.useRef({} as EditorRef);
-  // const [editorReady, setEditorReady] = React.useState(false);
-
   // const [loading, md] = useLazy(content);
 
-  /*React.useImperativeHandle(ref, () => ({
-        update: (markdown: string) => {
-          // if (!editorReady || !editorRef.current) return;
-          if (loading) return;
-          const editor = get();
-          if (!editor) return;
-          editor.action(replaceAll(markdown));
-          /!*editor.action(ctx => {
+  const { get, loading } = useEditor(
+    root => {
+      //, renderReact) => {
+      /*const nodes = gfm
+                    .configure(link, { view: renderReact(TSLink) })
+                    .configure(image, { view: renderReact(TSImage) });*/
+      return createEditor(
+        pluginViewFactory,
+        widgetViewFactory,
+        slash,
+        root,
+        content,
+        readOnly,
+        // nodes,
+        onChange,
+        onFocus,
+        lightMode
+      );
+    },
+    [readOnly, content, onChange, onFocus]
+  );
+
+  React.useImperativeHandle(milkdownRef, () => ({
+    update: (markdown: string) => {
+      // if (!editorReady || !editorRef.current) return;
+      if (loading) return;
+      const editor = get();
+      if (!editor) return;
+      editor.action(replaceAll(markdown));
+      /*editor.action(ctx => {
             const view = ctx.get(editorViewCtx);
             const parser = ctx.get(parserCtx);
             const doc = parser(markdown);
@@ -69,10 +81,10 @@ const UseMilkdownEditor: React.FC<Props> = ({
                 new Slice(doc.content, 0, 0)
               )
             );
-          });*!/
-        },
-        // https://github.com/Saul-Mirone/milkdown/issues/204#issuecomment-985977031
-        isEqualMarkdown: (prev: string, next: string) => {
+          });*/
+    }
+    // https://github.com/Saul-Mirone/milkdown/issues/204#issuecomment-985977031
+    /*isEqualMarkdown: (prev: string, next: string) => {
           if (loading) return;
           const editor = get();
           if (!editor) return;
@@ -84,8 +96,8 @@ const UseMilkdownEditor: React.FC<Props> = ({
             console.log(JSON.stringify(nextDoc));
             return JSON.stringify(prevDoc) === JSON.stringify(nextDoc);
           });
-        }
-      }));*/
+        }*/
+  }));
 
   /*
       function hasURLProtocol(url: any) {
@@ -162,33 +174,6 @@ const UseMilkdownEditor: React.FC<Props> = ({
         return <img src={path} alt={node.attrs.alt} title={node.attrs.title} />;
       };*/
 
-  const {
-    //editor,
-    // getInstance,
-    get,
-    loading //: editorLoading
-  } = useEditor(
-    root => {
-      //, renderReact) => {
-      /*const nodes = gfm
-                  .configure(link, { view: renderReact(TSLink) })
-                  .configure(image, { view: renderReact(TSImage) });*/
-      return createEditor(
-        pluginViewFactory,
-        widgetViewFactory,
-        slash,
-        root,
-        content,
-        readOnly,
-        // nodes,
-        onChange,
-        onFocus,
-        lightMode
-      );
-    },
-    [readOnly, content, onChange, onFocus]
-  );
-
   /* React.useEffect(() => {
         if (loading) return;
         const editor = get();
@@ -206,7 +191,16 @@ const UseMilkdownEditor: React.FC<Props> = ({
         }
       }, [loading, dark]); */
 
-  return <Milkdown />;
+  return (
+    <React.Fragment>
+      <AppBar position="fixed">
+        <Toolbar>
+          <ToolbarButtons />
+        </Toolbar>
+      </AppBar>
+      <Milkdown />
+    </React.Fragment>
+  );
 };
 
 export default UseMilkdownEditor;
