@@ -11,6 +11,9 @@ import { EditorView } from 'prosemirror-view';
 import { trailing } from '@milkdown/plugin-trailing';
 import { useEditor, UseEditorReturn } from '@milkdown/react';
 import { createContext, useMemo } from 'react';
+import { Node } from '@milkdown/prose/model';
+import { findChildrenByMark } from '@milkdown/prose';
+import { linkSchema } from '@milkdown/preset-commonmark';
 
 import { useCommonmarkPlugin } from './hooks/useCommonmarkPlugin/useCommonmarkPlugin';
 import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
@@ -56,7 +59,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const menuBarPlugin = useMenuBarPlugin();
   const listenerPlugin = useListenerPlugin({ onChange, debounceChange });
 
-  /*const handleClick = (
+  const handleClick = (
     view: EditorView,
     pos: number,
     node: Node,
@@ -64,9 +67,14 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
     event: MouseEvent,
     direct: boolean
   ) => {
-    alert('click');
+    event.preventDefault();
+    // event.stopPropagation();
+    const marks = findChildrenByMark(node, linkSchema.type());
+    if (marks.length > 0 && marks[0].node.marks.length > 0) {
+      alert('click on mark:' + marks[0].node.marks[0].attrs.href);
+    }
     return true;
-  };*/
+  };
   const editor = useEditor(
     root =>
       MilkdownEditor.make()
@@ -77,8 +85,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
             editable: () => mode === 'active',
-            // @ts-ignore
-            // handleClickOn: handleClick
+            handleClickOn: handleClick
           }));
         })
         .use(commonmarkPlugin)
