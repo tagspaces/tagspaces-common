@@ -6,6 +6,7 @@ const path = require("path");
 const tsThumbImage = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
 const tsThumbPdf = require("@tagspaces/tagspaces-thumbgen-pdf/tspdfthumbgen");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const tsUtils = require("@tagspaces/tagspaces-common/utils-io");
 
 // get reference to S3 client
 const s3 = new AWS.S3();
@@ -56,7 +57,7 @@ module.exports.generateThumbnail = function (srcBucket, key) {
     const fileType = tsThumbImage.getFileType(srcKey);
     console.info("generateThumbnail fileType:" + fileType);
 
-    if (tsThumbImage.isSupportedImageType(fileType)) {
+    if (tsUtils.isThumbGenSupportedFileType(fileType,"image")) {
       s3.getObject({
         Bucket: srcBucket,
         Key: srcKey,
@@ -169,7 +170,7 @@ module.exports.processAllThumbnails = function (srcBucket) {
 
           if (!srcKey.startsWith(AppConfig.metaFolder)) {
             const fileType = tsThumbImage.getFileType(srcKey);
-            if (tsThumbImage.isSupportedImageType(fileType)) {
+            if (tsUtils.isThumbGenSupportedFileType(fileType,"image")) {
               return s3
                 .getObject({
                   Bucket: srcBucket,
