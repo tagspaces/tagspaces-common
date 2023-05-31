@@ -3,11 +3,21 @@ import "./App.css";
 import { MilkdownEditor, CodeMirror } from "@tagspaces/tagspaces-md";
 import { useCallback, useRef, useState } from "react";
 
+const initMarkdown = `# Milkdown React Custom Component
+
+[link](https://www.tagspaces.org/)
+> You're scared of a world where you're needed.
+
+This is a demo for using Milkdown with **React**.
+The quote is built by a custom react component.`;
+
 function App() {
   const milkdownEditorRef = useRef(null);
   const codeMirrorRef = useRef(null);
   const [dark, setDark] = useState(false);
+  const [isReadOnly, setReadOnly] = useState(false);
   const lockCode = useRef(false);
+  const text = useRef(initMarkdown);
 
   const milkdownListener = useCallback((markdown, prevMarkdown) => {
     const lock = lockCode.current;
@@ -15,6 +25,7 @@ function App() {
     // console.log(markdown);
     const { current } = codeMirrorRef;
     if (!current) return;
+    text.current = markdown;
     current.update(markdown);
   }, []);
 
@@ -23,15 +34,9 @@ function App() {
     const { current } = milkdownEditorRef;
     if (!current) return;
     const value = getCode();
+    text.current = value;
     current.update(value);
   }, []);
-
-  const markdown = `# Milkdown React Custom Component
-
-> You're scared of a world where you're needed.
-
-This is a demo for using Milkdown with **React**.
-The quote is built by a custom react component.`;
 
   return (
     <div className="App">
@@ -43,6 +48,13 @@ The quote is built by a custom react component.`;
             }}
           >
             Switch theme
+          </button>
+          <button
+            onClick={() => {
+              setReadOnly(!isReadOnly);
+            }}
+          >
+            {isReadOnly ? "Preview" : "Active"}
           </button>
           {/*<MilkdownEditor
             ref={fileDescriptionRef}
@@ -56,16 +68,16 @@ The quote is built by a custom react component.`;
           <p>not lightMode</p>
           <MilkdownEditor
             ref={milkdownEditorRef}
-            content={markdown}
+            content={text.current}
             onChange={milkdownListener}
-            readOnly={false}
+            readOnly={isReadOnly}
             dark={dark}
             lightMode={false}
           />
           <hr />
           <CodeMirror
             ref={codeMirrorRef}
-            value={markdown}
+            value={text.current}
             onChange={onCodeChange}
             dark={dark}
             editable={true}

@@ -4,7 +4,8 @@ import { createEditor } from './editor';
 import 'katex/dist/katex.css';
 import {
   usePluginViewFactory,
-  useWidgetViewFactory
+  useWidgetViewFactory,
+  useNodeViewFactory
 } from '@prosemirror-adapter/react';
 import { replaceAll } from '@milkdown/utils';
 import { useSlash } from './plugins/slash-menu';
@@ -35,6 +36,7 @@ const UseMilkdownEditor: React.FC<Props> = ({
   currentFolder
 }) => {
   const slash = useSlash();
+  const nodeViewFactory = useNodeViewFactory();
   const widgetViewFactory = useWidgetViewFactory();
   const pluginViewFactory = usePluginViewFactory();
   // const [loading, md] = useLazy(content);
@@ -46,6 +48,7 @@ const UseMilkdownEditor: React.FC<Props> = ({
                     .configure(link, { view: renderReact(TSLink) })
                     .configure(image, { view: renderReact(TSImage) });*/
       return createEditor(
+          nodeViewFactory,
         pluginViewFactory,
         widgetViewFactory,
         slash,

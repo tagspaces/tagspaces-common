@@ -1,7 +1,13 @@
 import React from 'react';
 import { MilkdownProvider } from '@milkdown/react';
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react';
-import UseMilkdownEditor from './UseMilkdownEditor';
+
+import { Milkdown } from '@milkdown/react';
+import 'katex/dist/katex.min.css';
+
+import { EditorContextProvider } from './EditorContext/EditorContextProvider';
+import { TextEditorContextProvider } from './TextEditorContext/TextEditorContextProvider';
+import MilkdownEditorRef from './MilkdownEditorRef';
 
 export interface MilkdownRef {
   update: (markdown: string) => void;
@@ -17,14 +23,24 @@ interface Props {
   currentFolder?: string;
 }
 
-const MilkdownEditor = React.forwardRef<MilkdownRef, Props>((props, ref) => {
-  return (
-    <MilkdownProvider>
-      <ProsemirrorAdapterProvider>
-        <UseMilkdownEditor milkdownRef={ref} {...props} />
-      </ProsemirrorAdapterProvider>
-    </MilkdownProvider>
-  );
-});
+const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
+  ({ readOnly, content, onChange, ...rest }, ref) => {
+    return (
+      <TextEditorContextProvider mode={readOnly ? 'preview' : 'active'}>
+        <MilkdownProvider>
+          <ProsemirrorAdapterProvider>
+            <EditorContextProvider
+              defaultMarkdownValue={content}
+              onChange={onChange}
+              {...rest}
+            >
+              <MilkdownEditorRef milkdownRef={ref} />
+            </EditorContextProvider>
+          </ProsemirrorAdapterProvider>
+        </MilkdownProvider>
+      </TextEditorContextProvider>
+    );
+  }
+);
 
 export default MilkdownEditor;

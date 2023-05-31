@@ -1,3 +1,5 @@
+// noinspection JSVoidFunctionReturnValueUsed
+
 import {
   defaultValueCtx,
   Editor,
@@ -16,11 +18,15 @@ import { prism } from '@milkdown/plugin-prism';
 import { nord } from '@milkdown/theme-nord';
 import { block } from '@milkdown/plugin-block';
 import { cursor } from '@milkdown/plugin-cursor';
-import { commonmark } from '@milkdown/preset-commonmark';
+import { commonmark, linkSchema } from '@milkdown/preset-commonmark';
+import { $view } from '@milkdown/utils';
 //import { slash, SlashView } from './plugins/SlashView';
 import { tooltip, TooltipView } from './plugins/TooltipView';
+import { linkPlugin } from './widgets/TsLinkWidget';
+import {TSLink} from "./nodes/TSLink";
 
 export const createEditor = (
+  nodeViewFactory: any,
   pluginViewFactory: any,
   widgetViewFactory: any,
   slash: any,
@@ -32,9 +38,9 @@ export const createEditor = (
   onChange?: (markdown: string, prevMarkdown: string | null) => void,
   onFocus?: () => void,
   lightMode = false
-) => {
+): Editor => {
+  // .enableInspector()
   const editor: Editor = Editor.make()
-    // .enableInspector()
     .config(ctx => {
       ctx.set(rootCtx, root);
       ctx.set(defaultValueCtx, defaultValue);
@@ -46,7 +52,10 @@ export const createEditor = (
           component: TooltipView
         })
       });
-      /*ctx.set('link', {
+
+      // Mark.replace(linkSchema.key, new MarkType("link", extendLinkSchema));
+      // ctx.update(linkSchema.key, extendLinkSchema);
+      /*listItemSchema.key, {
         // Set your link attributes here
         onClick: () => console.log('Link clicked!')
       });*/
@@ -77,7 +86,15 @@ export const createEditor = (
     })
     .config(nord)
     .use(commonmark)
-    // .use(nodes)
+    .use(
+      $view(linkSchema.mark, () =>
+        nodeViewFactory({
+          component: TSLink,
+          contentAs: 'a',
+          as: 'span'
+        })
+      )
+    )
     .use(gfm)
     // .use(complete(() => setEditorReady(true)))
     .use(clipboard)
@@ -88,9 +105,11 @@ export const createEditor = (
     // .use(table)
     .use(tooltip)
     .use(math)
-    .use(emoji);
-  //.use(linkPlugin(widgetViewFactory));
-  // .use(linkPlugin(widgetViewFactory))
+    .use(emoji)
+    /*.use(
+      $view(linkSchema.node, () => nodeViewFactory({ component: ListItem }))
+    );*/
+    //.use(linkPlugin(widgetViewFactory));
   // Add a custom widget view
   /* .use(
       $prose(() => {

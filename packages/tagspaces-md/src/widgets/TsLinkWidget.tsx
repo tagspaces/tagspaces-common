@@ -79,7 +79,6 @@ export const LinkWidgetAfter: FC = () => {
 export const linkPlugin = (
   widgetViewFactory: ReturnType<typeof useWidgetViewFactory>
 ) => {
-
   return $prose(() => {
     const getAnchorWidget = widgetViewFactory({
       as: 'span',
@@ -91,9 +90,30 @@ export const linkPlugin = (
           const widgets: Decoration[] = [];
 
           state.doc.descendants((node, pos) => {
+            /*node.marks.map(mark => {
+              if(mark.type === linkSchema.type()){
+                mark.type.schema =
+              }
+            })*/
             if (node.marks.some(mark => mark.type === linkSchema.type())) {
-              // === headingSchema.type()) {
-              //  if (hasMark(node.type, 'link')) {
+              /*const widgetFactory: WidgetDecorationFactory = (node, view) => {
+                const dom = document.createElement("span");
+                dom.textContent = node.attrs.text;
+                dom.addEventListener("click", () => {
+                  // Handle click event
+                });
+                return {
+                  dom,
+                  update: () => true,
+                };
+              };
+
+              const widgetSpec: WidgetDecorationSpec = {
+                widget: widgetFactory,
+                side: -1,
+              };
+              widgets.push(Decoration.widget(pos, widgetSpec))*/
+
               widgets.push(
                 getAnchorWidget(pos + 1, {
                   id: node.attrs.id,
