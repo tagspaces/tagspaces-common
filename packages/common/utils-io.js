@@ -225,10 +225,31 @@ async function runPromisesSynchronously(resolvables) {
   return results;
 }
 
+function isThumbGenSupportedFileType(fileExtension, fileType) {
+  if(fileType) {
+    const fileTypes = AppConfig.ThumbGenSupportedFileTypes[fileType];
+    if (fileTypes) {
+      return fileTypes.includes(fileExtension);
+    }
+  } else {
+    const fileTypes = Object.keys(AppConfig.ThumbGenSupportedFileTypes);
+    for (let type in fileTypes) {
+      const fileTypes = AppConfig.ThumbGenSupportedFileTypes[fileType];
+      if (fileTypes) {
+        if(fileTypes.includes(fileExtension)){
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 module.exports = {
   getUuid,
   walkDirectory,
   enhanceEntry,
   loadJSONString,
   runPromisesSynchronously,
+  isThumbGenSupportedFileType,
 };

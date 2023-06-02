@@ -19,8 +19,8 @@ module.exports.getFileType = function (srcKey) {
   return typeMatch[1].toLowerCase();
 };
 
-module.exports.isSupportedImageType = function (type) {
-  /*const supportedTypes = [
+/*module.exports.isSupportedImageType = function (type) {
+  /!*const supportedTypes = [
     "jpeg",
     "jpg",
     "png",
@@ -28,7 +28,7 @@ module.exports.isSupportedImageType = function (type) {
     "avif",
     "tiff",
     "gif",
-    "svg",*/
+    "svg",*!/
 
   const supportedTypes = [
     "jpg",
@@ -46,7 +46,7 @@ module.exports.isSupportedImageType = function (type) {
     "avif",
   ];
   return supportedTypes.includes(type);
-};
+};*/
 
 module.exports.isReadableStream = function (obj) {
   return (
