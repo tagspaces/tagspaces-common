@@ -66,14 +66,28 @@ export const LinkTooltip: React.FC = () => {
 
   return (
     <div style={{ display: 'none' }}>
-      <div ref={ref}>
+      <div
+        ref={ref}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: 6,
+          backgroundColor: 'gray',
+          borderRadius: 8,
+          fontSize: 10
+        }}
+      >
         {href}
-        <LinkDialog
-          open={isLinkModalOpened}
-          onClose={() => setLinkModalOpened(false)}
-          text={text}
-          href={href}
-        />
+        {isLinkModalOpened && (
+          <LinkDialog
+            open={isLinkModalOpened}
+            onClose={() => setLinkModalOpened(false)}
+            text={text}
+            href={href}
+            isEditMode={true}
+          />
+        )}
+
         <IconButton
           aria-label="edit"
           onClick={() => setLinkModalOpened(true)}

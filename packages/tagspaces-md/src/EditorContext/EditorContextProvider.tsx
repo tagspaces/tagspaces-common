@@ -53,6 +53,7 @@ type EditorContextProviderProps = {
   children: React.ReactNode;
   onChange: (markdown: string, prevMarkdown: string) => void;
   debounceChange?: number;
+  lightMode?: boolean;
   defaultMarkdownValue: string;
 };
 
@@ -60,16 +61,17 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   children,
   onChange,
   debounceChange,
-  defaultMarkdownValue
+  defaultMarkdownValue,
+  lightMode
 }) => {
   const { mode } = useTextEditorContext();
 
+  const commonmarkPlugin = useCommonmarkPlugin();
   const gfmPlugin = useGfmPlugin();
   const mathPlugin = useMathPlugin();
   const uploadPlugin = useUploadPlugin();
   const mermaidPlugin = useMermaidPlugin();
   const slashPlugin = useSlashPlugin();
-  const commonmarkPlugin = useCommonmarkPlugin();
   const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
   const listenerPlugin = useListenerPlugin({ onChange, debounceChange });
@@ -112,10 +114,9 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
     return false;
   };
 
-  // noinspection JSVoidFunctionReturnValueUsed
   const editor = useEditor(
-    root =>
-      MilkdownEditor.make()
+    root => {
+      const editor: MilkdownEditor = MilkdownEditor.make()
         .config(ctx => {
           ctx.set(rootCtx, root);
           ctx.set(defaultValueCtx, defaultMarkdownValue);
@@ -136,19 +137,25 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
             childList: true
           });
         })
-        .use(commonmarkPlugin)
-        .use(listenerPlugin)
-        .use(prismPlugin)
-        .use(history)
-        .use(uploadPlugin)
-        .use(mermaidPlugin)
-        .use(mathPlugin)
-        .use(slashPlugin)
-        .use(trailing)
-        .use(emoji)
-        .use(clipboard)
-        .use(menuBarPlugin)
-        .use(gfmPlugin),
+        .use(commonmarkPlugin);
+
+      if (!lightMode) {
+        editor
+          .use(listenerPlugin)
+          .use(prismPlugin)
+          .use(history)
+          .use(uploadPlugin)
+          .use(mermaidPlugin)
+          .use(mathPlugin)
+          .use(slashPlugin)
+          .use(trailing)
+          .use(emoji)
+          .use(clipboard)
+          .use(menuBarPlugin)
+          .use(gfmPlugin);
+      }
+      return editor;
+    },
     [
       mode,
       commonmarkPlugin,
