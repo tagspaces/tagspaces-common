@@ -16,7 +16,6 @@ import { wrapInList } from 'prosemirror-schema-list';
 import { useMemo } from 'react';
 
 import { linkSchema } from '@milkdown/preset-commonmark';
-import { useGoogleSlidesPlugin } from './useGoogleSlidesPlugin';
 import { LinkTooltip } from '../../../components/LinkTooltip/LinkTooltip';
 //import { CodeBlockNode } from '../../../../components/CodeBlockNode/CodeBlockNode';
 //import { ImageNode } from '../../../../components/ImageNode/ImageNode';
@@ -35,7 +34,6 @@ export const wrapEntireInOrderedListCommand = $command(
 
 export const useCommonmarkPlugin = () => {
   const nodeViewFactory = useNodeViewFactory();
-  const googleSlidesPlugin = useGoogleSlidesPlugin();
   const pluginViewFactory = usePluginViewFactory();
 
   const commonMarkPlugin = useMemo(
@@ -57,11 +55,10 @@ export const useCommonmarkPlugin = () => {
         $view(imageSchema.node, () =>
           nodeViewFactory({ component: ImageNode, as: 'div' })
         ),*/
-        googleSlidesPlugin,
         wrapEntireInBulletListCommand,
         wrapEntireInOrderedListCommand
       ].flat(),
-    [pluginViewFactory, nodeViewFactory, googleSlidesPlugin]
+    [pluginViewFactory, nodeViewFactory]
   );
 
   return commonMarkPlugin;

@@ -22,9 +22,24 @@ import { useMathPlugin } from './hooks/useMathPlugin';
 import { useMenuBarPlugin } from './hooks/useMenuBarPlugin';
 import { useMermaidPlugin } from './hooks/useMermaidPlugin';
 import { usePrismPlugin } from './hooks/usePrismPlugin';
-//import { useSlashPlugin } from './hooks/useSlashPlugin';
+import { useSlashPlugin } from './hooks/useSlashPlugin';
 import { useUploadPlugin } from './hooks/useUploadPlugin/useUploadPlugin';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
+
+/*function isExternalLink(url: any) {
+    return url.startsWith('http://') || url.startsWith('https://');
+  }*/
+function hasURLProtocol(url: any) {
+  // noinspection OverlyComplexBooleanExpressionJS
+  return (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('file://') ||
+    url.startsWith('data:') ||
+    url.startsWith('ts://?ts') ||
+    url.startsWith('ts:?ts')
+  );
+}
 
 type EditorContextData = {
   editor: UseEditorReturn | null;
@@ -53,28 +68,51 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const mathPlugin = useMathPlugin();
   const uploadPlugin = useUploadPlugin();
   const mermaidPlugin = useMermaidPlugin();
-  //const slashPlugin = useSlash(); //useSlashPlugin();
+  const slashPlugin = useSlashPlugin();
   const commonmarkPlugin = useCommonmarkPlugin();
   const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
   const listenerPlugin = useListenerPlugin({ onChange, debounceChange });
 
+  // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
   const handleClick = (
     view: EditorView,
     pos: number,
-    node: Node,
-    nodePos: number,
-    event: MouseEvent,
-    direct: boolean
+    node: Node
+    // nodePos: number,
+    // event: MouseEvent,
+    // direct: boolean
   ) => {
-    event.preventDefault();
-    // event.stopPropagation();
-    const marks = findChildrenByMark(node, linkSchema.type());
-    if (marks.length > 0 && marks[0].node.marks.length > 0) {
-      alert('click on mark:' + marks[0].node.marks[0].attrs.href);
+    // event.preventDefault();
+    if (mode === 'preview') {
+      const nodes = findChildrenByMark(node, linkSchema.type());
+      if (nodes.length > 0) {
+        //&& nodes[0].node.marks.length > 0) {
+        const node = nodes.find(n => n.node.marks.length > 0);
+        const mark = node?.node.marks.find(mark => mark.type.name === 'link');
+        const href = mark?.attrs.href; //marks[0].node.marks[0].attrs.href;
+        // const isExternal = isExternalLink(href);
+        let path;
+        if (hasURLProtocol(href)) {
+          path = href;
+        } else {
+          path = encodeURIComponent(href);
+        }
+        window.parent.postMessage(
+          JSON.stringify({
+            command: 'openLinkExternally',
+            link: path
+          }),
+          '*'
+        );
+        // alert('click on mark:' + marks[0].node.marks[0].attrs.href);
+      }
+      return true;
     }
-    return true;
+    return false;
   };
+
+  // noinspection JSVoidFunctionReturnValueUsed
   const editor = useEditor(
     root =>
       MilkdownEditor.make()
@@ -87,6 +125,16 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
             editable: () => mode === 'active',
             handleClickOn: handleClick
           }));
+          //preventDefaultClick
+          const observer = new MutationObserver(() => {
+            const links = Array.from(root.querySelectorAll('a'));
+            links.forEach(link => {
+              link.onclick = () => false;
+            });
+          });
+          observer.observe(root, {
+            childList: true
+          });
         })
         .use(commonmarkPlugin)
         .use(listenerPlugin)
@@ -95,7 +143,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .use(uploadPlugin)
         .use(mermaidPlugin)
         .use(mathPlugin)
-        //.use(slashPlugin)
+        .use(slashPlugin)
         .use(trailing)
         .use(emoji)
         .use(clipboard)
@@ -111,7 +159,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       mathPlugin,
       mermaidPlugin,
       onChange,
-      //slashPlugin,
+      slashPlugin,
       uploadPlugin,
       prismPlugin
     ]

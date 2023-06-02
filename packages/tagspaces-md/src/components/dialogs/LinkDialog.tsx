@@ -56,7 +56,9 @@ function LinkDialog(props: Props) {
           overflowY: 'overlay',
           overflowX: 'hidden'
         }}
-      ></DialogContent>
+      >
+
+      </DialogContent>
       <DialogActions>
         <Button data-tid="cancelTagsMultipleEntries" onClick={() => onClose()}>
           Cancel
