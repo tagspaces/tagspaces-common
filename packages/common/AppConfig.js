@@ -222,7 +222,7 @@ const ThumbGenSupportedFileTypes = {
     "svg",
     "tif",
     "tiff",
-    "ico",
+    // "ico",
     "webp",
     // 'psd', // Unable to resize  due to an error:  [Error: Input buffer contains unsupported image format]
     "avif",
