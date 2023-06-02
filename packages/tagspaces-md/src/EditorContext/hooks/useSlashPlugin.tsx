@@ -19,10 +19,10 @@ export const useSlashPlugin = (): Plugin => {
         (ctx: Ctx) => () => {
           ctx.set(slash.key, {
             view: pluginViewFactory({
-              component: Slash,
-            }),
+              component: Slash
+            })
           });
-        },
+        }
       ].flat(),
     [pluginViewFactory]
   );
