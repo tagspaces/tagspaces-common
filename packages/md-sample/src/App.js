@@ -1,5 +1,5 @@
 import "./App.css";
-//import "@tagspaces/tagspaces-md/lib/milkdown.css";
+import "@tagspaces/tagspaces-md/lib/milkdown.css";
 import { MilkdownEditor, CodeMirror } from "@tagspaces/tagspaces-md";
 import { useCallback, useRef, useState } from "react";
 

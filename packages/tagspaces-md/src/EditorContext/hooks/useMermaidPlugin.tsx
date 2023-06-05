@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 
 //import { MermaidNode } from '../../../components/MermaidNode/MermaidNode';
 import { Plugin } from '../../types/plugins';
+import { MermaidNode } from '../../components/MermaidNode/MermaidNode';
 
 export const useMermaidPlugin = (): Plugin => {
   const nodeViewFactory = useNodeViewFactory();
@@ -13,12 +14,12 @@ export const useMermaidPlugin = (): Plugin => {
     () =>
       [
         diagram,
-        /*$view(diagramSchema.node, () =>
+        $view(diagramSchema.node, () =>
           nodeViewFactory({
             component: MermaidNode,
-            stopEvent: () => true,
+            stopEvent: () => true
           })
-        ),*/
+        )
       ].flat(),
     [nodeViewFactory]
   );

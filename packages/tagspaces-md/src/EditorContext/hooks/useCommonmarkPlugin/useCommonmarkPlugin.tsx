@@ -15,10 +15,9 @@ import {
 import { wrapInList } from 'prosemirror-schema-list';
 import { useMemo } from 'react';
 
-import { linkSchema } from '@milkdown/preset-commonmark';
 import { LinkTooltip } from '../../../components/LinkTooltip/LinkTooltip';
-//import { CodeBlockNode } from '../../../../components/CodeBlockNode/CodeBlockNode';
-//import { ImageNode } from '../../../../components/ImageNode/ImageNode';
+import { CodeBlockNode } from '../../../components/CodeBlockNode/CodeBlockNode';
+import { ImageNode } from '../../../components/ImageNode/ImageNode';
 
 const linkTooltip = tooltipFactory('HYPERLINK');
 
@@ -48,13 +47,12 @@ export const useCommonmarkPlugin = () => {
             })
           });
         },
-        // $view(linkSchema.mark, ()  => null),
-        /*$view(codeBlockSchema.node, () =>
+        $view(codeBlockSchema.node, () =>
           nodeViewFactory({ component: CodeBlockNode, as: 'div' })
         ),
         $view(imageSchema.node, () =>
           nodeViewFactory({ component: ImageNode, as: 'div' })
-        ),*/
+        ),
         wrapEntireInBulletListCommand,
         wrapEntireInOrderedListCommand
       ].flat(),

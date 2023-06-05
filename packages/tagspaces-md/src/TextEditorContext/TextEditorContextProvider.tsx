@@ -5,6 +5,7 @@ export type TextEditorMode = 'preview' | 'active';
 
 type TextEditorContextData = {
   mode: TextEditorMode;
+  currentFolder?: string;
   stickyOnMenu: number;
   onFileUpload: (file: File) => Promise<string>;
 };
@@ -17,6 +18,7 @@ export const TextEditorContext = createContext<TextEditorContextData>({
 
 export type TextEditorContextProviderProps = {
   mode: TextEditorMode;
+  currentFolder?: string;
   children: React.ReactNode;
   stickyOnMenu?: number;
   onFileUpload?: (file: File) => Promise<string>;
