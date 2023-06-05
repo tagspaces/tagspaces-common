@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/dynamic-packages-loading",
   "description": "utils for dynamic-packages-loading used by the TagSpaces application",
-  "version": "2.0.44",
+  "version": "3.0.0",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {

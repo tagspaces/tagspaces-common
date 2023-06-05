@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-electron",
   "description": "TagSpaces common electron module",
-  "version": "2.1.31",
+  "version": "3.0.0",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
