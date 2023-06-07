@@ -1,8 +1,11 @@
 const fs = require("fs-extra");
+const path = require("path");
 const filepath = require("./filepath");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const { walkDirectory } = require("@tagspaces/tagspaces-common/utils-io");
-const { listDirectoryPromise } = require("@tagspaces/tagspaces-common-node/io-node");
+const {
+  listDirectoryPromise,
+} = require("@tagspaces/tagspaces-common-node/io-node");
 
 const cleanMeta = (
   dirPath,
@@ -30,32 +33,22 @@ const cleanMeta = (
         // console.debug(fileName);
         const fileExtension = pathObj.extname();
         // console.debug(fileExtension);
-        const originPath = parts.slice(0, metaFolderIndex);
-        originPath.push(
+        const originPathParts = parts.slice(0, metaFolderIndex);
+        originPathParts.push(
           fileName.substring(0, fileName.length - fileExtension.length)
         );
-        const originFile = filepath.create(originPath);
+        const originFilePath = path.resolve(...originPathParts);
 
         if (fileName === AppConfig.folderThumbFile) {
         } else if (fileName === AppConfig.folderIndexFile) {
         } else if (fileName === AppConfig.metaFolderFile) {
         } else if (fileExtension === AppConfig.metaFileExt) {
           if (options.considerMetaJSON) {
-            checkExist(
-              originFile.sep + originFile.path,
-              fileEntry.path,
-              analyze,
-              callback
-            );
+            checkExist(originFilePath, fileEntry.path, analyze, callback);
           }
         } else if (fileExtension === AppConfig.thumbFileExt) {
           if (options.considerThumb) {
-            checkExist(
-              originFile.sep + originFile.path,
-              fileEntry.path,
-              analyze,
-              callback
-            );
+            checkExist(originFilePath, fileEntry.path, analyze, callback);
           }
         }
       }
