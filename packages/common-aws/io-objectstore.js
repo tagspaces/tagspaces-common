@@ -132,7 +132,7 @@ const listDirectoryPromise = (
   ignorePatterns = [],
   resultsLimit = {}
 ) =>
-  new Promise(async (resolve) => {
+  new Promise(async (resolve, reject) => {
     const path = param.path;
     const bucketName = param.bucketName;
     const enhancedEntries = [];
@@ -306,7 +306,8 @@ const listDirectoryPromise = (
             bucketName,
           error
         );
-        resolve(enhancedEntries);
+        // resolve(enhancedEntries);
+        reject(error);
       });
   });
 
