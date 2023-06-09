@@ -1,6 +1,7 @@
 import "./App.css";
 import "@tagspaces/tagspaces-md/lib/milkdown.css";
-import { MilkdownEditor, CodeMirror } from "@tagspaces/tagspaces-md";
+import { MilkdownEditor } from "@tagspaces/tagspaces-md";
+import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
 import { useCallback, useRef, useState } from "react";
 
 function App() {
