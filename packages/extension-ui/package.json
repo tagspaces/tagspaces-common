@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-extension-ui",
   "description": "Extension ui library used by the TagSpaces extensions",
-  "version": "2.1.44",
+  "version": "2.1.45",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "lib/index.js",
