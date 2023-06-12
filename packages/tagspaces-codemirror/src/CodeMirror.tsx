@@ -7,7 +7,21 @@ import {
   completionKeymap
 } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { cpp } from '@codemirror/lang-cpp';
 import { markdown } from '@codemirror/lang-markdown';
+import { javascript } from '@codemirror/lang-javascript';
+import { html } from '@codemirror/lang-html';
+import { css } from '@codemirror/lang-css';
+import { xml } from '@codemirror/lang-xml';
+import { java } from '@codemirror/lang-java';
+import { json } from '@codemirror/lang-json';
+import { less } from '@codemirror/lang-less';
+import { php } from '@codemirror/lang-php';
+import { python } from '@codemirror/lang-python';
+import { sql } from '@codemirror/lang-sql';
+import { rust } from '@codemirror/lang-rust';
+import { wast } from '@codemirror/lang-wast';
+import { sass } from '@codemirror/lang-sass';
 import {
   bracketMatching,
   defaultHighlightStyle,
@@ -33,6 +47,55 @@ import {
 } from '@codemirror/view';
 
 import className from './style.module.css';
+
+const languageModes = {
+  h: cpp(),
+  c: cpp(),
+  clj: cpp(), // todo 'clojure'
+  coffee: cpp(), // todo 'coffee'
+  cpp: cpp(),
+  cs: cpp(),
+  css: css(),
+  groovy: cpp(), // todo groovy
+  haxe: cpp(), // todo haxe
+  htm: html(),
+  html: html(),
+  java: java(),
+  js: javascript(),
+  ts: javascript(),
+  jsm: javascript(),
+  json: json(),
+  less: less(),
+  lua: cpp(),
+  markdown: markdown(),
+  md: markdown(),
+  mdown: markdown(),
+  mdwn: markdown(),
+  mkd: markdown(),
+  ml: cpp(), // todo ocaml
+  mli: cpp(), // todo ocaml
+  pl: cpp(), // todo perl
+  php: php(),
+  py: python(),
+  rb: cpp(), // todo ruby
+  rs: rust(),
+  sh: cpp(), // todo sh
+  sql: sql(),
+  svg: xml(),
+  sass: sass(),
+  xml: xml(),
+  wast: wast()
+  //filetype.txt = 'txt';
+};
+
+function detectMode(ext) {
+  const mode = languageModes[ext];
+  if (mode) {
+    return mode;
+  }
+  return undefined;
+  // return autoFold(autoMode());
+}
 
 const basicSetup: Extension = [
   lineNumbers(),
@@ -69,6 +132,7 @@ type StateOptions = {
   dark: boolean;
   editable: boolean;
   value?: string;
+  fileExtension?: string;
 };
 
 const createCodeMirrorState = ({
@@ -76,13 +140,15 @@ const createCodeMirrorState = ({
   lock,
   dark,
   editable,
-  value
+  value,
+  fileExtension
 }: StateOptions) => {
+  const mode = detectMode(fileExtension);
   return EditorState.create({
     doc: value,
     extensions: [
       basicSetup,
-      markdown(),
+      ...(mode !== undefined ? [mode] : []),
       EditorView.updateListener.of(v => {
         if (v.focusChanged) {
           lock.current = v.view.hasFocus;
@@ -122,10 +188,11 @@ type CodeMirrorProps = {
   lock: React.MutableRefObject<boolean>;
   dark: boolean;
   editable: boolean;
+  fileExtension?: string;
 };
 export type CodeMirrorRef = { update: (markdown: string) => void };
 export const CodeMirror = React.forwardRef<CodeMirrorRef, CodeMirrorProps>(
-  ({ value, onChange, lock, dark, editable }, ref) => {
+  ({ value, onChange, lock, dark, editable, fileExtension }, ref) => {
     const divRef = React.useRef<HTMLDivElement>(null);
     const editorRef = React.useRef<ReturnType<typeof createCodeMirrorView>>();
     const [focus, setFocus] = React.useState(false);
@@ -139,11 +206,18 @@ export const CodeMirror = React.forwardRef<CodeMirrorRef, CodeMirrorProps>(
         lock,
         dark,
         editable,
-        value
+        value,
+        fileExtension
       });
       editorRef.current = editor;
 
+      /*const timer = setInterval(() => {
+        editor.focus();
+        if(editor.hasFocus) clearInterval(timer);
+      }, 500);*/
+
       return () => {
+        // clearInterval(timer);
         editor.destroy();
       };
     }, [onChange, value, lock, dark]);

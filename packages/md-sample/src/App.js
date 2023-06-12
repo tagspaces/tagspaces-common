@@ -57,6 +57,7 @@ function App() {
             dark={dark}
             editable={true}
             lock={lockCode}
+            fileExtension={'js'}
           />
         </div>
       </header>
