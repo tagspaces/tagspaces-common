@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Button from '@mui/material/Button';
@@ -13,7 +13,7 @@ import Fab from '@mui/material/Fab';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import AboutIcon from '@mui/icons-material/Info';
 import PrintIcon from '@mui/icons-material/Print';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+// import { createTheme, ThemeProvider } from '@mui/material/styles';
 import DialogCloseButton from './DialogCloseButton';
 
 const MainMenu: React.FC<{
@@ -24,7 +24,8 @@ const MainMenu: React.FC<{
   aboutLink: () => void;
 }> = ({ menuItems, print, about, aboutTitle, aboutLink }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [isAboutDialogOpened, setAboutDialogOpened] = useState<boolean>(false);
+  const [isAboutDialogOpened, setAboutDialogOpened] =
+    React.useState<boolean>(false);
 
   const handleFabClick = (event: any) => {
     setAnchorEl(event.currentTarget);
@@ -60,57 +61,56 @@ const MainMenu: React.FC<{
       : [])
   ];
 
-  const primaryBackgroundColor = window
-    .getComputedStyle(document.documentElement)
-    .getPropertyValue('--primary-color')
-    .trim();
-  const primaryTextColor = window
-    .getComputedStyle(document.documentElement)
-    .getPropertyValue('--primary-text-color')
-    .trim();
+  /*
+    const primaryBackgroundColor = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--primary-color')
+      .trim();
+    const primaryTextColor = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--primary-text-color')
+      .trim();
 
-  const tsTheme = createTheme({
-    palette: {
-      primary: {
-        main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
-        contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
-      },
-      secondary: {
-        main: '#11cb5f',
-        contrastText: '#ffffff'
+    const tsTheme = createTheme({
+      palette: {
+        primary: {
+          main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
+          contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
+        },
+        secondary: {
+          main: '#11cb5f',
+          contrastText: '#ffffff'
+        }
       }
-    }
-  });
-
+    });*/
+  /*<ThemeProvider theme={tsTheme}>*/
   return (
-    <ThemeProvider theme={tsTheme}>
-      {Boolean(anchorEl) && (
-        <Menu
-          id="fab-menu"
-          anchorEl={anchorEl}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'left'
-          }}
-          transformOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center'
-          }}
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
-        >
-          {actions.map(action => (
-            <MenuItem
-              data-tid={action.dataTID}
-              key={action.name}
-              onClick={action.action}
-            >
-              <ListItemIcon>{action.icon}</ListItemIcon>
-              <ListItemText>{action.name}</ListItemText>
-            </MenuItem>
-          ))}
-        </Menu>
-      )}
+    <>
+      <Menu
+        id="fab-menu"
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left'
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center'
+        }}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+      >
+        {actions.map(action => (
+          <MenuItem
+            data-tid={action.dataTID}
+            key={action.name}
+            onClick={action.action}
+          >
+            <ListItemIcon>{action.icon}</ListItemIcon>
+            <ListItemText>{action.name}</ListItemText>
+          </MenuItem>
+        ))}
+      </Menu>
       <Fab
         data-tid="mainMenuTID"
         color="primary"
@@ -157,7 +157,7 @@ const MainMenu: React.FC<{
           </Button>
         </DialogActions>
       </Dialog>
-    </ThemeProvider>
+    </>
   );
 };
 

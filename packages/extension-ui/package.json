@@ -14,22 +14,19 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "npx rimraf build lib esm",
+    "clean": "npx rimraf build lib esm lib-esm",
     "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
     "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
     "build": "npm run clean && npm run lib:cjs && npm run lib:esm",
     "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
     "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development",
     "code-format": "npx prettier --write .",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-codemirror-2.1.6.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-codemirror && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-extension-ui-2.1.45.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-extension-ui && rimraf package",
+    "npmpack-ext": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-extension-ui-2.1.45.tgz && npx shx cp -rL package/** ../../../tagspaces/extensions/text-editor-react/node_modules/@tagspaces/tagspaces-extension-ui && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "dependencies": {
-    "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.13.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.19.3",
@@ -46,7 +43,9 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-dom": "*"
+    "react-dom": "*",
+    "@mui/icons-material": "*",
+    "@mui/material": "*"
   },
   "eslintConfig": {
     "extends": [

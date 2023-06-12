@@ -57,11 +57,20 @@ function App() {
             dark={dark}
             editable={true}
             lock={lockCode}
-            fileExtension={'js'}
+            fileExtension={"js"}
           />
         </div>
       </header>
-      <MainMenu print="Print" about="About" />
+      <MainMenu
+        print="Print"
+        about="About"
+        aboutLink={() => {
+          /*sendMessageToHost({
+            command: "openLinkExternally",
+            link: "https://docs.tagspaces.org/extensions/md-editor/",
+          });*/
+        }}
+      />
     </div>
   );
 }
