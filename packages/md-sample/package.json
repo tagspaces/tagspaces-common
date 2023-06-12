@@ -1,9 +1,9 @@
 {
   "name": "md-sample",
-  "version": "2.1.45",
+  "version": "2.1.46",
   "private": true,
   "dependencies": {
-    "@tagspaces/tagspaces-codemirror": "*",
+    "@tagspaces/tagspaces-codemirror": "^2.1.46",
     "@tagspaces/tagspaces-extension-ui": "^2.1.45",
     "@tagspaces/tagspaces-md": "*",
     "@testing-library/jest-dom": "^5.16.5",
