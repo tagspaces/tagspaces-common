@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-extension-ui",
   "description": "Extension ui library used by the TagSpaces extensions",
-  "version": "2.1.45",
+  "version": "2.1.47",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "lib/index.js",
@@ -42,10 +42,10 @@
     "typescript": "^4.8.4"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-dom": "*",
     "@mui/icons-material": "*",
-    "@mui/material": "*"
+    "@mui/material": "*",
+    "react": "*",
+    "react-dom": "*"
   },
   "eslintConfig": {
     "extends": [
