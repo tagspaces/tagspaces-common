@@ -3,6 +3,7 @@ import "@tagspaces/tagspaces-md/lib/milkdown.css";
 import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
 import { useCallback, useRef, useState } from "react";
+import { MainMenu } from "@tagspaces/tagspaces-extension-ui";
 
 function App() {
   const fileDescriptionRef = useRef(null);
@@ -59,6 +60,7 @@ function App() {
           />
         </div>
       </header>
+      <MainMenu print="Print" about="About" />
     </div>
   );
 }
