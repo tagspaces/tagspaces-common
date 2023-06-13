@@ -13,7 +13,7 @@ import Fab from '@mui/material/Fab';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import AboutIcon from '@mui/icons-material/Info';
 import PrintIcon from '@mui/icons-material/Print';
-// import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import DialogCloseButton from './DialogCloseButton';
 
 const MainMenu: React.FC<{
@@ -61,31 +61,30 @@ const MainMenu: React.FC<{
       : [])
   ];
 
-  /*
-    const primaryBackgroundColor = window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--primary-color')
-      .trim();
-    const primaryTextColor = window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--primary-text-color')
-      .trim();
+  const primaryBackgroundColor = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue('--primary-color')
+    .trim();
+  const primaryTextColor = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue('--primary-text-color')
+    .trim();
 
-    const tsTheme = createTheme({
-      palette: {
-        primary: {
-          main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
-          contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
-        },
-        secondary: {
-          main: '#11cb5f',
-          contrastText: '#ffffff'
-        }
+  const tsTheme = createTheme({
+    palette: {
+      primary: {
+        main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
+        contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
+      },
+      secondary: {
+        main: '#11cb5f',
+        contrastText: '#ffffff'
       }
-    });*/
-  /*<ThemeProvider theme={tsTheme}>*/
+    }
+  });
+
   return (
-    <>
+    <ThemeProvider theme={tsTheme}>
       <Menu
         id="fab-menu"
         anchorEl={anchorEl}
@@ -157,7 +156,7 @@ const MainMenu: React.FC<{
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </ThemeProvider>
   );
 };
 

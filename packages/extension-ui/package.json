@@ -42,6 +42,8 @@
     "typescript": "^4.8.4"
   },
   "peerDependencies": {
+    "@emotion/react": "*",
+    "@emotion/styled": "*",
     "@mui/icons-material": "*",
     "@mui/material": "*",
     "react": "*",

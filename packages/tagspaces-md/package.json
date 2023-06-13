@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "npx rimraf build lib esm",
+    "clean": "npx rimraf build lib esm lib-esm",
     "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
     "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
     "copy-files": "npx shx cp src/style.module.css esm && npx shx cp src/style.module.css lib && npx shx cp src/milkdown.css esm && npx shx cp src/milkdown.css lib",
@@ -29,16 +29,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.3.0",
-    "@codemirror/commands": "^6.1.2",
-    "@codemirror/lang-markdown": "^6.0.4",
-    "@codemirror/language": "^6.3.0",
-    "@codemirror/lint": "^6.0.0",
-    "@codemirror/search": "^6.2.2",
-    "@codemirror/state": "^6.1.2",
-    "@codemirror/view": "^6.4.1",
-    "@emotion/react": "11.10.5",
-    "@emotion/styled": "11.10.5",
     "@material-design-icons/font": "^0.13.1",
     "@milkdown/core": "6.5.2",
     "@milkdown/plugin-block": "6.5.2",
