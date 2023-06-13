@@ -2,6 +2,7 @@ import "./App.css";
 import "@tagspaces/tagspaces-md/lib/milkdown.css";
 import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useCallback, useRef, useState } from "react";
 import { MainMenu } from "@tagspaces/tagspaces-extension-ui";
 
@@ -70,6 +71,16 @@ function App() {
             link: "https://docs.tagspaces.org/extensions/md-editor/",
           });*/
         }}
+        menuItems={[
+          {
+            icon: <FormatListNumberedIcon />,
+            name: "Toggle Line Numbers",
+            dataTID: "lineNumbersTID",
+            action: () => {
+              codeMirrorRef.current.toggleLineNumbers();
+            },
+          },
+        ]}
       />
     </div>
   );

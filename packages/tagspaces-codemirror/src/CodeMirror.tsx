@@ -32,7 +32,7 @@ import {
 } from '@codemirror/language';
 import { lintKeymap } from '@codemirror/lint';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
-import { EditorState, Extension } from '@codemirror/state';
+import { EditorState, Extension, Compartment } from '@codemirror/state';
 import {
   crosshairCursor,
   drawSelection,
@@ -97,8 +97,14 @@ function detectMode(ext) {
   // return autoFold(autoMode());
 }
 
+let lineNumbersCompartment = new Compartment();
+
+export function makeLineNumbers(showLineNumbers) {
+  const v = showLineNumbers ? lineNumbers() : [];
+  return lineNumbersCompartment.of(v);
+}
+
 const basicSetup: Extension = [
-  lineNumbers(),
   highlightActiveLineGutter(),
   highlightSpecialChars(),
   history(),
@@ -148,6 +154,8 @@ const createCodeMirrorState = ({
     doc: value,
     extensions: [
       basicSetup,
+      //https://github.com/kjk/onlinetool.io/blob/752dc581d6e7f38ddd3b28be1feed65e9de860b1/web/CodeMirrorConfig.js#L12
+      makeLineNumbers(true),
       ...(mode !== undefined ? [mode] : []),
       EditorView.updateListener.of(v => {
         if (v.focusChanged) {
@@ -190,10 +198,14 @@ type CodeMirrorProps = {
   editable: boolean;
   fileExtension?: string;
 };
-export type CodeMirrorRef = { update: (markdown: string) => void };
+export type CodeMirrorRef = {
+  update: (markdown: string) => void;
+  toggleLineNumbers: () => void;
+};
 export const CodeMirror = React.forwardRef<CodeMirrorRef, CodeMirrorProps>(
   ({ value, onChange, lock, dark, editable, fileExtension }, ref) => {
     const divRef = React.useRef<HTMLDivElement>(null);
+    const showLNumbers = React.useRef<boolean>(true);
     const editorRef = React.useRef<ReturnType<typeof createCodeMirrorView>>();
     const [focus, setFocus] = React.useState(false);
 
@@ -228,8 +240,23 @@ export const CodeMirror = React.forwardRef<CodeMirrorRef, CodeMirrorProps>(
         if (!current) return;
 
         current.setState(
-          createCodeMirrorState({ onChange, lock, dark, editable, value })
+          createCodeMirrorState({
+            onChange,
+            lock,
+            dark,
+            editable,
+            value
+          })
         );
+      },
+      toggleLineNumbers: () => {
+        const { current } = editorRef;
+        if (!current) return;
+        showLNumbers.current = !showLNumbers.current;
+        const v = showLNumbers.current ? lineNumbers() : [];
+        current.dispatch({
+          effects: lineNumbersCompartment.reconfigure(v)
+        });
       }
     }));
 

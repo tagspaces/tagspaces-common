@@ -6,7 +6,7 @@
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.4",
     "@tagspaces/tagspaces-codemirror": "*",
-    "@tagspaces/tagspaces-extension-ui": "^2.1.48",
+    "@tagspaces/tagspaces-extension-ui": "*",
     "@tagspaces/tagspaces-md": "^2.1.48",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
