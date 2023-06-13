@@ -198,12 +198,12 @@ export interface CodeMirrorProps {
   dark: boolean;
   editable: boolean;
   fileExtension?: string;
-};
+}
 
-export interface CodeMirrorRef = {
+export interface CodeMirrorRef {
   update: (markdown: string) => void;
   toggleLineNumbers: () => void;
-};
+}
 
 export const CodeMirror = React.forwardRef<CodeMirrorRef, CodeMirrorProps>(
   ({ value, onChange, lock, dark, editable, fileExtension }, ref) => {

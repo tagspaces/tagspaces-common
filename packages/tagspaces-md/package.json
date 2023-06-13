@@ -22,7 +22,7 @@
     "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
     "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development",
     "code-format": "npx prettier --write .",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-2.0.48.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-3.0.0.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
@@ -51,9 +51,7 @@
     "@milkdown/theme-nord": "7.1.1",
     "@milkdown/transformer": "^7.0.1",
     "@milkdown/utils": "7.1.1",
-    "@prosemirror-adapter/react": "^0.2.5",
-    "react-loading-skeleton": "^3.1.0",
-    "remark-directive": "^2.0.1"
+    "@prosemirror-adapter/react": "^0.2.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.19.3",
@@ -69,6 +67,10 @@
     "typescript": "^4.8.4"
   },
   "peerDependencies": {
+    "@emotion/react": "*",
+    "@emotion/styled": "*",
+    "@mui/icons-material": "*",
+    "@mui/material": "*",
     "react": "*",
     "react-dom": "*"
   },

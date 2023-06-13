@@ -57,7 +57,7 @@ export const Slash = () => {
   };
 
   return (
-    <div className="hidden">
+    <div style={{ display: 'none' }}>
       <div role="tooltip" ref={tooltipRef}>
         <Box sx={{ width: '100%', maxWidth: 360, backgroundColor: 'gray' }}>
           {/* bgcolor: 'background.paper'*/}
