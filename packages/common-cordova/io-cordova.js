@@ -655,7 +655,8 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
       )
       .catch((err) => {
         console.error("Error getting listDirectoryPromise:", err);
-        resolve(enhancedEntries); // returning results even if any promise fails
+        // resolve(enhancedEntries); // returning results even if any promise fails
+        reject(err);
       });
   });
 }

@@ -1,7 +1,10 @@
 import "./App.css";
 import "@tagspaces/tagspaces-md/lib/milkdown.css";
-import { MilkdownEditor, CodeMirror } from "@tagspaces/tagspaces-md";
+import { MilkdownEditor } from "@tagspaces/tagspaces-md";
+import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useCallback, useRef, useState } from "react";
+import { MainMenu } from "@tagspaces/tagspaces-extension-ui";
 
 const initMarkdown = `# Milkdown React Custom Component
 
@@ -82,9 +85,30 @@ function App() {
             dark={dark}
             editable={true}
             lock={lockCode}
+            fileExtension={"js"}
           />
         </div>
       </header>
+      <MainMenu
+        print="Print"
+        about="About"
+        aboutLink={() => {
+          /*sendMessageToHost({
+            command: "openLinkExternally",
+            link: "https://docs.tagspaces.org/extensions/md-editor/",
+          });*/
+        }}
+        menuItems={[
+          {
+            icon: <FormatListNumberedIcon />,
+            name: "Toggle Line Numbers",
+            dataTID: "lineNumbersTID",
+            action: () => {
+              codeMirrorRef.current.toggleLineNumbers();
+            },
+          },
+        ]}
+      />
     </div>
   );
 }
