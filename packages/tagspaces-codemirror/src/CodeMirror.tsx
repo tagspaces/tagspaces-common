@@ -97,6 +97,7 @@ function detectMode(ext) {
   // return autoFold(autoMode());
 }
 
+// https://codemirror.net/examples/config/#dynamic-configuration
 let lineNumbersCompartment = new Compartment();
 
 export function makeLineNumbers(showLineNumbers) {
