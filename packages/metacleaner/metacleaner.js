@@ -37,7 +37,13 @@ const cleanMeta = (
         originPathParts.push(
           fileName.substring(0, fileName.length - fileExtension.length)
         );
-        const originFilePath = path.resolve(...originPathParts);
+        const relativeFilePath = path.relative(
+          __dirname.replace(/^\//, ''),
+          path.join(...originPathParts)
+        );
+        const originFilePath = path.join(__dirname, relativeFilePath);
+        // this works on Windows only
+        // const originFilePath = path.resolve(...originPathParts);
 
         if (fileName === AppConfig.folderThumbFile) {
         } else if (fileName === AppConfig.folderIndexFile) {
