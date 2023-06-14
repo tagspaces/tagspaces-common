@@ -15,51 +15,62 @@ import AboutIcon from '@mui/icons-material/Info';
 import PrintIcon from '@mui/icons-material/Print';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import DialogCloseButton from './DialogCloseButton';
+import useEventListener from './useEventListener';
+
+export type MainMenuItem = {
+  id: string;
+  icon?: any;
+  name: 'Toggle Line Numbers';
+  action: () => void;
+};
 
 const MainMenu: React.FC<{
-  menuItems?: Array<any>;
-  print: string;
-  about: string;
+  menuItems: Array<MainMenuItem>;
   aboutTitle?: string;
-  aboutLink: () => void;
-}> = ({ menuItems, print, about, aboutTitle, aboutLink }) => {
+  aboutDialogContent?: React.ReactElement;
+  aboutLink?: () => void; // this will not be set if aboutDialogContent is provided
+}> = ({ menuItems, aboutTitle, aboutDialogContent, aboutLink }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [isAboutDialogOpened, setAboutDialogOpened] =
     React.useState<boolean>(false);
+  const [isFabVisible, setFabVisible] = React.useState<boolean>(true);
+
+  useEventListener('beforeprint', event => {
+    setFabVisible(false);
+  });
+
+  useEventListener('afterprint', event => {
+    setFabVisible(true);
+  });
 
   const handleFabClick = (event: any) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const actions = [
-    ...(menuItems && menuItems.length > 0 ? menuItems : []),
-    ...(print
-      ? [
-          {
-            icon: <PrintIcon />,
-            name: print,
-            dataTID: 'printTID',
-            action: () => {
-              setAnchorEl(null);
-              window.print();
-            }
-          }
-        ]
-      : []),
-    ...(about
-      ? [
-          {
-            icon: <AboutIcon />,
-            name: about,
-            dataTID: 'aboutTID',
-            action: () => {
-              setAnchorEl(null);
-              setAboutDialogOpened(true);
-            }
-          }
-        ]
-      : [])
-  ];
+  const actions = menuItems.map(item => {
+    if (item.id === 'print') {
+      return {
+        ...item,
+        dataTID: item.id + 'TID',
+        icon: <PrintIcon />,
+        action: () => {
+          setAnchorEl(null);
+          window.print();
+        }
+      };
+    } else if (item.id === 'about') {
+      return {
+        ...item,
+        dataTID: item.id + 'TID',
+        icon: <AboutIcon />,
+        action: () => {
+          setAnchorEl(null);
+          setAboutDialogOpened(true);
+        }
+      };
+    }
+    return { ...item, dataTID: item.id + 'TID' };
+  });
 
   const primaryBackgroundColor = window
     .getComputedStyle(document.documentElement)
@@ -83,6 +94,27 @@ const MainMenu: React.FC<{
     }
   });
 
+  const dialogContent = aboutDialogContent ? (
+    aboutDialogContent
+  ) : (
+    <>
+      Please visit the dedicated&nbsp;
+      <Link
+        href="#"
+        variant="body2"
+        onClick={(event: React.SyntheticEvent) => {
+          event.preventDefault();
+          if (aboutLink) {
+            aboutLink();
+          }
+        }}
+      >
+        project page
+      </Link>
+      &nbsp; in the TagSpaces' documentation for more details.
+    </>
+  );
+
   return (
     <ThemeProvider theme={tsTheme}>
       <Menu
@@ -102,29 +134,31 @@ const MainMenu: React.FC<{
         {actions.map(action => (
           <MenuItem
             data-tid={action.dataTID}
-            key={action.name}
+            key={action.dataTID}
             onClick={action.action}
           >
             <ListItemIcon>{action.icon}</ListItemIcon>
-            <ListItemText>{action.name}</ListItemText>
+            <ListItemText>{action.name || action.id}</ListItemText>
           </MenuItem>
         ))}
       </Menu>
-      <Fab
-        data-tid="mainMenuTID"
-        color="primary"
-        aria-label="open extension menu"
-        style={{
-          position: 'absolute',
-          right: 20,
-          bottom: 20,
-          width: 50,
-          height: 50
-        }}
-        onClick={handleFabClick}
-      >
-        <MoreIcon />
-      </Fab>
+      {isFabVisible && (
+        <Fab
+          data-tid="mainMenuTID"
+          color="primary"
+          aria-label="open extension menu"
+          style={{
+            position: 'absolute',
+            right: 20,
+            bottom: 20,
+            width: 50,
+            height: 50
+          }}
+          onClick={handleFabClick}
+        >
+          <MoreIcon />
+        </Fab>
+      )}
       <Dialog
         open={isAboutDialogOpened}
         onClose={() => {
@@ -136,20 +170,7 @@ const MainMenu: React.FC<{
           {aboutTitle ? aboutTitle : ''}
           <DialogCloseButton onClick={() => setAboutDialogOpened(false)} />
         </DialogTitle>
-        <DialogContent>
-          Please visit the dedicated&nbsp;
-          <Link
-            href="#"
-            variant="body2"
-            onClick={(event: React.SyntheticEvent) => {
-              event.preventDefault();
-              aboutLink();
-            }}
-          >
-            project page
-          </Link>
-          &nbsp; in the TagSpaces' documentation for more details.
-        </DialogContent>
+        <DialogContent>{dialogContent}</DialogContent>
         <DialogActions>
           <Button onClick={() => setAboutDialogOpened(false)} color="primary">
             Ok

@@ -90,24 +90,20 @@ function App() {
         </div>
       </header>
       <MainMenu
-        print="Print"
-        about="About"
-        aboutLink={() => {
-          /*sendMessageToHost({
-            command: "openLinkExternally",
-            link: "https://docs.tagspaces.org/extensions/md-editor/",
-          });*/
-        }}
         menuItems={[
           {
+            id: "lineNumbers",
             icon: <FormatListNumberedIcon />,
             name: "Toggle Line Numbers",
-            dataTID: "lineNumbersTID",
             action: () => {
               codeMirrorRef.current.toggleLineNumbers();
             },
           },
+          { id: "print" },
+          { id: "about" },
         ]}
+        aboutTitle="About Dialog"
+        aboutDialogContent={<>Testing About Dialog</>}
       />
     </div>
   );
