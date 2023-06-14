@@ -26,7 +26,7 @@
   },
   "nodeDependencies": {
     "jsonwebtoken": "^8.5.1",
-    "@tagspaces/tagspaces-workers": "3.0.0"
+    "@tagspaces/tagspaces-workers": "3.0.1"
   },
   "webDependencies": {},
   "peerDependencies": {
