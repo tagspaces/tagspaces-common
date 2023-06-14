@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/aws-thumbgen",
   "description": "TagSpaces aws thumbnails module",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -9,8 +9,8 @@
     "pkg-publish": "rimraf package-lock.json && npm install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common-aws": "^3.0.0",
-    "@tagspaces/tagspaces-thumbgen-image": "^3.0.0",
-    "@tagspaces/tagspaces-thumbgen-pdf": "^3.0.0"
+    "@tagspaces/tagspaces-common-aws": "^3.0.1",
+    "@tagspaces/tagspaces-thumbgen-image": "^3.0.1",
+    "@tagspaces/tagspaces-thumbgen-pdf": "^3.0.1"
   }
 }
