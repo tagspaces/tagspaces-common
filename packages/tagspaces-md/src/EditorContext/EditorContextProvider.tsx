@@ -52,6 +52,7 @@ export const EditorContext = createContext<EditorContextData>({
 type EditorContextProviderProps = {
   children: React.ReactNode;
   onChange: (markdown: string, prevMarkdown: string) => void;
+  onFocus: () => void;
   debounceChange?: number;
   lightMode?: boolean;
   defaultMarkdownValue: string;
@@ -60,6 +61,7 @@ type EditorContextProviderProps = {
 export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   children,
   onChange,
+  onFocus,
   debounceChange,
   defaultMarkdownValue,
   lightMode
@@ -74,7 +76,11 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const slashPlugin = useSlashPlugin();
   const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
-  const listenerPlugin = useListenerPlugin({ onChange, debounceChange });
+  const listenerPlugin = useListenerPlugin({
+    onChange,
+    onFocus,
+    debounceChange
+  });
 
   // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
   const handleClick = (

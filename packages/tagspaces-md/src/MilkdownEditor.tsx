@@ -24,14 +24,18 @@ interface Props {
 }
 
 const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
-  ({ readOnly, content, onChange, currentFolder, ...rest }, ref) => {
+  ({ readOnly, content, onChange, onFocus, currentFolder, ...rest }, ref) => {
     return (
-      <TextEditorContextProvider mode={readOnly ? 'preview' : 'active'} currentFolder={currentFolder}>
+      <TextEditorContextProvider
+        mode={readOnly ? 'preview' : 'active'}
+        currentFolder={currentFolder}
+      >
         <MilkdownProvider>
           <ProsemirrorAdapterProvider>
             <EditorContextProvider
               defaultMarkdownValue={content}
               onChange={onChange}
+              onFocus={onFocus}
               {...rest}
             >
               <MilkdownEditorRef milkdownRef={ref} />
