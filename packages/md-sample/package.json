@@ -1,12 +1,12 @@
 {
   "name": "md-sample",
-  "version": "2.1.49",
+  "version": "2.1.50",
   "private": true,
   "dependencies": {
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.4",
-    "@tagspaces/tagspaces-codemirror": "^2.1.49",
-    "@tagspaces/tagspaces-extension-ui": "*",
+    "@tagspaces/tagspaces-codemirror": "^2.1.50",
+    "@tagspaces/tagspaces-extension-ui": "^2.1.50",
     "@tagspaces/tagspaces-md": "^2.1.48",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
