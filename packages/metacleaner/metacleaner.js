@@ -60,17 +60,16 @@ const cleanMeta = (
         // this works on Windows only
         // const originFilePath = path.resolve(...originPathParts);
 
-        if (fileName === AppConfig.folderThumbFile) {
-        } else if (fileName === AppConfig.folderIndexFile) {
-        } else if (fileName === AppConfig.metaFolderFile) {
-        } else if (fileExtension === AppConfig.metaFileExt) {
-          if (options.considerMetaJSON) {
-            checkExist(originFilePath, fileEntry.path, analyze, callback);
-          }
-        } else if (fileExtension === AppConfig.thumbFileExt) {
-          if (options.considerThumb) {
-            checkExist(originFilePath, fileEntry.path, analyze, callback);
-          }
+        if (
+          options.considerMetaJSON &&
+          fileExtension === AppConfig.metaFileExt
+        ) {
+          checkExist(originFilePath, fileEntry.path, analyze, callback);
+        } else if (
+          options.considerThumb &&
+          fileExtension === AppConfig.thumbFileExt
+        ) {
+          checkExist(originFilePath, fileEntry.path, analyze, callback);
         }
       }
     }
