@@ -5,7 +5,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 
 type UseListenerPluginProps = {
   onChange: (markdown: string, prevMarkdown?: string) => void;
-  onFocus: () => void;
+  onFocus?: () => void;
   debounceChange?: number;
 };
 
@@ -29,7 +29,9 @@ export const useListenerPlugin = ({
           });
 
           ctx.get(listenerCtx).focus(() => {
-            onFocus();
+            if(onFocus) {
+              onFocus();
+            }
           });
         }
       ].flat(),

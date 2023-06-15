@@ -1,9 +1,10 @@
+import init from "./init.md";
 import "./App.css";
 import "@tagspaces/tagspaces-md/lib/milkdown.css";
 import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { MainMenu } from "@tagspaces/tagspaces-extension-ui";
 
 const initMarkdown = `# Milkdown React Custom Component
@@ -21,6 +22,14 @@ function App() {
   const [isReadOnly, setReadOnly] = useState(false);
   const lockCode = useRef(false);
   const text = useRef(initMarkdown);
+
+  useEffect(() => {
+    fetch(init)
+        .then((res) => res.text())
+        .then((text) => {
+          milkdownListener(text);
+        });
+  }, []);
 
   const milkdownListener = useCallback((markdown, prevMarkdown) => {
     const lock = lockCode.current;

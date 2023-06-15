@@ -40,10 +40,11 @@ export const useMermaid = ({ codePanelRef }: UseMermaidProps) => {
             tertiaryColor: editor.mermaid.tertiaryColor,
           },*/
         });
+        /* todo
         mermaid.mermaidAPI.render(id, codeValue, (svg, bind) => {
           container.innerHTML = svg;
           bind?.(container);
-        });
+        });*/
       } catch (e) {
         console.error(e);
         if (canRetry === 0) {

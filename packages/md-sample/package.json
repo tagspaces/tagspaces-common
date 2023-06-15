@@ -17,6 +17,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "start-only": "react-scripts start",
     "start": "npm run build-libs && npm run build && react-scripts start",
     "build": "react-scripts build",
     "build-libs": "npm run build --prefix ../tagspaces-md && npm run build --prefix ../tagspaces-codemirror && npm run build --prefix ../extension-ui",
