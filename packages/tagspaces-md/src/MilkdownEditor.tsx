@@ -8,9 +8,11 @@ import 'katex/dist/katex.min.css';
 import { EditorContextProvider } from './EditorContext/EditorContextProvider';
 import { TextEditorContextProvider } from './TextEditorContext/TextEditorContextProvider';
 import MilkdownEditorRef from './MilkdownEditorRef';
+import { DarkModeProvider } from './providers/DarkModeProvider';
 
 export interface MilkdownRef {
   update: (markdown: string) => void;
+  setDarkMode: (isDark: boolean) => void;
 }
 
 interface Props {
@@ -38,7 +40,9 @@ const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
               onFocus={onFocus}
               {...rest}
             >
-              <MilkdownEditorRef milkdownRef={ref} />
+              <DarkModeProvider>
+                <MilkdownEditorRef milkdownRef={ref} />
+              </DarkModeProvider>
             </EditorContextProvider>
           </ProsemirrorAdapterProvider>
         </MilkdownProvider>

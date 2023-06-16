@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "jsx": "react",
-    "module": "commonjs",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "target": "ES2015",
     "sourceMap": true,
     "inlineSources": true,
-    "target": "es5",
     "outDir": "lib",
     "declaration": true,
     "importHelpers": true,
@@ -15,6 +15,13 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "lib": ["esnext", "dom"],
+    "noEmitOnError": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "lib-esm"
+  ]
 }

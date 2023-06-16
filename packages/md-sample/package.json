@@ -5,9 +5,9 @@
   "dependencies": {
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.4",
-    "@tagspaces/tagspaces-codemirror": "^3.0.1",
-    "@tagspaces/tagspaces-extension-ui": "^3.0.1",
-    "@tagspaces/tagspaces-md": "^3.0.1",
+    "@tagspaces/tagspaces-extension-ui": "*",
+    "@tagspaces/tagspaces-codemirror": "*",
+    "@tagspaces/tagspaces-md": "*",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -20,7 +20,7 @@
     "start-only": "react-scripts start",
     "start": "npm run build-libs && npm run build && react-scripts start",
     "build": "react-scripts build",
-    "build-libs": "npm run build --prefix ../tagspaces-md && npm run build --prefix ../tagspaces-codemirror && npm run build --prefix ../extension-ui",
+    "build-libs": "npm run build --prefix ../tagspaces-md && npm run build --prefix ../tagspaces-codemirror",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "run-build": "npx serve -s build"

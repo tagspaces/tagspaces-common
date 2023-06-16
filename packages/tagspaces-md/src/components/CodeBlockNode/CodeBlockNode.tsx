@@ -73,7 +73,7 @@ export const CodeBlockNode: React.FC = () => {
               onChange={onLanguageChange}
             >
               {options.map(option => (
-                <MenuItem value={option.value}>{option.label}</MenuItem>
+                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
               ))}
             </Select>
           ))

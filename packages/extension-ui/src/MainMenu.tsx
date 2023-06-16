@@ -13,7 +13,6 @@ import Fab from '@mui/material/Fab';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import AboutIcon from '@mui/icons-material/Info';
 import PrintIcon from '@mui/icons-material/Print';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import DialogCloseButton from './DialogCloseButton';
 import useEventListener from './useEventListener';
 
@@ -72,27 +71,27 @@ const MainMenu: React.FC<{
     return { ...item, dataTID: item.id + 'TID' };
   });
 
-  const primaryBackgroundColor = window
-    .getComputedStyle(document.documentElement)
-    .getPropertyValue('--primary-color')
-    .trim();
-  const primaryTextColor = window
-    .getComputedStyle(document.documentElement)
-    .getPropertyValue('--primary-text-color')
-    .trim();
+    /* const primaryBackgroundColor = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--primary-color')
+      .trim();
+    const primaryTextColor = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--primary-text-color')
+      .trim();
 
-  const tsTheme = createTheme({
-    palette: {
-      primary: {
-        main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
-        contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
-      },
-      secondary: {
-        main: '#11cb5f',
-        contrastText: '#ffffff'
+    const tsTheme = createTheme({
+      palette: {
+        primary: {
+          main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
+          contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
+        },
+        secondary: {
+          main: '#11cb5f',
+          contrastText: '#ffffff'
+        }
       }
-    }
-  });
+    });*/
 
   const dialogContent = aboutDialogContent ? (
     aboutDialogContent
@@ -116,7 +115,7 @@ const MainMenu: React.FC<{
   );
 
   return (
-    <ThemeProvider theme={tsTheme}>
+    <>
       <Menu
         id="fab-menu"
         anchorEl={anchorEl}
@@ -177,7 +176,7 @@ const MainMenu: React.FC<{
           </Button>
         </DialogActions>
       </Dialog>
-    </ThemeProvider>
+    </>
   );
 };
 

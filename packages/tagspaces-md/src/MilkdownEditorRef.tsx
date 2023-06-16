@@ -3,6 +3,7 @@ import { Milkdown } from '@milkdown/react';
 import { useInstance } from '@milkdown/react';
 import { replaceAll } from '@milkdown/utils';
 import { MilkdownRef } from './MilkdownEditor';
+import { useSetDarkMode } from './providers/DarkModeProvider';
 
 type Props = {
   milkdownRef: ForwardedRef<MilkdownRef>;
@@ -10,6 +11,7 @@ type Props = {
 
 const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
   const [loading, getEditor] = useInstance();
+  const setDarkMode = useSetDarkMode();
 
   React.useImperativeHandle(milkdownRef, () => ({
     update: (markdown: string) => {
@@ -17,6 +19,9 @@ const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
       const editor = getEditor();
       if (loading || !editor) return;
       editor.action(replaceAll(markdown));
+    },
+    setDarkMode: (isDarkMode: boolean) => {
+      setDarkMode(isDarkMode);
     }
     // https://github.com/Saul-Mirone/milkdown/issues/204#issuecomment-985977031
     /*isEqualMarkdown: (prev: string, next: string) => {
