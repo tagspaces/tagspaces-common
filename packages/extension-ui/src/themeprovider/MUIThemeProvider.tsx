@@ -32,7 +32,7 @@ const getDesignTokens = mode => ({
   }
 });
 const MUIThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useState('light');
+  const [mode, setMode] = useState<'light' | 'dark'>('light');
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {

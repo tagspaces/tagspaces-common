@@ -1,5 +1,5 @@
 import init from "./init.md";
-//import "./App.css";
+import "./App.css";
 import "@tagspaces/tagspaces-md/lib/milkdown.css";
 import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
@@ -8,6 +8,7 @@ import Box from "@mui/material/Box";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useCallback, useRef, useState, useEffect, useContext } from "react";
 import { MainMenu, ColorModeContext } from "@tagspaces/tagspaces-extension-ui";
+import { useTheme } from "@mui/material/styles";
 
 const initMarkdown = `# Milkdown React Custom Component
 
@@ -25,6 +26,7 @@ function App() {
   const lockCode = useRef(false);
   const text = useRef(initMarkdown);
   const colorMode = useContext(ColorModeContext);
+  const theme = useTheme();
 
   useEffect(() => {
     fetch(init)
@@ -58,9 +60,7 @@ function App() {
       <button
         onClick={() => {
           colorMode.toggleColorMode();
-          // setMode(mode === "light" ? "dark" : "light");
-          // milkdownEditorRef.current.setDarkMode(mode === "dark");
-          //setDark(!dark);
+          milkdownEditorRef.current.setDarkMode(theme.palette.mode === "light");
         }}
       >
         Switch theme
@@ -107,22 +107,22 @@ function App() {
           lock={lockCode}
           fileExtension={"js"}
         />
-        {/*<MainMenu
-        menuItems={[
-          {
-            id: "lineNumbers",
-            icon: <FormatListNumberedIcon />,
-            name: "Toggle Line Numbers",
-            action: () => {
-              codeMirrorRef.current.toggleLineNumbers();
+        <MainMenu
+          menuItems={[
+            {
+              id: "lineNumbers",
+              icon: <FormatListNumberedIcon />,
+              name: "Toggle Line Numbers",
+              action: () => {
+                codeMirrorRef.current.toggleLineNumbers();
+              },
             },
-          },
-          { id: "print" },
-          { id: "about" },
-        ]}
-        aboutTitle="About Dialog"
-        aboutDialogContent={<>Testing About Dialog</>}
-      />*/}
+            { id: "print" },
+            { id: "about" },
+          ]}
+          aboutTitle="About Dialog"
+          aboutDialogContent={<>Testing About Dialog</>}
+        />
       </Box>
     </>
   );
