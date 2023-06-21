@@ -5,7 +5,6 @@ import {
   editorViewOptionsCtx
 } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
-import { diagram } from '@milkdown/plugin-diagram';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { emoji } from '@milkdown/plugin-emoji';
 import { history } from '@milkdown/plugin-history';
@@ -22,12 +21,12 @@ import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
 import { useListenerPlugin } from './hooks/useListenerPlugin';
 import { useMathPlugin } from './hooks/useMathPlugin';
 import { useMenuBarPlugin } from './hooks/useMenuBarPlugin';
-import { useMermaidPlugin } from './hooks/useMermaidPlugin';
 import { usePrismPlugin } from './hooks/usePrismPlugin';
 import { useSlashPlugin } from './hooks/useSlashPlugin';
 import { useUploadPlugin } from './hooks/useUploadPlugin/useUploadPlugin';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
-import '@milkdown/theme-nord/style.css'
+import '@milkdown/theme-nord/style.css';
+import { useDiagramPlugin } from './hooks/useDiagramPlugin';
 
 /*function isExternalLink(url: any) {
     return url.startsWith('http://') || url.startsWith('https://');
@@ -75,7 +74,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const gfmPlugin = useGfmPlugin();
   const mathPlugin = useMathPlugin();
   const uploadPlugin = useUploadPlugin();
-  //const mermaidPlugin = useMermaidPlugin();
+  const diagramPlugins = useDiagramPlugin();
   const slashPlugin = useSlashPlugin();
   const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
@@ -156,7 +155,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           .use(history)
           .use(uploadPlugin)
           //.use(mermaidPlugin)
-          .use(diagram)
+          .use(diagramPlugins)
           .use(mathPlugin)
           .use(slashPlugin)
           .use(trailing)
