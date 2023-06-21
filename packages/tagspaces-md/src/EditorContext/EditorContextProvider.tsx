@@ -2,7 +2,7 @@ import {
   Editor as MilkdownEditor,
   rootCtx,
   defaultValueCtx,
-  editorViewOptionsCtx
+  editorViewOptionsCtx, remarkStringifyOptionsCtx
 } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
 import { clipboard } from '@milkdown/plugin-clipboard';
@@ -27,6 +27,7 @@ import { useUploadPlugin } from './hooks/useUploadPlugin/useUploadPlugin';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
 import '@milkdown/theme-nord/style.css';
 import { useDiagramPlugin } from './hooks/useDiagramPlugin';
+import { useTaskList } from './hooks/useTaskList';
 
 /*function isExternalLink(url: any) {
     return url.startsWith('http://') || url.startsWith('https://');
@@ -73,6 +74,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const commonmarkPlugin = useCommonmarkPlugin();
   const gfmPlugin = useGfmPlugin();
   const mathPlugin = useMathPlugin();
+  const taskList = useTaskList();
   const uploadPlugin = useUploadPlugin();
   const diagramPlugins = useDiagramPlugin();
   const slashPlugin = useSlashPlugin();
@@ -128,6 +130,12 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .config(ctx => {
           ctx.set(rootCtx, root);
           ctx.set(defaultValueCtx, defaultMarkdownValue);
+         /* ctx.set(remarkStringifyOptionsCtx, {
+            // some options, for example:
+            bullet: '*',
+            fences: true,
+            incrementListMarker: false,
+          });*/
 
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
@@ -146,23 +154,23 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           });
         })
         .config(nord)
-        .use(commonmarkPlugin);
+        .use(commonmarkPlugin)
+        .use(taskList);
 
       if (!lightMode) {
         editor
           .use(listenerPlugin)
+          .use(gfmPlugin)
           .use(prismPlugin)
           .use(history)
           .use(uploadPlugin)
-          //.use(mermaidPlugin)
           .use(diagramPlugins)
           .use(mathPlugin)
           .use(slashPlugin)
           .use(trailing)
           .use(emoji)
           .use(clipboard)
-          .use(menuBarPlugin)
-          .use(gfmPlugin);
+          .use(menuBarPlugin);
       }
       return editor;
     },
@@ -174,7 +182,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       menuBarPlugin,
       gfmPlugin,
       mathPlugin,
-      //mermaidPlugin,
+      diagramPlugins,
       onChange,
       slashPlugin,
       uploadPlugin,
