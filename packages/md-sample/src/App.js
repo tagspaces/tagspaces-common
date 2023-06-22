@@ -1,6 +1,7 @@
 import init from "./init.md";
 import "./App.css";
-import "@tagspaces/tagspaces-md/lib/milkdown.css";
+// import "@tagspaces/tagspaces-md/lib/milkdown.css";
+import "@tagspaces/tagspaces-md/lib/tailwind.css";
 import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
 import Box from "@mui/material/Box";
@@ -89,24 +90,27 @@ function App() {
             lightMode={true}
           />
       <hr /> */}
-        <MilkdownEditor
-          ref={milkdownEditorRef}
-          content={text.current}
-          onChange={milkdownListener}
-          readOnly={isReadOnly}
-          // dark={dark}
-          lightMode={false}
-        />
-        <hr />
-        <CodeMirror
-          ref={codeMirrorRef}
-          value={text.current}
-          onChange={onCodeChange}
-          // dark={dark}
-          editable={true}
-          lock={lockCode}
-          fileExtension={"js"}
-        />
+        <div style={{ width: "50%" }}>
+          <MilkdownEditor
+            ref={milkdownEditorRef}
+            content={text.current}
+            onChange={milkdownListener}
+            readOnly={isReadOnly}
+            // dark={dark}
+            lightMode={false}
+          />
+        </div>
+        <div style={{ width: "50%" }}>
+          <CodeMirror
+            ref={codeMirrorRef}
+            value={text.current}
+            onChange={onCodeChange}
+            // dark={dark}
+            editable={true}
+            lock={lockCode}
+            fileExtension={"js"}
+          />
+        </div>
         <MainMenu
           menuItems={[
             {

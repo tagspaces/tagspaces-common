@@ -97,8 +97,8 @@ export const TableTooltip: FC = () => {
   }, [getEditor, loading, view]);
 
   return (
-    <div style={{ display: 'hidden' }}>
-      <div style={{ display: 'flex' }} ref={ref}>
+    <div className="hidden">
+      <div className="flex" style={{ backgroundColor: 'white' }} ref={ref}>
         {!isWholeTable && !isHeading && isRow && (
           <IconButton
             title={'upward'}
