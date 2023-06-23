@@ -58,8 +58,8 @@ export const Slash = () => {
 
   return (
     <div style={{ display: 'none' }}>
-      <div role="tooltip" ref={tooltipRef}>
-        <Box sx={{ width: '100%', maxWidth: 360, backgroundColor: 'gray' }}>
+      <div role="tooltip" ref={tooltipRef} className="bg-gray-50 dark:bg-gray-900">
+        <Box sx={{ width: '100%', maxWidth: 360 }}>
           {/* bgcolor: 'background.paper'*/}
           <List component="nav" aria-label="main mailbox folders">
             <ListItemButton

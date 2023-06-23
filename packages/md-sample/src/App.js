@@ -4,12 +4,14 @@ import "./App.css";
 import "@tagspaces/tagspaces-md/lib/tailwind.css";
 import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
-import Box from "@mui/material/Box";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import EditIcon from "@mui/icons-material/Edit";
 
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useCallback, useRef, useState, useEffect, useContext } from "react";
 import { MainMenu, ColorModeContext } from "@tagspaces/tagspaces-extension-ui";
 import { useTheme } from "@mui/material/styles";
+import { Box, CssBaseline, Toolbar, Button, styled } from "@mui/material";
 
 const initMarkdown = `# Milkdown React Custom Component
 
@@ -56,26 +58,16 @@ function App() {
     current.update(value);
   }, []);
 
+  const Offset = styled("div")(({ theme }) => theme.mixins.toolbar);
+
   return (
     <>
-      <button
-        onClick={() => {
-          colorMode.toggleColorMode();
-          milkdownEditorRef.current.setDarkMode(theme.palette.mode === "light");
-        }}
-      >
-        Switch theme
-      </button>
-      <button
-        onClick={() => {
-          setReadOnly(!isReadOnly);
-        }}
-      >
-        {isReadOnly ? "Preview" : "Active"}
-      </button>
+      <Offset />
       <Box
+        component="main"
         sx={{
           display: "flex",
+          p: 3,
           width: "100%",
           bgcolor: "background.default",
           color: "text.primary",
@@ -113,6 +105,25 @@ function App() {
         </div>
         <MainMenu
           menuItems={[
+            {
+              id: "themeSwitch",
+              icon: <DarkModeIcon />,
+              name: "Theme Switch",
+              action: () => {
+                colorMode.toggleColorMode();
+                milkdownEditorRef.current.setDarkMode(
+                  theme.palette.mode === "light"
+                );
+              },
+            },
+            {
+              id: "readOnly",
+              icon: <EditIcon />,
+              name: isReadOnly ? "Preview" : "Active",
+              action: () => {
+                setReadOnly(!isReadOnly);
+              },
+            },
             {
               id: "lineNumbers",
               icon: <FormatListNumberedIcon />,

@@ -17,8 +17,9 @@ interface Props {
   open: boolean;
   isEditMode: boolean;
   onClose: (clearSelection?: boolean) => void;
-  text: string;
-  href: string;
+  text?: string;
+  href?: string;
+  onSubmit?: (payload: any) => void;
 }
 
 function LinkDialog(props: Props) {
@@ -54,7 +55,6 @@ function LinkDialog(props: Props) {
             })
           );
         }
-        onClose();
       });
     }
   };
@@ -120,7 +120,15 @@ function LinkDialog(props: Props) {
         <Button
           data-tid="saveLink"
           onClick={() => {
-            onHandleSubmit();
+            if (props.onSubmit) {
+              props.onSubmit({
+                // title: title,
+                src: link,
+                alt: title
+              });
+            } else {
+              onHandleSubmit();
+            }
             onClose();
           }}
         >
