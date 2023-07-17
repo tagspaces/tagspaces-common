@@ -1023,7 +1023,7 @@ function copyFilePromise(param, newFilePath, override = true) {
     fsRoot.getDirectory(
       newFileParentPath,
       {
-        create: false,
+        create: true,
         exclusive: false,
       },
       (parentDirEntry) => {
