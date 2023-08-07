@@ -7,6 +7,21 @@ const {
   listDirectoryPromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
 
+function isMeta(pathParts) {
+  const metaFolderIndex = pathParts.indexOf(AppConfig.metaFolder);
+  if (metaFolderIndex !== -1) {
+    const fileName = pathParts[pathParts.length - 1];
+    return (
+      fileName !== AppConfig.metaFolderFile &&
+      fileName !== AppConfig.folderLocationsFile &&
+      fileName !== AppConfig.folderIndexFile &&
+      fileName !== AppConfig.folderThumbFile &&
+      fileName !== AppConfig.folderBgndFile
+    );
+  }
+  return false;
+}
+
 const cleanMeta = (
   dirPath,
   callback,
@@ -27,29 +42,34 @@ const cleanMeta = (
     (fileEntry) => {
       const pathObj = filepath.create(fileEntry.path);
       const parts = pathObj.split();
-      const metaFolderIndex = parts.indexOf(AppConfig.metaFolder);
-      if (metaFolderIndex !== -1) {
+      if (isMeta(parts)) {
         const fileName = parts[parts.length - 1];
         // console.debug(fileName);
         const fileExtension = pathObj.extname();
         // console.debug(fileExtension);
+        const metaFolderIndex = parts.indexOf(AppConfig.metaFolder);
         const originPathParts = parts.slice(0, metaFolderIndex);
         originPathParts.push(
           fileName.substring(0, fileName.length - fileExtension.length)
         );
-        const originFilePath = path.resolve(...originPathParts);
+        const relativeFilePath = path.relative(
+          __dirname.replace(/^\//, ""),
+          path.join(...originPathParts)
+        );
+        const originFilePath = path.join(__dirname, relativeFilePath);
+        // this works on Windows only
+        // const originFilePath = path.resolve(...originPathParts);
 
-        if (fileName === AppConfig.folderThumbFile) {
-        } else if (fileName === AppConfig.folderIndexFile) {
-        } else if (fileName === AppConfig.metaFolderFile) {
-        } else if (fileExtension === AppConfig.metaFileExt) {
-          if (options.considerMetaJSON) {
-            checkExist(originFilePath, fileEntry.path, analyze, callback);
-          }
-        } else if (fileExtension === AppConfig.thumbFileExt) {
-          if (options.considerThumb) {
-            checkExist(originFilePath, fileEntry.path, analyze, callback);
-          }
+        if (
+          options.considerMetaJSON &&
+          fileExtension === AppConfig.metaFileExt
+        ) {
+          checkExist(originFilePath, fileEntry.path, analyze, callback);
+        } else if (
+          options.considerThumb &&
+          fileExtension === AppConfig.thumbFileExt
+        ) {
+          checkExist(originFilePath, fileEntry.path, analyze, callback);
         }
       }
     }

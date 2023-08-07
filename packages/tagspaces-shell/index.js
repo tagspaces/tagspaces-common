@@ -13,7 +13,7 @@ module.exports = function tscmd() {
     .option("mode", {
       alias: "m",
       type: "string",
-      default: "thumbgen",
+      // default: "thumbgen",
       description:
         "Switch thumbnails generation or tagspaces index [thumbgen, indexer, metacleaner]",
     })
@@ -59,7 +59,9 @@ module.exports = function tscmd() {
       });
     }
   } else if (argv.mode === "metacleaner") {
-    const { cleanMeta } = require("@tagspaces/tagspaces-metacleaner/metacleaner");
+    const {
+      cleanMeta,
+    } = require("@tagspaces/tagspaces-metacleaner/metacleaner");
     for (const dir of argv._) {
       cleanMeta(
         dir,
@@ -72,5 +74,11 @@ module.exports = function tscmd() {
         console.log("Dir cleaned:" + dir);
       });
     }
+  } else {
+    console.error(
+      "Unknown mode:" +
+        argv.mode +
+        " please set -m metacleaner|indexer|thumbgen"
+    );
   }
 };

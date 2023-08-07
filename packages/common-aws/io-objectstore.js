@@ -1041,7 +1041,7 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
  * @param newDirName = dir2
  * @returns {Promise<>|Promise<[]>}
  */
-function renameDirectoryPromise(param, newDirName) {
+function renameDirectoryPromise(param, newDirName, onProgress) {
   const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
   const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirName);
   if (param.path === newDirPath) {
@@ -1053,7 +1053,7 @@ function renameDirectoryPromise(param, newDirName) {
    *   param.path = /root/dir1
    *   newDirPath = /root/dir2
    */
-  return moveDirectoryPromise(param, newDirPath);
+  return moveDirectoryPromise(param, newDirPath, onProgress);
 }
 
 /**
@@ -1062,12 +1062,12 @@ function renameDirectoryPromise(param, newDirName) {
  * @param newDirPath = /root2/dir
  * @returns {Promise<*[]>}
  */
-function moveDirectoryPromise(param, newDirPath) {
+function moveDirectoryPromise(param, newDirPath, onProgress) {
   // const dirName = tsPaths.extractDirectoryName(param.path, "/");
   // const newDirPath = tsPaths.cleanTrailingDirSeparator(newDirectoryPath) + "/" + dirName;
   console.log("Move directory: " + param.path + " to " + newDirPath);
   return getDirectoryPrefixes(param).then((prefixes) =>
-    copyDirectoryInternal(param, newDirPath, prefixes).then(() =>
+    copyDirectoryInternal(param, newDirPath, prefixes, onProgress).then(() =>
       deleteDirectoryInternal(param, prefixes).then(() => newDirPath)
     )
   );

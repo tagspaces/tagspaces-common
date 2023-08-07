@@ -497,10 +497,11 @@ function platformMoveDirectoryPromise(param, newDirName, onProgress) {
         ...param,
         bucketName: objectStoreAPI.config().bucketName,
       },
-      newDirName
+      newDirName,
+      onProgress
     );
   } else if (webDavAPI) {
-    return webDavAPI.moveDirectoryPromise(param, newDirName);
+    return webDavAPI.moveDirectoryPromise(param, newDirName, onProgress);
   }
   // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
@@ -723,7 +724,7 @@ function platformCheckFileExist(file) {
   if (AppConfig.isCordova) {
     return checkFileExist(file);
   }
-  return getPropertiesPromise(file).then((stats) => {
+  return platformGetPropertiesPromise(file).then((stats) => {
     return stats && stats.isFile;
   });
 }
@@ -733,10 +734,7 @@ function platformCheckDirExist(dir) {
     return checkDirExist(dir);
   }
   // In cordova this check is too expensive for dirs like /.ts
-  return getPropertiesPromise({
-    path: dir,
-    ...(objectStoreAPI && { bucketName: objectStoreAPI.config().bucketName }),
-  }).then((stats) => {
+  return platformGetPropertiesPromise(dir).then((stats) => {
     return stats && !stats.isFile;
   });
 }
