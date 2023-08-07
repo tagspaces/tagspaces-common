@@ -2,7 +2,8 @@ import {
   Editor as MilkdownEditor,
   rootCtx,
   defaultValueCtx,
-  editorViewOptionsCtx, remarkStringifyOptionsCtx
+  editorViewOptionsCtx,
+  remarkStringifyOptionsCtx
 } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
 import { clipboard } from '@milkdown/plugin-clipboard';
@@ -53,31 +54,31 @@ export const EditorContext = createContext<EditorContextData>({
 });
 
 type EditorContextProviderProps = {
+  onFocus?: () => void;
   children: React.ReactNode;
   onChange: (markdown: string, prevMarkdown: string) => void;
-  onFocus: () => void;
   debounceChange?: number;
   lightMode?: boolean;
   defaultMarkdownValue: string;
 };
 
 export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
+  onFocus,
   children,
   onChange,
-  onFocus,
   debounceChange,
   defaultMarkdownValue,
   lightMode
 }) => {
   const { mode } = useTextEditorContext();
 
-  const commonmarkPlugin = useCommonmarkPlugin();
   const gfmPlugin = useGfmPlugin();
   const mathPlugin = useMathPlugin();
   const taskList = useTaskList();
   const uploadPlugin = useUploadPlugin();
   const diagramPlugins = useDiagramPlugin();
   const slashPlugin = useSlashPlugin();
+  const commonmarkPlugin = useCommonmarkPlugin();
   const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
   const listenerPlugin = useListenerPlugin({
@@ -88,6 +89,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
 
   // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
   const handleClick = (
+    ctx,
     view: EditorView,
     pos: number,
     node: Node
@@ -97,7 +99,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   ) => {
     // event.preventDefault();
     if (mode === 'preview') {
-      const nodes = findChildrenByMark(node, linkSchema.type());
+      const nodes = findChildrenByMark(node, linkSchema.type(ctx));
       if (nodes.length > 0) {
         //&& nodes[0].node.marks.length > 0) {
         const node = nodes.find(n => n.node.marks.length > 0);
@@ -130,7 +132,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .config(ctx => {
           ctx.set(rootCtx, root);
           ctx.set(defaultValueCtx, defaultMarkdownValue);
-         /* ctx.set(remarkStringifyOptionsCtx, {
+          /* ctx.set(remarkStringifyOptionsCtx, {
             // some options, for example:
             bullet: '*',
             fences: true,
@@ -140,7 +142,8 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
             editable: () => mode === 'active',
-            handleClickOn: handleClick
+            handleClickOn: (view: EditorView, pos: number, node: Node) =>
+              handleClick(ctx, view, pos, node)
           }));
           //preventDefaultClick
           const observer = new MutationObserver(() => {

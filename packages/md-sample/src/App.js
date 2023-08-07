@@ -58,11 +58,11 @@ function App() {
     current.update(value);
   }, []);
 
-  const Offset = styled("div")(({ theme }) => theme.mixins.toolbar);
+  //const Offset = styled("div")(({ theme }) => theme.mixins.toolbar);
 
   return (
     <>
-      <Offset />
+      {/*<Offset />*/}
       <Box
         component="main"
         sx={{

@@ -1,7 +1,7 @@
+import { EditorStatus } from '@milkdown/core';
 import { TooltipProvider } from '@milkdown/plugin-tooltip';
 import { linkSchema } from '@milkdown/preset-commonmark';
 import { TextSelection } from '@milkdown/prose/state';
-import { useInstance } from '@milkdown/react';
 import { usePluginViewContext } from '@prosemirror-adapter/react';
 import { useEffect, useRef, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
@@ -11,13 +11,14 @@ import { useHyperlinkAttrs } from './hooks/useHyperlinkAttrs';
 import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
 import { useSelectedMarkPosition } from '../../hooks/useSelectedMarkPosition';
 import LinkDialog from '../dialogs/LinkDialog';
+import { useMilkdownInstance } from '../../hooks/useMilkdownInstance';
 
 export const LinkTooltip: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
   const tooltipProvider = useRef<TooltipProvider>();
   const [text, setText] = useState('');
 
-  const [loading] = useInstance();
+  const { editor, loading } = useMilkdownInstance();
   const { view, prevState } = usePluginViewContext();
   const { mode } = useTextEditorContext();
   const { getSelectedMarkPosition } = useSelectedMarkPosition();
@@ -26,7 +27,13 @@ export const LinkTooltip: React.FC = () => {
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
 
   useEffect(() => {
-    if (ref.current && !tooltipProvider.current && !loading) {
+    if (
+      ref.current &&
+      !tooltipProvider.current &&
+      !loading &&
+      editor &&
+      editor.status === EditorStatus.Created
+    ) {
       const provider = new TooltipProvider({
         content: ref.current,
         tippyOptions: {
@@ -35,9 +42,14 @@ export const LinkTooltip: React.FC = () => {
           placement: 'bottom'
         },
         shouldShow: view => {
+          if (loading || !editor || editor.status !== EditorStatus.Created) {
+            return false;
+          }
+          const { ctx } = editor;
           const { selection } = view.state;
 
-          const linkPosition = getSelectedMarkPosition(view, linkSchema.type());
+          const linkPosition =
+            ctx && getSelectedMarkPosition(view, linkSchema.type(ctx));
 
           if (selection instanceof TextSelection && linkPosition) {
             setText(linkPosition.text);
@@ -54,7 +66,7 @@ export const LinkTooltip: React.FC = () => {
     return () => {
       tooltipProvider.current?.destroy();
     };
-  }, [loading, getSelectedMarkPosition, mode]);
+  }, [editor, getSelectedMarkPosition, mode, loading]);
 
   useEffect(() => {
     tooltipProvider.current?.update(view, prevState);

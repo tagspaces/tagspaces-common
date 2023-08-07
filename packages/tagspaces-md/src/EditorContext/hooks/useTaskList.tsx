@@ -8,10 +8,10 @@ import { Plugin } from '../../types/plugins';
 import { listItemSchema } from '@milkdown/preset-commonmark';
 import { TaskListItem } from '../../components/TaskListItem';
 
-export const insertMathCommand = $command(
+/*export const insertMathCommand = $command(
   'InsertMathCommand',
-  () => (value?: string) => setBlockType(mathBlockSchema.type(), { value })
-);
+  (ctx) => (value?: string) => setBlockType(mathBlockSchema.type(ctx), { value })
+);*/
 
 export const useTaskList = (): Plugin => {
   const nodeViewFactory = useNodeViewFactory();
