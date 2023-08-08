@@ -1,4 +1,4 @@
-import { Box, CssBaseline, IconButton } from '@mui/material';
+import { Box, CssBaseline, IconButton, styled } from '@mui/material';
 import { commandsCtx } from '@milkdown/core';
 import { redoCommand, undoCommand } from '@milkdown/plugin-history';
 import UndoIcon from '@mui/icons-material/Undo';
@@ -30,10 +30,17 @@ const ToolbarButtons: React.FC = () => {
   const [loading, editor] = useInstance();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
 
+  const FullWidthToolbar = styled(Toolbar)(({ theme }) => ({
+    minHeight: `30px`,
+    height: `30px`,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }));
+
   return (
     <>
       <AppBar position="sticky">
-        <Toolbar>
+        <FullWidthToolbar variant="dense">
           <IconButton
             size="large"
             edge="start"
@@ -161,7 +168,7 @@ const ToolbarButtons: React.FC = () => {
           >
             <AddLinkIcon />
           </IconButton>
-        </Toolbar>
+        </FullWidthToolbar>
       </AppBar>
       <LinkDialog
         open={isLinkModalOpened}
