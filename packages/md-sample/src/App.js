@@ -26,6 +26,7 @@ function App() {
   const codeMirrorRef = useRef(null);
   // const [dark, setDark] = useState(false);
   const [isReadOnly, setReadOnly] = useState(false);
+  const [isLightMode, setLightMode] = useState(false);
   const lockCode = useRef(false);
   const text = useRef(initMarkdown);
   const colorMode = useContext(ColorModeContext);
@@ -89,7 +90,8 @@ function App() {
             onChange={milkdownListener}
             readOnly={isReadOnly}
             // dark={dark}
-            lightMode={false}
+            lightMode={isLightMode}
+            excludePlugins={["upload"]}
           />
         </div>
         <div style={{ width: "50%" }}>
@@ -122,6 +124,14 @@ function App() {
               name: isReadOnly ? "Preview" : "Active",
               action: () => {
                 setReadOnly(!isReadOnly);
+              },
+            },
+            {
+              id: "lightMode",
+              icon: <EditIcon />,
+              name: isLightMode ? "Light mode" : "Full mode",
+              action: () => {
+                setLightMode(!isLightMode);
               },
             },
             {

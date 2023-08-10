@@ -47,8 +47,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(undoCommand.key);
+              e.preventDefault();
             }}
           >
             <UndoIcon />
@@ -59,8 +60,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(redoCommand.key);
+              e.preventDefault();
             }}
           >
             <RedoIcon />
@@ -71,8 +73,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(toggleStrongCommand.key);
+              e.preventDefault();
             }}
           >
             <FormatBoldIcon />
@@ -83,8 +86,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(toggleEmphasisCommand.key);
+              e.preventDefault();
             }}
           >
             <FormatItalicIcon />
@@ -95,10 +99,11 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor()
                 .ctx.get(commandsCtx)
                 .call(toggleStrikethroughCommand.key);
+              e.preventDefault();
             }}
           >
             <FormatStrikethroughIcon />
@@ -109,8 +114,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(wrapInBulletListCommand.key);
+              e.preventDefault();
             }}
           >
             <FormatListBulletedIcon />
@@ -121,8 +127,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(wrapInOrderedListCommand.key);
+              e.preventDefault();
             }}
           >
             <FormatListNumberedIcon />
@@ -133,8 +140,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               editor().ctx.get(commandsCtx).call(wrapInBlockquoteCommand.key);
+              e.preventDefault();
             }}
           >
             <FormatQuoteIcon />
@@ -157,8 +165,9 @@ const ToolbarButtons: React.FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={() => {
+            onMouseDown={e => {
               setLinkModalOpened(true);
+              e.preventDefault();
               /*editor().ctx.get(commandsCtx).call(insertImageCommand.key, {
                 title: 'title',
                 src: 'http://test',

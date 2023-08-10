@@ -59,6 +59,7 @@ type EditorContextProviderProps = {
   onChange: (markdown: string, prevMarkdown: string) => void;
   debounceChange?: number;
   lightMode?: boolean;
+  excludePlugins?: Array<string>;
   defaultMarkdownValue: string;
 };
 
@@ -68,7 +69,8 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   onChange,
   debounceChange,
   defaultMarkdownValue,
-  lightMode
+  lightMode,
+  excludePlugins
 }) => {
   const { mode } = useTextEditorContext();
 
@@ -126,6 +128,15 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
     return false;
   };
 
+  function isExcluded(pluginName) {
+    if (excludePlugins) {
+      if (excludePlugins.includes(pluginName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   const editor = useEditor(
     root => {
       const editor: MilkdownEditor = MilkdownEditor.make()
@@ -158,22 +169,33 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         })
         .config(nord)
         .use(commonmarkPlugin)
+        .use(gfmPlugin)
         .use(taskList);
 
       if (!lightMode) {
         editor
           .use(listenerPlugin)
-          .use(gfmPlugin)
           .use(prismPlugin)
           .use(history)
-          .use(uploadPlugin)
-          .use(diagramPlugins)
-          .use(mathPlugin)
-          .use(slashPlugin)
           .use(trailing)
           .use(emoji)
-          .use(clipboard)
-          .use(menuBarPlugin);
+          .use(clipboard);
+
+        if (!isExcluded('menu')) {
+          editor.use(menuBarPlugin);
+        }
+        if (!isExcluded('slash')) {
+          editor.use(slashPlugin);
+        }
+        if (!isExcluded('math')) {
+          editor.use(mathPlugin);
+        }
+        if (!isExcluded('diagrams')) {
+          editor.use(diagramPlugins);
+        }
+        if (!isExcluded('upload')) {
+          editor.use(uploadPlugin);
+        }
       }
       return editor;
     },

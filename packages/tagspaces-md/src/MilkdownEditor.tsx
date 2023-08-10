@@ -22,6 +22,7 @@ interface Props {
   onChange?: (markdown: string, prevMarkdown: string | null) => void;
   onFocus?: () => void;
   lightMode?: boolean;
+  excludePlugins?: Array<string>;
   currentFolder?: string;
 }
 
