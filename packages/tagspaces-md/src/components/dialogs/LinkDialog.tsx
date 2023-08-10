@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useInstance } from '@milkdown/react';
 import { editorViewCtx } from '@milkdown/core';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
@@ -12,6 +11,7 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { useEditorLinkActions } from '../../hooks/useEditorLinkActions';
+import { useMilkdownInstance } from '../../hooks/useMilkdownInstance';
 
 interface Props {
   open: boolean;
@@ -23,19 +23,32 @@ interface Props {
 }
 
 function LinkDialog(props: Props) {
-  const [, getEditor] = useInstance();
-  const [title, setTitle] = useState(props.text);
+  const { editor, loading } = useMilkdownInstance();
+  const [title, setTitle] = useState(props.text || getTitleFromSelection());
   const [link, setLink] = useState(props.href);
   const { open, isEditMode } = props;
   const { getLinkCreationTransaction, getLinkUpdateTransaction } =
     useEditorLinkActions();
+
+  function getTitleFromSelection() {
+    if (!props.text) {
+      const { ctx } = editor;
+      if (editor) {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { doc, selection } = state;
+        const { from, to } = selection;
+        return doc.textBetween(from, to); //, '\n');
+      }
+    }
+    return '';
+  }
 
   const onClose = () => {
     props.onClose();
   };
 
   const onHandleSubmit = () => {
-    const editor = getEditor();
     if (editor) {
       editor.action(ctx => {
         const view = ctx.get(editorViewCtx);
