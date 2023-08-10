@@ -24,21 +24,29 @@ interface Props {
 
 function LinkDialog(props: Props) {
   const { editor, loading } = useMilkdownInstance();
-  const [title, setTitle] = useState(props.text || getTitleFromSelection());
+  const [title, setTitle] = useState(getTitle());
   const [link, setLink] = useState(props.href);
   const { open, isEditMode } = props;
   const { getLinkCreationTransaction, getLinkUpdateTransaction } =
     useEditorLinkActions();
 
-  function getTitleFromSelection() {
-    if (!props.text) {
+  function getTitle() {
+    if (props.text) {
+      return props.text;
+    }
+    // get FromSelection
+    if (editor) {
       const { ctx } = editor;
-      if (editor) {
-        const view = ctx.get(editorViewCtx);
-        const { state } = view;
-        const { doc, selection } = state;
-        const { from, to } = selection;
-        return doc.textBetween(from, to); //, '\n');
+      if (ctx) {
+        try {
+          const view = ctx.get(editorViewCtx);
+          const { state } = view;
+          const { doc, selection } = state;
+          const { from, to } = selection;
+          return doc.textBetween(from, to);
+        } catch (e) {
+          console.debug('getTitleFromSelection', e);
+        }
       }
     }
     return '';

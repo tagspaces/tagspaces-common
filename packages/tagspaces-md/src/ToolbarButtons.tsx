@@ -179,14 +179,16 @@ const ToolbarButtons: React.FC = () => {
           </IconButton>
         </FullWidthToolbar>
       </AppBar>
-      <LinkDialog
-        open={isLinkModalOpened}
-        onClose={() => setLinkModalOpened(false)}
-        /*onSubmit={payload => {
-          editor().ctx.get(commandsCtx).call(insertImageCommand.key, payload);
-        }}*/
-        isEditMode={false}
-      />
+      {isLinkModalOpened && (
+        <LinkDialog
+          open={isLinkModalOpened}
+          onClose={() => setLinkModalOpened(false)}
+          /*onSubmit={payload => {
+              editor().ctx.get(commandsCtx).call(insertImageCommand.key, payload);
+            }}*/
+          isEditMode={false}
+        />
+      )}
     </>
   );
 };
