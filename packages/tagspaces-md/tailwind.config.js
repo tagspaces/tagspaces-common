@@ -3,11 +3,19 @@ module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,css}'],
   darkMode: 'class',
   theme: {
-    extend: {}
+    extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: false
+          }
+        }
+      }
+    }
   },
   future: {
     hoverOnlyWhenSupported: true
   },
-  plugins: [require('@tailwindcss/typography'), require('tailwind-nord')],
-  blocklist: ['prose']
+  plugins: [require('@tailwindcss/typography'), require('tailwind-nord')]
+  // blocklist: ['prose']
 };
