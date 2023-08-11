@@ -5,8 +5,8 @@ import { useTextEditorContext } from '../../../TextEditorContext/useTextEditoCon
 //import { useNotification } from '../../../../hooks/useNotification';
 
 export const useUploader = () => {
-  //const { onErrorNotification } = useNotification();
-  const { onFileUpload } = useTextEditorContext();
+  // const { onErrorNotification } = useNotification();
+  const { onFileUpload, onFileValidation } = useTextEditorContext();
 
   const uploader = useCallback(
     async (files: FileList, schema: Schema): Promise<Node[]> => {
@@ -15,15 +15,10 @@ export const useUploader = () => {
 
         for (let i = 0; i < files.length; i++) {
           const file = files.item(i);
-          if (!file) {
+          if (onFileValidation && !onFileValidation(file)) {
             continue;
           }
-
-          if (!file.type.includes('image')) {
-            continue;
-          }
-
-          images.push(file);
+          images.push(file as File);
         }
 
         return await Promise.all(
@@ -41,7 +36,7 @@ export const useUploader = () => {
         return [];
       }
     },
-    [onFileUpload] //, onErrorNotification]
+    [onFileUpload, onFileValidation]
   );
 
   return uploader;

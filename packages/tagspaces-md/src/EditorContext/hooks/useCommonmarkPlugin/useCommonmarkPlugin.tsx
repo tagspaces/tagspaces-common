@@ -18,6 +18,7 @@ import { useMemo } from 'react';
 import { LinkTooltip } from '../../../components/LinkTooltip/LinkTooltip';
 import { CodeBlockNode } from '../../../components/CodeBlockNode/CodeBlockNode';
 import { ImageNode } from '../../../components/ImageNode/ImageNode';
+import { DocumentNode } from '../../../components/DocumentNode/DocumentNode';
 
 const linkTooltip = tooltipFactory('HYPERLINK');
 
@@ -51,8 +52,11 @@ export const useCommonmarkPlugin = () => {
           nodeViewFactory({ component: CodeBlockNode, as: 'div' })
         ),
         $view(imageSchema.node, () =>
-          nodeViewFactory({ component: ImageNode, as: 'div' })
+          nodeViewFactory({ component: DocumentNode, as: 'div' })
         ),
+        /*$view(imageSchema.node, () =>
+          nodeViewFactory({ component: ImageNode, as: 'div' })
+        ),*/
         wrapEntireInBulletListCommand,
         wrapEntireInOrderedListCommand
       ].flat(),

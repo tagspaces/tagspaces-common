@@ -4,6 +4,9 @@ import { useNodeViewContext } from '@prosemirror-adapter/react';
 import { useState } from 'react';
 import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
 
+/**
+ * @deprecated use DocumentNode instead
+ */
 export const ImageNode: React.FC = () => {
   const [imageProperties, setImageProperties] = useState<{
     width: number;

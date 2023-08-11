@@ -91,7 +91,7 @@ function App() {
             readOnly={isReadOnly}
             // dark={dark}
             lightMode={isLightMode}
-            excludePlugins={["upload"]}
+            // excludePlugins={["upload"]}
           />
         </div>
         <div style={{ width: "50%" }}>

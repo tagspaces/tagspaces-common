@@ -4,7 +4,7 @@ import { useWidgetViewFactory } from '@prosemirror-adapter/react';
 import { useMemo } from 'react';
 
 import { useUploader } from './useUploader';
-// import { ImageLoader } from '../../../../common/ImageLoader';
+import { ImageLoader } from '../../../common/ImageLoader';
 
 export const useUploadPlugin = () => {
   const widgetViewFactory = useWidgetViewFactory();
@@ -19,12 +19,12 @@ export const useUploadPlugin = () => {
           ctx.update(uploadConfig.key, prev => ({
             ...prev,
             uploader,
-            /*uploadWidgetFactory: widgetViewFactory({
+            uploadWidgetFactory: widgetViewFactory({
               as: 'div',
-              component: () => <ImageLoader />,
-            }),*/
+              component: () => <ImageLoader />
+            })
           }));
-        },
+        }
       ].flat(),
     [widgetViewFactory, uploader]
   );
