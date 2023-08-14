@@ -58,34 +58,50 @@ export const Slash = () => {
 
   return (
     <div style={{ display: 'none' }}>
-      <div role="tooltip" ref={tooltipRef} className="bg-gray-50 dark:bg-gray-900">
+      <div
+        role="tooltip"
+        ref={tooltipRef}
+        className="bg-gray-50 dark:bg-gray-900"
+      >
         <Box sx={{ width: '100%', maxWidth: 360 }}>
           {/* bgcolor: 'background.paper'*/}
           <List component="nav" aria-label="main mailbox folders">
             <ListItemButton
               selected={activeItemIndex === 0}
-              onClick={() => onCommandClick(wrapInHeadingCommand.key, 1)}
+              onMouseDown={e => {
+                onCommandClick(wrapInHeadingCommand.key, 1);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>H1</ListItemIcon>
               <ListItemText primary="Large Heading" />
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 1}
-              onClick={() => onCommandClick(wrapInHeadingCommand.key, 2)}
+              onMouseDown={e => {
+                onCommandClick(wrapInHeadingCommand.key, 2);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>H2</ListItemIcon>
               <ListItemText primary="Medium Heading" />
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 2}
-              onClick={() => onCommandClick(wrapInHeadingCommand.key, 3)}
+              onMouseDown={e => {
+                onCommandClick(wrapInHeadingCommand.key, 3);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>H3</ListItemIcon>
               <ListItemText primary="Small Heading" />
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 3}
-              onClick={() => onCommandClick(createCodeBlockCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(createCodeBlockCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <CodeIcon />
@@ -94,7 +110,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 4}
-              onClick={() => onCommandClick(turnIntoTextCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(turnIntoTextCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <FormatClearIcon />
@@ -103,7 +122,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 5}
-              onClick={() => onCommandClick(insertTableCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(insertTableCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <CodeIcon />
@@ -112,7 +134,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 6}
-              onClick={() => onCommandClick(insertMathCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(insertMathCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <CodeIcon />
@@ -121,7 +146,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 7}
-              onClick={() => onCommandClick(insertDiagramCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(insertDiagramCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <SchemaIcon />
@@ -130,7 +158,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 8}
-              onClick={() => onCommandClick(wrapInBulletListCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(wrapInBulletListCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <CodeIcon />
@@ -139,7 +170,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 9}
-              onClick={() => onCommandClick(wrapInOrderedListCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(wrapInOrderedListCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <CodeIcon />
@@ -148,7 +182,10 @@ export const Slash = () => {
             </ListItemButton>
             <ListItemButton
               selected={activeItemIndex === 10}
-              onClick={() => onCommandClick(insertHrCommand.key)}
+              onMouseDown={e => {
+                onCommandClick(insertHrCommand.key);
+                e.preventDefault();
+              }}
             >
               <ListItemIcon>
                 <HorizontalRuleIcon />

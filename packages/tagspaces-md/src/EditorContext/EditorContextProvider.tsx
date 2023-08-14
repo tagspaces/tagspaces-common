@@ -105,7 +105,10 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       if (nodes.length > 0) {
         //&& nodes[0].node.marks.length > 0) {
         const node = nodes.find(n => n.node.marks.length > 0);
-        const mark = node?.node.marks.find(mark => mark.type.name === 'link');
+        const mark = node?.node.marks.find(
+          ({ type }) => type === linkSchema.type(ctx)
+        );
+        //const mark = node?.node.marks.find(mark => mark.type.name === 'link');
         const href = mark?.attrs.href; //marks[0].node.marks[0].attrs.href;
         // const isExternal = isExternalLink(href);
         let path;

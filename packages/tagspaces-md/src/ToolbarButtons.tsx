@@ -30,21 +30,22 @@ const ToolbarButtons: React.FC = () => {
   const [loading, editor] = useInstance();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
 
-  const FullWidthToolbar = styled(Toolbar)(({ theme }) => ({
+  const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     minHeight: `30px`,
     height: `30px`,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: theme.palette.background.default
   }));
 
   return (
     <>
       <AppBar position="sticky">
-        <FullWidthToolbar variant="dense">
+        <StyledToolbar variant="dense">
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -55,9 +56,9 @@ const ToolbarButtons: React.FC = () => {
             <UndoIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -68,9 +69,9 @@ const ToolbarButtons: React.FC = () => {
             <RedoIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -81,9 +82,9 @@ const ToolbarButtons: React.FC = () => {
             <FormatBoldIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -94,9 +95,9 @@ const ToolbarButtons: React.FC = () => {
             <FormatItalicIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -109,9 +110,9 @@ const ToolbarButtons: React.FC = () => {
             <FormatStrikethroughIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -122,9 +123,9 @@ const ToolbarButtons: React.FC = () => {
             <FormatListBulletedIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -135,9 +136,9 @@ const ToolbarButtons: React.FC = () => {
             <FormatListNumberedIcon />
           </IconButton>
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -160,9 +161,9 @@ const ToolbarButtons: React.FC = () => {
             <ChecklistIcon />
           </IconButton>*/}
           <IconButton
-            size="large"
+            size="small"
             edge="start"
-            color="inherit"
+            color="default"
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
@@ -177,7 +178,7 @@ const ToolbarButtons: React.FC = () => {
           >
             <AddLinkIcon />
           </IconButton>
-        </FullWidthToolbar>
+        </StyledToolbar>
       </AppBar>
       {isLinkModalOpened && (
         <LinkDialog
