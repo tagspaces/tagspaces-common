@@ -39,8 +39,8 @@ const ImageContainerStyled = styled('div')<ImageContainerProps>(
   ({ theme, loaderWidth, loaderHeight }) => ({
     position: 'relative',
     backgroundColor: theme.palette.background.default,
-    width: loaderWidth,
-    height: loaderHeight
+    //width: loaderWidth,
+    //height: loaderHeight
   })
 );
 

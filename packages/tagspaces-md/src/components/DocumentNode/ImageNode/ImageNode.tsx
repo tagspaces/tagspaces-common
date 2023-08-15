@@ -1,16 +1,19 @@
-import { EditorStatus, editorViewCtx } from '@milkdown/core';
+import { commandsCtx, EditorStatus, editorViewCtx } from '@milkdown/core';
 import { imageSchema } from '@milkdown/preset-commonmark';
 import { useNodeViewContext } from '@prosemirror-adapter/react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { styled, StyledComponentProps } from '@mui/material/styles';
 
 import { Image } from '../../../common/Image';
-import { Lightbox } from '../../../common/Lightbox';
 import { useIsNodeSelected } from '../../../hooks/useIsNodeSelected';
 import { useMilkdownInstance } from '../../../hooks/useMilkdownInstance';
 import { useToggler } from '../../../hooks/useToggler';
 import { pxToRem } from '../../../styles/utils';
 import { useTextEditorContext } from '../../../TextEditorContext/useTextEditoContext';
+import ImageDialog from '../../dialogs/ImageDialog';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { IconButton } from '@mui/material';
 
 export const ImageNode: React.FC = () => {
   const [imageProperties, setImageProperties] = useState<{
@@ -21,14 +24,11 @@ export const ImageNode: React.FC = () => {
   const { mode } = useTextEditorContext();
   const { isSelected } = useIsNodeSelected({ nodeType: imageSchema.type });
 
+  const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
   const { node, contentRef, setAttrs } = useNodeViewContext();
   const { attrs } = node;
   const { editor, loading } = useMilkdownInstance();
   const lightboxState = useToggler();
-
-  /*const onImageEdit = ({ alt, title }: ImageEditorFormValues) => {
-    setAttrs({ alt, title });
-  };*/
 
   const onImageRemove = () => {
     if (loading || !editor) {
@@ -89,22 +89,47 @@ export const ImageNode: React.FC = () => {
           >
             {isLoading => (
               <>
-                {/*{mode === 'active' && !isLoading && (
-                  <ImageEditorModal
+                {mode === 'active' && !isLoading && (
+                  <>
+                    <IconButton
+                      size="small"
+                      edge="start"
+                      color="default"
+                      onClick={() => setImageModalOpened(true)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      edge="start"
+                      color="default"
+                      onClick={() => onImageRemove()}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </>
+                  /*<ImageEditorModal
                     imageHeight={imageProperties.height}
                     imageWidth={imageProperties.width}
                     {...{ onImageRemove, onImageEdit, alt, title }}
-                  />
-                )}*/}
+                  />*/
+                )}
               </>
             )}
           </ImageStyled>
-          <Lightbox
+          <ImageDialog
+            open={isImageModalOpened}
+            onClose={() => setImageModalOpened(false)}
+            href={path}
+            text={title}
+            isEditMode={true}
+          />
+          {/*<Lightbox
             src={path}
             onOpen={lightboxState.on}
             isOpen={lightboxState.state}
             onClose={lightboxState.off}
-          />
+          />*/}
         </>
       )}
     </ImageNodeContainerStyled>

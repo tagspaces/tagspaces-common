@@ -17,7 +17,6 @@ import { useMemo } from 'react';
 
 import { LinkTooltip } from '../../../components/LinkTooltip/LinkTooltip';
 import { CodeBlockNode } from '../../../components/CodeBlockNode/CodeBlockNode';
-import { ImageNode } from '../../../components/ImageNode/ImageNode';
 import { DocumentNode } from '../../../components/DocumentNode/DocumentNode';
 
 const linkTooltip = tooltipFactory('HYPERLINK');

@@ -6,13 +6,13 @@ import RedoIcon from '@mui/icons-material/Redo';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import {
-  insertImageCommand,
   toggleEmphasisCommand,
   toggleStrongCommand,
   wrapInBlockquoteCommand,
   wrapInBulletListCommand,
   wrapInOrderedListCommand
 } from '@milkdown/preset-commonmark';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
@@ -25,10 +25,12 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import React, { useState } from 'react';
 import { useInstance } from '@milkdown/react';
 import LinkDialog from './components/dialogs/LinkDialog';
+import ImageDialog from './components/dialogs/ImageDialog';
 
 const ToolbarButtons: React.FC = () => {
   const [loading, editor] = useInstance();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
+  const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
 
   const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     minHeight: `30px`,
@@ -169,27 +171,34 @@ const ToolbarButtons: React.FC = () => {
             onMouseDown={e => {
               setLinkModalOpened(true);
               e.preventDefault();
-              /*editor().ctx.get(commandsCtx).call(insertImageCommand.key, {
-                title: 'title',
-                src: 'http://test',
-                alt: 'test'
-              });*/
             }}
           >
             <AddLinkIcon />
           </IconButton>
+          <IconButton
+            size="small"
+            edge="start"
+            color="default"
+            sx={{ mr: 2 }}
+            onMouseDown={e => {
+              setImageModalOpened(true);
+              e.preventDefault();
+            }}
+          >
+            <AddPhotoAlternateIcon />
+          </IconButton>
         </StyledToolbar>
       </AppBar>
-      {isLinkModalOpened && (
-        <LinkDialog
-          open={isLinkModalOpened}
-          onClose={() => setLinkModalOpened(false)}
-          /*onSubmit={payload => {
-              editor().ctx.get(commandsCtx).call(insertImageCommand.key, payload);
-            }}*/
-          isEditMode={false}
-        />
-      )}
+      <LinkDialog
+        open={isLinkModalOpened}
+        onClose={() => setLinkModalOpened(false)}
+        isEditMode={false}
+      />
+      <ImageDialog
+        open={isImageModalOpened}
+        onClose={() => setImageModalOpened(false)}
+        isEditMode={false}
+      />
     </>
   );
 };

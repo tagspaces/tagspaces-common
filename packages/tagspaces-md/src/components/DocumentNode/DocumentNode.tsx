@@ -1,7 +1,7 @@
 import { useNodeViewContext } from '@prosemirror-adapter/react';
 
 import { FileNode } from './FileNode/FileNode';
-import { ImageNode } from '../ImageNode/ImageNode';
+import { ImageNode } from './ImageNode/ImageNode';
 
 const formatRegex = /^http.*\.(jpeg|jpg|gif|png|tiff|bmp|eps|svg)$/;
 
