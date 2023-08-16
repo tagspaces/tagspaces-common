@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { commandsCtx, editorViewCtx } from '@milkdown/core';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
@@ -14,6 +14,7 @@ import {
   insertImageCommand,
   updateImageCommand
 } from '@milkdown/preset-commonmark';
+import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
 
 interface Props {
   open: boolean;
@@ -29,6 +30,8 @@ function ImageDialog(props: Props) {
   const [title, setTitle] = useState(getTitle());
   const [link, setLink] = useState(props.href);
   const { open, isEditMode } = props;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { onFileUpload, onFileValidation } = useTextEditorContext();
 
   function getTitle() {
     if (props.text) {
@@ -73,6 +76,20 @@ function ImageDialog(props: Props) {
       }
     }
   };
+
+  function handleFileInputChange(selection: any) {
+    const target = selection.currentTarget;
+    const file = target.files[0];
+    onFileUpload(file).then(base64src =>
+      editor.ctx.get(commandsCtx).call(insertImageCommand.key, {
+        title: file.name,
+        src: base64src,
+        alt: file.name
+      })
+    );
+    onClose();
+    target.value = null;
+  }
 
   return (
     <Dialog
@@ -126,6 +143,23 @@ function ImageDialog(props: Props) {
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             setLink(event.target.value);
           }}
+        />
+        <Button
+          data-tid="browseTID"
+          onClick={() => {
+            fileInputRef.current.click();
+          }}
+          size="small"
+          color="primary"
+        >
+          Or Browse...
+        </Button>
+        <input
+          style={{ display: 'none' }}
+          ref={fileInputRef}
+          accept="image/*"
+          type="file"
+          onChange={handleFileInputChange}
         />
       </DialogContent>
       <DialogActions>
