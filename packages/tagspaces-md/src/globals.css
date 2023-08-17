@@ -83,13 +83,13 @@ h4 {
   @apply !w-[calc(100%-2rem)];
 }
 
-.image-m-width {
+/*.image-m-width {
   max-width: 99%;
 }
 
 .prose img {
   @apply image-m-width;
-}
+}*/
 
 /* toast */
 
