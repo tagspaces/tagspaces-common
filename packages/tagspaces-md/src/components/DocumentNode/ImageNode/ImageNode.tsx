@@ -90,7 +90,7 @@ export const ImageNode: React.FC = () => {
             {isLoading => (
               <>
                 {mode === 'active' && !isLoading && (
-                  <>
+                  <div style={{ maxHeight: 40 }}>
                     <IconButton
                       size="small"
                       edge="start"
@@ -107,7 +107,7 @@ export const ImageNode: React.FC = () => {
                     >
                       <DeleteIcon />
                     </IconButton>
-                  </>
+                  </div>
                   /*<ImageEditorModal
                     imageHeight={imageProperties.height}
                     imageWidth={imageProperties.width}
@@ -143,8 +143,8 @@ const ImageNodeContainerStyled = styled('div')<ImageNodeContainerStyledProps>(
     position: 'relative',
     display: 'inline-flex',
     marginBottom: pxToRem(16),
-    outlineOffset: pxToRem(2),
-    outline: pxToRem(2) + ' solid',
+    // outlineOffset: pxToRem(2),
+    // outline: pxToRem(2) + ' solid',
     transition: 'outline-color 0.2s ease-in',
     backgroundColor: isSelected ? theme.palette.primary.light : 'transparent'
   })

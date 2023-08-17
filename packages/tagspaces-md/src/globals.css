@@ -83,13 +83,13 @@ h4 {
   @apply !w-[calc(100%-2rem)];
 }
 
-/*.link-color {
-  color: #2BD2A4;
+.image-m-width {
+  max-width: 99%;
 }
 
-.prose a {
-  @apply link-color;
-}*/
+.prose img {
+  @apply image-m-width;
+}
 
 /* toast */
 
