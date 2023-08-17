@@ -17,18 +17,22 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import { toggleStrikethroughCommand } from '@milkdown/preset-gfm';
+import {
+  //  extendListItemSchemaForTask,
+  toggleStrikethroughCommand
+} from '@milkdown/preset-gfm';
 import FormatStrikethroughIcon from '@mui/icons-material/FormatStrikethrough';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import React, { useState } from 'react';
-import { useInstance } from '@milkdown/react';
 import LinkDialog from './components/dialogs/LinkDialog';
 import ImageDialog from './components/dialogs/ImageDialog';
+import { useMilkdownInstance } from './hooks/useMilkdownInstance';
+import {insertTaskListCommand} from "./EditorContext/hooks/useGfmPlugin/useGfmPlugin";
 
 const ToolbarButtons: React.FC = () => {
-  const [loading, editor] = useInstance();
+  const { editor, loading } = useMilkdownInstance();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
   const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
 
@@ -51,7 +55,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(undoCommand.key);
+              editor.ctx.get(commandsCtx).call(undoCommand.key);
               e.preventDefault();
             }}
           >
@@ -64,7 +68,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(redoCommand.key);
+              editor.ctx.get(commandsCtx).call(redoCommand.key);
               e.preventDefault();
             }}
           >
@@ -77,7 +81,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(toggleStrongCommand.key);
+              editor.ctx.get(commandsCtx).call(toggleStrongCommand.key);
               e.preventDefault();
             }}
           >
@@ -90,7 +94,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(toggleEmphasisCommand.key);
+              editor.ctx.get(commandsCtx).call(toggleEmphasisCommand.key);
               e.preventDefault();
             }}
           >
@@ -103,9 +107,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor()
-                .ctx.get(commandsCtx)
-                .call(toggleStrikethroughCommand.key);
+              editor.ctx.get(commandsCtx).call(toggleStrikethroughCommand.key);
               e.preventDefault();
             }}
           >
@@ -118,7 +120,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(wrapInBulletListCommand.key);
+              editor.ctx.get(commandsCtx).call(wrapInBulletListCommand.key);
               e.preventDefault();
             }}
           >
@@ -131,7 +133,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(wrapInOrderedListCommand.key);
+              editor.ctx.get(commandsCtx).call(wrapInOrderedListCommand.key);
               e.preventDefault();
             }}
           >
@@ -144,7 +146,7 @@ const ToolbarButtons: React.FC = () => {
             aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
-              editor().ctx.get(commandsCtx).call(wrapInBlockquoteCommand.key);
+              editor.ctx.get(commandsCtx).call(wrapInBlockquoteCommand.key);
               e.preventDefault();
             }}
           >
@@ -186,6 +188,22 @@ const ToolbarButtons: React.FC = () => {
             }}
           >
             <AddPhotoAlternateIcon />
+          </IconButton>
+          <IconButton
+            size="small"
+            edge="start"
+            color="default"
+            onMouseDown={e => {
+              editor.action(ctx => {
+                ctx.get(commandsCtx).call(insertTaskListCommand.key);
+              });
+              //editor.action(callCommand(insertTaskListCommand.key));
+              //const command = editor.ctx.get(commandsCtx);
+              // command.call(liftListItemCommand.key); //insertTaskListCommand.key);
+              e.preventDefault();
+            }}
+          >
+            <ChecklistIcon />
           </IconButton>
         </StyledToolbar>
       </AppBar>

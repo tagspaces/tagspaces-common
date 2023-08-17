@@ -3,7 +3,7 @@ import {
   footnoteReferenceSchema,
   gfm
 } from '@milkdown/preset-gfm';
-import { $view } from '@milkdown/utils';
+import { $command, $view } from '@milkdown/utils';
 import {
   useNodeViewFactory,
   usePluginViewFactory,
@@ -18,6 +18,29 @@ import {
   tableTooltipCtx
 } from '../../../components/gfm/TableWidget';
 import { FootnoteDef, FootnoteRef } from '../../../components/gfm/Footnote';
+import { listItemSchema } from '@milkdown/preset-commonmark';
+
+/// A command to insert taskList.
+export const insertTaskListCommand = $command(
+  'InsertTaskList',
+  ctx => () => (state, dispatch) => {
+    if (!dispatch) return true;
+
+    const { tr } = state;
+    //const { from } = selection;
+
+    const node = listItemSchema.type(ctx).create();
+    if (!node) return true;
+
+    dispatch(tr.replaceSelectionWith(node).scrollIntoView());
+    /*dispatch(
+          tr.setNodeMarkup(from, undefined, { ...node.attrs, checked: false })
+        );
+        dispatch(tr.insertText('- [ ] ', from));*/
+
+    return true;
+  }
+);
 
 export const useGfmPlugin = () => {
   const pluginViewFactory = usePluginViewFactory();
@@ -27,6 +50,7 @@ export const useGfmPlugin = () => {
   const gfmPlugins: MilkdownPlugin[] = useMemo(() => {
     return [
       gfm,
+      insertTaskListCommand,
       tableTooltip,
       tableTooltipCtx,
       (ctx: Ctx) => async () => {
