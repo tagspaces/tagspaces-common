@@ -198,8 +198,6 @@ const ToolbarButtons: React.FC = () => {
                 ctx.get(commandsCtx).call(insertTaskListCommand.key);
               });
               //editor.action(callCommand(insertTaskListCommand.key));
-              //const command = editor.ctx.get(commandsCtx);
-              // command.call(liftListItemCommand.key); //insertTaskListCommand.key);
               e.preventDefault();
             }}
           >

@@ -5,7 +5,7 @@
   "dependencies": {
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.4",
-    "@tagspaces/tagspaces-codemirror": "*",
+    "@tagspaces/tagspaces-codemirror": "^3.0.1",
     "@tagspaces/tagspaces-extension-ui": "^3.0.3",
     "@tagspaces/tagspaces-md": "^3.0.11",
     "@testing-library/jest-dom": "^5.16.5",

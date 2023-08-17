@@ -29,7 +29,7 @@ export const insertTaskListCommand = $command(
     const { tr } = state;
     //const { from } = selection;
 
-    const node = listItemSchema.type(ctx).create();
+    const node = listItemSchema.type(ctx).create({ checked: false });
     if (!node) return true;
 
     dispatch(tr.replaceSelectionWith(node).scrollIntoView());
