@@ -1,0 +1,4 @@
+root = true
+
+[*]
+memory_limit = 2048
