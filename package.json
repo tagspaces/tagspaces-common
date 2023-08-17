@@ -5,7 +5,8 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "start": "cd ./packages/md-sample && npm install && npm run start-only",
+    "start": "cd ./packages/md-sample && npm run start-only",
+    "install": "npm --prefix ./packages/md-sample install",
     "npm-install": "npx cross-env PD_PLATFORM=node npm install",
     "lerna-clean": "lerna clean -y",
     "lerna-install-node": "npx cross-env PD_PLATFORM=node lerna bootstrap --no-ci",
