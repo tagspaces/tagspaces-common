@@ -7,13 +7,18 @@ type UseListenerPluginProps = {
   onChange: (markdown: string, prevMarkdown?: string) => void;
   onFocus?: () => void;
   debounceChange?: number;
+  lightMode?: boolean;
 };
 
 export const useListenerPlugin = ({
   onChange,
   onFocus,
-  debounceChange = 0
+  debounceChange = 0,
+  lightMode = false
 }: UseListenerPluginProps) => {
+  if (lightMode) {
+    return undefined;
+  }
   const { debounce: onChangeDebounced } = useDebounce({
     callback: onChange,
     wait: debounceChange
@@ -29,7 +34,7 @@ export const useListenerPlugin = ({
           });
 
           ctx.get(listenerCtx).focus(() => {
-            if(onFocus) {
+            if (onFocus) {
               onFocus();
             }
           });

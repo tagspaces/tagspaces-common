@@ -86,7 +86,8 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const listenerPlugin = useListenerPlugin({
     onChange,
     onFocus,
-    debounceChange
+    debounceChange,
+    lightMode
   });
 
   // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
