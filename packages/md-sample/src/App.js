@@ -22,11 +22,15 @@ This is a demo for using Milkdown with **React**.
 The quote is built by a custom react component.`;
 
 function App() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const lightMode = searchParams.get("lightMode");
   const milkdownEditorRef = useRef(null);
   const codeMirrorRef = useRef(null);
   // const [dark, setDark] = useState(false);
   const [isReadOnly, setReadOnly] = useState(false);
-  const [isLightMode, setLightMode] = useState(false);
+  const [isLightMode, setLightMode] = useState(
+    lightMode ? Boolean(lightMode) : false
+  );
   const lockCode = useRef(false);
   const text = useRef(initMarkdown);
   const colorMode = useContext(ColorModeContext);
@@ -68,7 +72,6 @@ function App() {
         component="main"
         sx={{
           display: "flex",
-          p: 3,
           width: "100%",
           bgcolor: "background.default",
           color: "text.primary",

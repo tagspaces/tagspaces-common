@@ -2,10 +2,9 @@ import React from 'react';
 import { MilkdownProvider } from '@milkdown/react';
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react';
 
-import { Milkdown } from '@milkdown/react';
 import 'katex/dist/katex.min.css';
 
-import { EditorContextProvider } from './EditorContext/EditorContextProvider';
+import { EditorContextModeProvider } from './EditorContext/EditorContextModeProvider';
 import { TextEditorContextProvider } from './TextEditorContext/TextEditorContextProvider';
 import MilkdownEditorRef from './MilkdownEditorRef';
 import { DarkModeProvider } from './providers/DarkModeProvider';
@@ -35,7 +34,7 @@ const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
       >
         <MilkdownProvider>
           <ProsemirrorAdapterProvider>
-            <EditorContextProvider
+            <EditorContextModeProvider
               defaultMarkdownValue={content}
               onChange={onChange}
               onFocus={onFocus}
@@ -44,7 +43,7 @@ const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
               <DarkModeProvider>
                 <MilkdownEditorRef milkdownRef={ref} />
               </DarkModeProvider>
-            </EditorContextProvider>
+            </EditorContextModeProvider>
           </ProsemirrorAdapterProvider>
         </MilkdownProvider>
       </TextEditorContextProvider>

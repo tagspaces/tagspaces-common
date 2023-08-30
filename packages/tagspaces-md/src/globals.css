@@ -83,6 +83,13 @@ h4 {
   @apply !w-[calc(100%-2rem)];
 }
 
+.prose > *:not(:first-child) {
+  @apply px-4;
+}
+
+.emoji {
+  @apply w-4 h-4;
+}
 /*.image-m-width {
   max-width: 99%;
 }

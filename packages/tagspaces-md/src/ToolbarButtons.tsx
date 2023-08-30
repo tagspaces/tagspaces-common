@@ -29,7 +29,7 @@ import React, { useState } from 'react';
 import LinkDialog from './components/dialogs/LinkDialog';
 import ImageDialog from './components/dialogs/ImageDialog';
 import { useMilkdownInstance } from './hooks/useMilkdownInstance';
-import {insertTaskListCommand} from "./EditorContext/hooks/useGfmPlugin/useGfmPlugin";
+import { insertTaskListCommand } from './EditorContext/hooks/useGfmPlugin/useGfmPlugin';
 
 const ToolbarButtons: React.FC = () => {
   const { editor, loading } = useMilkdownInstance();
@@ -39,8 +39,8 @@ const ToolbarButtons: React.FC = () => {
   const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     minHeight: `30px`,
     height: `30px`,
-    justifyContent: 'center',
-    alignItems: 'center',
+    //justifyContent: 'center',
+    //alignItems: 'center',
     backgroundColor: theme.palette.background.default
   }));
 
@@ -181,6 +181,7 @@ const ToolbarButtons: React.FC = () => {
             size="small"
             edge="start"
             color="default"
+            aria-label="menu"
             sx={{ mr: 2 }}
             onMouseDown={e => {
               setImageModalOpened(true);
@@ -193,10 +194,12 @@ const ToolbarButtons: React.FC = () => {
             size="small"
             edge="start"
             color="default"
+            aria-label="menu"
             onMouseDown={e => {
-              editor.action(ctx => {
+              editor.ctx.get(commandsCtx).call(insertTaskListCommand.key);
+              /*editor.action(ctx => {
                 ctx.get(commandsCtx).call(insertTaskListCommand.key);
-              });
+              });*/
               //editor.action(callCommand(insertTaskListCommand.key));
               e.preventDefault();
             }}

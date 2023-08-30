@@ -32,7 +32,7 @@ export const insertTaskListCommand = $command(
     const node = listItemSchema.type(ctx).createAndFill({ checked: false });
     if (!node) return true;
 
-    dispatch(tr.replaceSelectionWith(node).scrollIntoView());
+    dispatch(tr.replaceSelectionWith(node, true));
     /*dispatch(
           tr.setNodeMarkup(from, undefined, { ...node.attrs, checked: false })
         );

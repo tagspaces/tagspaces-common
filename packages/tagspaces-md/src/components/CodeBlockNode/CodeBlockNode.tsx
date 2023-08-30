@@ -6,6 +6,7 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { Matcher } from '../../utils/Matcher';
 import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
+import clsx from 'clsx';
 
 const options = [
   {
@@ -37,7 +38,7 @@ const options = [
 export const CodeBlockNode: React.FC = () => {
   const { mode } = useTextEditorContext();
   //const { onSuccessNotification } = useNotification();
-  const { contentRef, node, setAttrs } = useNodeViewContext();
+  const { contentRef, selected, node, setAttrs } = useNodeViewContext();
 
   const onCopyClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -61,11 +62,21 @@ export const CodeBlockNode: React.FC = () => {
   );
 
   return (
-    <>
-      <p>
+    <div
+      className={clsx(
+        selected ? 'ProseMirror-selectednode' : '',
+        'not-prose my-4 rounded bg-gray-200 p-5 shadow dark:bg-gray-800'
+      )}
+    >
+      <div
+        contentEditable="false"
+        suppressContentEditableWarning
+        className="mb-2 flex justify-between"
+      >
         {Matcher(mode)
           .match('active', () => (
             <Select
+              style={{ minWidth: 150 }}
               labelId="select-lang-label"
               id="select-lang"
               value={value}
@@ -73,7 +84,9 @@ export const CodeBlockNode: React.FC = () => {
               onChange={onLanguageChange}
             >
               {options.map(option => (
-                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
               ))}
             </Select>
           ))
@@ -89,11 +102,11 @@ export const CodeBlockNode: React.FC = () => {
         >
           <ContentCopyIcon />
         </IconButton>
-      </p>
-      <pre>
-        <code style={{ textAlign: 'left' }} ref={contentRef} />
+      </div>
+      <pre spellCheck={false} className="!m-0 !mb-4">
+        <code ref={contentRef} />
       </pre>
-    </>
+    </div>
   );
 };
 /*

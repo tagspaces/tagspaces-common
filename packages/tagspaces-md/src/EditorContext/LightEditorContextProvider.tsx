@@ -2,15 +2,10 @@ import {
   Editor as MilkdownEditor,
   rootCtx,
   defaultValueCtx,
-  editorViewOptionsCtx,
-  remarkStringifyOptionsCtx
+  editorViewOptionsCtx
 } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
-import { clipboard } from '@milkdown/plugin-clipboard';
-import { emoji } from '@milkdown/plugin-emoji';
-import { history } from '@milkdown/plugin-history';
 import { EditorView } from 'prosemirror-view';
-import { trailing } from '@milkdown/plugin-trailing';
 import { useEditor, UseEditorReturn } from '@milkdown/react';
 import { createContext, useMemo } from 'react';
 import { Node } from '@milkdown/prose/model';
@@ -19,15 +14,8 @@ import { linkSchema } from '@milkdown/preset-commonmark';
 
 import { useCommonmarkPlugin } from './hooks/useCommonmarkPlugin/useCommonmarkPlugin';
 import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
-import { useListenerPlugin } from './hooks/useListenerPlugin';
-import { useMathPlugin } from './hooks/useMathPlugin';
-import { useMenuBarPlugin } from './hooks/useMenuBarPlugin';
-import { usePrismPlugin } from './hooks/usePrismPlugin';
-import { useSlashPlugin } from './hooks/useSlashPlugin';
-import { useUploadPlugin } from './hooks/useUploadPlugin/useUploadPlugin';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
 import '@milkdown/theme-nord/style.css';
-import { useDiagramPlugin } from './hooks/useDiagramPlugin';
 import { useTaskList } from './hooks/useTaskList';
 
 /*function isExternalLink(url: any) {
@@ -58,34 +46,21 @@ type EditorContextProviderProps = {
   children: React.ReactNode;
   onChange: (markdown: string, prevMarkdown: string) => void;
   debounceChange?: number;
+  lightMode?: boolean;
   excludePlugins?: Array<string>;
   defaultMarkdownValue: string;
 };
 
-export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
-  onFocus,
+export const LightEditorContextProvider: React.FC<EditorContextProviderProps> = ({
   children,
   onChange,
-  debounceChange,
-  defaultMarkdownValue,
-  excludePlugins
+  defaultMarkdownValue
 }) => {
   const { mode } = useTextEditorContext();
 
   const gfmPlugin = useGfmPlugin();
-  const mathPlugin = useMathPlugin();
   const taskList = useTaskList();
-  const uploadPlugin = useUploadPlugin();
-  const diagramPlugins = useDiagramPlugin();
-  const slashPlugin = useSlashPlugin();
   const commonmarkPlugin = useCommonmarkPlugin();
-  const prismPlugin = usePrismPlugin();
-  const menuBarPlugin = useMenuBarPlugin();
-  const listenerPlugin = useListenerPlugin({
-    onChange,
-    onFocus,
-    debounceChange
-  });
 
   // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
   const handleClick = (
@@ -129,28 +104,12 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
     return false;
   };
 
-  function isExcluded(pluginName) {
-    if (excludePlugins) {
-      if (excludePlugins.includes(pluginName)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   const editor = useEditor(
     root => {
       const editor: MilkdownEditor = MilkdownEditor.make()
         .config(ctx => {
           ctx.set(rootCtx, root);
           ctx.set(defaultValueCtx, defaultMarkdownValue);
-          /* ctx.set(remarkStringifyOptionsCtx, {
-            // some options, for example:
-            bullet: '*',
-            fences: true,
-            incrementListMarker: false,
-          });*/
-
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
             editable: () => mode === 'active',
@@ -171,45 +130,11 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .config(nord)
         .use(commonmarkPlugin)
         .use(gfmPlugin)
-        .use(taskList)
-        .use(listenerPlugin)
-        .use(prismPlugin)
-        .use(history)
-        .use(trailing)
-        .use(emoji)
-        .use(clipboard);
+        .use(taskList);
 
-      if (!isExcluded('menu')) {
-        editor.use(menuBarPlugin);
-      }
-      if (!isExcluded('slash')) {
-        editor.use(slashPlugin);
-      }
-      if (!isExcluded('math')) {
-        editor.use(mathPlugin);
-      }
-      if (!isExcluded('diagrams')) {
-        editor.use(diagramPlugins);
-      }
-      if (!isExcluded('upload')) {
-        editor.use(uploadPlugin);
-      }
       return editor;
     },
-    [
-      mode,
-      commonmarkPlugin,
-      defaultMarkdownValue,
-      listenerPlugin,
-      menuBarPlugin,
-      gfmPlugin,
-      mathPlugin,
-      diagramPlugins,
-      onChange,
-      slashPlugin,
-      uploadPlugin,
-      prismPlugin
-    ]
+    [mode, commonmarkPlugin, defaultMarkdownValue, gfmPlugin, onChange]
   );
 
   const context = useMemo(() => ({ editor }), [editor]);
