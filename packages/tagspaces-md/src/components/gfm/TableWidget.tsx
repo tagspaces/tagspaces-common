@@ -38,6 +38,7 @@ import clsx from 'clsx';
 import type { FC } from 'react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
+import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
 
 export const tableTooltipCtx = $ctx<TooltipProvider | null, 'tableTooltip'>(
   null,
@@ -50,6 +51,7 @@ export const TableTooltip: FC = () => {
   const { view } = usePluginViewContext();
   const tooltipProvider = useRef<TooltipProvider>();
   const [loading, getEditor] = useInstance();
+  const { mode } = useTextEditorContext();
 
   const isRow =
     view.state.selection instanceof CellSelection &&
@@ -95,6 +97,10 @@ export const TableTooltip: FC = () => {
       tooltipProvider.current?.destroy();
     };
   }, [getEditor, loading, view]);
+
+  if (mode === 'preview') {
+    return null;
+  }
 
   return (
     <div className="hidden">
