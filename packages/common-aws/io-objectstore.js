@@ -726,6 +726,15 @@ function saveBinaryFilePromise(
             Bucket: param.bucketName,
             Key: filePath,
             Body: content,
+            ...(param.SSECustomerAlgorithm && {
+              SSECustomerAlgorithm: param.SSECustomerAlgorithm,
+            }),
+            ...(param.SSECustomerKey && {
+              SSECustomerKey: param.SSECustomerKey,
+            }),
+            ...(param.SSECustomerKeyMd5 && {
+              SSECustomerKeyMd5: param.SSECustomerKeyMd5,
+            }),
           };
           const request = s3().upload(params);
 
