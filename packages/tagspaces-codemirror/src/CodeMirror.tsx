@@ -191,18 +191,20 @@ const createCodeMirrorView = ({ root, ...options }: ViewOptions) => {
   });
 };
 
-type CodeMirrorProps = {
+export interface CodeMirrorProps {
   value: string;
   onChange: (getString: () => string) => void;
   lock: React.MutableRefObject<boolean>;
   dark: boolean;
   editable: boolean;
   fileExtension?: string;
-};
-export type CodeMirrorRef = {
+}
+
+export interface CodeMirrorRef {
   update: (markdown: string) => void;
   toggleLineNumbers: () => void;
-};
+}
+
 export const CodeMirror = React.forwardRef<CodeMirrorRef, CodeMirrorProps>(
   ({ value, onChange, lock, dark, editable, fileExtension }, ref) => {
     const divRef = React.useRef<HTMLDivElement>(null);

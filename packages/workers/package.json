@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-workers",
   "description": "utils for creating thumbnails and index used by the TagSpaces application",
-  "version": "2.1.56",
+  "version": "3.0.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -10,9 +10,9 @@
     "pkg-publish": "npm run node-install-new && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^2.1.56",
-    "@tagspaces/tagspaces-common-node": "^2.1.56",
-    "@tagspaces/tagspaces-platforms": "^2.1.56",
-    "@tagspaces/tagspaces-thumbgen-image": "^2.1.41"
+    "@tagspaces/tagspaces-common": "^3.0.4",
+    "@tagspaces/tagspaces-common-node": "^3.0.4",
+    "@tagspaces/tagspaces-platforms": "^3.0.5",
+    "@tagspaces/tagspaces-thumbgen-image": "^3.0.1"
   }
 }

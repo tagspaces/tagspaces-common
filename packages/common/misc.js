@@ -428,6 +428,10 @@ function convertStringToDate(dateString) {
   return false;
 }
 
+function toLowerCaseSafe(txt) {
+  return txt ? txt.toLowerCase() : '';
+}
+
 /**
  * @param a: TS.FileSystemEntry
  * @param b: TS.FileSystemEntry
@@ -442,11 +446,11 @@ function sortAlphaNum(a, b) {
 
   // Get rid of casing issues && remove tags for files only (folders dont have tags in name)
   const cleanedA = a.isFile
-    ? paths.cleanFileName(a.name.toLowerCase())
-    : a.name.toLowerCase();
+    ? paths.cleanFileName(toLowerCaseSafe(a.name))
+    : toLowerCaseSafe(a.name);
   const cleanedB = b.isFile
-    ? paths.cleanFileName(b.name.toLowerCase())
-    : b.name.toLowerCase();
+    ? paths.cleanFileName(toLowerCaseSafe(b.name))
+    : toLowerCaseSafe(b.name);
 
   // Separates the strings into substrings that have only digits and those
   // that have no digits.

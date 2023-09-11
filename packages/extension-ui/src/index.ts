@@ -1,2 +1,4 @@
 import MainMenu from './MainMenu';
-export { MainMenu };
+import { ColorModeContext } from './themeprovider/ColorModeContext';
+import MUIThemeProvider from './themeprovider/MUIThemeProvider';
+export { MainMenu, MUIThemeProvider, ColorModeContext };
