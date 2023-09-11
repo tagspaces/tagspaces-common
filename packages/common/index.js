@@ -4,8 +4,8 @@ const paths = require("./paths");
 const utilsIo = require("./utils-io");
 
 module.exports = {
-  ...AppConfig,
-  ...misc,
-  ...paths,
-  ...utilsIo,
+  AppConfig,
+  misc,
+  paths,
+  utilsIo,
 };
