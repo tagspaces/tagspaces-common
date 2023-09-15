@@ -83,7 +83,7 @@ h4 {
   @apply !w-[calc(100%-2rem)];
 }
 
-.prose > *:not(:first-child) {
+.prose > *:not(:first-child span) {
   @apply px-4;
 }
 
