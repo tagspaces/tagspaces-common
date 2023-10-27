@@ -22,7 +22,7 @@ import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
 import { useListenerPlugin } from './hooks/useListenerPlugin';
 import { useMathPlugin } from './hooks/useMathPlugin';
 import { useMenuBarPlugin } from './hooks/useMenuBarPlugin';
-import { usePrismPlugin } from './hooks/usePrismPlugin';
+//import { usePrismPlugin } from './hooks/usePrismPlugin';
 import { useSlashPlugin } from './hooks/useSlashPlugin';
 import { useUploadPlugin } from './hooks/useUploadPlugin/useUploadPlugin';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
@@ -79,7 +79,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const diagramPlugins = useDiagramPlugin();
   const slashPlugin = useSlashPlugin();
   const commonmarkPlugin = useCommonmarkPlugin();
-  const prismPlugin = usePrismPlugin();
+  //const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
   const listenerPlugin = useListenerPlugin({
     onChange,
@@ -173,7 +173,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .use(gfmPlugin)
         .use(taskList)
         .use(listenerPlugin)
-        .use(prismPlugin)
+        //.use(prismPlugin)
         .use(history)
         .use(trailing)
         .use(emoji)
@@ -208,7 +208,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       onChange,
       slashPlugin,
       uploadPlugin,
-      prismPlugin
+      //prismPlugin
     ]
   );
 

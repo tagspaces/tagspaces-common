@@ -1,3 +1,4 @@
+/*
 import { Ctx } from '@milkdown/ctx';
 import { prism, prismConfig } from '@milkdown/plugin-prism';
 import { useMemo } from 'react';
@@ -21,3 +22,4 @@ export const usePrismPlugin = () => {
 
   return prismPlugin;
 };
+*/
