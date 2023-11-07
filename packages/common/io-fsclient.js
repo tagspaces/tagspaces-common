@@ -485,7 +485,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     */
           if (entries) {
             for (const entry of entries) {
-              entryPath = path + dirSeparator + entry;
+              entryPath =
+                path +
+                (path.endsWith(dirSeparator) ? "" : dirSeparator) +
+                entry;
 
               if (ignorePatterns.length > 0) {
                 const isIgnored = micromatch(
