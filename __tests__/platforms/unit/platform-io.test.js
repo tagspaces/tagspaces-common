@@ -4,7 +4,7 @@ const {
   cleanTrailingDirSeparator,
 } = require("@tagspaces/tagspaces-common/paths");
 const {
-  platformCreateDirectoryTree,
+  //platformCreateDirectoryTree,
   platformListDirectoryPromise,
   platformSaveFilePromise,
   platformGetPropertiesPromise,
@@ -23,10 +23,10 @@ const dirPath = bucketDir + "/dir/";
 const filePath = dirPath + "test.txt";
 const fileImgPath = "./__tests__/img.jpg";
 
-test("platformCreateDirectoryTree", async () => {
+/*test("platformCreateDirectoryTree", async () => {
   const list = await platformCreateDirectoryTree(bucketDir);
   console.log("platformCreateDirectoryTree:" + JSON.stringify(list));
-});
+});*/
 
 test("listDirectoryPromise", async () => {
   const list = await platformListDirectoryPromise(bucketDir);

@@ -50,8 +50,6 @@
     "@tagspaces/tagspaces-common-webdav": "3.0.21"
   },
   "electronDependencies": {
-    "@tagspaces/tagspaces-common-node": "3.0.21",
-    "@tagspaces/tagspaces-common-electron": "3.0.16",
     "@tagspaces/tagspaces-common-aws": "3.0.21",
     "@tagspaces/tagspaces-common-webdav": "3.0.21"
   }
