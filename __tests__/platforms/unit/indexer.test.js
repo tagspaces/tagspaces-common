@@ -10,6 +10,7 @@ const {
   s3,
   createDirectoryPromise,
   listDirectoryPromise,
+  loadTextFilePromise,
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-aws/io-objectstore");
 
@@ -54,9 +55,10 @@ test("createIndex", async () => {
   };
   const index = await createIndex(
     param,
+    listDirectoryPromise,
+    loadTextFilePromise,
     ["extractThumbPath"], //, "extractThumbURL"],
     [],
-    listDirectoryPromise
   );
   expect(index.some(({ name }) => name === "image.png")).toBe(true);
   const subdir = index.find((element) => element.name === "subdir");
