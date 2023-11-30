@@ -16,7 +16,24 @@ var optionDefinitions = [
   {
     name: "methods",
     type: Array,
-    defaultValue: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "PROPFIND", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", "OPTIONS", "PROPPATCH", "REPORT", "VERSION-CONTROL"],
+    defaultValue: [
+      "GET",
+      "HEAD",
+      "PUT",
+      "PATCH",
+      "POST",
+      "DELETE",
+      "PROPFIND",
+      "MKCOL",
+      "COPY",
+      "MOVE",
+      "LOCK",
+      "UNLOCK",
+      "OPTIONS",
+      "PROPPATCH",
+      "REPORT",
+      "VERSION-CONTROL",
+    ],
   },
 ];
 

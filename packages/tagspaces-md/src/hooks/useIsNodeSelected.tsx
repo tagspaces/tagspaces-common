@@ -15,7 +15,7 @@ export const useIsNodeSelected = ({ nodeType }: UseIsNodeSelected) => {
   const { view, getPos } = useNodeViewContext();
   const { editor, loading } = useMilkdownInstance();
   const {
-    state: { selection },
+    state: { selection }
   } = view;
 
   const selected = useMemo(() => {

@@ -14,7 +14,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "lib": ["esnext", "dom"],
+    "lib": ["esnext", "dom"]
   },
   "include": ["src"]
 }

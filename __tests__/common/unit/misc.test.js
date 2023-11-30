@@ -132,22 +132,22 @@ describe("Common misc unit tests", () => {
   });
   test("misc.sortByCriteria", () => {
     const items = [
-      { name: "b",isFile:true, size: 30 },
-      { name: "a",isFile:true, size: 20 },
-      { name: "c",isFile:true, size: 10 },
+      { name: "b", isFile: true, size: 30 },
+      { name: "a", isFile: true, size: 20 },
+      { name: "c", isFile: true, size: 10 },
     ];
     let output = misc.sortByCriteria(items, "byName", "asc");
     expect(output).toEqual([
-      { name: "a",isFile:true, size: 20 },
-      { name: "b",isFile:true, size: 30 },
-      { name: "c",isFile:true, size: 10 },
+      { name: "a", isFile: true, size: 20 },
+      { name: "b", isFile: true, size: 30 },
+      { name: "c", isFile: true, size: 10 },
     ]);
 
     output = misc.sortByCriteria(items, "byFileSize", "asc");
     expect(output).toEqual([
-      { name: "c",isFile:true, size: 10 },
-      { name: "a",isFile:true, size: 20 },
-      { name: "b",isFile:true, size: 30 },
+      { name: "c", isFile: true, size: 10 },
+      { name: "a", isFile: true, size: 20 },
+      { name: "b", isFile: true, size: 30 },
     ]);
   });
 });

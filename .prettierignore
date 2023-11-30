@@ -1,1 +1,7 @@
 node_modules
+build
+esm
+lib
+.minio.sys
+testdata
+testContents

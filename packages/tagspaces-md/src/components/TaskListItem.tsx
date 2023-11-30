@@ -1,17 +1,17 @@
-import { useNodeViewContext } from "@prosemirror-adapter/react";
-import type { FC } from "react";
+import { useNodeViewContext } from '@prosemirror-adapter/react';
+import type { FC } from 'react';
 
 export const TaskListItem: FC = () => {
   const { contentRef, node, setAttrs, selected } = useNodeViewContext();
   const { attrs } = node;
   const checked = attrs?.checked;
-  const isBullet = attrs?.listType === "bullet";
+  const isBullet = attrs?.listType === 'bullet';
   return (
     <li
       className={[
-        "flex-column flex items-start gap-2",
-        selected ? "ProseMirror-selectednode" : "",
-      ].join(" ")}
+        'flex-column flex items-start gap-2',
+        selected ? 'ProseMirror-selectednode' : ''
+      ].join(' ')}
     >
       <span className="flex h-6 items-center">
         {checked != null ? (

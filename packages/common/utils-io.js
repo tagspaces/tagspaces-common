@@ -226,7 +226,7 @@ async function runPromisesSynchronously(resolvables) {
 }
 
 function isThumbGenSupportedFileType(fileExtension, fileType) {
-  if(fileType) {
+  if (fileType) {
     const fileTypes = AppConfig.ThumbGenSupportedFileTypes[fileType];
     if (fileTypes) {
       return fileTypes.includes(fileExtension);
@@ -236,7 +236,7 @@ function isThumbGenSupportedFileType(fileExtension, fileType) {
     for (let type in fileTypes) {
       const fileTypes = AppConfig.ThumbGenSupportedFileTypes[fileType];
       if (fileTypes) {
-        if(fileTypes.includes(fileExtension)){
+        if (fileTypes.includes(fileExtension)) {
           return true;
         }
       }

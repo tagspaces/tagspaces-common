@@ -70,10 +70,6 @@ function openDirectory(dirPath) {
   electron.shell.showItemInFolder(dirPath);
 }
 
-function showInFileManager(filePath) {
-  electron.shell.showItemInFolder(filePath);
-}
-
 function openFile(filePath) {
   electron.shell
     .openPath(filePath)
@@ -260,7 +256,6 @@ module.exports = {
   setGlobalShortcuts,
   moveToTrash,
   openDirectory,
-  showInFileManager,
   openFile,
   openUrl,
   selectDirectoryDialog,

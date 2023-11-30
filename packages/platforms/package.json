@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "3.0.21",
+  "version": "4.0.1",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -31,28 +31,26 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "3.0.21",
-    "@tagspaces/tagspaces-common-aws": "3.0.21",
-    "@tagspaces/tagspaces-common-webdav": "3.0.21"
+    "@tagspaces/tagspaces-common-node": "4.0.1",
+    "@tagspaces/tagspaces-common-aws": "4.0.1",
+    "@tagspaces/tagspaces-common-webdav": "4.0.1"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-web": "3.0.21",
-    "@tagspaces/tagspaces-common-aws": "3.0.21",
-    "@tagspaces/tagspaces-common-webdav": "3.0.21"
+    "@tagspaces/tagspaces-common-web": "4.0.1",
+    "@tagspaces/tagspaces-common-aws": "4.0.1",
+    "@tagspaces/tagspaces-common-webdav": "4.0.1"
   },
   "awsDependencies": {
-    "@tagspaces/tagspaces-common-aws": "3.0.21",
-    "@tagspaces/tagspaces-common-webdav": "3.0.21"
+    "@tagspaces/tagspaces-common-aws": "4.0.1",
+    "@tagspaces/tagspaces-common-webdav": "4.0.1"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "3.0.21",
-    "@tagspaces/tagspaces-common-aws": "3.0.21",
-    "@tagspaces/tagspaces-common-webdav": "3.0.21"
+    "@tagspaces/tagspaces-common-cordova": "4.0.1",
+    "@tagspaces/tagspaces-common-aws": "4.0.1",
+    "@tagspaces/tagspaces-common-webdav": "4.0.1"
   },
   "electronDependencies": {
-    "@tagspaces/tagspaces-common-node": "3.0.21",
-    "@tagspaces/tagspaces-common-electron": "3.0.16",
-    "@tagspaces/tagspaces-common-aws": "3.0.21",
-    "@tagspaces/tagspaces-common-webdav": "3.0.21"
+    "@tagspaces/tagspaces-common-aws": "4.0.1",
+    "@tagspaces/tagspaces-common-webdav": "4.0.1"
   }
 }

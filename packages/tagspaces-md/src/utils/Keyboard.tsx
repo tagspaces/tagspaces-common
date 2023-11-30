@@ -2,7 +2,7 @@ export enum KeyboardCodes {
   'ArrowUp' = 'ArrowUp',
   'ArrowDown' = 'ArrowDown',
   'Escape' = 'Escape',
-  'Enter' = 'Enter',
+  'Enter' = 'Enter'
 }
 
 export type KeyboardCodesTypes = KeyboardCodes;
@@ -31,5 +31,5 @@ export const KeyboardMatcher = (e: KeyboardEvent) => ({
       fn();
     }
     return KeyboardMatcher(e);
-  },
+  }
 });

@@ -155,13 +155,9 @@ function deleteDirectoryPromise(path) {
   return fsClient.deleteDirectoryPromise(path);
 }
 
-function watchDirectory(dirPath, listener) {
+/*function watchDirectory(dirPath, listener) {
   return fsClient.watchDirectory(dirPath, listener);
-}
-
-function createDirectoryTree(dirPath) {
-  return fsClient.watchDirectory(dirPath);
-}
+}*/
 
 function getURLforPath(filePath) {
   return wfs.getSignedUrl(filePath);
@@ -187,7 +183,5 @@ module.exports = {
   copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-  watchDirectory,
-  createDirectoryTree,
   getURLforPath,
 };

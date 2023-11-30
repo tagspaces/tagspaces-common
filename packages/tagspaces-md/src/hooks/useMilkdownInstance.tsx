@@ -7,6 +7,6 @@ export const useMilkdownInstance = () => {
 
   return {
     editor,
-    loading,
+    loading
   };
 };

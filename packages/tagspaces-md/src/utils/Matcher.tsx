@@ -18,7 +18,7 @@ function MatcherBuilder<Match, Value>(match: Match, value?: Value) {
         return newValue();
       }
       return value as V | NonNullable<Value>;
-    },
+    }
   };
 }
 

@@ -4,7 +4,7 @@ import { EditorView } from 'prosemirror-view';
 import { useCallback } from 'react';
 
 import { useSelectedMarkPosition } from './useSelectedMarkPosition';
-import {useMilkdownInstance} from "./useMilkdownInstance";
+import { useMilkdownInstance } from './useMilkdownInstance';
 
 type LinkValues = {
   href: string;

@@ -207,7 +207,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       diagramPlugins,
       onChange,
       slashPlugin,
-      uploadPlugin,
+      uploadPlugin
       //prismPlugin
     ]
   );

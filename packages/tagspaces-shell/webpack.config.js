@@ -59,5 +59,5 @@ module.exports = {
   // Tells webpack what file extesions it should look at.
   resolve: {
     extensions: [".js", ".json"],
-  }
+  },
 };

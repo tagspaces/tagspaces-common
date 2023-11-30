@@ -439,9 +439,9 @@ function quitApp() {
 /**
  * Creates recursively a tree structure for a given directory path
  */
-function createDirectoryTree(dirPath) {
+/*function createDirectoryTree(dirPath) {
   console.warn("Creating directory tree is not supported in Cordova yet.");
-}
+}*/
 
 async function listMetaDirectoryPromise(path) {
   const promise = new Promise((resolve) => {
@@ -1460,13 +1460,6 @@ function openDirectory(dirPath) {
 }
 
 /**
- * Opens a directory in the operating system's default file manager, selecting the file
- */
-function showInFileManager(filePath) {
-  console.warn("Showing item " + filePath + " not supported on cordova");
-}
-
-/**
  * Opens a file with the operating system's default program for the type of the file
  */
 function openFile(filePath) {
@@ -1547,7 +1540,6 @@ module.exports = {
   getDevicePaths,
   handleStartParameters,
   quitApp,
-  createDirectoryTree,
   listMetaDirectoryPromise,
   listDirectoryPromise,
   getEntryMeta,
@@ -1571,7 +1563,6 @@ module.exports = {
   selectFile,
   selectDirectoryDialog,
   openDirectory,
-  showInFileManager,
   openFile,
   openUrl,
   focusWindow,

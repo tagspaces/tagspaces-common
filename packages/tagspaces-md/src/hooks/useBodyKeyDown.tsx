@@ -18,7 +18,7 @@ export const useBodyKeyDown = ({
   Escape,
   ArrowUp,
   options,
-  ArrowDown,
+  ArrowDown
 }: UseBodyKeyDownProps) => {
   const { onMount = true, isBodyKeyDownActive } = options || {};
 

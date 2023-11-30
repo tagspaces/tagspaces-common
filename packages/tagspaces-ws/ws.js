@@ -5,6 +5,11 @@ const jwt = require("jsonwebtoken");
 const {
   processAllThumbnails,
 } = require("@tagspaces/tagspaces-workers/tsnodethumbgen");
+const {
+  listDirectoryPromise,
+  loadTextFilePromise,
+  saveTextFilePromise,
+} = require("@tagspaces/tagspaces-common-node/io-node");
 // const { indexer } = require("tagspaces-workers/tsnodeindexer");
 const {
   persistIndex,
@@ -137,11 +142,16 @@ module.exports.createWS = function (port, key) {
             }
             return createIndex(
               directoryPath,
+              listDirectoryPromise,
+              loadTextFilePromise,
               mode,
               ignorePatterns ? ignorePatterns : []
             )
               .then((directoryIndex) => {
-                return persistIndex(directoryPath, directoryIndex)
+                return persistIndex(
+                  { path: directoryPath, saveTextFilePromise },
+                  directoryIndex
+                )
                   .then((success) => {
                     if (success) {
                       console.log(

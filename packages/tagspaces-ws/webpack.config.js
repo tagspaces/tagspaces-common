@@ -1,26 +1,23 @@
 const { join, resolve } = require("path");
-var webpack = require('webpack');
+var webpack = require("webpack");
 
 // package.json contains the version number of the dependencies
 // that we want to make external.  Parsing the package.json
 // makes it automatic to keep the package version in sync with
 // the CDN URL used in the HtmlWebpackPlugin
-const packageJson = require(join(__dirname, 'package.json'));
+const packageJson = require(join(__dirname, "package.json"));
 
 // This is the object webpack looks at for configuration.
 // Webpack doesn't  care about any other javascript in the file.
 // Because this is javascript, you can write functions to help build up the configuration.
 module.exports = {
-
   // Tells webpack what kind of source maps to produce.
   // There are a lot of options, but I chose the standalone file option.
   devtool: "source-map",
 
   // Tells webpack where start walking the dependencies to build a bundle.
   entry: {
-    app: [
-      join(__dirname, "index.js")
-    ]
+    app: [join(__dirname, "index.js")],
   },
 
   // When the env is "development", this tells webpack to provide debuggable information in the source maps and turns off some optimizations.
@@ -35,7 +32,7 @@ module.exports = {
       { enforce: "pre", test: /\.js?$/, loader: "source-map-loader" },
 
       // { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-    ]
+    ],
   },
 
   // Tells webpack not to touch __dirname and __filename.
@@ -43,7 +40,7 @@ module.exports = {
   // https://github.com/webpack/webpack/issues/2010
   node: {
     __dirname: false,
-    __filename: false
+    __filename: false,
   },
 
   // Tells webpack where to output the bundled javascript
@@ -52,19 +49,18 @@ module.exports = {
     //library: 'TagspacesWS',
     //libraryTarget: 'umd',
     //umdNamedDefine: true,
-    path: join(__dirname, "build")
+    path: join(__dirname, "build"),
   },
 
   // Tells the HTML webpack plug-in to use a template and emit dist/index.html
-  plugins: [
-  ],
+  plugins: [],
   target: "node",
 
   externals: {
-    'sharp': 'commonjs sharp'
+    sharp: "commonjs sharp",
   },
   // Tells webpack what file extesions it should look at.
   resolve: {
-    extensions: [".js", ".json"]
-  }
+    extensions: [".js", ".json"],
+  },
 };

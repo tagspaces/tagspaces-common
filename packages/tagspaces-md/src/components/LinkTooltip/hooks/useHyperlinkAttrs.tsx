@@ -14,6 +14,6 @@ export const useHyperlinkAttrs = () => {
 
   return {
     href: Strings(mark?.attrs.href).getOrElse(() => ''),
-    title: Strings(mark?.attrs.title).getOrElse(() => ''),
+    title: Strings(mark?.attrs.title).getOrElse(() => '')
   };
 };

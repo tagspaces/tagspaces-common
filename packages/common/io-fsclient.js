@@ -64,13 +64,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   /**
    * TODO not used now implement it in DirectoryTreeView.tsx
    */
-  function createDirectoryTree(dirPath) {
+  /*function createDirectoryTree(dirPath) {
     return new Promise(async (resolve) => {
       const tree = {};
-      /*fs.lstat(dirPath, (err, dstats) => {
+      /!*fs.lstat(dirPath, (err, dstats) => {
             if (err !== null) {
               console.error("Generating tree for " + dirPath + " failed " + ex);
-            }*/
+            }*!/
       tree.name = pathLib.basename(dirPath);
       tree.isFile = false;
       // tree.lmdt = dstats.mtime;
@@ -79,9 +79,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       //})
       resolve(tree);
     });
-  }
+  }*/
 
-  function getTreeChildren(dirPath) {
+  /*function getTreeChildren(dirPath) {
     const children = [];
     return new Promise((resolve) => {
       fs.readdir(dirPath, async (error, dirList) => {
@@ -114,7 +114,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
       });
     });
-  }
+  }*/
 
   /**
    * Create a promise that rejects in <ms> milliseconds
@@ -1088,14 +1088,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   // Experimental functionality
-  function watchDirectory(dirPath, listener) {
+  /*function watchDirectory(dirPath, listener) {
     // stopWatchingDirectories();
     fsWatcher = fs.watch(
       dirPath,
       { persistent: true, recursive: false },
       listener
     );
-  }
+  }*/
 
   function resolveFilePath(filePath) {
     pathLib.resolve(filePath);
@@ -1120,8 +1120,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     copyDirectoryPromise,
     deleteFilePromise,
     deleteDirectoryPromise,
-    watchDirectory,
-    createDirectoryTree,
     mkdirpSync,
   };
 }

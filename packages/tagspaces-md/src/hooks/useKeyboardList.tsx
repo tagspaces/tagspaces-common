@@ -63,7 +63,7 @@ export const useKeyboardList = <T extends Element>({
     Escape: onEscape,
     options,
     ArrowUp: onArrowUp,
-    ArrowDown: onArrowDown,
+    ArrowDown: onArrowDown
   });
 
   return { keyboardListRefs, setActive, active };

@@ -17,20 +17,14 @@
  */
 
 const {
-  watchDirectory,
   getLocationPath,
-  setLanguage,
   isWorkerAvailable,
   readMacOSTags,
   watchFolder,
-  tiffJs,
-  setZoomFactorElectron,
-  setGlobalShortcuts,
   showMainWindow,
   quitApp,
   focusWindow,
   getDevicePaths,
-  createDirectoryTree,
   createDirectoryIndexInWorker,
   createThumbnailsInWorker,
   listDirectoryPromise,
@@ -51,7 +45,6 @@ const {
   moveToTrash,
   deleteDirectoryPromise,
   openDirectory,
-  showInFileManager,
   openFile,
   resolveFilePath,
   openUrl,
@@ -133,27 +126,19 @@ function platformGetDirSeparator() {
     : AppConfig.dirSeparator;
 }
 
-function platformWatchDirectory(dirPath, listener) {
+/*function platformWatchDirectory(dirPath, listener) {
   if (watchDirectory) {
     watchDirectory(dirPath, listener);
   } else {
     console.log("watchDirectory not supported");
   }
-}
+}*/
 
 function platformGetLocationPath(location) {
   if (getLocationPath) {
     return getLocationPath(location);
   }
   return location ? location.path : "";
-}
-
-function platformSetLanguage(language) {
-  if (setLanguage) {
-    setLanguage(language);
-  } else {
-    console.log("setLanguage not supported");
-  }
 }
 
 function platformIsWorkerAvailable(wsPort) {
@@ -177,28 +162,12 @@ function platformWatchFolder(locationPath, options) {
   return undefined;
 }
 
-function platformTiffJs() {
+/*function platformTiffJs() {
   if (tiffJs) {
     return tiffJs();
   }
   return undefined;
-}
-
-function platformSetZoomFactorElectron(zoomLevel) {
-  if (setZoomFactorElectron) {
-    setZoomFactorElectron(zoomLevel);
-  } else {
-    console.log("setZoomFactorElectron not supported");
-  }
-}
-
-function platformSetGlobalShortcuts(globalShortcutsEnabled) {
-  if (setGlobalShortcuts) {
-    setGlobalShortcuts(globalShortcutsEnabled);
-  } else {
-    console.log("setGlobalShortcuts not supported");
-  }
-}
+}*/
 
 function platformShowMainWindow() {
   showMainWindow();
@@ -235,14 +204,15 @@ function platformGetURLforPath(path, expirationInSeconds) {
   } else if (webDavAPI) {
     return webDavAPI.getURLforPath(path);
   }
+  return undefined;
 }
 
 function platformCreateIndex(
   param,
+  listDirectory,
+  loadTextFile,
   mode = ["extractThumbPath"],
-  ignorePatterns = [],
-  listDirectory = undefined,
-  loadTextFile = undefined
+  ignorePatterns = []
 ) {
   return Indexer.createIndex(
     objectStoreAPI
@@ -251,18 +221,11 @@ function platformCreateIndex(
           bucketName: objectStoreAPI.config().bucketName,
         }
       : param,
-    mode,
-    ignorePatterns,
     listDirectory,
-    loadTextFile
+    loadTextFile,
+    mode,
+    ignorePatterns
   );
-}
-
-function platformCreateDirectoryTree(directoryPath) {
-  if (createDirectoryTree) {
-    return createDirectoryTree(directoryPath);
-  }
-  return undefined;
 }
 
 /**
@@ -286,14 +249,6 @@ function platformCreateDirectoryIndexInWorker(
     ignorePatterns,
     wsPort
   );
-}
-
-/**
- * @param token
- * @param tmbGenerationList: Array<string>
- */
-function platformCreateThumbnailsInWorker(token, tmbGenerationList, wsPort) {
-  return createThumbnailsInWorker(token, tmbGenerationList, wsPort);
 }
 
 /**
@@ -340,7 +295,7 @@ function platformListMetaDirectoryPromise(path) {
 }
 
 /**
- * @deprecated TODO for remove (use listDirectoryPromise only) -> after set path to param
+ * only objectStore
  * @param param
  * @param mode
  * @param ignorePatterns
@@ -350,7 +305,13 @@ function platformListObjectStoreDir(
   mode = ["extractThumbPath"],
   ignorePatterns = []
 ) {
-  return objectStoreAPI.listDirectoryPromise(param, mode, ignorePatterns);
+  if (objectStoreAPI) {
+    return objectStoreAPI.listDirectoryPromise(param, mode, ignorePatterns);
+  } else {
+    return Promise.reject(
+      new Error("platformListObjectStoreDir: no objectStoreAPI")
+    );
+  }
 }
 
 /**
@@ -395,12 +356,8 @@ function platformCreateDirectoryPromise(dirPath) {
   } else if (webDavAPI) {
     return webDavAPI.createDirectoryPromise(dirPath);
   }
-  // PlatformIO.ignoreByWatcher(dirPath); // TODO rethink move Watcher
 
-  return createDirectoryPromise(dirPath).then((result) => {
-    // PlatformIO.deignoreByWatcher(dirPath);
-    return result;
-  });
+  return createDirectoryPromise(dirPath);
 }
 
 /**
@@ -427,10 +384,7 @@ function copyFilePromiseOverwrite(sourceFilePath, targetFilePath) {
   }
   // PlatformIO.ignoreByWatcher(targetFilePath);
 
-  return copyFilePromise(sourceFilePath, targetFilePath).then((result) => {
-    // PlatformIO.deignoreByWatcher(targetFilePath);
-    return result;
-  });
+  return copyFilePromise(sourceFilePath, targetFilePath);
 }
 
 function platformRenameFilePromise(
@@ -450,10 +404,7 @@ function platformRenameFilePromise(
   }
   // PlatformIO.ignoreByWatcher(filePath, newFilePath);
 
-  return renameFilePromise(filePath, newFilePath, onProgress).then((result) => {
-    // PlatformIO.deignoreByWatcher(filePath, newFilePath);
-    return result;
-  });
+  return renameFilePromise(filePath, newFilePath, onProgress);
 }
 
 function platformRenameDirectoryPromise(dirPath, newDirName) {
@@ -466,12 +417,8 @@ function platformRenameDirectoryPromise(dirPath, newDirName) {
   } else if (webDavAPI) {
     return webDavAPI.renameDirectoryPromise(dirPath, newDirName);
   }
-  // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
-  return renameDirectoryPromise(dirPath, newDirName).then((result) => {
-    // PlatformIO.deignoreByWatcher(dirPath, newDirName);
-    return result;
-  });
+  return renameDirectoryPromise(dirPath, newDirName);
 }
 
 function platformCopyDirectoryPromise(param, newDirName, onProgress) {
@@ -485,9 +432,7 @@ function platformCopyDirectoryPromise(param, newDirName, onProgress) {
     return webDavAPI.copyDirectoryPromise(param, newDirName, onProgress);
   }
 
-  return copyDirectoryPromise(param, newDirName, onProgress).then((result) => {
-    return result;
-  });
+  return copyDirectoryPromise(param, newDirName, onProgress);
 }
 
 function platformMoveDirectoryPromise(param, newDirName, onProgress) {
@@ -505,10 +450,7 @@ function platformMoveDirectoryPromise(param, newDirName, onProgress) {
   }
   // PlatformIO.ignoreByWatcher(dirPath, newDirName);
 
-  return moveDirectoryPromise(param, newDirName, onProgress).then((result) => {
-    // PlatformIO.deignoreByWatcher(dirPath, newDirName);
-    return result;
-  });
+  return moveDirectoryPromise(param, newDirName, onProgress);
 }
 
 function platformLoadTextFilePromise(filePath, isPreview) {
@@ -637,7 +579,7 @@ function platformUploadFileByMultiPart(
   }
 }
 
-function platformDeleteFilePromise(path, useTrash) {
+function platformDeleteFilePromise(path) {
   if (objectStoreAPI) {
     const param = {
       path,
@@ -647,11 +589,7 @@ function platformDeleteFilePromise(path, useTrash) {
   } else if (webDavAPI) {
     return webDavAPI.deleteFilePromise(path);
   }
-  if (useTrash && moveToTrash) {
-    return moveToTrash([path]);
-  } else {
-    return deleteFilePromise(path);
-  }
+  return deleteFilePromise(path);
 }
 
 function platformDeleteDirectoryPromise(path, useTrash) {
@@ -674,10 +612,6 @@ function platformDeleteDirectoryPromise(path, useTrash) {
 
 function platformOpenDirectory(dirPath) {
   return openDirectory(dirPath);
-}
-
-function platformShowInFileManager(dirPath) {
-  return showInFileManager(dirPath);
 }
 
 function platformOpenFile(filePath) {
@@ -739,30 +673,6 @@ function platformCheckDirExist(dir) {
   });
 }
 
-function platformLoadExtensions() {
-  if (AppConfig.isElectron) {
-    return loadExtensions();
-  } else {
-    console.log("Load extensions is supported only on Electron.");
-  }
-}
-
-function platformRemoveExtension(extensionId) {
-  if (AppConfig.isElectron) {
-    return removeExtension(extensionId);
-  } else {
-    console.log("remove extensions is supported only on Electron.");
-  }
-}
-
-function platformGetUserDataDir() {
-  if (AppConfig.isElectron) {
-    return getUserDataDir();
-  } else {
-    console.log("getUserDataDir is supported only on Electron.");
-  }
-}
-
 function platformUnZip(filePath, targetPath) {
   if (AppConfig.isElectron) {
     return unZip(filePath, targetPath);
@@ -783,13 +693,9 @@ function platformDirProperties(filePath) {
 
 module.exports = {
   platformGetLocationPath,
-  platformSetLanguage,
   platformIsWorkerAvailable,
   platformReadMacOSTags,
   platformWatchFolder,
-  platformTiffJs,
-  platformSetZoomFactorElectron,
-  platformSetGlobalShortcuts,
   platformShowMainWindow,
   platformQuitApp,
   platformEnableObjectStoreSupport,
@@ -800,13 +706,10 @@ module.exports = {
   platformHaveWebDavSupport,
   platformIsMinio,
   platformGetDirSeparator,
-  platformWatchDirectory,
   platformFocusWindow,
   platformGetDevicePaths,
   platformGetURLforPath,
-  platformCreateDirectoryTree,
   platformCreateDirectoryIndexInWorker,
-  platformCreateThumbnailsInWorker,
   platformListDirectoryPromise,
   platformListMetaDirectoryPromise,
   platformListObjectStoreDir,
@@ -828,7 +731,6 @@ module.exports = {
   platformDeleteFilePromise,
   platformDeleteDirectoryPromise,
   platformOpenDirectory,
-  platformShowInFileManager,
   platformOpenFile,
   platformResolveFilePath,
   platformOpenUrl,
@@ -839,9 +741,6 @@ module.exports = {
   platformCreateNewInstance,
   platformCheckDirExist,
   platformCheckFileExist,
-  platformLoadExtensions,
-  platformRemoveExtension,
-  platformGetUserDataDir,
   platformUnZip,
   platformDirProperties,
 };

@@ -422,13 +422,9 @@ function deleteDirectoryPromise(path) {
   return fsClient.deleteDirectoryPromise(path);
 }
 
-function watchDirectory(dirPath, listener) {
+/*function watchDirectory(dirPath, listener) {
   return fsClient.watchDirectory(dirPath, listener);
-}
-
-function createDirectoryTree(dirPath) {
-  return fsClient.createDirectoryTree(dirPath);
-}
+}*/
 
 module.exports = {
   getLocationPath,
@@ -450,8 +446,6 @@ module.exports = {
   copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-  watchDirectory,
-  createDirectoryTree,
   unZip,
   getDirProperties,
   mkdirpSync,
