@@ -71,7 +71,7 @@ const MainMenu: React.FC<{
     return { ...item, dataTID: item.id + 'TID' };
   });
 
-    /* const primaryBackgroundColor = window
+  /* const primaryBackgroundColor = window
       .getComputedStyle(document.documentElement)
       .getPropertyValue('--primary-color')
       .trim();

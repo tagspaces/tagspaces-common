@@ -429,7 +429,7 @@ function convertStringToDate(dateString) {
 }
 
 function toLowerCaseSafe(txt) {
-  return txt ? txt.toLowerCase() : '';
+  return txt ? txt.toLowerCase() : "";
 }
 
 /**

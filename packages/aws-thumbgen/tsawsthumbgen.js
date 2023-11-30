@@ -57,7 +57,7 @@ module.exports.generateThumbnail = function (srcBucket, key) {
     const fileType = tsThumbImage.getFileType(srcKey);
     console.info("generateThumbnail fileType:" + fileType);
 
-    if (tsUtils.isThumbGenSupportedFileType(fileType,"image")) {
+    if (tsUtils.isThumbGenSupportedFileType(fileType, "image")) {
       s3.getObject({
         Bucket: srcBucket,
         Key: srcKey,
@@ -170,7 +170,7 @@ module.exports.processAllThumbnails = function (srcBucket) {
 
           if (!srcKey.startsWith(AppConfig.metaFolder)) {
             const fileType = tsThumbImage.getFileType(srcKey);
-            if (tsUtils.isThumbGenSupportedFileType(fileType,"image")) {
+            if (tsUtils.isThumbGenSupportedFileType(fileType, "image")) {
               return s3
                 .getObject({
                   Bucket: srcBucket,

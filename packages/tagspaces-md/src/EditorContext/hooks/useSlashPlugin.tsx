@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 
 // import { SlashNode } from '../../../components/SlashNode/SlashNode';
 import { Plugin } from '../../types/plugins';
-import {Slash} from "../../components/slash/Slash";
+import { Slash } from '../../components/slash/Slash';
 
 const slash = slashFactory('MILKDOWN');
 

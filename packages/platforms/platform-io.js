@@ -221,10 +221,10 @@ function platformCreateIndex(
           bucketName: objectStoreAPI.config().bucketName,
         }
       : param,
-      listDirectory,
-      loadTextFile,
+    listDirectory,
+    loadTextFile,
     mode,
-    ignorePatterns,
+    ignorePatterns
   );
 }
 
@@ -250,7 +250,6 @@ function platformCreateDirectoryIndexInWorker(
     wsPort
   );
 }
-
 
 /**
  * Promise === undefined on error
@@ -306,10 +305,12 @@ function platformListObjectStoreDir(
   mode = ["extractThumbPath"],
   ignorePatterns = []
 ) {
-  if(objectStoreAPI) {
+  if (objectStoreAPI) {
     return objectStoreAPI.listDirectoryPromise(param, mode, ignorePatterns);
   } else {
-    return Promise.reject(new Error('platformListObjectStoreDir: no objectStoreAPI'))
+    return Promise.reject(
+      new Error("platformListObjectStoreDir: no objectStoreAPI")
+    );
   }
 }
 
@@ -588,7 +589,7 @@ function platformDeleteFilePromise(path) {
   } else if (webDavAPI) {
     return webDavAPI.deleteFilePromise(path);
   }
-    return deleteFilePromise(path);
+  return deleteFilePromise(path);
 }
 
 function platformDeleteDirectoryPromise(path, useTrash) {

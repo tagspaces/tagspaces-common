@@ -8,7 +8,10 @@ const {
   listDirectoryPromise,
   getPropertiesPromise,
 } = require("@tagspaces/tagspaces-platforms/index");
-const { walkDirectory,isThumbGenSupportedFileType } = require("@tagspaces/tagspaces-common/utils-io");
+const {
+  walkDirectory,
+  isThumbGenSupportedFileType,
+} = require("@tagspaces/tagspaces-common/utils-io");
 const {
   extractFileName,
   getMetaDirectoryPath,
@@ -66,7 +69,7 @@ module.exports.processAllThumbnails = async function (
       if (!upToDate) {
         const fileType = tsThumb.getFileType(filePath);
         console.log("Generating thumbnail for: " + filePath);
-        if (isThumbGenSupportedFileType(fileType,"image")) {
+        if (isThumbGenSupportedFileType(fileType, "image")) {
           const image = fs.readFileSync(filePath);
           return tsThumb
             .generateImageThumbnail(image, fileType, filePath, upload)

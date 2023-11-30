@@ -58,7 +58,7 @@ test("createIndex", async () => {
     listDirectoryPromise,
     loadTextFilePromise,
     ["extractThumbPath"], //, "extractThumbURL"],
-    [],
+    []
   );
   expect(index.some(({ name }) => name === "image.png")).toBe(true);
   const subdir = index.find((element) => element.name === "subdir");

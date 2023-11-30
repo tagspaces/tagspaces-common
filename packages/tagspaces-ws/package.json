@@ -22,6 +22,8 @@
     "install-web": "npx rimraf node_modules && npx rimraf package-lock.json && npx @tagspaces/dynamic-packages-loading ./ -p web",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
     "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/thumb-gen",
+    "test-indexer": "curl -d '{\"directoryPath\":\"/Users/sytolk/Pictures/\"}' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/indexer",
+    "sign-jwt": "npx jsonwebtokencli --encode --secret xxx '{\"provider\":\"tagspaces\",\"date\":1638276725}'",
     "pkg-publish": "npm run install-node && npm run build && npm publish --access public"
   },
   "nodeDependencies": {

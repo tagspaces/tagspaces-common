@@ -12,7 +12,7 @@ type UseListenerPluginProps = {
 export const useListenerPlugin = ({
   onChange,
   onFocus,
-  debounceChange = 0,
+  debounceChange = 0
 }: UseListenerPluginProps) => {
   const { debounce: onChangeDebounced } = useDebounce({
     callback: onChange,

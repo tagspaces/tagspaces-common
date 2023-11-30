@@ -7,6 +7,6 @@ export const useToggler = (initialState = false) => {
     state,
     on: useCallback(() => setState(true), []),
     off: useCallback(() => setState(false), []),
-    toggle: useCallback(() => setState(state => !state), []),
+    toggle: useCallback(() => setState(state => !state), [])
   };
 };

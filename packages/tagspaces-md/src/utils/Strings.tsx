@@ -23,6 +23,6 @@ export const Strings = <T extends string>(str: T | undefined) => {
     },
     get: () => {
       return str as T;
-    },
+    }
   };
 };

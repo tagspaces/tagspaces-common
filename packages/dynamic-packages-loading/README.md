@@ -9,5 +9,3 @@
 @tagspaces/dynamic-packages-loading ../ -p [string] [extra npm arguments: --platform=linux --arch=x64]
 
 `npx @tagspaces/dynamic-packages-loading ./app -p node --platform=linux --arch=x64`
-
-

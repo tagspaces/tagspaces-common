@@ -85,7 +85,7 @@ function createIndex(
             AppConfig.dirSeparator
           ),
         },
-          loadTextFilePromise
+        loadTextFilePromise
       );
 
       const entry = {
@@ -108,7 +108,7 @@ function createIndex(
             ...param,
             path: getMetaFileLocationForDir(directoryEntry.path),
           },
-            loadTextFilePromise
+          loadTextFilePromise
         );
         const entry = {
           name: directoryEntry.name,
@@ -171,8 +171,8 @@ async function getEntryMeta(param, loadTextFilePromise) {
  * @param directoryIndex
  */
 function persistIndex(param, directoryIndex) {
-  if(!param.saveTextFilePromise){
-    console.error('persistIndex param.saveTextFilePromise is not set!')
+  if (!param.saveTextFilePromise) {
+    console.error("persistIndex param.saveTextFilePromise is not set!");
     return Promise.resolve(false);
   }
   let directoryPath;
@@ -182,11 +182,12 @@ function persistIndex(param, directoryIndex) {
     directoryPath = param;
   }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  return param.saveTextFilePromise(
-    { ...param, path: folderIndexPath },
-    JSON.stringify(directoryIndex), // relativeIndex),
-    true
-  )
+  return param
+    .saveTextFilePromise(
+      { ...param, path: folderIndexPath },
+      JSON.stringify(directoryIndex), // relativeIndex),
+      true
+    )
     .then((result) => {
       if (result) {
         console.log(
@@ -341,12 +342,12 @@ function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
 }
 
 function addToIndex(param, size, LastModified, thumbPath) {
-  if(!param.loadTextFilePromise){
-    console.error('addToIndex param.loadTextFilePromise is not set!')
+  if (!param.loadTextFilePromise) {
+    console.error("addToIndex param.loadTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-  if(!param.saveTextFilePromise){
-    console.error('addToIndex param.saveTextFilePromise is not set!')
+  if (!param.saveTextFilePromise) {
+    console.error("addToIndex param.saveTextFilePromise is not set!");
     return Promise.resolve(false);
   }
   if (param.path.indexOf(AppConfig.metaFolder + "/") !== -1) {
@@ -367,44 +368,53 @@ function addToIndex(param, size, LastModified, thumbPath) {
       " bucketName:" +
       param.bucketName
   );
-  return param.loadTextFilePromise({
-    path: metaFilePath,
-    bucketName: param.bucketName,
-  }).then((metaFileContent) => {
-    console.info("addToIndex metaFileContent:" + metaFileContent);
-    let tsi = [];
-    if (metaFileContent) {
-      try {
-        tsi = JSON.parse(metaFileContent.trim());
-      } catch (ex) {
-        console.warn("Error JSON.parse for " + metaFilePath, ex);
+  return param
+    .loadTextFilePromise({
+      path: metaFilePath,
+      bucketName: param.bucketName,
+    })
+    .then((metaFileContent) => {
+      console.info("addToIndex metaFileContent:" + metaFileContent);
+      let tsi = [];
+      if (metaFileContent) {
+        try {
+          tsi = JSON.parse(metaFileContent.trim());
+        } catch (ex) {
+          console.warn("Error JSON.parse for " + metaFilePath, ex);
+        }
       }
-    }
 
-    const eentry = {
-      ...param,
-      name: extractFileName(param.path),
-      tags: [],
-      thumbPath,
-      meta: {},
-      isFile: true,
-      size: size,
-      lmdt: Date.parse(LastModified),
-    };
+      const eentry = {
+        ...param,
+        name: extractFileName(param.path),
+        tags: [],
+        thumbPath,
+        meta: {},
+        isFile: true,
+        size: size,
+        lmdt: Date.parse(LastModified),
+      };
 
-    tsi.push(eentry);
+      tsi.push(eentry);
 
-    return persistIndex({ ...param, path: dirPath, saveTextFilePromise:param.saveTextFilePromise }, tsi);
-  });
+      return persistIndex(
+        {
+          ...param,
+          path: dirPath,
+          saveTextFilePromise: param.saveTextFilePromise,
+        },
+        tsi
+      );
+    });
 }
 
 function removeFromIndex(param) {
-  if(!param.loadTextFilePromise){
-    console.error('removeFromIndex param.loadTextFilePromise is not set!')
+  if (!param.loadTextFilePromise) {
+    console.error("removeFromIndex param.loadTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-  if(!param.saveTextFilePromise){
-    console.error('addToIndex param.saveTextFilePromise is not set!')
+  if (!param.saveTextFilePromise) {
+    console.error("addToIndex param.saveTextFilePromise is not set!");
     return Promise.resolve(false);
   }
   console.info(
@@ -416,23 +426,32 @@ function removeFromIndex(param) {
   }
   const dirPath = extractContainingDirectoryPath(param.path, "/");
   const metaFilePath = getMetaIndexFilePath(dirPath);
-  return param.loadTextFilePromise({
-    ...param,
-    path: metaFilePath,
-  }).then((metaFileContent) => {
-    if (metaFileContent) {
-      let tsi = [];
-      try {
-        tsi = JSON.parse(metaFileContent.trim());
-      } catch (ex) {
-        console.warn("Error JSON.parse for " + metaFilePath, ex);
+  return param
+    .loadTextFilePromise({
+      ...param,
+      path: metaFilePath,
+    })
+    .then((metaFileContent) => {
+      if (metaFileContent) {
+        let tsi = [];
+        try {
+          tsi = JSON.parse(metaFileContent.trim());
+        } catch (ex) {
+          console.warn("Error JSON.parse for " + metaFilePath, ex);
+        }
+        const newTsi = tsi.filter((item) => item.path !== param.path);
+        if (tsi.size !== newTsi.size) {
+          return persistIndex(
+            {
+              ...param,
+              path: dirPath,
+              saveTextFilePromise: param.saveTextFilePromise,
+            },
+            newTsi
+          );
+        }
       }
-      const newTsi = tsi.filter((item) => item.path !== param.path);
-      if (tsi.size !== newTsi.size) {
-        return persistIndex({ ...param, path: dirPath, saveTextFilePromise:param.saveTextFilePromise }, newTsi);
-      }
-    }
-  });
+    });
 }
 
 function getMetaIndexFilePath(
@@ -458,16 +477,16 @@ function getMetaIndexFilePath(
  * @param loadTextFilePromise
  */
 function loadJSONFile(param, loadTextFilePromise) {
-  if(!loadTextFilePromise){
-    console.error('loadJSONFile loadTextFilePromise is not set!')
+  if (!loadTextFilePromise) {
+    console.error("loadJSONFile loadTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-    return loadTextFilePromise(param.path)
-      .then((jsonContent) => loadJSONString(jsonContent))
-      .catch(() => {
-        return undefined;
-        // console.debug("File not exist: " + param.path);
-      });
+  return loadTextFilePromise(param.path)
+    .then((jsonContent) => loadJSONString(jsonContent))
+    .catch(() => {
+      return undefined;
+      // console.debug("File not exist: " + param.path);
+    });
 }
 
 module.exports = {

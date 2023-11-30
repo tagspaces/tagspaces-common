@@ -11,7 +11,7 @@ type AnyFunction = (...args: any) => any;
 
 export const useDebounce = <T extends AnyFunction>({
   callback,
-  wait = 300,
+  wait = 300
 }: UseDebounceProps<T>) => {
   const handler = useMemo(() => {
     return debounce(callback, wait);
@@ -22,6 +22,6 @@ export const useDebounce = <T extends AnyFunction>({
   }, [handler]);
 
   return {
-    debounce: handler,
+    debounce: handler
   };
 };

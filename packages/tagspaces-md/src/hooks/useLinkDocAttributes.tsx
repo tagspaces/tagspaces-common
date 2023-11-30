@@ -14,7 +14,7 @@ export const useLinkDocAttributes = () => {
         ({ pos: start, node }) => {
           const {
             nodeSize,
-            marks: [link],
+            marks: [link]
           } = node;
           const end = start + nodeSize;
           const href: string = link.attrs?.href || '';

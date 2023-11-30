@@ -43,7 +43,7 @@ export const useSlashProvider = ({ tooltipRef }: UseSlashProviderProps) => {
         },
         []
       ),
-      isBodyKeyDownActive: isBodyKeyDownActive,
+      isBodyKeyDownActive: isBodyKeyDownActive
     });
 
   useEffect(() => {
@@ -93,8 +93,8 @@ export const useSlashProvider = ({ tooltipRef }: UseSlashProviderProps) => {
         onHide: () => {
           setActive(null);
           setBodyKeyDownActive(false);
-        },
-      },
+        }
+      }
     });
 
     return () => {
