@@ -5,9 +5,8 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "install": "node install/platformIO-new.js",
+    "install": "node install/platformIO.js",
     "install-new": "npx @tagspaces/dynamic-packages-loading ./",
-    "install-old": "node install/platformIO.js",
     "install-node": "npx cross-env PD_PLATFORM=node npm run install",
     "install-electron": "npx cross-env PD_PLATFORM=electron npm run install",
     "install-aws": "rimraf node_modules && npx cross-env PD_PLATFORM=aws npm run install",
