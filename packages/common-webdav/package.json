@@ -8,7 +8,7 @@
     "webdav-start": "node ../scripts/webdav/webserver-start.js",
     "cors-proxy-start": "node local-cors-proxy/lcp.js --proxyUrl http://localhost:9988",
     "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
-    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-webdav-1.0.16.tgz && npx shx cp -rL ./package/** ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/node_modules/@tagspaces/tagspaces-common-webdav && npx rimraf package",
+    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-webdav-4.0.2.tgz && npx shx cp -rL ./package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common-webdav && npx rimraf package",
     "pkg-publish": "npm publish --access public"
   },
   "files": [

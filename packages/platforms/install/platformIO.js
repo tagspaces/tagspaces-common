@@ -5,7 +5,7 @@ const path = require("path");
 // const { installDependencies } = require("../../dynamic-packages-loading");
 // const { installDependencies } = require("@tagspaces/dynamic-packages-loading");
 
-let platform = process.env.PD_PLATFORM || "electron";
+let platform = process.env.PD_PLATFORM;
 
 if (platform) {
   fs.copySync(

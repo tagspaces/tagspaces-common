@@ -1,4 +1,4 @@
-const micromatch = require("micromatch");
+const picomatch = require("picomatch/posix");
 const { v1: uuidv1, v4: uuidv4 } = require("uuid");
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
@@ -26,8 +26,11 @@ function walkDirectory(
   } else {
     path = param;
   }
-  if (ignorePatterns.length > 0 && micromatch.isMatch(path, ignorePatterns)) {
-    return;
+  if (ignorePatterns.length > 0) {
+    const isMatch = picomatch(ignorePatterns);
+    if (isMatch(ignorePatterns)) {
+      return;
+    }
   }
   const mergedOptions = {
     recursive: false,
@@ -52,11 +55,11 @@ function walkDirectory(
             // if (window.walkCanceled) {
             //     return false;
             // }
-            if (
-              ignorePatterns.length > 0 &&
-              micromatch.isMatch(entry.path, ignorePatterns)
-            ) {
-              return false;
+            if (ignorePatterns.length > 0) {
+              const isMatch = picomatch(ignorePatterns);
+              if (isMatch(entry.path)) {
+                return false;
+              }
             }
 
             if (entry.isFile) {

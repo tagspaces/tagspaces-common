@@ -1,5 +1,8 @@
 const { AuthType } = require("webdav/dist/node/types");
-const pathLib = require("path");
+// const pathLib = require("path");
+const {
+  extractContainingDirectoryName,
+} = require("@tagspaces/tagspaces-common/paths");
 const { createAdapter } = require("@tagspaces/webdav-fs");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 // const { normalizePath } = require("@tagspaces/tagspaces-common/paths");
@@ -66,7 +69,7 @@ function configure(webDavConfig) {
       encoding = "utf8";
     }
 
-    const dir = pathLib.dirname(file);
+    const dir = extractContainingDirectoryName(file); // pathLib.dirname(file);
     wfs.stat(dir, (err, fsStat) => {
       if (err) return callback(err);
       if (fsStat.isDirectory())

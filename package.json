@@ -37,6 +37,7 @@
     "npm": "^8.14.0",
     "path": "^0.12.7",
     "prettier": "2.3.2",
+    "picomatch": "^3.0.1",
     "rimraf": "^3.0.2",
     "s3rver": "^3.7.1",
     "source-map-loader": "^3.0.0",

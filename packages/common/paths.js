@@ -388,12 +388,26 @@ function extractShortDirectoryName(
   return shortDirName;
 }
 
+function getDirSeparator(path) {
+  if (path) {
+    if (path.includes("\\")) {
+      return "\\";
+    } else if (path.includes("/")) {
+      return "/";
+    }
+  }
+  // failed to getDirSeparator return unix
+  return "/";
+}
 /**
  * @param filePath: string
  * @param dirSeparator: string
  * @returns {string}
  */
-function extractContainingDirectoryName(filePath, dirSeparator) {
+function extractContainingDirectoryName(filePath, dirSeparator = undefined) {
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(filePath);
+  }
   const tmpStr = filePath.substring(0, filePath.lastIndexOf(dirSeparator));
   return tmpStr.substring(tmpStr.lastIndexOf(dirSeparator) + 1, tmpStr.length);
 }

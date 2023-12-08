@@ -3,7 +3,7 @@ const AWS = require("aws-sdk");
 const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const micromatch = require("micromatch");
+const picomatch = require("picomatch/posix");
 const {
   runPromisesSynchronously,
 } = require("@tagspaces/tagspaces-common/utils-io");
@@ -182,13 +182,8 @@ const listDirectoryPromise = (
             // skipping the current directory
             let ignored = false;
             if (ignorePatterns.length > 0) {
-              const isIgnored = micromatch(
-                [eentry.path, eentry.name],
-                ignorePatterns
-              );
-              if (isIgnored.length !== 0) {
-                ignored = true;
-              }
+              const isMatch = picomatch(ignorePatterns);
+              ignored = isMatch([eentry.path, eentry.name]);
             }
             if (!ignored) {
               enhancedEntries.push(eentry);
@@ -213,13 +208,8 @@ const listDirectoryPromise = (
 
           let ignored = false;
           if (ignorePatterns.length > 0) {
-            const isIgnored = micromatch(
-              [eentry.path, eentry.name],
-              ignorePatterns
-            );
-            if (isIgnored.length !== 0) {
-              ignored = true;
-            }
+            const isMatch = picomatch(ignorePatterns);
+            ignored = isMatch([eentry.path, eentry.name]);
           }
           if (!ignored) {
             let thumbPath;

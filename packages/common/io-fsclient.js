@@ -1,8 +1,8 @@
-const pathLib = require("path");
+//const pathLib = require("path");
 const tsPaths = require("./paths");
 const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
 const AppConfig = require("./AppConfig");
-const micromatch = require("micromatch");
+const picomatch = require("picomatch/posix");
 
 /**
  * this is common module with io-node
@@ -467,10 +467,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         let eentry;
         // let containsMetaFolder = false;
         // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
-        if (path.startsWith("./") || path.startsWith("../")) {
+        /*if (path.startsWith("./") || path.startsWith("../")) {
           // relative tsPaths
           path = pathLib.resolve(path);
-        }
+        }*/
         fs.readdir(path, async (error, entries) => {
           if (error) {
             console.warn("Error listing directory " + path);
@@ -491,10 +491,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 entry;
 
               if (ignorePatterns.length > 0) {
-                const isIgnored = micromatch(
-                  [entryPath, entry],
-                  ignorePatterns
-                );
+                const isMatch = picomatch(ignorePatterns); //, { options: windows }); you can configure the matcher function to accept windows paths
+                const isIgnored = isMatch([entryPath, entry]);
                 if (isIgnored.length !== 0) {
                   continue;
                 }
@@ -680,11 +678,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * @returns {Promise<string>}
    */
   function loadTextFilePromise(param, isPreview = false) {
-    let filePath = getPath(param);
-    if (filePath.startsWith("./") || filePath.startsWith("../")) {
+    const filePath = getPath(param);
+    /*if (filePath.startsWith("./") || filePath.startsWith("../")) {
       // relative paths
       filePath = pathLib.resolve(filePath);
-    }
+    }*/
     return new Promise((resolve, reject) => {
       if (isPreview) {
         const stream = fs.createReadStream(filePath, {
@@ -726,10 +724,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    */
   function getFileContentPromise(param, type = "arraybuffer") {
     let filePath = getPath(param);
-    if (filePath.startsWith("./") || filePath.startsWith("../")) {
+    /*if (filePath.startsWith("./") || filePath.startsWith("../")) {
       // relative paths
       filePath = pathLib.resolve(filePath);
-    }
+    }*/
     return new Promise((resolve, reject) => {
       fs.readFile(filePath, (error, content) => {
         if (error) {
@@ -1097,9 +1095,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     );
   }*/
 
-  function resolveFilePath(filePath) {
+  /*function resolveFilePath(filePath) {
     pathLib.resolve(filePath);
-  }
+  }*/
 
   return {
     isDirectory,
