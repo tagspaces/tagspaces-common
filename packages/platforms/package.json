@@ -13,7 +13,7 @@
     "install-web": "npx cross-env PD_PLATFORM=web npm run install",
     "install-cordova": "npx cross-env PD_PLATFORM=cordova npm run install",
     "npmpack": "npm pack && tar -xvf tagspaces-tagspaces-platforms-2.1.44.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/ && npx rimraf package",
-    "copy_platform": "shx cp -rL platform-io.js ../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/platform-io.js",
+    "copy_platform": "npx shx cp -rL platform-io.js ../../../tagspaces/node_modules/@tagspaces/tagspaces-platforms/platform-io.js",
     "pkg-publish": "npm publish --access public"
   },
   "files": [

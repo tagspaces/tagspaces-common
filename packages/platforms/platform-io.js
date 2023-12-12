@@ -97,8 +97,9 @@ function platformEnableWebdavSupport(webdavConfig) {
     webDavAPI.password !== webdavConfig.password ||
     webDavAPI.port !== webdavConfig.port
   ) {
-    webDavAPI = require("@tagspaces/tagspaces-common-webdav/io-webdav");
-    webDavAPI.configure(webdavConfig);
+    // TODO move webdav in Electron main thread or https://github.com/perry-mitchell/webdav-client#browser-support
+    //webDavAPI = require("@tagspaces/tagspaces-common-webdav/io-webdav");
+    //webDavAPI.configure(webdavConfig);
   }
 }
 

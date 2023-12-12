@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "npmpack": "npm pack && tar -xvf tagspaces-tagspaces-indexer-2.1.44.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/ && npx rimraf package",
-    "copy_platform": "shx cp -rL indexer.js ../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/indexer.js"
+    "copy_platform": "shx cp -rL indexer.js ../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/indexer.js",
+    "pkg-publish": "npm publish --access public"
   },
   "files": [
     "index.js",
