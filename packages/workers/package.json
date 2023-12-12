@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-workers",
   "description": "utils for creating thumbnails and index used by the TagSpaces application",
-  "version": "4.0.4",
+  "version": "4.0.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -12,7 +12,7 @@
   "dependencies": {
     "@tagspaces/tagspaces-common": "^4.0.3",
     "@tagspaces/tagspaces-common-node": "^4.0.3",
-    "@tagspaces/tagspaces-platforms": "^4.0.4",
+    "@tagspaces/tagspaces-platforms": "^4.0.5",
     "@tagspaces/tagspaces-thumbgen-image": "^4.0.2"
   }
 }

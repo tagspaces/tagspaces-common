@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-indexer",
   "description": "TagSpaces indexer module",
-  "version": "4.0.4",
+  "version": "4.0.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
