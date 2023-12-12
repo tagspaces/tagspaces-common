@@ -3,7 +3,7 @@ const pathJs = require("path");
 const {
   createIndex,
   getMetaIndexFilePath,
-} = require("@tagspaces/tagspaces-platforms/indexer");
+} = require("@tagspaces/tagspaces-indexer");
 const { cleanRootPath } = require("@tagspaces/tagspaces-common/paths");
 const {
   configure,

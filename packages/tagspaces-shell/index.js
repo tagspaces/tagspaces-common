@@ -47,7 +47,7 @@ module.exports = function tscmd() {
     const {
       persistIndex,
       createIndex,
-    } = require("@tagspaces/tagspaces-platforms/indexer");
+    } = require("@tagspaces/tagspaces-indexer");
 
     for (const dir of argv._) {
       createIndex(dir).then((directoryIndex) => {

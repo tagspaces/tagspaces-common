@@ -14,7 +14,7 @@ const {
 const {
   persistIndex,
   createIndex,
-} = require("@tagspaces/tagspaces-platforms/indexer");
+} = require("@tagspaces/tagspaces-indexer");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen

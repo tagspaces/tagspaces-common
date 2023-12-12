@@ -1,10 +1,3 @@
-// const pathJS = require("path");
-/*const {
-  loadTextFilePromise,
-  saveTextFilePromise,
-  listDirectoryPromise,
-  getPropertiesPromise,
-} = require("./index");*/ // TODO replace with PlatformIO after: https://trello.com/c/fPp0gh1W/759-fully-migrate-the-electron-and-cordova-platforms-to-new-the-tagspaces-platform
 const {
   normalizePath,
   extractContainingDirectoryPath,
@@ -12,6 +5,8 @@ const {
   getMetaFileLocationForFile,
   getMetaFileLocationForDir,
   joinPaths,
+  cleanRootPath,
+  cleanTrailingDirSeparator,
 } = require("@tagspaces/tagspaces-common/paths");
 const {
   loadJSONString,
@@ -19,10 +14,6 @@ const {
   enhanceEntry,
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const {
-  cleanRootPath,
-  cleanTrailingDirSeparator,
-} = require("@tagspaces/tagspaces-common/paths");
 
 /*function cleanPath(filePath, rootPathLength) {
   const cleanPath = filePath

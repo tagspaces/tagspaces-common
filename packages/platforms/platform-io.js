@@ -61,7 +61,6 @@ const {
   getDirProperties,
 } = require("./index");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const Indexer = require("./indexer");
 
 let objectStoreAPI, webDavAPI;
 
@@ -207,7 +206,7 @@ function platformGetURLforPath(path, expirationInSeconds) {
   return undefined;
 }
 
-function platformCreateIndex(
+/*function platformCreateIndex(
   param,
   listDirectory,
   loadTextFile,
@@ -226,7 +225,7 @@ function platformCreateIndex(
     mode,
     ignorePatterns
   );
-}
+}*/
 
 /**
  * @param token
@@ -737,7 +736,6 @@ module.exports = {
   platformSelectFileDialog,
   platformSelectDirectoryDialog,
   platformShareFiles,
-  platformCreateIndex,
   platformCreateNewInstance,
   platformCheckDirExist,
   platformCheckFileExist,

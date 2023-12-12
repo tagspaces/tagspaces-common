@@ -1,0 +1,18 @@
+{
+  "name": "@tagspaces/tagspaces-indexer",
+  "description": "TagSpaces indexer module",
+  "version": "4.0.3",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "scripts": {
+    "npmpack": "npm pack && tar -xvf tagspaces-tagspaces-indexer-2.1.44.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/ && npx rimraf package",
+    "copy_platform": "shx cp -rL indexer.js ../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/indexer.js"
+  },
+  "files": [
+    "index.js",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@tagspaces/tagspaces-common": "4.0.3"
+  }
+}

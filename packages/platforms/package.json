@@ -24,32 +24,21 @@
     "AppConfig.js",
     "aws.js",
     "webdav.js",
-    "indexer.js",
     "platform-io.js",
     "LICENSE",
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "4.0.3",
-    "@tagspaces/tagspaces-common-aws": "4.0.3",
-    "@tagspaces/tagspaces-common-webdav": "4.0.3"
+    "@tagspaces/tagspaces-common-node": "4.0.3"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-web": "4.0.3",
-    "@tagspaces/tagspaces-common-aws": "4.0.3",
-    "@tagspaces/tagspaces-common-webdav": "4.0.3"
-  },
-  "awsDependencies": {
-    "@tagspaces/tagspaces-common-aws": "4.0.3",
-    "@tagspaces/tagspaces-common-webdav": "4.0.3"
+    "@tagspaces/tagspaces-common-web": "4.0.3"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "4.0.3",
-    "@tagspaces/tagspaces-common-aws": "4.0.3",
-    "@tagspaces/tagspaces-common-webdav": "4.0.3"
+    "@tagspaces/tagspaces-common-cordova": "4.0.3"
+  },
+  "awsDependencies": {
   },
   "electronDependencies": {
-    "@tagspaces/tagspaces-common-aws": "4.0.3",
-    "@tagspaces/tagspaces-common-webdav": "4.0.3"
   }
 }
