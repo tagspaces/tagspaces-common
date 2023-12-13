@@ -4,6 +4,7 @@
   "version": "4.0.3",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
     "npmpack-ts": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-cordova-2.1.43.tgz && npx shx cp -rL ./package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common-cordova && npx rimraf package",

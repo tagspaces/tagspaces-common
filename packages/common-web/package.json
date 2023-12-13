@@ -4,6 +4,7 @@
   "version": "4.0.3",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "test": "jest",
     "clean-install": "rimraf package-lock.json && rimraf node_modules && npm install",

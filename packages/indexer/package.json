@@ -4,6 +4,7 @@
   "version": "4.0.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "npmpack": "npm pack && tar -xvf tagspaces-tagspaces-indexer-2.1.44.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/ && npx rimraf package",
     "copy_platform": "shx cp -rL indexer.js ../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/indexer.js",

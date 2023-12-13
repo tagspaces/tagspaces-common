@@ -4,6 +4,7 @@
   "version": "4.0.3",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "webdav-start": "node ../scripts/webdav/webserver-start.js",
     "cors-proxy-start": "node local-cors-proxy/lcp.js --proxyUrl http://localhost:9988",
