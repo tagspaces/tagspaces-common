@@ -10,10 +10,6 @@
     "copy_platform": "shx cp -rL indexer.js ../../tagspaces/node_modules/@tagspaces/tagspaces-indexer/indexer.js",
     "pkg-publish": "npm publish --access public"
   },
-  "files": [
-    "index.js",
-    "LICENSE"
-  ],
   "dependencies": {
     "@tagspaces/tagspaces-common": "4.0.3"
   }
