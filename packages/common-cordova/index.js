@@ -1,1 +1,1 @@
-module.exports = require('./io-cordova.js');
+module.exports = require("./io-cordova.js");
