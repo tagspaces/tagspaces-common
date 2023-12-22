@@ -1,4 +1,3 @@
-const { verifyAuth } = require("../auth");
 const {
   listDirectoryPromise,
   loadTextFilePromise,
@@ -7,9 +6,6 @@ const {
 const { persistIndex, createIndex } = require("@tagspaces/tagspaces-indexer");
 
 function handleIndexer(req, res) {
-  if (!verifyAuth(req.headers.authorization, res)) {
-    return;
-  }
   if (req.method === "POST") {
     let body = "";
     req.on("data", function (data) {

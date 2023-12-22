@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-function verifyAuth(token, res) {
+function verifyAuth(token, res, key) {
   if (!token) {
     console.error("No Auth header provided!");
   } else {

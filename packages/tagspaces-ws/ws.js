@@ -1,5 +1,6 @@
 "use strict";
 const ws = require("http");
+const { verifyAuth } = require("./auth");
 const { watchFolder } = require("./endpoints/watchFolderRequest");
 const { defaultRequest } = require("./endpoints/defaultRequest");
 const { handleIndexer } = require("./endpoints/indexerRequest");
@@ -16,10 +17,19 @@ module.exports.createWS = function (port, key) {
     const baseURL = "http://" + req.headers.host + "/";
     const reqUrl = new URL(req.url, baseURL);
     if (reqUrl.pathname === "/thumb-gen") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
       handleThumbGen(req, res);
     } else if (reqUrl.pathname === "/indexer") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
       handleIndexer(req, res);
     } else if (reqUrl.pathname === "/watch-folder") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
       watchFolder(req, res);
     } else {
       defaultRequest(req, res);

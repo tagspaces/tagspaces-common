@@ -13,7 +13,7 @@ const packageJson = require(join(__dirname, "package.json"));
 module.exports = {
   // Tells webpack what kind of source maps to produce.
   // There are a lot of options, but I chose the standalone file option.
-  devtool: process.env.NODE_ENV === 'production' ? false : "source-map",
+  devtool: process.env.NODE_ENV === "production" ? false : "source-map",
 
   // Tells webpack where start walking the dependencies to build a bundle.
   entry: {

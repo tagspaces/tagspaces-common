@@ -1,12 +1,8 @@
-const { verifyAuth } = require("../auth");
 const {
   processAllThumbnails,
 } = require("@tagspaces/tagspaces-workers/tsnodethumbgen");
 
 function handleThumbGen(req, res) {
-  if (!verifyAuth(req.headers.authorization, res)) {
-    return;
-  }
   const baseURL = "http://" + req.headers.host + "/";
   const reqUrl = new URL(req.url, baseURL);
 
