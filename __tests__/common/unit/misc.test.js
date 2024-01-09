@@ -1,5 +1,5 @@
 const pathLib = require("path");
-const misc = require("../../../common/misc");
+const misc = require("../../../packages/common/misc");
 const fs = require("fs");
 
 describe("Common misc unit tests", () => {
