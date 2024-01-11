@@ -1,6 +1,9 @@
+const fs = require("fs-extra");
 const pathLib = require("path");
-const utilsIO = require("../../../common/utils-io");
-const { listDirectoryPromise } = require("../../../common-node/io-node");
+const utilsIO = require("@tagspaces/tagspaces-common/utils-io");
+const {
+  listDirectoryPromise,
+} = require("@tagspaces/tagspaces-common-node/io-node");
 
 describe("Common utils-io unit tests", () => {
   test("walkDirectory", async () => {
@@ -15,7 +18,12 @@ describe("Common utils-io unit tests", () => {
       "supported-filestypes"
     );
     const entries = await utilsIO.walkDirectory(dir, listDirectoryPromise);
-    expect(entries.length).toBe(35);
+    // try {
+    const files = fs.readdirSync(dir);
+    expect(entries.length).toBe(files.length);
+    /*} catch (err) {
+      console.error('Error reading directory:', err);
+    }*/
   });
 
   test("enhanceEntry", async () => {
@@ -31,14 +39,16 @@ describe("Common utils-io unit tests", () => {
     );
     const entries = await utilsIO.walkDirectory(dir, listDirectoryPromise);
     const enhancedEntries = entries.map(utilsIO.enhanceEntry);
-    expect(enhancedEntries.length).toBe(35);
+    const files = fs.readdirSync(dir);
+    expect(enhancedEntries.length).toBe(files.length);
 
     expect(enhancedEntries[0].name).toBe("empty_folder");
     expect(enhancedEntries[0].isFile).toBe(false);
 
-    expect(enhancedEntries[34].name).toBe("sample_exif[iptc].jpg");
-    expect(enhancedEntries[34].isFile).toBe(true);
-    expect(enhancedEntries[34].tags).toEqual([
+    const lastEntry = enhancedEntries[enhancedEntries.length -1];
+    expect(lastEntry.name).toBe("sample_exif[iptc].jpg");
+    expect(lastEntry.isFile).toBe(true);
+    expect(lastEntry.tags).toEqual([
       {
         title: "iptc",
         type: "plain",

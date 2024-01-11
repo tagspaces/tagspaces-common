@@ -4,7 +4,7 @@ require("dotenv").config({
   override: false,
   debug: true,
 }); */
-const AppConfig = require("../../../common/AppConfig");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 test("AppConfig", async () => {
   expect(AppConfig.metaFolder === ".ts").toBe(true);

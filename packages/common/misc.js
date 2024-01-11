@@ -570,36 +570,38 @@ function shuffleArray(array) {
  * @returns {Array<*>|*}
  */
 function sortByCriteria(data, criteria, order) {
+  const copyData = [...data];
   switch (criteria) {
     case "byName":
+      copyData.sort(sortByName);
       if (order) {
-        return data.sort(sortByName);
+        copyData.reverse();
       }
-      return data.sort((a, b) => -1 * sortByName(a, b));
+      return copyData; //data.sort((a, b) => -1 * sortByName(a, b));
     case "byFileSize":
       if (order) {
-        return data.sort(sortBySize);
+        return copyData.sort(sortBySize);
       }
-      return data.sort((a, b) => -1 * sortBySize(a, b));
+      return copyData.sort((a, b) => -1 * sortBySize(a, b));
     case "byDateModified":
       if (order) {
-        return data.sort(sortByDateModified);
+        return copyData.sort(sortByDateModified);
       }
-      return data.sort((a, b) => -1 * sortByDateModified(a, b));
+      return copyData.sort((a, b) => -1 * sortByDateModified(a, b));
     case "byExtension":
       if (order) {
-        return data.sort(sortByExtension);
+        return copyData.sort(sortByExtension);
       }
-      return data.sort((a, b) => -1 * sortByExtension(a, b));
+      return copyData.sort((a, b) => -1 * sortByExtension(a, b));
     case "byFirstTag":
       if (order) {
-        return data.sort(sortByFirstTag);
+        return copyData.sort(sortByFirstTag);
       }
-      return data.sort((a, b) => -1 * sortByFirstTag(a, b));
+      return copyData.sort((a, b) => -1 * sortByFirstTag(a, b));
     case "random":
-      return shuffleArray(data);
+      return shuffleArray(copyData);
     default:
-      return data.sort(sortByName);
+      return copyData.sort(sortByName);
   }
 }
 

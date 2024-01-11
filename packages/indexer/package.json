@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-indexer",
   "description": "TagSpaces indexer module",
-  "version": "4.0.7",
+  "version": "4.0.9",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
@@ -11,6 +11,6 @@
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "4.0.3"
+    "@tagspaces/tagspaces-common": "^4.0.9"
   }
 }
