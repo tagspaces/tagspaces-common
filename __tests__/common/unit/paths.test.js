@@ -1,6 +1,6 @@
 const pathLib = require("path");
-const paths = require("../../../common/paths");
-const AppConfig = require("../../../common/AppConfig");
+const paths = require("@tagspaces/tagspaces-common/paths");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 describe("Common Paths unit tests", () => {
   test("paths baseName", async () => {
@@ -254,7 +254,7 @@ describe("Common Paths unit tests", () => {
       entryID
     );
     expect(link).toBe(
-      "ts:?tslid=" +
+      "ts://?tslid=" +
         locationID +
         "&tsepath=" +
         encodeURIComponent(entryPath) +

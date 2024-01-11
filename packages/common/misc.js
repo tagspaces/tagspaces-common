@@ -573,9 +573,9 @@ function sortByCriteria(data, criteria, order) {
   switch (criteria) {
     case "byName":
       if (order) {
-        return data.sort(sortByName);
+        return data.reverse(sortByName);
       }
-      return data.sort((a, b) => -1 * sortByName(a, b));
+      return data.sort(sortByName); //data.sort((a, b) => -1 * sortByName(a, b));
     case "byFileSize":
       if (order) {
         return data.sort(sortBySize);

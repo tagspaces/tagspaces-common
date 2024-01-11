@@ -135,17 +135,49 @@ describe("Common misc unit tests", () => {
       { name: "b", isFile: true, size: 30 },
       { name: "a", isFile: true, size: 20 },
       { name: "c", isFile: true, size: 10 },
+      { name: "0", isFile: true, size: 11 },
+      { name: "2", isFile: true, size: 12 },
+      { name: "1", isFile: true, size: 13 },
+      { name: "02", isFile: true, size: 14 },
+      { name: "01", isFile: true, size: 15 },
+      { name: "10", isFile: true, size: 16 },
     ];
-    let output = misc.sortByCriteria(items, "byName", "asc");
+    //asc
+    let output = misc.sortByCriteria(items, "byName", false);
     expect(output).toEqual([
       { name: "a", isFile: true, size: 20 },
       { name: "b", isFile: true, size: 30 },
       { name: "c", isFile: true, size: 10 },
+      { name: "0", isFile: true, size: 11 },
+      { name: "1", isFile: true, size: 13 },
+      { name: "01", isFile: true, size: 15 },
+      { name: "2", isFile: true, size: 12 },
+      { name: "02", isFile: true, size: 14 },
+      { name: "10", isFile: true, size: 16 },
+    ]);
+    //desc
+    output = misc.sortByCriteria(items, "byName", true);
+    expect(output).toEqual([
+      { name: "10", isFile: true, size: 16 },
+      { name: "02", isFile: true, size: 14 },
+      { name: "2", isFile: true, size: 12 },
+      { name: "01", isFile: true, size: 15 },
+      { name: "1", isFile: true, size: 13 },
+      { name: "0", isFile: true, size: 11 },
+      { name: "c", isFile: true, size: 10 },
+      { name: "b", isFile: true, size: 30 },
+      { name: "a", isFile: true, size: 20 },
     ]);
 
-    output = misc.sortByCriteria(items, "byFileSize", "asc");
+    output = misc.sortByCriteria(items, "byFileSize", true);
     expect(output).toEqual([
       { name: "c", isFile: true, size: 10 },
+      { name: "0", isFile: true, size: 11 },
+      { name: "2", isFile: true, size: 12 },
+      { name: "1", isFile: true, size: 13 },
+      { name: "02", isFile: true, size: 14 },
+      { name: "01", isFile: true, size: 15 },
+      { name: "10", isFile: true, size: 16 },
       { name: "a", isFile: true, size: 20 },
       { name: "b", isFile: true, size: 30 },
     ]);
