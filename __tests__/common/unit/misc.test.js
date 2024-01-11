@@ -142,6 +142,7 @@ describe("Common misc unit tests", () => {
       { name: "01", isFile: true, size: 15 },
       { name: "10", isFile: true, size: 16 },
     ];
+    const reversedItems = [...items].reverse();
     //asc
     let output = misc.sortByCriteria(items, "byName", false);
     expect(output).toEqual([
@@ -155,6 +156,19 @@ describe("Common misc unit tests", () => {
       { name: "02", isFile: true, size: 14 },
       { name: "10", isFile: true, size: 16 },
     ]);
+    //asc reverse
+    output = misc.sortByCriteria(reversedItems, "byName", false);
+    expect(output).toEqual([
+      { name: "0", isFile: true, size: 11 },
+      { name: "01", isFile: true, size: 15 },
+      { name: "1", isFile: true, size: 13 },
+      { name: "02", isFile: true, size: 14 },
+      { name: "2", isFile: true, size: 12 },
+      { name: "10", isFile: true, size: 16 },
+      { name: "a", isFile: true, size: 20 },
+      { name: "b", isFile: true, size: 30 },
+      { name: "c", isFile: true, size: 10 },
+    ]);
     //desc
     output = misc.sortByCriteria(items, "byName", true);
     expect(output).toEqual([
@@ -167,6 +181,20 @@ describe("Common misc unit tests", () => {
       { name: "c", isFile: true, size: 10 },
       { name: "b", isFile: true, size: 30 },
       { name: "a", isFile: true, size: 20 },
+    ]);
+
+    //desc reversed
+    output = misc.sortByCriteria(reversedItems, "byName", true);
+    expect(output).toEqual([
+      { name: "c", isFile: true, size: 10 },
+      { name: "b", isFile: true, size: 30 },
+      { name: "a", isFile: true, size: 20 },
+      { name: "10", isFile: true, size: 16 },
+      { name: "2", isFile: true, size: 12 },
+      { name: "02", isFile: true, size: 14 },
+      { name: "1", isFile: true, size: 13 },
+      { name: "01", isFile: true, size: 15 },
+      { name: "0", isFile: true, size: 11 },
     ]);
 
     output = misc.sortByCriteria(items, "byFileSize", true);
