@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/aws-thumbgen",
   "description": "TagSpaces aws thumbnails module",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@tagspaces/tagspaces-common-aws": "^4.1.0",
-    "@tagspaces/tagspaces-thumbgen-image": "^4.0.2",
+    "@tagspaces/tagspaces-thumbgen-image": "^4.1.1",
     "@tagspaces/tagspaces-thumbgen-pdf": "^4.0.2"
   }
 }
