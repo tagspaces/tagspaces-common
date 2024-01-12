@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-platforms",
   "description": "TagSpaces platforms module",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
