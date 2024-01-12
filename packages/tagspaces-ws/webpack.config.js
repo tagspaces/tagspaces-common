@@ -13,7 +13,7 @@ const packageJson = require(join(__dirname, "package.json"));
 module.exports = {
   // Tells webpack what kind of source maps to produce.
   // There are a lot of options, but I chose the standalone file option.
-  devtool: "source-map",
+  devtool: process.env.NODE_ENV === "production" ? false : "source-map",
 
   // Tells webpack where start walking the dependencies to build a bundle.
   entry: {
@@ -30,7 +30,7 @@ module.exports = {
     rules: [
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
       { enforce: "pre", test: /\.js?$/, loader: "source-map-loader" },
-
+      { test: /.node$/, loader: "node-loader" },
       // { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     ],
   },
@@ -58,6 +58,8 @@ module.exports = {
 
   externals: {
     sharp: "commonjs sharp",
+    bufferutil: "bufferutil",
+    "utf-8-validate": "utf-8-validate",
   },
   // Tells webpack what file extesions it should look at.
   resolve: {

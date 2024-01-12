@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "4.0.9",
+  "version": "4.1.1",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "build/index.js",
@@ -10,28 +10,31 @@
     "LICENSE"
   ],
   "scripts": {
-    "build:dev": "npm run install-node && webpack --config webpack.config.js --mode development",
-    "build": "npm run install-node && webpack --config webpack.config.js --mode production",
+    "build:dev": "webpack --config webpack.config.js --mode development",
+    "build": "npx rimraf build && npx cross-env NODE_ENV=production webpack --config webpack.config.js --mode production",
     "start": "node build/index.js -p 49352",
-    "start-dev": "node index.js -p 2000 -k xxx",
-    "install-node": "npx @tagspaces/dynamic-packages-loading ./ -p node --prefix=../../",
-    "install-node-old": "npx @tagspaces/dynamic-packages-loading ./ -p node && npx cross-env PD_PLATFORM=node npm run-script --prefix ./node_modules/@tagspaces/tagspaces-platforms install && npm --prefix ./node_modules/@tagspaces/tagspaces-platforms dedupe",
-    "install-node-linux": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=linux TARGET_ARCH=x64 node install/ws.js",
-    "install-node-mac": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=darwin TARGET_ARCH=x64 node install/ws.js",
-    "install-node-win": "npx cross-env PD_PLATFORM=node TARGET_PLATFORM=win32 TARGET_ARCH=x64 node install/ws.js",
-    "install-web": "npx rimraf node_modules && npx rimraf package-lock.json && npx @tagspaces/dynamic-packages-loading ./ -p web",
+    "start-dev": "node index.js -p 2000 -k e2eTestKey",
+    "install-node-linux": "npm install --arch=x64 --platform=linux sharp",
+    "install-node-mac": "npm install --arch=x64 --platform=darwin sharp",
+    "install-node-win": "npm install --arch=x64 --platform=win32 sharp",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
     "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/thumb-gen",
     "test-indexer": "curl -d '{\"directoryPath\":\"/Users/sytolk/Pictures/\"}' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/indexer",
+    "test-watcher": "curl -d '{\"path\":\"/Users/sytolk/Pictures/\",\"depth\":\"1\"}' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" http://127.0.0.1:2000/watch-folder",
     "sign-jwt": "npx jsonwebtokencli --encode --secret xxx '{\"provider\":\"tagspaces\",\"date\":1638276725}'",
-    "pkg-publish": "npm run install-node && npm run build && npm publish --access public"
+    "npmpack": "npm run build && npx shx cp -rL build/** ../../../tagspaces/release/app/node_modules/@tagspaces/tagspaces-ws/",
+    "pkg-publish": "npm run build && npm publish --access public"
   },
-  "nodeDependencies": {
+  "dependencies": {
+    "@tagspaces/tagspaces-workers": "^4.1.1",
+    "find-free-ports": "^3.1.1",
     "jsonwebtoken": "^8.5.1",
-    "@tagspaces/tagspaces-workers": "4.0.9"
+    "ws": "^8.15.1"
   },
-  "webDependencies": {},
+  "devDependencies": {
+    "node-loader": "^2.0.0"
+  },
   "peerDependencies": {
-    "sharp": ">=0.29.3"
+    "sharp": ">=0.32.0"
   }
 }
