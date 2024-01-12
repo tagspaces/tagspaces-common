@@ -574,7 +574,7 @@ function sortByCriteria(data, criteria, order) {
   switch (criteria) {
     case "byName":
       copyData.sort(sortByName);
-      if (order) {
+      if (!order) {
         copyData.reverse();
       }
       return copyData; //data.sort((a, b) => -1 * sortByName(a, b));
