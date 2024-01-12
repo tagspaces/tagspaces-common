@@ -35,6 +35,6 @@
     "node-loader": "^2.0.0"
   },
   "peerDependencies": {
-    "sharp": ">=0.33.0"
+    "sharp": ">=0.32.0"
   }
 }

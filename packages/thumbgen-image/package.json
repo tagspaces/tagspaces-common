@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "async": "^3.2.4",
-    "sharp": "^0.29.3"
+    "sharp": "^0.32.6"
   }
 }
