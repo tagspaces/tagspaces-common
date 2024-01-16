@@ -1,4 +1,5 @@
 const {
+  unZip,
   isDirectory,
   extractTextContent,
   listDirectoryPromise,
@@ -32,6 +33,19 @@ describe("io-node unit tests", () => {
     } catch (ex) {
       console.error("clean failed:" + ex.message);
     }
+  });
+
+  test("io-node.unZip", async () => {
+    const sourcePath = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/sample.zip"
+    );
+    const targetPath = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/empty_folder/unzip/"
+    );
+    const path = await unZip(sourcePath, targetPath);
+    expect(path === sourcePath).toBe(true);
   });
 
   test("io-node.extractTextContent", async () => {

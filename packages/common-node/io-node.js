@@ -2,8 +2,7 @@ const pathLib = require("path");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const fs = require("fs-extra");
 const klaw = require("klaw");
-const JSZip = require("jszip");
-const JSZipUtils = require("jszip-utils");
+const AdmZip = require("adm-zip");
 //const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 const fsClient = createFsClient(fs);
@@ -72,8 +71,47 @@ async function getDirProperties(directoryPath) {
 /**
  * @param filePath like /home/user/file.zip
  * @param targetPath /home/user/targetDir
- * return Promise<zipPath: string>
+ * return Promise<zipPath>: string>
  */
+function unZip(filePath, targetPath) {
+  return new Promise((resolve, reject) => {
+    try {
+      const zip = new AdmZip(filePath, {});
+      zip.extractAllToAsync(targetPath, true, false, (err) => {
+        if (err) {
+          reject("Error unzipping ZIP file: ", err);
+        } else {
+          resolve(filePath);
+        }
+      });
+    } catch (error) {
+      reject("Error unzipping ZIP file: " + error.message);
+    }
+  });
+}
+
+/*function unZip(filePath, targetPath) {
+  return new Promise((resolve, reject) => {
+    try {
+      const readStream = fs.createReadStream(filePath);
+      const writeStream = fs.createWriteStream(targetPath);
+      const unzip = zlib.createGunzip();
+
+      readStream.pipe(unzip).pipe(writeStream);
+
+      writeStream.on("finish", () => {
+        resolve(filePath);
+      });
+
+      writeStream.on("error", (err) => {
+        reject("Error unzipping file: " + err.message);
+      });
+    } catch (ex) {
+      reject("Error unzipping file: ", ex);
+    }
+  });
+}*/
+/*
 function unZip(filePath, targetPath) {
   return new Promise((resolve, reject) => {
     try {
@@ -116,63 +154,12 @@ function unZip(filePath, targetPath) {
           Promise.all(promises).then(() => resolve(filePath));
         });
       });
-
-      /*const readStream = fs.createReadStream(filePath);
-      const unzipStream = zlib.createUnzip();
-      const writeStream = fs.createWriteStream(targetPath);
-
-      readStream
-        .on("error", reject)
-        .pipe(unzipStream)
-        .on("error", reject)
-        .pipe(writeStream)
-        .on("error", reject)
-        .on("finish", resolve);*/
-
-      // const dirName = filePath.split(".").slice(0, -1).join(".");
-      /*const readStream = fs.createReadStream(filePath);
-      const writeStream = fs.createWriteStream(targetPath); //dirName); //targetPath);
-      const unzipStream = new zlib.Gunzip(); //Unzip();
-
-      readStream.on("error", reject);
-      writeStream.on("error", reject);
-      unzipStream.on("error", reject);
-
-      writeStream.on("finish", () => {
-        resolve();
-      });
-
-      readStream.pipe(unzipStream).pipe(writeStream);*/
-      // -----------------------------
-      /*const readStream = fs.createReadStream(filePath);
-      const dirName = filePath.split(".").slice(0, -1).join("."); // remove .zip extension
-      // const writeDir = pathLib.join(targetPath ? targetPath : ".", dirName);
-      fs.mkdirp(dirName, (error) => {
-        if (error) {
-          console.error("Error creating folder: " + dirName + " with ", error);
-          return;
-        }
-        const writeStream = fs.createWriteStream(dirName);
-
-        const unzipper = zlib.createGunzip();
-        readStream.pipe(unzipper).pipe(writeStream);
-
-        writeStream.on("close", () => {
-          console.log("File unzipped successfully!");
-          resolve(true);
-        });
-
-        writeStream.on("error", (error) => {
-          console.error("Error unzipping file:", error);
-          reject(error);
-        });
-      });*/
     } catch (err) {
       console.error(err);
       reject(err);
     }
   });
-}
+} */
 
 function resolveFilePath(filePath) {
   pathLib.resolve(filePath);
