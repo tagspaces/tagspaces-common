@@ -48,7 +48,7 @@ async function getDirProperties(directoryPath) {
   let dirsCount = 0;
 
   await new Promise((resolve, reject) => {
-    klaw(directoryPath)
+    klaw(directoryPath, { preserveSymlinks: true })
       .on("data", (item) => {
         if (item.stats.isFile()) {
           totalSize += item.stats.size;
