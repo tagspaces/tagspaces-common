@@ -120,14 +120,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * Create a promise that rejects in <ms> milliseconds
    * @param ms: number
    */
-  function timeout(ms) {
+  /*function timeout(ms) {
     return new Promise((resolve, reject) => {
       const id = setTimeout(() => {
         clearTimeout(id);
         reject(new Error("Timed out in " + ms + "ms."));
       }, ms);
     });
-  }
+  }*/
 
   /**
    * @param param (path - deprecated or Object)
@@ -137,7 +137,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    */
   function getPropertiesPromise(param) {
     const path = getPath(param);
-    const promise = new Promise((resolve) => {
+    return new Promise((resolve) => {
       /* stats for file:
        * "dev":41, "mode":33204, "nlink":1, "uid":1000, "gid":1000,  "rdev":0,
        * "blksize":4096, "ino":2634172, "size":230, "blocks":24,  "atime":"2015-11-24T09:56:41.932Z",
@@ -167,7 +167,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
 
     // Returns a race between our timeout and the passed in promise
-    return Promise.race([promise, timeout(2000)]);
+    // return Promise.race([promise, timeout(2000)]);
   }
 
   function saveTextFilePromise(param, content, overwrite) {
@@ -204,13 +204,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             reject(error);
             return;
           }
-          if (entry.lmdt) {
+          /*if (entry.lmdt) {
             resolve(entry);
-          } else {
+          } else {*/
             getPropertiesPromise(param).then((entryProps) => {
               resolve({ ...entry, ...entryProps });
             });
-          }
+          //}
         });
       }
       function getDefaultFile() {

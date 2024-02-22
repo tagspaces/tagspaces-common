@@ -34,8 +34,10 @@ test("listDirectoryPromise", async () => {
 });
 
 test("saveFilePromise/saveTextFilePromise", async () => {
-  const file = await platformSaveFilePromise({ path: filePath }, "test");
-  expect(file.path === filePath).toBe(true);
+  const file = await platformSaveFilePromise({ path: filePath }, "test init");
+  expect(file.path).toBe(filePath);
+  const fileChanged = await platformSaveFilePromise({ path: filePath }, "test");
+  expect(fileChanged.lmdt).toBeGreaterThan(file.lmdt);
   // console.log("file:" + JSON.stringify(file));
 });
 
