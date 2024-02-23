@@ -31,6 +31,19 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return undefined;
   }
 
+  function stat(param) {
+    const path = getPath(param);
+    return new Promise((resolve, reject) => {
+      fs.lstat(path, (err, stat) => {
+        if (err !== null) {
+          resolve(false);
+        } else {
+          resolve(stat);
+        }
+      });
+    });
+  }
+
   /**
    * @param param
    * @returns {Promise<boolean>} catch reject if path not exists
@@ -207,9 +220,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           /*if (entry.lmdt) {
             resolve(entry);
           } else {*/
-            getPropertiesPromise(param).then((entryProps) => {
-              resolve({ ...entry, ...entryProps });
-            });
+          getPropertiesPromise(param).then((entryProps) => {
+            resolve({ ...entry, ...entryProps });
+          });
           //}
         });
       }
@@ -506,20 +519,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               // eentry.meta = {};
 
               try {
-                stats = await new Promise((resolve, rej) => {
-                  fs.stat(entryPath, (err, data) => {
-                    if (err) {
-                      rej(err);
-                    } else {
-                      resolve(data);
-                    }
-                  });
-                });
-                eentry.isFile = stats.isFile();
-                eentry.size = stats.size;
-                eentry.lmdt = stats.mtime.getTime
-                  ? stats.mtime.getTime()
-                  : stats.mtime;
+                stats = await stat({ path: entryPath });
+                if (stats) {
+                  eentry.isFile = stats.isFile();
+                  eentry.size = stats.size;
+                  eentry.lmdt = stats.mtime.getTime
+                    ? stats.mtime.getTime()
+                    : stats.mtime;
+                }
 
                 // Load meta for dirs
                 if (
@@ -878,33 +885,45 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         );
         return;
       }
-      isDirectory(filePath)
-        .then((isDir) => {
-          if (isDir) {
-            /*reject(
-              'Trying to rename a directory. Renaming of "' +
-                filePath +
-                '" failed'
-            );*/
-            console.debug(
-              "move a directory:" + filePath + " to:" + newFilePath
-            );
-            moveDirectoryPromise(
-              { path: filePath },
+      stat({ path: filePath }).then((sourceStat) => {
+        if (!sourceStat) {
+          reject(
+            'Source file does not exist. Renaming of "' + filePath + '" failed'
+          );
+        } else if (sourceStat.isDirectory()) {
+          moveDirectoryPromise(
+            { path: filePath },
+            newFilePath,
+            onProgress
+          ).then(() => resolve([filePath, newFilePath]));
+          /*console.debug(
+                    "move a directory:" + filePath + " to:" + newFilePath
+                );*/
+        } else {
+          stat({ path: newFilePath }).then((destStat) => {
+            if (destStat) {
+              reject(
+                'Target filename "' +
+                  newFilePath +
+                  '" exists. Renaming of "' +
+                  filePath +
+                  '" failed'
+              );
+            }
+            const destDirPath = tsPaths.extractParentDirectoryPath(
               newFilePath,
-              onProgress
-            ).then(() => resolve([filePath, newFilePath]));
-          } else {
-            exist(newFilePath).then((exist) => {
-              if (exist) {
+              AppConfig.dirSeparator
+            );
+            stat({ path: destDirPath }).then((destDirStat) => {
+              if (!destDirStat) {
                 reject(
-                  'Target filename "' +
-                    newFilePath +
-                    '" exists. Renaming of "' +
+                  'Destination dir "' +
+                    destDirPath +
+                    '" not exists. Renaming of "' +
                     filePath +
                     '" failed'
                 );
-              } else {
+              } else if (sourceStat.dev === destDirStat.dev) {
                 fs.move(filePath, newFilePath, { clobber: true }, (error) => {
                   // TODO webdav impl
                   if (error) {
@@ -913,15 +932,27 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   }
                   resolve([filePath, newFilePath]);
                 });
+              } else {
+                fs.copy(filePath, newFilePath, (error) => {
+                  if (error) {
+                    reject("Copying: " + filePath + " failed.");
+                    return;
+                  }
+                  fs.unlink(filePath, (error) => {
+                    if (error) {
+                      console.log(
+                        "renameFilePromise delete " + filePath + " file:",
+                        error
+                      );
+                    }
+                    resolve([filePath, newFilePath]);
+                  });
+                });
               }
             });
-          }
-        })
-        .catch((e) => {
-          reject(
-            'Source file does not exist. Renaming of "' + filePath + '" failed'
-          );
-        });
+          });
+        }
+      });
     });
   }
 
