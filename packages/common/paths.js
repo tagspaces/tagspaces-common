@@ -338,6 +338,11 @@ function extractParentDirectoryPath(
   const lastIndex = path.lastIndexOf(dirSeparator);
   if (lastIndex !== -1) {
     return path.substring(0, lastIndex);
+  } else if (dirSeparator === "\\") {
+    const index = path.lastIndexOf("/");
+    if (index !== -1) {
+      return path.substring(0, index);
+    }
   }
   // return root dir in cases that dirPath not start with dirSeparator (AWS)
   return "";

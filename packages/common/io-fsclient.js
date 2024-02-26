@@ -22,6 +22,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   function mkdirpSync(dir) {
     fs.ensureDirSync(dir);
+    //fs.mkdirSync(dir, { recursive: true });
   }
 
   function getLmdt(param) {
@@ -914,41 +915,45 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               newFilePath,
               AppConfig.dirSeparator
             );
-            stat({ path: destDirPath }).then((destDirStat) => {
-              if (!destDirStat) {
-                reject(
-                  'Destination dir "' +
-                    destDirPath +
-                    '" not exists. Renaming of "' +
-                    filePath +
-                    '" failed'
-                );
-              } else if (sourceStat.dev === destDirStat.dev) {
-                fs.move(filePath, newFilePath, { clobber: true }, (error) => {
-                  // TODO webdav impl
-                  if (error) {
-                    reject("Renaming: " + filePath + " failed with: " + error);
-                    return;
-                  }
-                  resolve([filePath, newFilePath]);
-                });
-              } else {
-                fs.copy(filePath, newFilePath, (error) => {
-                  if (error) {
-                    reject("Copying: " + filePath + " failed.");
-                    return;
-                  }
-                  fs.unlink(filePath, (error) => {
+            fs.mkdirp(destDirPath, (error) => {
+              stat({ path: destDirPath }).then((destDirStat) => {
+                if (!destDirStat) {
+                  reject(
+                    'Destination dir "' +
+                      destDirPath +
+                      '" not exists. Renaming of "' +
+                      filePath +
+                      '" failed'
+                  );
+                } else if (sourceStat.dev === destDirStat.dev) {
+                  fs.move(filePath, newFilePath, { clobber: true }, (error) => {
+                    // TODO webdav impl
                     if (error) {
-                      console.log(
-                        "renameFilePromise delete " + filePath + " file:",
-                        error
+                      reject(
+                        "Renaming: " + filePath + " failed with: " + error
                       );
+                      return;
                     }
                     resolve([filePath, newFilePath]);
                   });
-                });
-              }
+                } else {
+                  fs.copy(filePath, newFilePath, (error) => {
+                    if (error) {
+                      reject("Copying: " + filePath + " failed.");
+                      return;
+                    }
+                    fs.unlink(filePath, (error) => {
+                      if (error) {
+                        console.log(
+                          "renameFilePromise delete " + filePath + " file:",
+                          error
+                        );
+                      }
+                      resolve([filePath, newFilePath]);
+                    });
+                  });
+                }
+              });
             });
           });
         }

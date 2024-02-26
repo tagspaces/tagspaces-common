@@ -45,7 +45,7 @@ describe("Common utils-io unit tests", () => {
     expect(enhancedEntries[0].name).toBe("empty_folder");
     expect(enhancedEntries[0].isFile).toBe(false);
 
-    const lastEntry = enhancedEntries[enhancedEntries.length -1];
+    const lastEntry = enhancedEntries[enhancedEntries.length - 1];
     expect(lastEntry.name).toBe("sample_exif[iptc].jpg");
     expect(lastEntry.isFile).toBe(true);
     expect(lastEntry.tags).toEqual([
