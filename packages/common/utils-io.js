@@ -145,15 +145,8 @@ function enhanceEntry(
       dirSeparator
     );
   }
-  let sidecarDescription = "";
-  let sidecarColor = "";
-  let sidecarPerspective;
   let sidecarTags = [];
-  let meta;
   if (entry.meta && Object.keys(entry.meta).length > 0) {
-    sidecarDescription = entry.meta.description || "";
-    sidecarColor = entry.meta.color || "";
-    sidecarPerspective = entry.meta.perspective;
     if (entry.meta.tags && entry.meta.tags.length > 0) {
       entry.meta.tags.forEach((tag) => {
         const cleanedTag = {
@@ -169,28 +162,16 @@ function enhanceEntry(
       });
     }
     entry.uuid = entry.meta.id;
-    meta = { ...entry.meta, description: undefined };
   }
   return {
+    ...entry,
     uuid: entry.uuid || getUuid(),
-    name: entry.name,
-    isFile: entry.isFile,
-    size: entry.size,
-    lmdt: entry.lmdt,
-    path: entry.path,
-    ...(meta && { meta: meta }),
-    // isIgnored: entry.isIgnored,
     ...(!entry.extension && {
       extension: entry.isFile
         ? paths.extractFileExtension(entry.name, dirSeparator)
         : "",
     }),
     tags: [...sidecarTags, ...fileNameTags],
-    ...(sidecarDescription && { description: sidecarDescription }),
-    ...(sidecarColor && { color: sidecarColor }),
-    ...(sidecarPerspective && { perspective: sidecarPerspective }),
-    ...(entry.thumbPath && { thumbPath: entry.thumbPath }),
-    ...(entry.textContent && { textContent: entry.textContent }),
   };
 }
 
