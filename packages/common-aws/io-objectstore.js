@@ -515,7 +515,10 @@ function getPropertiesPromise(param) {
               : tsPaths.extractDirectoryName(path),
             isFile: !path.endsWith("/"),
             size: data.ContentLength,
-            lmdt: data.LastModified, // Date.parse(data.LastModified),
+            lmdt:
+              data.LastModified instanceof Date
+                ? data.LastModified.getTime()
+                : data.LastModified, // Date.parse(data.LastModified),
             path,
           });
         }
@@ -605,27 +608,12 @@ const saveFilePromise = (param, content, overWrite, mode) =>
           path: filePath,
           bucketName: bucketName,
         });
-        if (fileProps && fileProps.lmdt.getTime() !== lmdt.getTime()) {
+        if (fileProps && fileProps.lmdt !== lmdt) {
           reject(new Error("File was modified externally"));
           return false;
         }
       }
-      /*return getPropertiesPromise({
-    path: filePath,
-    bucketName: bucketName,
-  }).then((result) => {
-    if (result === false) {
-      isNewFile = true;
-    }
-    if (isNewFile || overWrite === true) {
-      if (result.size !== content.length) {
-        console.log(
-          "Update index size:" +
-            result.size +
-            " old index size:" +
-            content.length
-        );*/
-      // || mode === 'text') {
+
       const fileExt = tsPaths.extractFileExtension(filePath);
 
       let mimeType;
@@ -653,20 +641,27 @@ const saveFilePromise = (param, content, overWrite, mode) =>
           console.log(err, err.stack); // an error occurred
           resolve(false);
         }
-        resolve({
-          uuid: data ? data.ETag : uuidv1(),
-          name:
-            data && data.Key
-              ? data.Key
-              : tsPaths.extractFileName(filePath, "/"),
-          url: data ? data.Location : filePath,
-          isFile: true,
-          path: filePath,
-          extension: tsPaths.extractFileExtension(filePath, "/"),
-          size: content.length,
-          lmdt: new Date().getTime(),
-          // isNewFile,
-        });
+        if (lmdt) {
+          getPropertiesPromise({
+            path: filePath,
+            bucketName: bucketName,
+          }).then(entry => resolve(entry));
+        } else {
+          resolve({
+            uuid: data ? data.ETag : uuidv1(),
+            name:
+                data && data.Key
+                    ? data.Key
+                    : tsPaths.extractFileName(filePath, "/"),
+            url: data ? data.Location : filePath,
+            isFile: true,
+            path: filePath,
+            extension: tsPaths.extractFileExtension(filePath, "/"),
+            size: content.length,
+            lmdt: new Date().getTime(),
+            // isNewFile,
+          });
+        }
       });
     }
   });
