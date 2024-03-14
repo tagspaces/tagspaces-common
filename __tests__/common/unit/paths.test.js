@@ -120,7 +120,7 @@ describe("Common Paths unit tests", () => {
   test("paths cleanTrailingDirSeparator", async () => {
     const dirPath = pathLib.join(__dirname, "..", "..");
     const clenPath = paths.cleanTrailingDirSeparator(
-      dirPath + AppConfig.dirSeparator
+      dirPath + AppConfig.dirSeparator + AppConfig.dirSeparator
     );
     expect(clenPath).toBe(dirPath);
   });
