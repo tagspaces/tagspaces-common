@@ -307,11 +307,19 @@ describe("io-node unit tests", () => {
     );
     const targetPath = pathLib.resolve(
       __dirname,
-      "../../../scripts/testContents/.gitkeep2"
+      "../../../scripts/testContents/.gitkeep 2 💕"
     );
     await renameFilePromise(sourcePath, targetPath);
     const targetFile = fs.lstatSync(targetPath);
     expect(targetFile.size).toBe(0);
+
+    const targetPath2 = pathLib.resolve(
+        __dirname,
+        "../../../scripts/testContents/.git keep 22 💕 .txt"
+    );
+    await renameFilePromise(targetPath, targetPath2);
+    const targetFile2 = fs.lstatSync(targetPath2);
+    expect(targetFile2.size).toBe(0);
   });
   test("io-node.renameDirectoryPromise", async () => {
     const sourcePath = pathLib.resolve(
