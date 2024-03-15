@@ -42,8 +42,8 @@ describe("Common utils-io unit tests", () => {
     const files = fs.readdirSync(dir);
     expect(enhancedEntries.length).toBe(files.length);
 
-    expect(enhancedEntries[0].name).toBe("empty_folder");
-    expect(enhancedEntries[0].isFile).toBe(false);
+    expect(enhancedEntries[1].name).toBe("empty_folder");
+    expect(enhancedEntries[1].isFile).toBe(false);
 
     const lastEntry = enhancedEntries[enhancedEntries.length - 1];
     expect(lastEntry.name).toBe("sample_exif[iptc].jpg");

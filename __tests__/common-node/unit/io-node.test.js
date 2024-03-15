@@ -204,8 +204,10 @@ describe("io-node unit tests", () => {
       __dirname,
       "../../../scripts/testContents"
     );
-    const list = await listDirectoryPromise({ path: filePath }, []);
+    const ignorePatterns = ['.DS_Store'];
+    const list = await listDirectoryPromise({ path: filePath }, [], ignorePatterns);
     expect(list.length).toBeGreaterThan(30);
+    expect(list.some(entry => !ignorePatterns.includes(entry.name))).toBe(true);
   });
 
   test("io-node.saveTextFilePromise", async () => {
