@@ -509,7 +509,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 //const isIgnored = isMatch([entryPath, entry]);
                 const isIgnoredPath = isMatch(entryPath);
                 const isIgnoredEntry = isMatch(entry);
-                if (isIgnoredPath || isIgnoredEntry) {//isIgnored.length !== 0) {
+                if (isIgnoredPath || isIgnoredEntry) {
+                  //isIgnored.length !== 0) {
                   continue;
                 }
               }

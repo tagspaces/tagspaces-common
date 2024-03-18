@@ -258,7 +258,7 @@ function cleanTrailingDirSeparator(dirPath) {
       return dirPath.substring(0, dirPath.length - 1);
     }
     if (dirPath.lastIndexOf("/") === dirPath.length - 1) {
-      return dirPath.replace(/\/+$/g, ''); //dirPath.substring(0, dirPath.length - 1);
+      return dirPath.replace(/\/+$/g, ""); //dirPath.substring(0, dirPath.length - 1);
     }
     return dirPath;
   }

@@ -641,27 +641,20 @@ const saveFilePromise = (param, content, overWrite, mode) =>
           console.log(err, err.stack); // an error occurred
           resolve(false);
         }
-        if (lmdt) {
-          getPropertiesPromise({
-            path: filePath,
-            bucketName: bucketName,
-          }).then(entry => resolve(entry));
-        } else {
-          resolve({
-            uuid: data ? data.ETag : uuidv1(),
-            name:
-                data && data.Key
-                    ? data.Key
-                    : tsPaths.extractFileName(filePath, "/"),
-            url: data ? data.Location : filePath,
-            isFile: true,
-            path: filePath,
-            extension: tsPaths.extractFileExtension(filePath, "/"),
-            size: content.length,
-            lmdt: new Date().getTime(),
-            // isNewFile,
-          });
-        }
+        getPropertiesPromise({
+          path: filePath,
+          bucketName: bucketName,
+        }).then((entry) => resolve({
+          ...entry,
+          uuid: data ? data.ETag : uuidv1(),
+          url: data ? data.Location : filePath,
+          isFile: true,
+          extension: tsPaths.extractFileExtension(filePath, "/"),
+          //name: data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+          //path: filePath,
+          //size: content.length,
+          //lmdt: new Date().getTime(),
+        }));
       });
     }
   });

@@ -204,10 +204,16 @@ describe("io-node unit tests", () => {
       __dirname,
       "../../../scripts/testContents"
     );
-    const ignorePatterns = ['.DS_Store'];
-    const list = await listDirectoryPromise({ path: filePath }, [], ignorePatterns);
+    const ignorePatterns = [".DS_Store"];
+    const list = await listDirectoryPromise(
+      { path: filePath },
+      [],
+      ignorePatterns
+    );
     expect(list.length).toBeGreaterThan(30);
-    expect(list.some(entry => !ignorePatterns.includes(entry.name))).toBe(true);
+    expect(list.some((entry) => !ignorePatterns.includes(entry.name))).toBe(
+      true
+    );
   });
 
   test("io-node.saveTextFilePromise", async () => {
@@ -316,8 +322,8 @@ describe("io-node unit tests", () => {
     expect(targetFile.size).toBe(0);
 
     const targetPath2 = pathLib.resolve(
-        __dirname,
-        "../../../scripts/testContents/.git keep 22 💕 .txt"
+      __dirname,
+      "../../../scripts/testContents/.git keep 22 💕 .txt"
     );
     await renameFilePromise(targetPath, targetPath2);
     const targetFile2 = fs.lstatSync(targetPath2);
