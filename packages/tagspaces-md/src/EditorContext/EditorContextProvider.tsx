@@ -99,16 +99,12 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   ) => {
     // event.preventDefault();
     if (mode === 'preview') {
-      const nodes = findChildrenByMark(node, linkSchema.type(ctx));
-      if (nodes.length > 0) {
-        //&& nodes[0].node.marks.length > 0) {
-        const node = nodes.find(n => n.node.marks.length > 0);
-        const mark = node?.node.marks.find(
-          ({ type }) => type === linkSchema.type(ctx)
+      const found = view.state.tr.doc.nodeAt(pos);
+      if (found && found.marks.length > 0) {
+        const mark = found.marks.find(
+            ({ type }) => type === linkSchema.type(ctx)
         );
-        //const mark = node?.node.marks.find(mark => mark.type.name === 'link');
-        const href = mark?.attrs.href; //marks[0].node.marks[0].attrs.href;
-        // const isExternal = isExternalLink(href);
+        const href = mark?.attrs.href;
         let path;
         if (hasURLProtocol(href)) {
           path = href;
@@ -116,15 +112,14 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           path = encodeURIComponent(href);
         }
         window.parent.postMessage(
-          JSON.stringify({
-            command: 'openLinkExternally',
-            link: path
-          }),
-          '*'
+            JSON.stringify({
+              command: 'openLinkExternally',
+              link: path
+            }),
+            '*'
         );
-        // alert('click on mark:' + marks[0].node.marks[0].attrs.href);
+        return true;
       }
-      return true;
     }
     return false;
   };

@@ -15,7 +15,7 @@ import { Box, CssBaseline, Toolbar, Button, styled } from "@mui/material";
 
 const initMarkdown = `# Milkdown React Custom Component
 
-[link](https://www.tagspaces.org/)
+[link1](https://www.tagspaces.org/) [link2](https://www.abv.bg/)
 > You're scared of a world where you're needed.
 
 This is a demo for using Milkdown with **React**.
