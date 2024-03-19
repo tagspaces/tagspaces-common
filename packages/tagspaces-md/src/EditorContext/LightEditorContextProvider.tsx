@@ -17,6 +17,7 @@ import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
 import '@milkdown/theme-nord/style.css';
 import { useTaskList } from './hooks/useTaskList';
+import { handleClick } from './utils';
 
 /*function isExternalLink(url: any) {
     return url.startsWith('http://') || url.startsWith('https://');
@@ -59,48 +60,6 @@ export const LightEditorContextProvider: React.FC<EditorContextProviderProps> =
     const taskList = useTaskList();
     const commonmarkPlugin = useCommonmarkPlugin();
 
-    // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
-    const handleClick = (
-      ctx,
-      view: EditorView,
-      pos: number,
-      node: Node
-      // nodePos: number,
-      // event: MouseEvent,
-      // direct: boolean
-    ) => {
-      // event.preventDefault();
-      if (mode === 'preview') {
-        const nodes = findChildrenByMark(node, linkSchema.type(ctx));
-        if (nodes.length > 0) {
-          //&& nodes[0].node.marks.length > 0) {
-          const node = nodes.find(n => n.node.marks.length > 0);
-          const mark = node?.node.marks.find(
-            ({ type }) => type === linkSchema.type(ctx)
-          );
-          //const mark = node?.node.marks.find(mark => mark.type.name === 'link');
-          const href = mark?.attrs.href; //marks[0].node.marks[0].attrs.href;
-          // const isExternal = isExternalLink(href);
-          let path;
-          if (hasURLProtocol(href)) {
-            path = href;
-          } else {
-            path = encodeURIComponent(href);
-          }
-          window.parent.postMessage(
-            JSON.stringify({
-              command: 'openLinkExternally',
-              link: path
-            }),
-            '*'
-          );
-          // alert('click on mark:' + marks[0].node.marks[0].attrs.href);
-        }
-        return true;
-      }
-      return false;
-    };
-
     const editor = useEditor(
       root => {
         const editor: MilkdownEditor = MilkdownEditor.make()
@@ -111,7 +70,7 @@ export const LightEditorContextProvider: React.FC<EditorContextProviderProps> =
               ...prev,
               editable: () => mode === 'active',
               handleClickOn: (view: EditorView, pos: number, node: Node) =>
-                handleClick(ctx, view, pos, node)
+                handleClick(mode, ctx, view, pos) //, node)
             }));
             //preventDefaultClick
             const observer = new MutationObserver(() => {

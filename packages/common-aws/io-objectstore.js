@@ -644,17 +644,19 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         getPropertiesPromise({
           path: filePath,
           bucketName: bucketName,
-        }).then((entry) => resolve({
-          ...entry,
-          uuid: data ? data.ETag : uuidv1(),
-          url: data ? data.Location : filePath,
-          isFile: true,
-          extension: tsPaths.extractFileExtension(filePath, "/"),
-          //name: data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
-          //path: filePath,
-          //size: content.length,
-          //lmdt: new Date().getTime(),
-        }));
+        }).then((entry) =>
+          resolve({
+            ...entry,
+            uuid: data ? data.ETag : uuidv1(),
+            url: data ? data.Location : filePath,
+            isFile: true,
+            extension: tsPaths.extractFileExtension(filePath, "/"),
+            //name: data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+            //path: filePath,
+            //size: content.length,
+            //lmdt: new Date().getTime(),
+          })
+        );
       });
     }
   });

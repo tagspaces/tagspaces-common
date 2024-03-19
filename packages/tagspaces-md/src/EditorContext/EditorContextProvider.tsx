@@ -29,21 +29,11 @@ import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
 import '@milkdown/theme-nord/style.css';
 import { useDiagramPlugin } from './hooks/useDiagramPlugin';
 import { useTaskList } from './hooks/useTaskList';
+import { handleClick } from './utils';
 
 /*function isExternalLink(url: any) {
     return url.startsWith('http://') || url.startsWith('https://');
   }*/
-function hasURLProtocol(url: any) {
-  // noinspection OverlyComplexBooleanExpressionJS
-  return (
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('file://') ||
-    url.startsWith('data:') ||
-    url.startsWith('ts://?ts') ||
-    url.startsWith('ts:?ts')
-  );
-}
 
 type EditorContextData = {
   editor: UseEditorReturn | null;
@@ -87,43 +77,6 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
     debounceChange
   });
 
-  // noinspection OverlyComplexFunctionJS,FunctionWithMultipleReturnPointsJS
-  const handleClick = (
-    ctx,
-    view: EditorView,
-    pos: number,
-    node: Node
-    // nodePos: number,
-    // event: MouseEvent,
-    // direct: boolean
-  ) => {
-    // event.preventDefault();
-    if (mode === 'preview') {
-      const found = view.state.tr.doc.nodeAt(pos);
-      if (found && found.marks.length > 0) {
-        const mark = found.marks.find(
-            ({ type }) => type === linkSchema.type(ctx)
-        );
-        const href = mark?.attrs.href;
-        let path;
-        if (hasURLProtocol(href)) {
-          path = href;
-        } else {
-          path = encodeURIComponent(href);
-        }
-        window.parent.postMessage(
-            JSON.stringify({
-              command: 'openLinkExternally',
-              link: path
-            }),
-            '*'
-        );
-        return true;
-      }
-    }
-    return false;
-  };
-
   function isExcluded(pluginName) {
     if (excludePlugins) {
       if (excludePlugins.includes(pluginName)) {
@@ -150,7 +103,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
             ...prev,
             editable: () => mode === 'active',
             handleClickOn: (view: EditorView, pos: number, node: Node) =>
-              handleClick(ctx, view, pos, node)
+              handleClick(mode, ctx, view, pos) //, node)
           }));
           //preventDefaultClick
           const observer = new MutationObserver(() => {
