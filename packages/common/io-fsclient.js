@@ -506,11 +506,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
               if (ignorePatterns.length > 0) {
                 const isMatch = picomatch(ignorePatterns); //, { options: windows }); you can configure the matcher function to accept windows paths
-                //const isIgnored = isMatch([entryPath, entry]);
-                const isIgnoredPath = isMatch(entryPath);
-                const isIgnoredEntry = isMatch(entry);
-                if (isIgnoredPath || isIgnoredEntry) {
-                  //isIgnored.length !== 0) {
+                if (isMatch(entryPath) || isMatch(entry)) {
                   continue;
                 }
               }

@@ -64,10 +64,15 @@ test("createIndex", async () => {
   const subdir = index.find((element) => element.name === "subdir");
   expect(subdir !== undefined).toBe(true);
   expect(subdir.thumbPath.includes(subdirThumbnail)).toBe(true);
-  /*expect(index.some(({ thumbPath }) => thumbPath === ".ts/image.png.jpg")).toBe(
-    true
-  );*/
-  // console.log("list:" + JSON.stringify(index));
+
+  const indexIgnore = await createIndex(
+    param,
+    listDirectoryPromise,
+    loadTextFilePromise,
+    ["extractThumbPath"], //, "extractThumbURL"],
+    ["image.png"]
+  );
+  expect(indexIgnore.some(({ name }) => name === "image.png")).toBe(false);
 
   const indexPersisted = await persistIndex(
     // TODO from indexer Error upload .ts/tsi.json All access to this object has been disabled

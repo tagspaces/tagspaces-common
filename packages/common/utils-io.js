@@ -28,7 +28,7 @@ function walkDirectory(
   }
   if (ignorePatterns.length > 0) {
     const isMatch = picomatch(ignorePatterns);
-    if (isMatch(ignorePatterns)) {
+    if (isMatch(path)) {
       return;
     }
   }

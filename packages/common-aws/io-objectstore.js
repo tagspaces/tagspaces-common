@@ -183,7 +183,7 @@ const listDirectoryPromise = (
             let ignored = false;
             if (ignorePatterns.length > 0) {
               const isMatch = picomatch(ignorePatterns);
-              ignored = isMatch([eentry.path, eentry.name]);
+              ignored = isMatch(eentry.path) || isMatch(eentry.name);
             }
             if (!ignored) {
               enhancedEntries.push(eentry);
@@ -209,7 +209,7 @@ const listDirectoryPromise = (
           let ignored = false;
           if (ignorePatterns.length > 0) {
             const isMatch = picomatch(ignorePatterns);
-            ignored = isMatch([eentry.path, eentry.name]);
+            ignored = isMatch(eentry.path) || isMatch(eentry.name);
           }
           if (!ignored) {
             let thumbPath;
