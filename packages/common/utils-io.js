@@ -57,7 +57,7 @@ function walkDirectory(
             // }
             if (ignorePatterns.length > 0) {
               const isMatch = picomatch(ignorePatterns);
-              if (isMatch(entry.path)) {
+              if (isMatch(entry.path) || isMatch(entry.name)) {
                 return false;
               }
             }
