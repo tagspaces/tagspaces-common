@@ -578,7 +578,9 @@ function joinPaths(...paths) {
         result +
         (result.endsWith(dirSeparator) ||
         paths[i].startsWith(dirSeparator) ||
-        (i === 1 && paths[i].startsWith(".") && !paths[i].startsWith(AppConfig.metaFolder)) // relative paths
+        (i === 1 &&
+          paths[i].startsWith(".") &&
+          !paths[i].startsWith(AppConfig.metaFolder)) // relative paths
           ? ""
           : dirSeparator) +
         paths[i];

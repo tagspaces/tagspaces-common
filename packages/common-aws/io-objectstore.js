@@ -172,7 +172,6 @@ const listDirectoryPromise = (
           eentry.path = prefix;
           eentry.bucketName = bucketName;
           eentry.tags = [];
-          eentry.thumbPath = "";
           eentry.meta = {};
           eentry.isFile = false;
           eentry.size = 0;
@@ -235,15 +234,10 @@ const listDirectoryPromise = (
                     604800
                   ); // 60 * 60 * 24 * 7 = 1 week
                 }
-              } /*else {
-            thumbPath = "";
-          }*/
+              }
             }
 
-            if (thumbPath) {
-              eentry.thumbPath = thumbPath;
-            }
-            eentry.meta = {};
+            eentry.meta = { ...(thumbPath && thumbPath) };
             eentry.isFile = true;
             eentry.size = file.Size;
             eentry.lmdt = Date.parse(file.LastModified);
@@ -386,13 +380,15 @@ const getEntryMeta = async (eentry) => {
           bucketName: eentry.bucketName,
         });
         if (folderThumbProps && folderThumbProps.isFile) {
-          eentry.thumbPath = getURLforPath(
+          const thumb = getURLforPath(
             {
               path: folderTmbPath,
               bucketName: eentry.bucketName,
             },
             604800
           ); // 60 * 60 * 24 * 7 = 1 week ;
+
+          eentry.meta = { thumbPath: thumb };
         }
         // }
         // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder

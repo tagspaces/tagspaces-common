@@ -510,13 +510,14 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                 eentry.name = entry.name;
                 eentry.path = entry.fullPath;
                 eentry.tags = [];
-                eentry.thumbPath = entry.isFile
-                  ? ""
-                  : getThumbFileLocationForDirectory(
-                      eentry.path,
-                      AppConfig.dirSeparator
-                    );
-                // eentry.meta = {};
+                eentry.meta = {
+                  thumbPath: entry.isFile
+                    ? ""
+                    : getThumbFileLocationForDirectory(
+                        eentry.path,
+                        AppConfig.dirSeparator
+                      ),
+                };
                 eentry.isFile = entry.isFile;
                 if (entry.isFile) {
                   entry.file((fileEntry) => {
@@ -554,7 +555,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                       (obj) => obj.name === entry.name + AppConfig.thumbFileExt
                     );
                     if (metaThumbAvailable && metaThumbAvailable.path) {
-                      eentry.thumbPath = metaThumbAvailable.path;
+                      eentry.meta.thumbPath = metaThumbAvailable.path;
                     }
                   }
                 }
