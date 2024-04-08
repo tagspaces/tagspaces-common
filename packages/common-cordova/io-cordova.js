@@ -454,23 +454,23 @@ async function listMetaDirectoryPromise(path) {
 
     getDirSystemPromise(metaDirPath)
       .then((fileSystem) => {
-        const reader = fileSystem.createReader();
-        reader.readEntries((entr) => {
-          entr.forEach((entry) => {
-            const entryPath = entry.fullPath;
-            if (entryPath.toLowerCase() === metaDirPath.toLowerCase()) {
-              console.log("Skipping current folder");
-            } else {
-              const ee = {};
-              ee.name = entry.name;
-              ee.path = decodeURI(entryPath);
-              ee.isFile = true;
-              entries.push(ee);
-            }
+          const reader = fileSystem.createReader();
+          reader.readEntries((entr) => {
+            entr.forEach((entry) => {
+              const entryPath = entry.fullPath;
+              if (entryPath.toLowerCase() === metaDirPath.toLowerCase()) {
+                console.log("Skipping current folder");
+              } else {
+                const ee = {};
+                ee.name = entry.name;
+                ee.path = decodeURI(entryPath);
+                ee.isFile = true;
+                entries.push(ee);
+              }
+            });
+            //resolve(entries);
           });
-          resolve(entries);
-        });
-        return true;
+        resolve(entries);
       })
       .catch((err) => {
         console.error("Error getting listMetaDirectoryPromise:", err);
@@ -1186,13 +1186,15 @@ function renameDirectoryPromise(param, newDirName) {
   } else {
     path = param;
   }
-  const newDirPath =
-    extractParentDirectoryPath(path, "/") + AppConfig.dirSeparator + newDirName;
+  const parentDir = extractParentDirectoryPath(path, "/");
+  const newDirPath = parentDir + AppConfig.dirSeparator + newDirName;
 
-  return moveDirectoryPromise(param, normalizePath(newDirPath));
+  return copyDirectoryPromise(param, newDirPath).then(() => deleteDirectoryPromise(param)).then(() => newDirPath);
+
+  //return moveDirectoryPromise(param, normalizePath(newDirPath));
 }
 /**
- * Rename a directory
+ * Move a directory. Do not use for rename
  */
 function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
   let path;
@@ -1343,6 +1345,7 @@ function deleteFilePromise(param) {
   } else {
     filePath = param;
   }
+  console.log("init file deleted: " + filePath);
   return new Promise((resolve, reject) => {
     const path = normalizePath(filePath);
     fsRoot.getFile(
@@ -1392,7 +1395,7 @@ function deleteDirectoryPromise(param) {
       (entry) => {
         entry.remove(
           () => {
-            console.log("file deleted: " + dirPath);
+            console.log("dir deleted: " + dirPath);
             resolve(dirPath);
           },
           (err) => {
