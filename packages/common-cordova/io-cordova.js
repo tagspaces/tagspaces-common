@@ -443,42 +443,49 @@ function quitApp() {
   console.warn("Creating directory tree is not supported in Cordova yet.");
 }*/
 
-async function listMetaDirectoryPromise(path) {
-  const promise = new Promise((resolve) => {
-    const entries = [];
-    const metaDirPath =
-      cleanTrailingDirSeparator(path) +
-      AppConfig.dirSeparator +
-      AppConfig.metaFolder +
-      AppConfig.dirSeparator;
+function listMetaDirectoryPromise(path) {
+  const entries = [];
+  const metaDirPath =
+    cleanTrailingDirSeparator(path) +
+    AppConfig.dirSeparator +
+    AppConfig.metaFolder +
+    AppConfig.dirSeparator;
 
-    getDirSystemPromise(metaDirPath)
-      .then((fileSystem) => {
-          const reader = fileSystem.createReader();
-          reader.readEntries((entr) => {
-            entr.forEach((entry) => {
-              const entryPath = entry.fullPath;
-              if (entryPath.toLowerCase() === metaDirPath.toLowerCase()) {
-                console.log("Skipping current folder");
-              } else {
-                const ee = {};
-                ee.name = entry.name;
-                ee.path = decodeURI(entryPath);
-                ee.isFile = true;
-                entries.push(ee);
-              }
-            });
-            //resolve(entries);
-          });
-        resolve(entries);
-      })
-      .catch((err) => {
-        console.error("Error getting listMetaDirectoryPromise:", err);
-        resolve(entries); // returning results even if any promise fails
-      });
-  });
-  const result = await promise; // listDirectoryPromise(normalizePath(path) + AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator, true);
-  return result;
+  return getDirSystemPromise(metaDirPath)
+    .then((fileSystem) => {
+      if (fileSystem) {
+        const reader = fileSystem.createReader();
+        return new Promise((resolve) => {
+          reader.readEntries(
+            (entr) => {
+              entr.forEach((entry) => {
+                const entryPath = entry.fullPath;
+                if (entryPath.toLowerCase() === metaDirPath.toLowerCase()) {
+                  console.log("Skipping current folder");
+                } else {
+                  const ee = {};
+                  ee.name = entry.name;
+                  ee.path = decodeURI(entryPath);
+                  ee.isFile = true;
+                  entries.push(ee);
+                }
+              });
+              resolve(entries);
+            },
+            (err) => {
+              console.log(err);
+              resolve(entries);
+            }
+          );
+        });
+      } else {
+        return entries;
+      }
+    })
+    .catch((err) => {
+      console.error("Error getting listMetaDirectoryPromise:", err);
+      return entries; // returning results even if any promise fails
+    });
 }
 
 /**
@@ -842,6 +849,35 @@ function getFileContentPromise(
   });
 }
 
+function createDirIfNotExists(dirPath, successCallback, failureCallback) {
+  window.resolveLocalFileSystemURL(
+    dirPath,
+    function (dirEntry) {
+      successCallback(dirEntry);
+    },
+    function (error) {
+      if (error.code === FileError.NOT_FOUND_ERR || error.code === 5) {
+        //FileError.ENCODING_ERR = 5
+        // Directory does not exist, create it
+        fsRoot.getDirectory(
+          dirPath,
+          {
+            create: true,
+            exclusive: false,
+          },
+          (dirEntry) => {
+            successCallback(dirEntry);
+          },
+          (error) => {
+            failureCallback(error);
+          }
+        );
+      } else {
+        failureCallback(error);
+      }
+    }
+  );
+}
 /**
  * Persists a given content(binary supported) to a specified filepath
  */
@@ -856,78 +892,82 @@ function saveFilePromise(param, content, overWrite, isRaw) {
   filePath = normalizePath(filePath);
   console.log("Saving file: " + filePath);
   return new Promise((resolve, reject) => {
-    let isNewFile = true;
     // Checks if the file already exists
-    fsRoot.getFile(
-      filePath,
-      {
-        create: false,
-        exclusive: false,
-      },
-      (entry) => {
-        if (entry.isFile) {
-          isNewFile = false;
-        }
-      },
-      () => {}
-    );
-    if (isNewFile || overWrite) {
-      fsRoot.getFile(
-        filePath,
-        {
-          create: true,
-          exclusive: false,
-        },
-        (entry) => {
-          entry.createWriter(
-            (writer) => {
-              writer.onwriteend = function (evt) {
-                // resolve(fsRoot.fullPath + "/" + filePath);
-                resolve({
-                  name: extractFileName(filePath, AppConfig.dirSeparator),
-                  isFile: true,
-                  path: filePath,
-                  extension: extractFileExtension(
-                    filePath,
-                    AppConfig.dirSeparator
-                  ),
-                  size: 0, // TODO debug evt and set size
-                  lmdt: new Date().getTime(),
-                  isNewFile,
-                  tags: [],
+    checkFileExist(filePath).then((exist) => {
+      if (!exist || overWrite) {
+        const parentDir = extractParentDirectoryPath(filePath, "/");
+        createDirIfNotExists(
+          parentDir,
+          (dirEntry) => {
+            fsRoot.getFile(
+              filePath,
+              {
+                create: true,
+                exclusive: false,
+              },
+              (entry) => {
+                entry.createWriter(
+                  (writer) => {
+                    writer.onwriteend = function (evt) {
+                      // resolve(fsRoot.fullPath + "/" + filePath);
+                      resolve({
+                        name: extractFileName(filePath, AppConfig.dirSeparator),
+                        isFile: true,
+                        path: filePath,
+                        extension: extractFileExtension(
+                          filePath,
+                          AppConfig.dirSeparator
+                        ),
+                        size: 0, // TODO debug evt and set size
+                        lmdt: new Date().getTime(),
+                        isNewFile: true,
+                        tags: [],
+                      });
+                    };
+                    if (isRaw) {
+                      writer.write(content);
+                    } else if (
+                      typeof content === "string" &&
+                      content.indexOf(";base64,") > 0
+                    ) {
+                      const contentArray = content.split(";base64,");
+                      const type =
+                        contentArray.length > 1
+                          ? contentArray[0].split(":")[1]
+                          : "";
+                      const newContent =
+                        contentArray.length > 1
+                          ? contentArray[1]
+                          : contentArray[0];
+                      const data = b64toBlob(newContent, type, 512);
+                      writer.write(data);
+                    } else {
+                      writer.write(content);
+                    }
+                  },
+                  (err) => {
+                    reject("Error creating file: " + filePath + " " + err);
+                  }
+                );
+              },
+              (error) => {
+                reject({
+                  error,
+                  message: "Error getting file entry: " + filePath,
                 });
-              };
-              if (isRaw) {
-                writer.write(content);
-              } else if (
-                typeof content === "string" &&
-                content.indexOf(";base64,") > 0
-              ) {
-                const contentArray = content.split(";base64,");
-                const type =
-                  contentArray.length > 1 ? contentArray[0].split(":")[1] : "";
-                const newContent =
-                  contentArray.length > 1 ? contentArray[1] : contentArray[0];
-                const data = b64toBlob(newContent, type, 512);
-                writer.write(data);
-              } else {
-                writer.write(content);
               }
-            },
-            (err) => {
-              reject("Error creating file: " + filePath + " " + err);
-            }
-          );
-        },
-        (error) => {
-          reject("Error getting file entry: " + filePath + " " + error);
-        }
-      );
-    } else {
-      const errMsg = "File already exists: " + filePath; // i18n.t('ns.common:fileExists', { fileName: filePath });
-      // showAlertDialog(errMsg);
-      reject(errMsg);
-    }
+            );
+          },
+          (err) => {
+            reject({ error: err, message: "Error create dir: " + parentDir });
+          }
+        );
+      } else {
+        const errMsg = "File already exists: " + filePath; // i18n.t('ns.common:fileExists', { fileName: filePath });
+        // showAlertDialog(errMsg);
+        reject(errMsg);
+      }
+    });
   });
 }
 
@@ -952,7 +992,8 @@ function saveTextFilePromise(param, content, overWrite) {
 function saveBinaryFilePromise(param, content, overWrite) {
   console.log("Saving binary file: " + param);
   // var dataView = new Int8Array(content);
-  const dataView = content;
+  // const dataView = content;
+  const dataView = new Blob([content], { type: "application/octet-stream" });
   return saveFilePromise(param, dataView, overWrite);
 }
 
@@ -1189,7 +1230,9 @@ function renameDirectoryPromise(param, newDirName) {
   const parentDir = extractParentDirectoryPath(path, "/");
   const newDirPath = parentDir + AppConfig.dirSeparator + newDirName;
 
-  return copyDirectoryPromise(param, newDirPath).then(() => deleteDirectoryPromise(param)).then(() => newDirPath);
+  return copyDirectoryPromise(param, newDirPath)
+    .then(() => deleteDirectoryPromise(param))
+    .then(() => newDirPath);
 
   //return moveDirectoryPromise(param, normalizePath(newDirPath));
 }
@@ -1393,7 +1436,7 @@ function deleteDirectoryPromise(param) {
         exclusive: false,
       },
       (entry) => {
-        entry.remove(
+        entry.removeRecursively(
           () => {
             console.log("dir deleted: " + dirPath);
             resolve(dirPath);
