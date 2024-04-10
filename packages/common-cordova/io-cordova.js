@@ -520,6 +520,12 @@ function listMetaDirectoryPromise(path) {
     });
 }
 
+function getFileMetadata(entry) {
+  return new Promise(function (resolve, reject) {
+    entry.file(resolve, reject);
+  });
+}
+
 /**
  * Creates a list with containing the files and the sub directories of a given directory
  */
@@ -543,25 +549,35 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
         (fileSystem) => {
           const reader = fileSystem.createReader();
           reader.readEntries(
-            (entries) => {
-              entries.forEach((entry) => {
+            async (entries) => {
+              for (const entry of entries) {
                 const eentry = {};
                 eentry.name = entry.name;
                 eentry.path = entry.fullPath;
                 eentry.tags = [];
-                eentry.thumbPath = entry.isFile
-                  ? ""
-                  : getThumbFileLocationForDirectory(
-                      eentry.path,
-                      AppConfig.dirSeparator
-                    );
-                // eentry.meta = {};
                 eentry.isFile = entry.isFile;
                 if (entry.isFile) {
-                  entry.file((fileEntry) => {
+                  try {
+                    const metadata = await getFileMetadata(entry);
+                    eentry.size = metadata.size;
+                    eentry.lmdt = metadata.modificationTime;
+                  } catch (error) {
+                    console.log(
+                      "Failed to get metadata for file: " + entry.name,
+                      error
+                    );
+                  }
+                  /*entry.file((fileEntry) => {
                     eentry.size = fileEntry.size;
                     eentry.lmdt = fileEntry.lastModifiedDate;
-                  });
+                  });*/
+                } else {
+                  eentry.meta = {
+                    thumbPath: getThumbFileLocationForDirectory(
+                      eentry.path,
+                      AppConfig.dirSeparator
+                    ),
+                  };
                 }
 
                 if (mode.includes("extractThumbPath")) {
@@ -645,7 +661,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                         fileWorkers.push(filePromise);
                       }
                     } */
-              });
+              }
 
               Promise.all(metaPromises)
                 .then(() => {
