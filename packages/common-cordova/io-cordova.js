@@ -184,7 +184,7 @@ function onApplicationLoad() {
 
 function getDirSystemPromise(dirPath) {
   console.log("getDirSystemPromise: " + dirPath);
-  if (
+  /*if (
     dirPath &&
     (dirPath.indexOf(cordova.file.applicationDirectory) === 0 ||
       dirPath.startsWith("file:///"))
@@ -194,25 +194,38 @@ function getDirSystemPromise(dirPath) {
       ":/",
       ":///"
     );
-    /*localPath = AppConfig.isCordovaiOS
-        ? path
-            .join(cordova.file.documentsDirectory, localPath)
-            .replace(':/', ':///')
-        : 'file:///' + localPath;*/
   } else {
     dirPath = (dirPath.startsWith("/") ? "file://" : "file:///") + dirPath;
   }
-  dirPath = encodeURI(dirPath) + (dirPath.endsWith("/") ? "" : "/");
+  dirPath = encodeURI(dirPath) + (dirPath.endsWith("/") ? "" : "/");*/
   return new Promise((resolve, reject) => {
-    window.resolveLocalFileSystemURL(dirPath, resolve, (error) => {
-      console.error(
-        "Error getting FileSystem " +
-          dirPath +
-          ": " +
-          cordovaFileError[error.code]
-      ); //JSON.stringify(error));
-      resolve(false); // reject(error);
-    });
+    fsRoot.getDirectory(
+      dirPath,
+      {
+        create: false,
+        exclusive: false,
+      },
+      (dirEntry) => {
+        resolve(dirEntry);
+        /*window.resolveLocalFileSystemURL(dirPath, resolve, (error) => {
+            console.error(
+                "Error getting FileSystem " +
+                dirPath +
+                ": " +
+                cordovaFileError[error.code]
+            ); //JSON.stringify(error));
+            resolve(false); // reject(error);
+          });*/
+      },
+      (error) => {
+        reject(
+          "getDirectory failed: " +
+            dirPath +
+            " failed with error code: " +
+            error.code
+        );
+      }
+    );
   });
 }
 
@@ -245,7 +258,26 @@ function getAppStorageFileSystem(fileName, fileCallback, fail) {
   );
 }
 
+/*function onFileSystemSuccess(fileSystem) {
+  // Get a reference to the root directory
+  fsRoot = fileSystem.root;
+
+  handleStartParameters();
+
+  loadSettingsFile(appSettingFile, (settings) => {
+    loadedSettings = settings;
+    loadSettingsFile(appSettingTagsFile, (settingsTags) => {
+      loadedSettingsTags = settingsTags;
+    });
+  });
+}*/
+
 function getFileSystem() {
+  // Request access to the file system
+  /*window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemSuccess, (error) => {
+    console.log("Failed to access file system: " + error.code);
+  });*/
+
   // on android cordova.file.externalRootDirectory points to sdcard0
   const fsURL = AppConfig.isCordovaiOS
     ? cordova.file.documentsDirectory
@@ -750,18 +782,26 @@ function getPropertiesPromise(param) {
         }
       },
       (err) => {
-        getDirSystemPromise(entryPath).then((dirEntry) => {
-          if (!dirEntry) {
+        getDirSystemPromise(entryPath)
+          .then((dirEntry) => {
+            if (!dirEntry) {
+              resolve(false);
+              return false;
+            }
+            console.log(
+              "getPropertiesPromise: It's not file " + entryPath,
+              err
+            );
+            resolve({
+              path: dirEntry.fullPath,
+              isFile: dirEntry.isFile,
+              name: dirEntry.name,
+            });
+          })
+          .catch((err) => {
+            console.log("getPropertiesPromise: not exist " + entryPath, err);
             resolve(false);
-            return false;
-          }
-          console.log("getPropertiesPromise: It's not file " + entryPath, err);
-          resolve({
-            path: dirEntry.fullPath,
-            isFile: dirEntry.isFile,
-            name: dirEntry.name,
           });
-        });
       }
     );
   });
@@ -1326,55 +1366,57 @@ function copyDirectoryPromise(param, targetDir, onProgress = undefined) {
   }
   return new Promise(function (resolve, reject) {
     // Check if source directory exists
-    getDirSystemPromise(normalizePath(sourceDir)).then((dirEntry) => {
-      createDirectoryPromise(normalizePath(targetDir)).then((newDirPath) => {
-        // Get a directory reader to read files in the source directory
-        const dirReader = dirEntry.createReader();
-        dirReader.readEntries(
-          async function (entries) {
-            // Recursively copy each file in the source directory
-            const fileCount = entries.length;
-            let part = 0;
-            let running = true;
-            for (let i = 0; i < entries.length; i++) {
-              if (running) {
-                const entry = entries[i];
-                if (entry.isDirectory) {
-                  await copyDirectoryPromise(
-                    entry.fullPath,
-                    newDirPath + AppConfig.dirSeparator + entry.name
-                  );
-                } else {
-                  await copyFilePromise(
-                    entry.fullPath,
-                    newDirPath + AppConfig.dirSeparator + entry.name
-                  );
-                }
-                part += 1;
-                if (onProgress && running) {
-                  const progress = {
-                    loaded: part,
-                    total: fileCount,
-                    key: newDirPath,
-                  };
-                  onProgress(
-                    progress,
-                    () => {
-                      running = false;
-                    },
-                    entry.fullPath
-                  );
+    getDirSystemPromise(normalizePath(sourceDir))
+      .then((dirEntry) => {
+        createDirectoryPromise(normalizePath(targetDir)).then((newDirPath) => {
+          // Get a directory reader to read files in the source directory
+          const dirReader = dirEntry.createReader();
+          dirReader.readEntries(
+            async function (entries) {
+              // Recursively copy each file in the source directory
+              const fileCount = entries.length;
+              let part = 0;
+              let running = true;
+              for (let i = 0; i < entries.length; i++) {
+                if (running) {
+                  const entry = entries[i];
+                  if (entry.isDirectory) {
+                    await copyDirectoryPromise(
+                      entry.fullPath,
+                      newDirPath + AppConfig.dirSeparator + entry.name
+                    );
+                  } else {
+                    await copyFilePromise(
+                      entry.fullPath,
+                      newDirPath + AppConfig.dirSeparator + entry.name
+                    );
+                  }
+                  part += 1;
+                  if (onProgress && running) {
+                    const progress = {
+                      loaded: part,
+                      total: fileCount,
+                      key: newDirPath,
+                    };
+                    onProgress(
+                      progress,
+                      () => {
+                        running = false;
+                      },
+                      entry.fullPath
+                    );
+                  }
                 }
               }
+              resolve(newDirPath);
+            },
+            function (error) {
+              reject(error);
             }
-            resolve(newDirPath);
-          },
-          function (error) {
-            reject(error);
-          }
-        );
-      });
-    });
+          );
+        });
+      })
+      .catch(reject);
   });
 }
 
