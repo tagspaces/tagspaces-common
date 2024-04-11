@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@tagspaces/tagspaces-common-aws": "^4.2.0",
-    "@tagspaces/tagspaces-thumbgen-image": "^4.1.2",
+    "@tagspaces/tagspaces-thumbgen-image": "^4.1.18",
     "@tagspaces/tagspaces-thumbgen-pdf": "^4.0.2"
   }
 }

@@ -184,7 +184,7 @@ function onApplicationLoad() {
 
 function getDirSystemPromise(dirPath) {
   console.log("getDirSystemPromise: " + dirPath);
-  if (
+  /*if (
     dirPath &&
     (dirPath.indexOf(cordova.file.applicationDirectory) === 0 ||
       dirPath.startsWith("file:///"))
@@ -194,25 +194,38 @@ function getDirSystemPromise(dirPath) {
       ":/",
       ":///"
     );
-    /*localPath = AppConfig.isCordovaiOS
-        ? path
-            .join(cordova.file.documentsDirectory, localPath)
-            .replace(':/', ':///')
-        : 'file:///' + localPath;*/
   } else {
     dirPath = (dirPath.startsWith("/") ? "file://" : "file:///") + dirPath;
   }
-  dirPath = encodeURI(dirPath) + (dirPath.endsWith("/") ? "" : "/");
+  dirPath = encodeURI(dirPath) + (dirPath.endsWith("/") ? "" : "/");*/
   return new Promise((resolve, reject) => {
-    window.resolveLocalFileSystemURL(dirPath, resolve, (error) => {
-      console.error(
-        "Error getting FileSystem " +
-          dirPath +
-          ": " +
-          cordovaFileError[error.code]
-      ); //JSON.stringify(error));
-      resolve(false); // reject(error);
-    });
+    fsRoot.getDirectory(
+      dirPath,
+      {
+        create: false,
+        exclusive: false,
+      },
+      (dirEntry) => {
+        resolve(dirEntry);
+        /*window.resolveLocalFileSystemURL(dirPath, resolve, (error) => {
+            console.error(
+                "Error getting FileSystem " +
+                dirPath +
+                ": " +
+                cordovaFileError[error.code]
+            ); //JSON.stringify(error));
+            resolve(false); // reject(error);
+          });*/
+      },
+      (error) => {
+        reject(
+          "getDirectory failed: " +
+            dirPath +
+            " failed with error code: " +
+            error.code
+        );
+      }
+    );
   });
 }
 
@@ -245,7 +258,26 @@ function getAppStorageFileSystem(fileName, fileCallback, fail) {
   );
 }
 
+/*function onFileSystemSuccess(fileSystem) {
+  // Get a reference to the root directory
+  fsRoot = fileSystem.root;
+
+  handleStartParameters();
+
+  loadSettingsFile(appSettingFile, (settings) => {
+    loadedSettings = settings;
+    loadSettingsFile(appSettingTagsFile, (settingsTags) => {
+      loadedSettingsTags = settingsTags;
+    });
+  });
+}*/
+
 function getFileSystem() {
+  // Request access to the file system
+  /*window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemSuccess, (error) => {
+    console.log("Failed to access file system: " + error.code);
+  });*/
+
   // on android cordova.file.externalRootDirectory points to sdcard0
   const fsURL = AppConfig.isCordovaiOS
     ? cordova.file.documentsDirectory
@@ -443,42 +475,55 @@ function quitApp() {
   console.warn("Creating directory tree is not supported in Cordova yet.");
 }*/
 
-async function listMetaDirectoryPromise(path) {
-  const promise = new Promise((resolve) => {
-    const entries = [];
-    const metaDirPath =
-      cleanTrailingDirSeparator(path) +
-      AppConfig.dirSeparator +
-      AppConfig.metaFolder +
-      AppConfig.dirSeparator;
+function listMetaDirectoryPromise(path) {
+  const entries = [];
+  const metaDirPath =
+    cleanTrailingDirSeparator(path) +
+    AppConfig.dirSeparator +
+    AppConfig.metaFolder +
+    AppConfig.dirSeparator;
 
-    getDirSystemPromise(metaDirPath)
-      .then((fileSystem) => {
+  return getDirSystemPromise(metaDirPath)
+    .then((fileSystem) => {
+      if (fileSystem) {
         const reader = fileSystem.createReader();
-        reader.readEntries((entr) => {
-          entr.forEach((entry) => {
-            const entryPath = entry.fullPath;
-            if (entryPath.toLowerCase() === metaDirPath.toLowerCase()) {
-              console.log("Skipping current folder");
-            } else {
-              const ee = {};
-              ee.name = entry.name;
-              ee.path = decodeURI(entryPath);
-              ee.isFile = true;
-              entries.push(ee);
+        return new Promise((resolve) => {
+          reader.readEntries(
+            (entr) => {
+              entr.forEach((entry) => {
+                const entryPath = entry.fullPath;
+                if (entryPath.toLowerCase() === metaDirPath.toLowerCase()) {
+                  console.log("Skipping current folder");
+                } else {
+                  const ee = {};
+                  ee.name = entry.name;
+                  ee.path = decodeURI(entryPath);
+                  ee.isFile = true;
+                  entries.push(ee);
+                }
+              });
+              resolve(entries);
+            },
+            (err) => {
+              console.log(err);
+              resolve(entries);
             }
-          });
-          resolve(entries);
+          );
         });
-        return true;
-      })
-      .catch((err) => {
-        console.error("Error getting listMetaDirectoryPromise:", err);
-        resolve(entries); // returning results even if any promise fails
-      });
+      } else {
+        return entries;
+      }
+    })
+    .catch((err) => {
+      console.error("Error getting listMetaDirectoryPromise:", err);
+      return entries; // returning results even if any promise fails
+    });
+}
+
+function getFileMetadata(entry) {
+  return new Promise(function (resolve, reject) {
+    entry.file(resolve, reject);
   });
-  const result = await promise; // listDirectoryPromise(normalizePath(path) + AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator, true);
-  return result;
 }
 
 /**
@@ -504,26 +549,35 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
         (fileSystem) => {
           const reader = fileSystem.createReader();
           reader.readEntries(
-            (entries) => {
-              entries.forEach((entry) => {
+            async (entries) => {
+              for (const entry of entries) {
                 const eentry = {};
                 eentry.name = entry.name;
                 eentry.path = entry.fullPath;
                 eentry.tags = [];
-                eentry.meta = {
-                  thumbPath: entry.isFile
-                    ? ""
-                    : getThumbFileLocationForDirectory(
-                        eentry.path,
-                        AppConfig.dirSeparator
-                      ),
-                };
                 eentry.isFile = entry.isFile;
                 if (entry.isFile) {
-                  entry.file((fileEntry) => {
+                  try {
+                    const metadata = await getFileMetadata(entry);
+                    eentry.size = metadata.size;
+                    eentry.lmdt = metadata.modificationTime;
+                  } catch (error) {
+                    console.log(
+                      "Failed to get metadata for file: " + entry.name,
+                      error
+                    );
+                  }
+                  /*entry.file((fileEntry) => {
                     eentry.size = fileEntry.size;
                     eentry.lmdt = fileEntry.lastModifiedDate;
-                  });
+                  });*/
+                } else {
+                  eentry.meta = {
+                    thumbPath: getThumbFileLocationForDirectory(
+                      eentry.path,
+                      AppConfig.dirSeparator
+                    ),
+                  };
                 }
 
                 if (mode.includes("extractThumbPath")) {
@@ -607,7 +661,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                         fileWorkers.push(filePromise);
                       }
                     } */
-              });
+              }
 
               Promise.all(metaPromises)
                 .then(() => {
@@ -744,18 +798,26 @@ function getPropertiesPromise(param) {
         }
       },
       (err) => {
-        getDirSystemPromise(entryPath).then((dirEntry) => {
-          if (!dirEntry) {
+        getDirSystemPromise(entryPath)
+          .then((dirEntry) => {
+            if (!dirEntry) {
+              resolve(false);
+              return false;
+            }
+            console.log(
+              "getPropertiesPromise: It's not file " + entryPath,
+              err
+            );
+            resolve({
+              path: dirEntry.fullPath,
+              isFile: dirEntry.isFile,
+              name: dirEntry.name,
+            });
+          })
+          .catch((err) => {
+            console.log("getPropertiesPromise: not exist " + entryPath, err);
             resolve(false);
-            return false;
-          }
-          console.log("getPropertiesPromise: It's not file " + entryPath, err);
-          resolve({
-            path: dirEntry.fullPath,
-            isFile: dirEntry.isFile,
-            name: dirEntry.name,
           });
-        });
       }
     );
   });
@@ -843,6 +905,35 @@ function getFileContentPromise(
   });
 }
 
+function createDirIfNotExists(dirPath, successCallback, failureCallback) {
+  window.resolveLocalFileSystemURL(
+    dirPath,
+    function (dirEntry) {
+      successCallback(dirEntry);
+    },
+    function (error) {
+      if (error.code === FileError.NOT_FOUND_ERR || error.code === 5) {
+        //FileError.ENCODING_ERR = 5
+        // Directory does not exist, create it
+        fsRoot.getDirectory(
+          dirPath,
+          {
+            create: true,
+            exclusive: false,
+          },
+          (dirEntry) => {
+            successCallback(dirEntry);
+          },
+          (error) => {
+            failureCallback(error);
+          }
+        );
+      } else {
+        failureCallback(error);
+      }
+    }
+  );
+}
 /**
  * Persists a given content(binary supported) to a specified filepath
  */
@@ -857,78 +948,82 @@ function saveFilePromise(param, content, overWrite, isRaw) {
   filePath = normalizePath(filePath);
   console.log("Saving file: " + filePath);
   return new Promise((resolve, reject) => {
-    let isNewFile = true;
     // Checks if the file already exists
-    fsRoot.getFile(
-      filePath,
-      {
-        create: false,
-        exclusive: false,
-      },
-      (entry) => {
-        if (entry.isFile) {
-          isNewFile = false;
-        }
-      },
-      () => {}
-    );
-    if (isNewFile || overWrite) {
-      fsRoot.getFile(
-        filePath,
-        {
-          create: true,
-          exclusive: false,
-        },
-        (entry) => {
-          entry.createWriter(
-            (writer) => {
-              writer.onwriteend = function (evt) {
-                // resolve(fsRoot.fullPath + "/" + filePath);
-                resolve({
-                  name: extractFileName(filePath, AppConfig.dirSeparator),
-                  isFile: true,
-                  path: filePath,
-                  extension: extractFileExtension(
-                    filePath,
-                    AppConfig.dirSeparator
-                  ),
-                  size: 0, // TODO debug evt and set size
-                  lmdt: new Date().getTime(),
-                  isNewFile,
-                  tags: [],
+    checkFileExist(filePath).then((exist) => {
+      if (!exist || overWrite) {
+        const parentDir = extractParentDirectoryPath(filePath, "/");
+        createDirIfNotExists(
+          parentDir,
+          (dirEntry) => {
+            fsRoot.getFile(
+              filePath,
+              {
+                create: true,
+                exclusive: false,
+              },
+              (entry) => {
+                entry.createWriter(
+                  (writer) => {
+                    writer.onwriteend = function (evt) {
+                      // resolve(fsRoot.fullPath + "/" + filePath);
+                      resolve({
+                        name: extractFileName(filePath, AppConfig.dirSeparator),
+                        isFile: true,
+                        path: filePath,
+                        extension: extractFileExtension(
+                          filePath,
+                          AppConfig.dirSeparator
+                        ),
+                        size: 0, // TODO debug evt and set size
+                        lmdt: new Date().getTime(),
+                        isNewFile: true,
+                        tags: [],
+                      });
+                    };
+                    if (isRaw) {
+                      writer.write(content);
+                    } else if (
+                      typeof content === "string" &&
+                      content.indexOf(";base64,") > 0
+                    ) {
+                      const contentArray = content.split(";base64,");
+                      const type =
+                        contentArray.length > 1
+                          ? contentArray[0].split(":")[1]
+                          : "";
+                      const newContent =
+                        contentArray.length > 1
+                          ? contentArray[1]
+                          : contentArray[0];
+                      const data = b64toBlob(newContent, type, 512);
+                      writer.write(data);
+                    } else {
+                      writer.write(content);
+                    }
+                  },
+                  (err) => {
+                    reject("Error creating file: " + filePath + " " + err);
+                  }
+                );
+              },
+              (error) => {
+                reject({
+                  error,
+                  message: "Error getting file entry: " + filePath,
                 });
-              };
-              if (isRaw) {
-                writer.write(content);
-              } else if (
-                typeof content === "string" &&
-                content.indexOf(";base64,") > 0
-              ) {
-                const contentArray = content.split(";base64,");
-                const type =
-                  contentArray.length > 1 ? contentArray[0].split(":")[1] : "";
-                const newContent =
-                  contentArray.length > 1 ? contentArray[1] : contentArray[0];
-                const data = b64toBlob(newContent, type, 512);
-                writer.write(data);
-              } else {
-                writer.write(content);
               }
-            },
-            (err) => {
-              reject("Error creating file: " + filePath + " " + err);
-            }
-          );
-        },
-        (error) => {
-          reject("Error getting file entry: " + filePath + " " + error);
-        }
-      );
-    } else {
-      const errMsg = "File already exists: " + filePath; // i18n.t('ns.common:fileExists', { fileName: filePath });
-      // showAlertDialog(errMsg);
-      reject(errMsg);
-    }
+            );
+          },
+          (err) => {
+            reject({ error: err, message: "Error create dir: " + parentDir });
+          }
+        );
+      } else {
+        const errMsg = "File already exists: " + filePath; // i18n.t('ns.common:fileExists', { fileName: filePath });
+        // showAlertDialog(errMsg);
+        reject(errMsg);
+      }
+    });
   });
 }
 
@@ -953,7 +1048,8 @@ function saveTextFilePromise(param, content, overWrite) {
 function saveBinaryFilePromise(param, content, overWrite) {
   console.log("Saving binary file: " + param);
   // var dataView = new Int8Array(content);
-  const dataView = content;
+  // const dataView = content;
+  const dataView = new Blob([content], { type: "application/octet-stream" });
   return saveFilePromise(param, dataView, overWrite);
 }
 
@@ -1187,13 +1283,17 @@ function renameDirectoryPromise(param, newDirName) {
   } else {
     path = param;
   }
-  const newDirPath =
-    extractParentDirectoryPath(path, "/") + AppConfig.dirSeparator + newDirName;
+  const parentDir = extractParentDirectoryPath(path, "/");
+  const newDirPath = parentDir + AppConfig.dirSeparator + newDirName;
 
-  return moveDirectoryPromise(param, normalizePath(newDirPath));
+  return copyDirectoryPromise(param, newDirPath)
+    .then(() => deleteDirectoryPromise(param))
+    .then(() => newDirPath);
+
+  //return moveDirectoryPromise(param, normalizePath(newDirPath));
 }
 /**
- * Rename a directory
+ * Move a directory. Do not use for rename
  */
 function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
   let path;
@@ -1282,55 +1382,57 @@ function copyDirectoryPromise(param, targetDir, onProgress = undefined) {
   }
   return new Promise(function (resolve, reject) {
     // Check if source directory exists
-    getDirSystemPromise(normalizePath(sourceDir)).then((dirEntry) => {
-      createDirectoryPromise(normalizePath(targetDir)).then((newDirPath) => {
-        // Get a directory reader to read files in the source directory
-        const dirReader = dirEntry.createReader();
-        dirReader.readEntries(
-          async function (entries) {
-            // Recursively copy each file in the source directory
-            const fileCount = entries.length;
-            let part = 0;
-            let running = true;
-            for (let i = 0; i < entries.length; i++) {
-              if (running) {
-                const entry = entries[i];
-                if (entry.isDirectory) {
-                  await copyDirectoryPromise(
-                    entry.fullPath,
-                    newDirPath + AppConfig.dirSeparator + entry.name
-                  );
-                } else {
-                  await copyFilePromise(
-                    entry.fullPath,
-                    newDirPath + AppConfig.dirSeparator + entry.name
-                  );
-                }
-                part += 1;
-                if (onProgress && running) {
-                  const progress = {
-                    loaded: part,
-                    total: fileCount,
-                    key: newDirPath,
-                  };
-                  onProgress(
-                    progress,
-                    () => {
-                      running = false;
-                    },
-                    entry.fullPath
-                  );
+    getDirSystemPromise(normalizePath(sourceDir))
+      .then((dirEntry) => {
+        createDirectoryPromise(normalizePath(targetDir)).then((newDirPath) => {
+          // Get a directory reader to read files in the source directory
+          const dirReader = dirEntry.createReader();
+          dirReader.readEntries(
+            async function (entries) {
+              // Recursively copy each file in the source directory
+              const fileCount = entries.length;
+              let part = 0;
+              let running = true;
+              for (let i = 0; i < entries.length; i++) {
+                if (running) {
+                  const entry = entries[i];
+                  if (entry.isDirectory) {
+                    await copyDirectoryPromise(
+                      entry.fullPath,
+                      newDirPath + AppConfig.dirSeparator + entry.name
+                    );
+                  } else {
+                    await copyFilePromise(
+                      entry.fullPath,
+                      newDirPath + AppConfig.dirSeparator + entry.name
+                    );
+                  }
+                  part += 1;
+                  if (onProgress && running) {
+                    const progress = {
+                      loaded: part,
+                      total: fileCount,
+                      key: newDirPath,
+                    };
+                    onProgress(
+                      progress,
+                      () => {
+                        running = false;
+                      },
+                      entry.fullPath
+                    );
+                  }
                 }
               }
+              resolve(newDirPath);
+            },
+            function (error) {
+              reject(error);
             }
-            resolve(newDirPath);
-          },
-          function (error) {
-            reject(error);
-          }
-        );
-      });
-    });
+          );
+        });
+      })
+      .catch(reject);
   });
 }
 
@@ -1344,6 +1446,7 @@ function deleteFilePromise(param) {
   } else {
     filePath = param;
   }
+  console.log("init file deleted: " + filePath);
   return new Promise((resolve, reject) => {
     const path = normalizePath(filePath);
     fsRoot.getFile(
@@ -1391,9 +1494,9 @@ function deleteDirectoryPromise(param) {
         exclusive: false,
       },
       (entry) => {
-        entry.remove(
+        entry.removeRecursively(
           () => {
-            console.log("file deleted: " + dirPath);
+            console.log("dir deleted: " + dirPath);
             resolve(dirPath);
           },
           (err) => {

@@ -81,7 +81,7 @@ module.exports.generateImageThumbnail = function (
               .rotate()
               .flatten({ background: "#ededed" })
               .resize(tmbMaxWidth)
-              .jpeg()
+              .jpeg({ quality: 95 })
               .toBuffer(imageType, function (err, buffer) {
                 if (err) {
                   next(err);
