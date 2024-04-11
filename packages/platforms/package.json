@@ -35,7 +35,7 @@
     "@tagspaces/tagspaces-common-web": "4.2.0"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "4.2.0"
+    "@tagspaces/tagspaces-common-cordova": "4.2.1"
   },
   "awsDependencies": {},
   "electronDependencies": {}
