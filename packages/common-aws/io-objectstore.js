@@ -24,29 +24,32 @@ function s3() {
   return S3;
 }
 
-function configure(objectStoreConfig) {
-  conf = objectStoreConfig;
-  const advancedMode =
-    objectStoreConfig.endpointURL && objectStoreConfig.endpointURL.length > 7;
+function getS3Api(location) {
+  const advancedMode = location.endpointURL && location.endpointURL.length > 7;
   if (advancedMode) {
-    const endpoint = new AWS.Endpoint(objectStoreConfig.endpointURL);
-    S3 = new AWS.S3({
+    const endpoint = new AWS.Endpoint(location.endpointURL);
+    return new AWS.S3({
       endpoint: endpoint, // as string,
-      accessKeyId: objectStoreConfig.accessKeyId,
-      secretAccessKey: objectStoreConfig.secretAccessKey,
-      sessionToken: objectStoreConfig.sessionToken,
+      accessKeyId: location.accessKeyId,
+      secretAccessKey: location.secretAccessKey,
+      sessionToken: location.sessionToken,
       s3ForcePathStyle: true, // needed for minio
       signatureVersion: "v4", // needed for minio
       logger: console,
     });
   } else {
-    S3 = new AWS.S3({
-      region: objectStoreConfig.region,
-      accessKeyId: objectStoreConfig.accessKeyId,
-      secretAccessKey: objectStoreConfig.secretAccessKey,
+    return new AWS.S3({
+      region: location.region,
+      accessKeyId: location.accessKeyId,
+      secretAccessKey: location.secretAccessKey,
       signatureVersion: "v4",
     });
   }
+}
+
+function configure(objectStoreConfig) {
+  conf = objectStoreConfig;
+  S3 = getS3Api(objectStoreConfig);
 }
 
 /**
@@ -1293,11 +1296,13 @@ module.exports = {
   s3,
   config,
   configure,
+  getS3Api,
   listDirectoryPromise,
   listMetaDirectoryPromise,
   getURLforPath,
   saveFilePromise,
   saveTextFilePromise,
+  isFileExist,
   getPropertiesPromise,
   loadTextFilePromise,
   getFileContentPromise,
