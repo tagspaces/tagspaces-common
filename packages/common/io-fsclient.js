@@ -369,71 +369,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
-  /*async function enhanceEntry(entry, path, mode) {
-    const entryPath = path + pathLib.sep + entry;
-    const eentry = {};
-    // let containsMetaFolder = false;
-
-    eentry.name = entry;
-    eentry.path = entryPath;
-    eentry.tags = [];
-    eentry.thumbPath = "";
-    eentry.meta = {};
-
-    try {
-      const stats = await getPropertiesPromise(entryPath);
-      eentry.isFile = stats.isFile;
-      eentry.size = stats.size;
-      eentry.lmdt = stats.lmdt;
-
-      // Read tsm.json from sub folders
-      if (!eentry.isFile && mode.includes("extractThumbPath")) {
-        const folderMetaPath =
-          eentry.path +
-          pathLib.sep +
-          (!eentry.path.includes("/" + AppConfig.metaFolder)
-            ? AppConfig.metaFolder + pathLib.sep
-            : "") +
-          AppConfig.metaFolderFile;
-
-        const folderMeta = await loadTextFilePromise(folderMetaPath);
-        if (folderMeta) {
-          eentry.meta = JSON.parse(folderMeta);
-        }
-
-        // Loading thumbs for folders
-        if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
-          // skipping meta folder
-          const folderTmbPath =
-            eentry.path +
-            pathLib.sep +
-            AppConfig.metaFolder +
-            pathLib.sep +
-            AppConfig.folderThumbFile;
-          const isDir = await isDirectory(folderTmbPath);
-          if (!isDir) {
-            eentry.thumbPath = folderTmbPath;
-          }
-        }
-      }
-
-      if (mode.includes("extractTextContent") && eentry.isFile) {
-        const fileName = eentry.name.toLowerCase();
-        if (
-          fileName.endsWith(".txt") ||
-          fileName.endsWith(".md") ||
-          fileName.endsWith(".html")
-        ) {
-          const fileContent = await loadTextFilePromise(eentry.path);
-          eentry.textContent = extractTextContent(fileName, fileContent);
-        }
-      }
-    } catch (e) {
-      console.warn("Can not load properties for: " + entryPath, e);
-    }
-    return eentry;
-  }*/
-
   function listMetaDirectoryPromise(param) {
     const path = getPath(param);
     const metaPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
@@ -515,8 +450,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               eentry.name = entry;
               eentry.path = entryPath;
               eentry.tags = [];
-              eentry.thumbPath = "";
-              // eentry.meta = {};
+              eentry.meta = {};
 
               try {
                 stats = await stat({ path: entryPath });
@@ -579,7 +513,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   ) {
                     if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
                       // skipping meta folder
-                      eentry.thumbPath = folderTmbPath;
+                      eentry.meta = { thumbPath: folderTmbPath };
                     }
                   }
                 }
@@ -633,11 +567,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       console.warn("Error readJson for " + metaFilePath, ex);
                     }
                     if (metaFileObj) {
-                      enhancedEntries.map((enhancedEntry) => {
+                      enhancedEntries.forEach((enhancedEntry) => {
                         if (enhancedEntry.name === fileNameWithoutMetaExt) {
                           enhancedEntry.meta = metaFileObj;
                         }
-                        return true;
                       });
                     }
                   }
@@ -649,14 +582,17 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     0,
                     metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
                   );
-                  enhancedEntries.map((enhancedEntry) => {
+                  enhancedEntries.forEach((enhancedEntry) => {
                     if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                      enhancedEntry.thumbPath =
+                      const thumbPath =
                         metaFolderPath +
                         dirSeparator +
                         encodeURIComponent(metaEntry.path);
+                      enhancedEntry.meta = {
+                        ...(enhancedEntry.meta && enhancedEntry.meta),
+                        thumbPath,
+                      };
                     }
-                    return true;
                   });
                 }
 

@@ -89,7 +89,6 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
         eentry.name = entry.name;
         eentry.path = nestedPath;
         eentry.tags = [];
-        eentry.thumbPath = "";
         eentry.meta = {};
         eentry.isFile = false;
         eentry.size = 0;
@@ -119,7 +118,7 @@ const listDirectoryPromise = (param, mode = ["extractThumbPath"]) =>
             (obj) => obj.path === thumbPath
           );
           if (thumbAvailable) {
-            file.thumbPath = await getFileContentPromise(
+            file.meta.thumbPath = await getFileContentPromise(
               { path: thumbPath },
               "DataURL"
             );

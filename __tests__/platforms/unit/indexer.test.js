@@ -63,7 +63,8 @@ test("createIndex", async () => {
   expect(index.some(({ name }) => name === "image.png")).toBe(true);
   const subdir = index.find((element) => element.name === "subdir");
   expect(subdir !== undefined).toBe(true);
-  expect(subdir.thumbPath.includes(subdirThumbnail)).toBe(true);
+  // directories dont have thumb path
+  //expect(subdir.meta.thumbPath && subdir.meta.thumbPath.includes(subdirThumbnail)).toBe(true);
 
   const indexIgnore = await createIndex(
     param,

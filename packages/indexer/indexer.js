@@ -78,16 +78,19 @@ function createIndex(
         },
         loadTextFilePromise
       );
-
+      /*const thumb =
+        fileEntry.meta && fileEntry.meta.thumbPath
+          ? cleanRootPath(
+              fileEntry.meta.thumbPath,
+              path,
+              AppConfig.dirSeparator
+            )
+          : undefined;*/
       const entry = {
         ...fileEntry,
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
-        thumbPath: cleanRootPath(
-          fileEntry.thumbPath,
-          path,
-          AppConfig.dirSeparator
-        ),
         meta: meta,
+        //meta: { ...(meta && meta), ...(thumb && { thumbPath: thumb }) },
       };
       directoryIndex.push(enhanceEntry(entry));
     },
@@ -107,11 +110,6 @@ function createIndex(
           tags: directoryEntry.tags,
           path: cleanRootPath(
             directoryEntry.path,
-            path,
-            AppConfig.dirSeparator
-          ),
-          thumbPath: cleanRootPath(
-            directoryEntry.thumbPath,
             path,
             AppConfig.dirSeparator
           ),
@@ -285,23 +283,15 @@ function enhanceDirectoryIndex(
     directoryPath = cleanTrailingDirSeparator(directoryPath);
   }
   return directoryIndex.map((entry) => {
-    if (entry.thumbPath) {
+    if (entry.meta && entry.meta.thumbPath) {
       let thumbPath;
       if (param.bucketName) {
-        thumbPath = entry.thumbPath;
-        /* don't use aws dependency for indexing
-        thumbPath = getURLforPath(
-          {
-            path: entry.thumbPath,
-            bucketName: param.bucketName,
-          },
-          604800
-        ); */
+        thumbPath = entry.meta.thumbPath;
       } else {
         thumbPath = joinPaths(
           dirSeparator,
           directoryPath,
-          toPlatformPath(entry.thumbPath)
+          toPlatformPath(entry.meta.thumbPath)
         );
       }
 
@@ -313,7 +303,9 @@ function enhanceDirectoryIndex(
           directoryPath,
           toPlatformPath(entry.path)
         ),
-        thumbPath: thumbPath,
+        meta: {
+          thumbPath: thumbPath,
+        },
       };
     }
     return {
@@ -379,8 +371,7 @@ function addToIndex(param, size, LastModified, thumbPath) {
         ...param,
         name: extractFileName(param.path),
         tags: [],
-        thumbPath,
-        meta: {},
+        meta: { thumbPath },
         isFile: true,
         size: size,
         lmdt: Date.parse(LastModified),
@@ -472,11 +463,11 @@ function loadJSONFile(param, loadTextFilePromise) {
     console.error("loadJSONFile loadTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-  return loadTextFilePromise(param.path)
+  return loadTextFilePromise(param)
     .then((jsonContent) => loadJSONString(jsonContent))
-    .catch(() => {
+    .catch((e) => {
+      console.log("File not exist: " + param.path, e);
       return undefined;
-      // console.debug("File not exist: " + param.path);
     });
 }
 

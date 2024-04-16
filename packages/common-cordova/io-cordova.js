@@ -609,7 +609,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                       (obj) => obj.name === entry.name + AppConfig.thumbFileExt
                     );
                     if (metaThumbAvailable && metaThumbAvailable.path) {
-                      eentry.thumbPath = metaThumbAvailable.path;
+                      eentry.meta.thumbPath = metaThumbAvailable.path;
                     }
                   }
                 }
