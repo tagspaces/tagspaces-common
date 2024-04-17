@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-thumbgen-image",
   "description": "TagSpaces common thumbnails image generation module",
-  "version": "4.2.1",
+  "version": "4.2.3",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
