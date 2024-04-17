@@ -33,6 +33,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
  * @param ignorePatterns: Array<string>
  * @param loadTextFilePromise function
+ * @param isWalking
  * @returns {Promise<*>}
  */
 function createIndex(
@@ -40,7 +41,8 @@ function createIndex(
   listDirectoryPromise,
   loadTextFilePromise,
   mode = ["extractThumbPath"],
-  ignorePatterns = []
+  ignorePatterns = [],
+  isWalking = () => true
 ) {
   let path;
   if (typeof param === "object" && param !== null) {
@@ -118,7 +120,8 @@ function createIndex(
         directoryIndex.push(enhanceEntry(entry));
       }
     },
-    ignorePatterns
+    ignorePatterns,
+    isWalking
   )
     .then(() => {
       // entries - can be used for further processing

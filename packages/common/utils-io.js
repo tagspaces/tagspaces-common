@@ -10,6 +10,7 @@ const AppConfig = require("./AppConfig");
  * @param fileCallback: () => {}
  * @param dirCallback: () => {}
  * @param ignorePatterns: Array<string>
+ * @param isWalking
  * @returns {*}
  */
 function walkDirectory(
@@ -18,7 +19,8 @@ function walkDirectory(
   options = {},
   fileCallback,
   dirCallback,
-  ignorePatterns = []
+  ignorePatterns = [],
+  isWalking = () => true
 ) {
   let path;
   if (typeof param === "object" && param !== null) {
@@ -42,83 +44,82 @@ function walkDirectory(
     mode: [],
     ...options,
   };
-  return (
-    listDirectoryPromise(param, mergedOptions.mode, mergedOptions.extractText)
-      // @ts-ignore
-      .then((entries) => {
-        if (/* window.walkCanceled || */ entries === undefined) {
-          return false;
-        }
+  return listDirectoryPromise(
+    param,
+    mergedOptions.mode,
+    mergedOptions.extractText
+  )
+    .then((entries) => {
+      if (!isWalking() || entries === undefined) {
+        return false;
+      }
 
-        return Promise.all(
-          entries.map(async (entry) => {
-            // if (window.walkCanceled) {
-            //     return false;
-            // }
-            if (ignorePatterns.length > 0) {
-              const isMatch = picomatch(ignorePatterns);
-              if (isMatch(entry.path) || isMatch(entry.name)) {
-                return false;
-              }
+      return Promise.all(
+        entries.map(async (entry) => {
+          if (!isWalking()) return false;
+          if (ignorePatterns.length > 0) {
+            const isMatch = picomatch(ignorePatterns);
+            if (isMatch(entry.path) || isMatch(entry.name)) {
+              return false;
             }
+          }
 
-            if (entry.isFile) {
-              if (
-                fileCallback &&
-                (!mergedOptions.skipDotHiddenFiles ||
-                  !entry.name.startsWith("."))
-              ) {
-                await fileCallback(entry);
-              }
-              return entry;
-            }
-
+          if (entry.isFile) {
             if (
-              dirCallback &&
-              (!mergedOptions.skipDotHiddenFolder ||
-                !entry.name.startsWith(".")) &&
-              (!mergedOptions.skipMetaFolder ||
-                entry.name !== AppConfig.metaFolder)
+              fileCallback &&
+              (!mergedOptions.skipDotHiddenFiles || !entry.name.startsWith("."))
             ) {
-              await dirCallback(entry);
-            }
-
-            if (mergedOptions.recursive) {
-              if (
-                mergedOptions.skipDotHiddenFolder &&
-                entry.name.startsWith(".") &&
-                entry.name !== AppConfig.metaFolder
-              ) {
-                return entry;
-              }
-              if (
-                mergedOptions.skipMetaFolder &&
-                entry.name === AppConfig.metaFolder
-              ) {
-                return entry;
-              }
-              const subPath =
-                typeof path === "object" && path !== null
-                  ? { ...path, path: entry.path }
-                  : entry.path;
-              return walkDirectory(
-                { ...param, path: subPath },
-                listDirectoryPromise,
-                mergedOptions,
-                fileCallback,
-                dirCallback,
-                ignorePatterns
-              );
+              await fileCallback(entry);
             }
             return entry;
-          })
-        );
-      })
-      .catch((err) => {
-        console.warn("Error walking directory " + err);
-        return err;
-      })
-  );
+          }
+
+          if (
+            dirCallback &&
+            (!mergedOptions.skipDotHiddenFolder ||
+              !entry.name.startsWith(".")) &&
+            (!mergedOptions.skipMetaFolder ||
+              entry.name !== AppConfig.metaFolder)
+          ) {
+            await dirCallback(entry);
+          }
+
+          if (mergedOptions.recursive) {
+            if (
+              mergedOptions.skipDotHiddenFolder &&
+              entry.name.startsWith(".") &&
+              entry.name !== AppConfig.metaFolder
+            ) {
+              return entry;
+            }
+            if (
+              mergedOptions.skipMetaFolder &&
+              entry.name === AppConfig.metaFolder
+            ) {
+              return entry;
+            }
+            const subPath =
+              typeof path === "object" && path !== null
+                ? { ...path, path: entry.path }
+                : entry.path;
+            return walkDirectory(
+              { ...param, path: subPath },
+              listDirectoryPromise,
+              isWalking,
+              mergedOptions,
+              fileCallback,
+              dirCallback,
+              ignorePatterns
+            );
+          }
+          return entry;
+        })
+      );
+    })
+    .catch((err) => {
+      console.warn("Error walking directory " + err);
+      return err;
+    });
 }
 
 function getUuid(version = 4) {
