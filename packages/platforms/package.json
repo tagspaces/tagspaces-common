@@ -29,13 +29,13 @@
     "install/**"
   ],
   "nodeDependencies": {
-    "@tagspaces/tagspaces-common-node": "4.2.0"
+    "@tagspaces/tagspaces-common-node": "4.2.3"
   },
   "webDependencies": {
-    "@tagspaces/tagspaces-common-web": "4.2.0"
+    "@tagspaces/tagspaces-common-web": "4.2.3"
   },
   "cordovaDependencies": {
-    "@tagspaces/tagspaces-common-cordova": "4.2.1"
+    "@tagspaces/tagspaces-common-cordova": "4.2.3"
   },
   "awsDependencies": {},
   "electronDependencies": {}
