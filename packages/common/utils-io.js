@@ -105,11 +105,11 @@ function walkDirectory(
             return walkDirectory(
               { ...param, path: subPath },
               listDirectoryPromise,
-              isWalking,
               mergedOptions,
               fileCallback,
               dirCallback,
-              ignorePatterns
+              ignorePatterns,
+              isWalking
             );
           }
           return entry;
