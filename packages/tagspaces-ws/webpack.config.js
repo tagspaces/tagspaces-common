@@ -53,7 +53,13 @@ module.exports = {
   },
 
   // Tells the HTML webpack plug-in to use a template and emit dist/index.html
-  plugins: [],
+  // plugins: [],
+  plugins: [
+    new webpack.IgnorePlugin({
+      resourceRegExp: /original-fs/,
+      contextRegExp: /adm-zip/
+    })
+  ],
   target: "node",
 
   externals: {
