@@ -1,0 +1,1307 @@
+const AWS = require("aws-sdk");
+// const pathJS = require("path"); DONT use it add for windows platform delimiter \
+const { v1: uuidv1 } = require("uuid");
+const tsPaths = require("@tagspaces/tagspaces-common/paths");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const picomatch = require("picomatch/posix");
+const {
+  runPromisesSynchronously,
+} = require("@tagspaces/tagspaces-common/utils-io");
+
+function s3(location) {
+  const advancedMode = location.endpointURL && location.endpointURL.length > 7;
+  if (advancedMode) {
+    const endpoint = new AWS.Endpoint(location.endpointURL);
+    return new AWS.S3({
+      endpoint: endpoint, // as string,
+      accessKeyId: location.accessKeyId,
+      secretAccessKey: location.secretAccessKey,
+      sessionToken: location.sessionToken,
+      s3ForcePathStyle: true, // needed for minio
+      signatureVersion: "v4", // needed for minio
+      logger: console,
+    });
+  } else {
+    return new AWS.S3({
+      region: location.region,
+      accessKeyId: location.accessKeyId,
+      secretAccessKey: location.secretAccessKey,
+      signatureVersion: "v4",
+    });
+  }
+}
+
+/**
+ * @param param param.path - needs to be not encoded s3().getSignedUrl - this will double encode it
+ * @param expirationInSeconds
+ * @returns {string}
+ */
+const getURLforPath = (param, expirationInSeconds = 900) => {
+  const path = normalizeRootPath(param.path);
+  const bucketName = param.bucketName;
+  if (!path || path.length < 1) {
+    console.warn("Wrong path param for getURLforPath");
+    return "";
+  }
+  const params = {
+    Bucket: bucketName,
+    Key: path,
+    Expires: expirationInSeconds,
+  };
+  try {
+    return s3(param.location).getSignedUrl("getObject", params);
+  } catch (e) {
+    console.warn("Error by getSignedUrl" + e.toString());
+    return "";
+  }
+};
+
+const listMetaDirectoryPromise = async (param) => {
+  const path = param.path;
+  const bucketName = param.bucketName;
+  const entries = [];
+  let entry;
+
+  const params = {
+    Delimiter: "/",
+    Prefix:
+      path !== "/" && path.length > 0
+        ? normalizeRootPath(path + "/" + AppConfig.metaFolder + "/")
+        : AppConfig.metaFolder + "/",
+    Bucket: bucketName,
+  };
+  const results = await s3(param.location)
+    .listObjectsV2(params)
+    .promise()
+    .then((data) => {
+      // if (window.walkCanceled) {
+      //     return resolve(entries); // returning results even if walk canceled
+      // }
+      // Handling files
+      data.Contents.forEach((file) => {
+        // console.warn('Meta: ' + JSON.stringify(file));
+        entry = {};
+        entry.name = file.Key; // extractFileName(file.Key, '/');
+        entry.path = file.Key;
+        entry.isFile = true;
+        entry.size = file.Size;
+        entry.lmdt = Date.parse(file.LastModified);
+        if (file.Key !== params.Prefix) {
+          // skipping the current folder
+          entries.push(entry);
+        }
+      });
+      return entries;
+    })
+    .catch((err) => {
+      // console.log(err);
+      console.warn("Error listing meta directory " + path, err);
+      return entries; // returning results even if any promise fails
+    });
+  return results;
+};
+
+/**
+ * @param param
+ * @param mode = ['extractTextContent', 'extractThumbPath', 'extractThumbURL']
+ * @param ignorePatterns
+ * @param resultsLimit = {maxLoops: number, IsTruncated: boolean}
+ * @returns {Promise<>}
+ */
+const listDirectoryPromise = (
+  param,
+  mode = ["extractThumbPath"],
+  ignorePatterns = [],
+  resultsLimit = {}
+) =>
+  new Promise(async (resolve, reject) => {
+    const path = param.path;
+    const bucketName = param.bucketName;
+    const enhancedEntries = [];
+    let eentry;
+
+    const loadMeta = mode.some(
+      (el) => el === "extractThumbURL" || el === "extractThumbPath"
+    );
+
+    let metaContent;
+    if (loadMeta) {
+      metaContent = await listMetaDirectoryPromise(param);
+    }
+    // console.log('Meta folder content: ' + JSON.stringify(metaContent));
+
+    const params = {
+      Delimiter: "/",
+      Prefix:
+        path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
+      // MaxKeys: 10000, // It returns actually up to 1000
+      Bucket: bucketName
+    };
+    listDirectoryAll(params, param.location, resultsLimit.maxLoops)
+      .then((data) => {
+        const metaPromises = [];
+
+        if (data.IsTruncated) {
+          resultsLimit.IsTruncated = data.IsTruncated;
+        }
+        // Handling "directories"
+        data.CommonPrefixes.forEach((dir) => {
+          // console.warn(JSON.stringify(dir));
+          const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
+          eentry = {};
+          const prefixArray = prefix.replace(/\/$/, "").split("/");
+          eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
+          eentry.path = prefix;
+          eentry.bucketName = bucketName;
+          eentry.tags = [];
+          eentry.meta = {};
+          eentry.isFile = false;
+          eentry.size = 0;
+          eentry.lmdt = 0;
+
+          if (eentry.path !== params.Prefix) {
+            // skipping the current directory
+            let ignored = false;
+            if (ignorePatterns.length > 0) {
+              const isMatch = picomatch(ignorePatterns);
+              ignored = isMatch(eentry.path) || isMatch(eentry.name);
+            }
+            if (!ignored) {
+              enhancedEntries.push(eentry);
+              if (loadMeta) {
+                metaPromises.push(getEntryMeta(eentry, param.location));
+              }
+            }
+          }
+
+          // if (window.walkCanceled) {
+          //     resolve(enhancedEntries);
+          // }
+        });
+
+        // Handling files
+        data.Contents.forEach((file) => {
+          eentry = {};
+          eentry.name = tsPaths.extractFileName(file.Key);
+          eentry.path = file.Key;
+          eentry.bucketName = bucketName;
+          eentry.tags = [];
+
+          let ignored = false;
+          if (ignorePatterns.length > 0) {
+            const isMatch = picomatch(ignorePatterns);
+            ignored = isMatch(eentry.path) || isMatch(eentry.name);
+          }
+          if (!ignored) {
+            let thumbPath;
+            if (loadMeta) {
+              thumbPath = tsPaths.getThumbFileLocationForFile(
+                file.Key,
+                "/",
+                false
+              );
+              if (thumbPath && thumbPath.startsWith("/")) {
+                thumbPath = thumbPath.substring(1);
+              }
+              const thumbAvailable = metaContent.find(
+                (obj) => obj.path === thumbPath
+              );
+              if (thumbAvailable) {
+                if (mode.includes("extractThumbURL")) {
+                  thumbPath = getURLforPath(
+                    {
+                      path: thumbPath,
+                      bucketName: bucketName,
+                      location: param.location
+                    },
+                    604800
+                  ); // 60 * 60 * 24 * 7 = 1 week
+                }
+              }
+            }
+
+            eentry.meta = { ...(thumbPath && thumbPath) };
+            eentry.isFile = true;
+            eentry.size = file.Size;
+            eentry.lmdt = Date.parse(file.LastModified);
+            if (file.Key !== params.Prefix) {
+              // skipping the current folder
+              enhancedEntries.push(eentry);
+              if (loadMeta) {
+                let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+                if (metaFilePath.startsWith("/")) {
+                  metaFilePath = metaFilePath.substring(1);
+                }
+                const metaFileAvailable = metaContent.find(
+                  (obj) => obj.path === metaFilePath
+                );
+                if (metaFileAvailable) {
+                  metaPromises.push(getEntryMeta(eentry, param.location));
+                }
+              }
+            }
+          }
+        });
+
+        if (metaPromises.length > 0) {
+          Promise.all(metaPromises)
+            .then((entriesMeta) => {
+              entriesMeta.forEach((entryMeta) => {
+                enhancedEntries.some((enhancedEntry) => {
+                  if (enhancedEntry.path === entryMeta.path) {
+                    enhancedEntry = entryMeta;
+                    return true;
+                  }
+                  return false;
+                });
+              });
+              resolve(enhancedEntries);
+              return true;
+            })
+            .catch(() => {
+              resolve(enhancedEntries);
+            });
+        } else {
+          resolve(enhancedEntries);
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Error listing directory " +
+            params.Prefix +
+            " bucketName:" +
+            bucketName,
+          error
+        );
+        // resolve(enhancedEntries);
+        reject(error);
+      });
+  });
+
+/**
+ * @param param
+ * @param location
+ * @param maxLoops
+ * @returns {Promise<data>}
+ */
+function listDirectoryAll(param, location, maxLoops = 5) {
+  return new Promise((resolve, reject) => {
+    let allObjects = undefined;
+    let loop = 0;
+
+    function listObjects(token) {
+      s3(location).listObjectsV2(
+        {
+          ...param,
+          ...(token && {
+            ContinuationToken: token,
+          }),
+        },
+        (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            if (allObjects) {
+              allObjects.CommonPrefixes = [
+                ...allObjects.CommonPrefixes,
+                ...data.CommonPrefixes,
+              ];
+              allObjects.Contents = [...allObjects.Contents, ...data.Contents];
+              allObjects.IsTruncated = data.IsTruncated;
+            } else {
+              allObjects = { ...data };
+            }
+            loop += 1;
+
+            if (data.IsTruncated && loop < maxLoops) {
+              if (data.NextContinuationToken) {
+                listObjects(data.NextContinuationToken);
+              } else {
+                resolve(allObjects);
+              }
+            } else {
+              resolve(allObjects);
+            }
+          }
+        }
+      );
+    }
+
+    listObjects();
+  });
+}
+
+const getEntryMeta = async (eentry, location) => {
+  const promise = new Promise(async (resolve) => {
+    const entryPath = tsPaths.normalizePath(eentry.path);
+    if (eentry.isFile) {
+      try {
+        const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
+        const metaFileContent = await loadTextFilePromise({
+          path: metaFilePath,
+          bucketName: eentry.bucketName,
+          location
+        });
+        eentry.meta = JSON.parse(metaFileContent.trim());
+      } catch (ex) {
+        eentry.meta = {};
+        console.warn("Error getEntryMeta for " + entryPath, ex);
+      }
+      resolve(eentry);
+      // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
+    } else {
+      if (
+        !entryPath.includes("/" + AppConfig.metaFolder) &&
+        !entryPath.includes(AppConfig.metaFolder + "/")
+      ) {
+        // skipping meta folder
+        const folderTmbPath =
+          entryPath +
+          "/" +
+          AppConfig.metaFolder +
+          "/" +
+          AppConfig.folderThumbFile;
+        const folderThumbProps = await getPropertiesPromise({
+          path: folderTmbPath,
+          bucketName: eentry.bucketName,
+          location
+        });
+        if (folderThumbProps && folderThumbProps.isFile) {
+          const thumb = getURLforPath(
+            {
+              path: folderTmbPath,
+              bucketName: eentry.bucketName,
+              location
+            },
+            604800
+          ); // 60 * 60 * 24 * 7 = 1 week ;
+
+          eentry.meta = { thumbPath: thumb };
+        }
+        // }
+        // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
+        const folderMetaPath =
+          entryPath +
+          "/" +
+          AppConfig.metaFolder +
+          "/" +
+          AppConfig.metaFolderFile;
+        const folderProps = await getPropertiesPromise({
+          path: folderMetaPath,
+          bucketName: eentry.bucketName,
+          location
+        });
+        if (folderProps && folderProps.isFile) {
+          try {
+            const metaFileContent = await loadTextFilePromise({
+              path: folderMetaPath,
+              bucketName: eentry.bucketName,
+              location
+            });
+            eentry.meta = JSON.parse(metaFileContent.trim());
+          } catch (ex) {
+            console.warn("Error getEntryMeta for " + folderMetaPath, ex);
+          }
+          // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
+        }
+      }
+      resolve(eentry);
+    }
+  });
+  const result = await promise;
+  return result;
+};
+
+/**
+ * @param param
+ * @returns {Promise<boolean>}
+ */
+function isFileExist(param) {
+  try {
+    return s3(param.location)
+      .headObject({
+        Bucket: param.bucketName,
+        Key: normalizeRootPath(param.path),
+      })
+      .promise()
+      .then(
+        () => true,
+        (err) => {
+          if (err.code === "NotFound") {
+            return false;
+          }
+          throw err;
+        }
+      );
+  } catch (error) {
+    return Promise.resolve(false);
+  }
+}
+/**
+ * @param param
+ * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
+ */
+function getPropertiesPromise(param) {
+  const path = normalizeRootPath(param.path);
+  const bucketName = param.bucketName;
+  if (path) {
+    const params = {
+      Bucket: bucketName,
+      Key: path,
+    };
+    return new Promise((resolve) => {
+      s3(param.location).headObject(params, (err, data) => {
+        if (err) {
+          // workaround for checking if a folder exists on s3
+          // console.log("getPropertiesPromise " + path, err);
+          const listParams = {
+            Bucket: bucketName,
+            Prefix: path,
+            MaxKeys: 1,
+            Delimiter: "/",
+          };
+          s3(param.location).listObjectsV2(listParams, (listError, listData) => {
+            if (listError) {
+              resolve(false);
+            }
+            const folderExists =
+              (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
+              (listData &&
+                listData.CommonPrefixes &&
+                listData.CommonPrefixes.length > 0); // needed for DO
+            if (folderExists) {
+              resolve({
+                name: tsPaths.extractDirectoryName(path),
+                isFile: false,
+                size: 0,
+                lmdt: undefined,
+                path: path,
+              });
+            } else {
+              resolve(false);
+            }
+          });
+        } else {
+          /*
+                                  data = {
+                                    "AcceptRanges":"bytes",
+                                    "LastModified":"2018-10-22T12:57:16.000Z",
+                                    "ContentLength":101003,
+                                    "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
+                                    "ContentType":"image/png",
+                                    "ServerSideEncryption":"AES256",
+                                    "Metadata":{}
+                                  }
+                                  */
+
+          const isFile = !path.endsWith("/");
+          resolve({
+            name: isFile
+              ? tsPaths.extractFileName(path)
+              : tsPaths.extractDirectoryName(path),
+            isFile: !path.endsWith("/"),
+            size: data.ContentLength,
+            lmdt:
+              data.LastModified instanceof Date
+                ? data.LastModified.getTime()
+                : data.LastModified, // Date.parse(data.LastModified),
+            path,
+          });
+        }
+      });
+    });
+  } else {
+    // root folder
+    return Promise.resolve({
+      name: bucketName,
+      isFile: false,
+      size: 0,
+      lmdt: undefined,
+      path: "/",
+    });
+  }
+}
+
+const loadTextFilePromise = (param, isPreview) =>
+  getFileContentPromise(param, "text", isPreview);
+
+/**
+ * Use only for files (will not work for dirs)
+ * @param param
+ * @param type text | arraybuffer
+ * @param isPreview
+ * @returns {Promise<string | string>}
+ */
+const getFileContentPromise = async (
+  param,
+  type = "text",
+  isPreview = false
+) => {
+  const path = normalizeRootPath(param.path);
+  const bucketName = param.bucketName;
+  const params = {
+    Bucket: bucketName,
+    Key: path,
+    Range: isPreview ? "bytes=0-10000" : "",
+  };
+  // console.info("getFileContentPromise:" + JSON.stringify(params));
+  return s3(param.location)
+    .getObject(params)
+    .promise()
+    .then((data) => {
+      // data: {
+      // "AcceptRanges":"bytes",
+      // "LastModified":"2018-10-22T16:24:42.000Z",
+      // "ContentLength":99,
+      // "ETag":"\"407a96716a09a2cf36ca32759cf15497\"",
+      // "ContentType":"application/json",
+      // "ServerSideEncryption":"AES256",
+      // "Metadata":{},
+      // "Body":{"type":"Buffer","data":[123,....,10,125]}}
+      if (type === "text") {
+        return data.Body.toString("utf8");
+      }
+      return data.Body;
+    })
+    .catch((e) => {
+      // console.error("Error getObject " + path + " " + e.message);
+      return ""; //Promise.resolve("");
+    });
+};
+
+/**
+ * Persists a given content(binary supported) to a specified filepath (tested)
+ * @param param
+ * @param content string if undefined reject error
+ * @param overWrite
+ * @param mode
+ * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
+ */
+const saveFilePromise = (param, content, overWrite, mode) =>
+  new Promise(async (resolve, reject) => {
+    if (content === undefined) {
+      reject(new Error("content is undefined"));
+    } else {
+      const path = param.path;
+      const bucketName = param.bucketName;
+      const lmdt = param.lmdt;
+      // let isNewFile = false;
+      // eslint-disable-next-line no-param-reassign
+      const filePath = normalizeRootPath(path);
+
+      if (lmdt) {
+        const fileProps = await getPropertiesPromise({
+          path: filePath,
+          bucketName: bucketName,
+          location: param.location
+        });
+        if (fileProps && fileProps.lmdt !== lmdt) {
+          reject(new Error("File was modified externally"));
+          return false;
+        }
+      }
+
+      const fileExt = tsPaths.extractFileExtension(filePath);
+
+      let mimeType;
+      if (fileExt === "md") {
+        mimeType = "text/markdown";
+      } else if (fileExt === "txt") {
+        mimeType = "text/plain";
+      } else if (fileExt === "html") {
+        mimeType = "text/html";
+      } else if (fileExt === "json") {
+        mimeType = "application/json";
+      } else {
+        // default type
+        mimeType = "text/plain";
+      }
+      const params = {
+        Bucket: bucketName,
+        Key: filePath,
+        Body: content,
+        ContentType: mimeType,
+      }; // fs.readFileSync(filePath)
+      s3(param.location).putObject(params, (err, data) => {
+        if (err) {
+          console.log("Error upload " + filePath); // an error occurred
+          console.log(err, err.stack); // an error occurred
+          resolve(false);
+        }
+        getPropertiesPromise({
+          path: filePath,
+          bucketName: bucketName,
+          location: param.location
+        }).then((entry) =>
+          resolve({
+            ...entry,
+            uuid: data ? data.ETag : uuidv1(),
+            url: data ? data.Location : filePath,
+            isFile: true,
+            extension: tsPaths.extractFileExtension(filePath, "/"),
+            //name: data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+            //path: filePath,
+            //size: content.length,
+            //lmdt: new Date().getTime(),
+          })
+        );
+      });
+    }
+  });
+
+/**
+ * Persists a given text content to a specified filepath (tested)
+ */
+function saveTextFilePromise(param, content, overWrite) {
+  console.log("Saving text file: " + param.path);
+  return saveFilePromise(param, content, overWrite, "text");
+}
+
+function normalizeRootPath(filePath) {
+  filePath = filePath.replace(new RegExp("//+", "g"), "/");
+  filePath = filePath.replace("\\", "/");
+  /* if(filePath.indexOf(AppConfig.dirSeparator) === 0){
+    filePath = filePath.substr(AppConfig.dirSeparator.length);
+  } */
+  if (filePath.indexOf("/") === 0) {
+    filePath = filePath.substr(1);
+  }
+  return decodeURIComponent(filePath);
+}
+
+/**
+ * Persists a given binary content to a specified filepath (tested)
+ * return : Promise<TS.FileSystemEntry>
+ */
+function saveBinaryFilePromise(
+  param,
+  content,
+  overWrite,
+  onUploadProgress,
+  onAbort
+) {
+  return new Promise((resolve, reject) => {
+    let isNewFile = false;
+    // eslint-disable-next-line no-param-reassign
+    const filePath = normalizeRootPath(param.path);
+    isFileExist(param)
+      .then((result) => {
+        if (result === false) {
+          isNewFile = true;
+        }
+        if (isNewFile || overWrite === true) {
+          const params = {
+            Bucket: param.bucketName,
+            Key: filePath,
+            Body: content,
+          };
+          const request = s3(param.location).upload(params);
+
+          if (onUploadProgress) {
+            request.on("httpUploadProgress", (progress) => {
+              if (onUploadProgress) {
+                onUploadProgress(progress, () => request.abort());
+              }
+            }); // onUploadProgress as any);
+          }
+          if (onAbort) {
+            onAbort = () => request.abort();
+          }
+          try {
+            request
+              .promise()
+              .then((data) => {
+                resolve({
+                  uuid: uuidv1(), // data.ETag,
+                  name: data.Key
+                    ? data.Key
+                    : tsPaths.extractFileName(filePath, "/"),
+                  url: data.Location,
+                  isFile: true,
+                  path: filePath,
+                  extension: tsPaths.extractFileExtension(filePath, "/"),
+                  size: content.length,
+                  lmdt: new Date().getTime(),
+                  tags: [],
+                  isNewFile,
+                });
+              })
+              .catch((err) => {
+                reject(err);
+              });
+          } catch (err) {
+            console.log("Error upload " + filePath); // an error occurred
+            console.log(err, err.stack); // an error occurred
+            reject("saveBinaryFilePromise error");
+          }
+        } else {
+          resolve(result);
+        }
+        return result;
+      })
+      .catch((err) => reject(err));
+  });
+}
+
+/**
+ * @param param
+ * @param file
+ * @param overWrite
+ * @param onUploadProgress
+ * @param onAbort
+ * @returns {Promise<TS.FileSystemEntry>}
+ */
+function uploadFileByMultiPart(
+  param,
+  file,
+  overWrite,
+  onUploadProgress,
+  onAbort
+) {
+  return new Promise(async (resolve, reject) => {
+    let isNewFile = (await isFileExist(param)) === false;
+    if (isNewFile || overWrite === true) {
+      createMultipartUpload(param).then(async (uploadId) => {
+        onUploadProgress({ key: param.path, loaded: 0, total: file.size }, () =>
+          abortMultipartUpload(param, uploadId)
+        );
+        let partNumber = 0;
+        const completedParts = [];
+        const chunkSize = 5 * 1024 * 1024; // https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
+        let offset = 0;
+        // const reader = file.stream().getReader(); //{mode: "byob"}); TODO create 5MB limit of chunks with stream
+        while (offset < file.size) {
+          const chunkFile = await file.slice(offset, offset + chunkSize);
+          const chunk = await chunkFile.arrayBuffer();
+          onUploadProgress(
+            { key: param.path, loaded: offset, total: file.size },
+            () => {
+              offset = file.size;
+              abortMultipartUpload(param, uploadId);
+              reject(new Error("stopped:" + file.name));
+            }
+          );
+          /* const { done, value } = await reader.read();
+          console.debug(value.length);
+          if (done) {
+            break;
+          } */
+          partNumber++;
+          completedParts.push(
+            uploadPart(
+              param,
+              new Uint8Array(chunk), // value.toString(),
+              partNumber,
+              uploadId
+            )
+          );
+          offset += chunkSize;
+        }
+        Promise.all(completedParts).then((parts) => {
+          completeMultipartUpload(param, uploadId, parts).then((fsEntry) => {
+            onUploadProgress(
+              { key: param.path, loaded: file.size, total: file.size },
+              () => abortMultipartUpload(param, uploadId)
+            );
+            resolve({ ...fsEntry, size: file.size, isNewFile });
+          });
+        });
+      });
+    } else {
+      reject(new Error("file exist:" + file.name));
+    }
+  });
+}
+
+/**
+ * @param param
+ * @param chunk: string
+ * @param partNumber: number
+ * @param uploadId: string
+ * @returns {Promise<unknown>}
+ */
+function uploadPart(param, chunk, partNumber, uploadId) {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Body: chunk,
+      Bucket: param.bucketName,
+      Key: param.path,
+      PartNumber: partNumber,
+      UploadId: uploadId,
+    };
+    s3(param.location).uploadPart(params, function (err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          ETag: data.ETag,
+          PartNumber: partNumber,
+        });
+      }
+    });
+  });
+}
+
+/**
+ * @param param
+ * @returns {Promise<string>}
+ */
+function createMultipartUpload(param) {
+  const params = {
+    Bucket: param.bucketName,
+    Key: param.path,
+  };
+  return new Promise((resolve, reject) => {
+    s3(param.location).createMultipartUpload(params, function (err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data.UploadId);
+      }
+    });
+  });
+}
+
+/**
+ * @param param
+ * @param uploadId: string
+ * @param parts: CompletedPart[]
+ * @returns {Promise<TS.FileSystemEntry>}
+ */
+function completeMultipartUpload(param, uploadId, parts) {
+  const filePath = normalizeRootPath(param.path);
+  if (Array.isArray(parts) && parts.length > 0) {
+    const params = {
+      Bucket: param.bucketName,
+      Key: param.path,
+      UploadId: uploadId,
+      MultipartUpload: {
+        Parts: parts,
+      },
+    };
+    return s3(param.location)
+      .completeMultipartUpload(params)
+      .promise()
+      .then((data) => ({
+        uuid: uuidv1(), // data.ETag,
+        name: data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
+        url: data.Location,
+        isFile: true,
+        path: filePath,
+        extension: tsPaths.extractFileExtension(filePath, "/"),
+        lmdt: new Date().getTime(),
+        tags: [],
+      }));
+  }
+  return abortMultipartUpload(param, uploadId);
+}
+
+function abortMultipartUpload(param, uploadId) {
+  return s3(param.location)
+    .abortMultipartUpload({
+      Bucket: param.bucketName,
+      Key: param.path,
+      UploadId: uploadId,
+    })
+    .promise();
+}
+
+/**
+ * Creates a directory. S3 does not have folders or files; it has buckets and objects. Buckets are used to store objects (tested)
+ * @param param = { path: newDirectory/ }
+ * @returns {Promise<>}
+ */
+function createDirectoryPromise(param) {
+  const dirPath = tsPaths.normalizePath(normalizeRootPath(param.path)) + "/";
+  console.log("Creating directory: " + dirPath);
+  return s3(param.location)
+    .putObject({
+      Bucket: param.bucketName,
+      Key: dirPath,
+    })
+    .promise()
+    .then((result) => {
+      const out = {
+        ...result,
+        dirPath,
+      };
+      if (dirPath.endsWith(AppConfig.metaFolder + "/")) {
+        return dirPath;
+      }
+      const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
+      const metaContent = '{"id":"' + uuidv1() + '"}';
+      // create meta file with id -> empty folders cannot be shown on S3
+      return saveTextFilePromise(
+        { ...param, path: metaFilePath },
+        metaContent,
+        false
+      ).then(() => dirPath);
+    });
+}
+
+/**
+ * Copies a given file to a specified location (tested)
+ * @param param
+ * @param newFilePath
+ * @returns {Promise<>}
+ */
+function copyFilePromise(param, newFilePath) {
+  const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
+  const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
+  console.log("Copying file: " + nFilePath + " to " + nNewFilePath);
+  if (nFilePath.toLowerCase() === nNewFilePath.toLowerCase()) {
+    return new Promise((resolve, reject) => {
+      reject("Copying file failed, files have the same path");
+    });
+  }
+  return s3(param.location)
+    .copyObject({
+      Bucket: param.bucketName,
+      CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
+      Key: nNewFilePath, //encodeS3URI
+    })
+    .promise();
+}
+
+/**
+ * Renames a given file (tested)
+ * TODO for web minio copyObject -> The request signature we calculated does not match the signature you provided. Check your key and signing method.
+ */
+function renameFilePromise(param, newFilePath, onProgress = undefined) {
+  const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
+  const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
+  console.log("Renaming file: " + nFilePath + " to " + newFilePath);
+  if (nFilePath === nNewFilePath) {
+    return new Promise((resolve, reject) => {
+      reject("Renaming file failed, files have the same path");
+    });
+  }
+  // Copy the object to a new location
+  return new Promise((resolve, reject) => {
+    s3(param.location)
+      .copyObject({
+        Bucket: param.bucketName,
+        CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
+        Key: nNewFilePath, //encodeS3URI
+      })
+      .promise()
+      .then(() =>
+        // Delete the old object
+        s3(param.location)
+          .deleteObject({
+            Bucket: param.bucketName,
+            Key: nFilePath,
+          })
+          .promise()
+          .then(() => {
+            resolve([param.path, nNewFilePath]);
+          })
+      )
+      .catch((e) => {
+        console.log(e);
+        reject("Renaming file failed" + e.code);
+      });
+  });
+}
+
+/**
+ * @param param param.path = /root/dir1
+ * @param newDirName = dir2
+ * @returns {Promise<>|Promise<[]>}
+ */
+function renameDirectoryPromise(param, newDirName, onProgress) {
+  const parenDirPath = tsPaths.extractParentDirectoryPath(param.path, "/");
+  const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirName);
+  if (param.path === newDirPath) {
+    return Promise.reject(
+      "Renaming directory failed, directories have the same path"
+    );
+  }
+  /**
+   *   param.path = /root/dir1
+   *   newDirPath = /root/dir2
+   */
+  return moveDirectoryPromise(param, newDirPath, onProgress);
+}
+
+/**
+ * Move a directory
+ * @param param param.path = /root/dir
+ * @param newDirPath = /root2/dir
+ * @returns {Promise<*[]>}
+ */
+function moveDirectoryPromise(param, newDirPath, onProgress) {
+  // const dirName = tsPaths.extractDirectoryName(param.path, "/");
+  // const newDirPath = tsPaths.cleanTrailingDirSeparator(newDirectoryPath) + "/" + dirName;
+  console.log("Move directory: " + param.path + " to " + newDirPath);
+  return getDirectoryPrefixes(param).then((prefixes) =>
+    copyDirectoryInternal(param, newDirPath, prefixes, onProgress).then(() =>
+      deleteDirectoryInternal(param, prefixes).then(() => newDirPath)
+    )
+  );
+  /*
+  const listParams = {
+    Bucket: param.bucketName,
+    Prefix: param.path,
+    Delimiter: "/",
+  };
+  return s3(param.location)
+    .listObjectsV2(listParams)
+    .promise()
+    .then((listedObjects) => {
+      if (listedObjects.Contents.length > 0) {
+        const promises = [];
+        listedObjects.Contents.forEach(({ Key }) => {
+          if (Key.endsWith("/")) {
+            promises.push(
+              createDirectoryPromise({
+                ...param,
+                path:
+                  tsPaths.cleanTrailingDirSeparator(newDirectoryPath) +
+                  "/" +
+                  dirName,
+              })
+            );
+          } else {
+            const newFilePath =
+              tsPaths.cleanTrailingDirSeparator(newDirectoryPath) +
+              "/" +
+              dirName +
+              "/" +
+              tsPaths.extractFileName(Key, "/");
+            promises.push(
+              copyFilePromise({ ...param, path: Key }, newFilePath)
+            );
+          }
+        });
+
+        return Promise.all(promises).then(() =>
+          deleteDirectoryPromise(param).then(() => newDirectoryPath)
+        );
+      } else {
+        // empty Dir
+        return createDirectoryPromise({
+          ...param,
+          path: newDirectoryPath,
+        }).then(() =>
+          deleteDirectoryPromise(param).then(() => newDirectoryPath)
+        );
+      }
+    })
+    .catch((e) => {
+      console.log(e);
+      return Promise.reject("No directory exist:" + param.path);
+    });*/
+}
+
+function copyDirectoryPromise(param, newDirPath, onProgress = undefined) {
+  return getDirectoryPrefixes(param).then((prefixes) =>
+    copyDirectoryInternal(param, newDirPath, prefixes, onProgress)
+  );
+}
+
+function copyDirectoryInternal(
+  param,
+  newDirPath,
+  prefixes,
+  onProgress = undefined
+) {
+  let part = 0;
+  let running = true;
+  function handleProgress(Key) {
+    if (onProgress && running) {
+      part += 1;
+      const progress = {
+        loaded: part,
+        total: prefixes.length,
+        key: newDirPath,
+      };
+      onProgress(
+        progress,
+        () => {
+          running = false;
+        },
+        Key
+      );
+    }
+  }
+  if (prefixes.length > 0) {
+    const promises = [];
+    for (const { Key } of prefixes) {
+      if (Key.endsWith("/")) {
+        promises.push(
+          createDirectoryPromise({
+            ...param,
+            path: Key.replace(
+              tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
+              tsPaths.cleanFrontDirSeparator(newDirPath)
+            ),
+          }).then(() => {
+            handleProgress(Key);
+          })
+        );
+      } else {
+        promises.push(
+          copyFilePromise(
+            { ...param, path: Key },
+            Key.replace(
+              tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
+              tsPaths.cleanFrontDirSeparator(newDirPath)
+            )
+          ).then(() => {
+            handleProgress(Key);
+          })
+        );
+      }
+    }
+    return runPromisesSynchronously(promises).then(() => newDirPath);
+  }
+  return Promise.reject(new Error("No dir content in:" + param.path));
+}
+
+/**
+ * Delete a specified file
+ */
+function deleteFilePromise(param) {
+  return s3(param.location)
+    .deleteObject({
+      Bucket: param.bucketName,
+      Key: param.path,
+    })
+    .promise();
+}
+
+/**
+ * Delete a specified directory
+ * @param param
+ * @returns {Promise<*[]>}
+ */
+function deleteDirectoryPromise(param) {
+  return getDirectoryPrefixes(param).then((prefixes) =>
+    deleteDirectoryInternal(param, prefixes)
+  );
+}
+
+function deleteDirectoryInternal(param, prefixes) {
+  if (prefixes.length > 0) {
+    const deleteParams = {
+      Bucket: param.bucketName,
+      Delete: { Objects: prefixes },
+    };
+
+    try {
+      return s3(param.location).deleteObjects(deleteParams).promise();
+    } catch (e) {
+      console.error(e);
+      return Promise.resolve();
+    }
+  }
+  return s3(param.location)
+    .deleteObject({
+      Bucket: param.bucketName,
+      Key: param.path,
+    })
+    .promise();
+}
+
+/**
+ * get recursively all aws directory prefixes
+ * @param param
+ * @returns {Promise<[]>}
+ */
+async function getDirectoryPrefixes(param) {
+  const prefixes = [];
+  const promises = [];
+  const listParams = {
+    Bucket: param.bucketName,
+    Prefix: tsPaths.normalizePath(normalizeRootPath(param.path)) + "/",
+    Delimiter: "/",
+    ...(param.ContinuationToken && {
+      ContinuationToken: param.ContinuationToken,
+    }),
+  };
+  const listedObjects = await s3(param.location).listObjectsV2(listParams).promise();
+
+  if (
+    listedObjects.Contents.length > 0 ||
+    listedObjects.CommonPrefixes.length > 0
+  ) {
+    listedObjects.Contents.forEach(({ Key }) => {
+      addPrefix(prefixes, { Key });
+    });
+
+    listedObjects.CommonPrefixes.forEach(({ Prefix }) => {
+      addPrefix(prefixes, { Key: Prefix });
+      promises.push(getDirectoryPrefixes({ ...param, path: Prefix }));
+    });
+  }
+  if (listedObjects.IsTruncated) {
+    // console.log('More files available');
+    if (listedObjects.NextContinuationToken) {
+      promises.push(
+        getDirectoryPrefixes({
+          ...param,
+          ContinuationToken: listedObjects.NextContinuationToken,
+        })
+      );
+    }
+  }
+  const subPrefixes = await Promise.all(promises);
+  subPrefixes.map((arrPrefixes) => {
+    arrPrefixes.map((prefix) => {
+      addPrefix(prefixes, prefix);
+    });
+  });
+  return prefixes;
+}
+
+function addPrefix(prefixes, prefix) {
+  if (!prefixes.some((obj) => obj.Key === prefix.Key)) {
+    prefixes.push(prefix);
+  }
+}
+
+function openUrl(url) {
+  const tmpLink = document.createElement("a");
+  tmpLink.target = "_blank";
+  tmpLink.href = url;
+  tmpLink.rel = "noopener noreferrer";
+  document.body.appendChild(tmpLink);
+  tmpLink.click();
+  tmpLink.parentNode.removeChild(tmpLink);
+  // window.open(url, '_blank').opener = null;
+  // Object.assign(anchor, {
+  //   target: '_blank',
+  //   href: url,
+  //   rel: 'noopener noreferrer'
+  // }).click();
+}
+
+function openFile(filePath) {
+  openUrl(filePath);
+}
+
+module.exports = {
+  s3,
+  listDirectoryPromise,
+  listMetaDirectoryPromise,
+  getURLforPath,
+  saveFilePromise,
+  saveTextFilePromise,
+  isFileExist,
+  getPropertiesPromise,
+  loadTextFilePromise,
+  getFileContentPromise,
+  saveBinaryFilePromise,
+  uploadFileByMultiPart,
+  createDirectoryPromise,
+  copyFilePromise,
+  renameFilePromise,
+  renameDirectoryPromise,
+  moveDirectoryPromise,
+  copyDirectoryPromise,
+  deleteFilePromise,
+  deleteDirectoryPromise,
+  openUrl,
+  openFile,
+};
