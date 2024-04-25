@@ -8,26 +8,39 @@ const {
   runPromisesSynchronously,
 } = require("@tagspaces/tagspaces-common/utils-io");
 
+const locationsCache = [];
+
 function s3(location) {
-  const advancedMode = location.endpointURL && location.endpointURL.length > 7;
-  if (advancedMode) {
-    const endpoint = new AWS.Endpoint(location.endpointURL);
-    return new AWS.S3({
-      endpoint: endpoint, // as string,
-      accessKeyId: location.accessKeyId,
-      secretAccessKey: location.secretAccessKey,
-      sessionToken: location.sessionToken,
-      s3ForcePathStyle: true, // needed for minio
-      signatureVersion: "v4", // needed for minio
-      logger: console,
-    });
-  } else {
-    return new AWS.S3({
-      region: location.region,
-      accessKeyId: location.accessKeyId,
-      secretAccessKey: location.secretAccessKey,
-      signatureVersion: "v4",
-    });
+  if (location) {
+    if (locationsCache[location.uuid]) {
+      if (
+        locationsCache[location.uuid].lastEditedDate === location.lastEditedDate
+      ) {
+        return locationsCache[location.uuid];
+      }
+    }
+    const advancedMode =
+      location.endpointURL && location.endpointURL.length > 7;
+    if (advancedMode) {
+      const endpoint = new AWS.Endpoint(location.endpointURL);
+      locationsCache[location.uuid] = new AWS.S3({
+        endpoint: endpoint, // as string,
+        accessKeyId: location.accessKeyId,
+        secretAccessKey: location.secretAccessKey,
+        sessionToken: location.sessionToken,
+        s3ForcePathStyle: true, // needed for minio
+        signatureVersion: "v4", // needed for minio
+        logger: console,
+      });
+    } else {
+      locationsCache[location.uuid] = new AWS.S3({
+        region: location.region,
+        accessKeyId: location.accessKeyId,
+        secretAccessKey: location.secretAccessKey,
+        signatureVersion: "v4",
+      });
+    }
+    return locationsCache[location.uuid];
   }
 }
 
@@ -135,7 +148,7 @@ const listDirectoryPromise = (
       Prefix:
         path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
-      Bucket: bucketName
+      Bucket: bucketName,
     };
     listDirectoryAll(params, param.location, resultsLimit.maxLoops)
       .then((data) => {
@@ -212,7 +225,7 @@ const listDirectoryPromise = (
                     {
                       path: thumbPath,
                       bucketName: bucketName,
-                      location: param.location
+                      location: param.location,
                     },
                     604800
                   ); // 60 * 60 * 24 * 7 = 1 week
@@ -340,7 +353,7 @@ const getEntryMeta = async (eentry, location) => {
         const metaFileContent = await loadTextFilePromise({
           path: metaFilePath,
           bucketName: eentry.bucketName,
-          location
+          location,
         });
         eentry.meta = JSON.parse(metaFileContent.trim());
       } catch (ex) {
@@ -364,14 +377,14 @@ const getEntryMeta = async (eentry, location) => {
         const folderThumbProps = await getPropertiesPromise({
           path: folderTmbPath,
           bucketName: eentry.bucketName,
-          location
+          location,
         });
         if (folderThumbProps && folderThumbProps.isFile) {
           const thumb = getURLforPath(
             {
               path: folderTmbPath,
               bucketName: eentry.bucketName,
-              location
+              location,
             },
             604800
           ); // 60 * 60 * 24 * 7 = 1 week ;
@@ -389,14 +402,14 @@ const getEntryMeta = async (eentry, location) => {
         const folderProps = await getPropertiesPromise({
           path: folderMetaPath,
           bucketName: eentry.bucketName,
-          location
+          location,
         });
         if (folderProps && folderProps.isFile) {
           try {
             const metaFileContent = await loadTextFilePromise({
               path: folderMetaPath,
               bucketName: eentry.bucketName,
-              location
+              location,
             });
             eentry.meta = JSON.parse(metaFileContent.trim());
           } catch (ex) {
@@ -460,27 +473,30 @@ function getPropertiesPromise(param) {
             MaxKeys: 1,
             Delimiter: "/",
           };
-          s3(param.location).listObjectsV2(listParams, (listError, listData) => {
-            if (listError) {
-              resolve(false);
+          s3(param.location).listObjectsV2(
+            listParams,
+            (listError, listData) => {
+              if (listError) {
+                resolve(false);
+              }
+              const folderExists =
+                (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
+                (listData &&
+                  listData.CommonPrefixes &&
+                  listData.CommonPrefixes.length > 0); // needed for DO
+              if (folderExists) {
+                resolve({
+                  name: tsPaths.extractDirectoryName(path),
+                  isFile: false,
+                  size: 0,
+                  lmdt: undefined,
+                  path: path,
+                });
+              } else {
+                resolve(false);
+              }
             }
-            const folderExists =
-              (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
-              (listData &&
-                listData.CommonPrefixes &&
-                listData.CommonPrefixes.length > 0); // needed for DO
-            if (folderExists) {
-              resolve({
-                name: tsPaths.extractDirectoryName(path),
-                isFile: false,
-                size: 0,
-                lmdt: undefined,
-                path: path,
-              });
-            } else {
-              resolve(false);
-            }
-          });
+          );
         } else {
           /*
                                   data = {
@@ -593,7 +609,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         const fileProps = await getPropertiesPromise({
           path: filePath,
           bucketName: bucketName,
-          location: param.location
+          location: param.location,
         });
         if (fileProps && fileProps.lmdt !== lmdt) {
           reject(new Error("File was modified externally"));
@@ -631,7 +647,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         getPropertiesPromise({
           path: filePath,
           bucketName: bucketName,
-          location: param.location
+          location: param.location,
         }).then((entry) =>
           resolve({
             ...entry,
@@ -1220,7 +1236,9 @@ async function getDirectoryPrefixes(param) {
       ContinuationToken: param.ContinuationToken,
     }),
   };
-  const listedObjects = await s3(param.location).listObjectsV2(listParams).promise();
+  const listedObjects = await s3(param.location)
+    .listObjectsV2(listParams)
+    .promise();
 
   if (
     listedObjects.Contents.length > 0 ||

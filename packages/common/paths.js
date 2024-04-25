@@ -221,12 +221,13 @@ function extractFileName(filePath, dirSeparator = AppConfig.dirSeparator) {
   if (filePath.endsWith(dirSeparator)) {
     return "";
   }
-  return filePath
-    ? filePath.substring(
-        filePath.lastIndexOf(dirSeparator) + 1,
-        filePath.length
-      )
-    : filePath;
+  if (filePath) {
+    const lastIndex = getDirSeparatorPosition(filePath, dirSeparator);
+    if (lastIndex !== -1) {
+      return filePath.substring(lastIndex + 1, filePath.length);
+    }
+  }
+  return filePath;
 }
 
 /**
@@ -266,6 +267,15 @@ function cleanTrailingDirSeparator(dirPath) {
   return "";
 }
 
+function getDirSeparatorPosition(path, dirSeparator) {
+  const lastIndex = path.lastIndexOf(dirSeparator);
+  if (lastIndex !== -1) {
+    return lastIndex;
+  } else if (dirSeparator === "\\") {
+    return path.lastIndexOf("/");
+  }
+  return -1;
+}
 /**
  *
  * @param path -> root//subFolder/
@@ -335,14 +345,9 @@ function extractParentDirectoryPath(
   if (path.endsWith(dirSeparator)) {
     path = path.substring(0, path.lastIndexOf(dirSeparator));
   }
-  const lastIndex = path.lastIndexOf(dirSeparator);
+  const lastIndex = getDirSeparatorPosition(path, dirSeparator);
   if (lastIndex !== -1) {
     return path.substring(0, lastIndex);
-  } else if (dirSeparator === "\\") {
-    const index = path.lastIndexOf("/");
-    if (index !== -1) {
-      return path.substring(0, index);
-    }
   }
   // return root dir in cases that dirPath not start with dirSeparator (AWS)
   return "";

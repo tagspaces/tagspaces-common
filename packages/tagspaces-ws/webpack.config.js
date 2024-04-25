@@ -57,8 +57,8 @@ module.exports = {
   plugins: [
     new webpack.IgnorePlugin({
       resourceRegExp: /original-fs/,
-      contextRegExp: /adm-zip/
-    })
+      contextRegExp: /adm-zip/,
+    }),
   ],
   target: "node",
 
