@@ -44,11 +44,7 @@ function walkDirectory(
     mode: [],
     ...options,
   };
-  return listDirectoryPromise(
-    param,
-    mergedOptions.mode,
-    mergedOptions.extractText
-  )
+  return listDirectoryPromise(param, mergedOptions.mode, ignorePatterns)
     .then((entries) => {
       if (!isWalking() || entries === undefined) {
         return false;
