@@ -576,8 +576,9 @@ function extractTags(
  */
 function joinPaths(...paths) {
   let result = "";
-  const dirSeparator = paths[0];
+  const dirSeparator = paths[0] || AppConfig.dirSeparator;
   if (dirSeparator) {
+    //&& (dirSeparator === '/' || dirSeparator === '\\')) {
     for (let i = 1; i < paths.length; i += 1) {
       result =
         result +
@@ -590,6 +591,8 @@ function joinPaths(...paths) {
           : dirSeparator) +
         paths[i];
     }
+  } else {
+    throw new Error("Wrong dirSeparator:" + dirSeparator);
   }
   if (AppConfig.isWin && result.startsWith(dirSeparator)) {
     // trim dirSeparator in windows paths like \C:\

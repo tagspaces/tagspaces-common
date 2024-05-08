@@ -230,10 +230,12 @@ const listDirectoryPromise = (
                     604800
                   ); // 60 * 60 * 24 * 7 = 1 week
                 }
+              } else {
+                thumbPath = undefined;
               }
             }
 
-            eentry.meta = { ...(thumbPath && thumbPath) };
+            eentry.meta = thumbPath ? { thumbPath } : {};
             eentry.isFile = true;
             eentry.size = file.Size;
             eentry.lmdt = Date.parse(file.LastModified);
