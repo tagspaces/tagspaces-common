@@ -256,7 +256,7 @@ function encodeFileName(
 function cleanTrailingDirSeparator(dirPath) {
   if (dirPath) {
     if (dirPath.lastIndexOf("\\") === dirPath.length - 1) {
-      return dirPath.substring(0, dirPath.length - 1);
+      return dirPath.replace(/\\+$/g, ""); //dirPath.substring(0, dirPath.length - 1);
     }
     if (dirPath.lastIndexOf("/") === dirPath.length - 1) {
       return dirPath.replace(/\/+$/g, ""); //dirPath.substring(0, dirPath.length - 1);

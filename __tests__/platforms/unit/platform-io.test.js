@@ -17,6 +17,7 @@ const {
   platformDeleteFilePromise,
   platformDeleteDirectoryPromise,
 } = require("@tagspaces/tagspaces-platforms/platform-io");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 const bucketDir = "./__tests__/common-aws/buckets/bucket1";
 const dirPath = bucketDir + "/dir/";
@@ -37,7 +38,12 @@ test("saveFilePromise/saveTextFilePromise", async () => {
   const file = await platformSaveFilePromise({ path: filePath }, "test init");
   expect(file.path).toBe(filePath);
   const fileChanged = await platformSaveFilePromise({ path: filePath }, "test");
-  expect(fileChanged.lmdt).toBeGreaterThan(file.lmdt);
+  if (AppConfig.isWin) {
+    //in windows are equal
+    expect(fileChanged.lmdt).toBeGreaterThanOrEqual(file.lmdt);
+  } else {
+    expect(fileChanged.lmdt).toBeGreaterThan(file.lmdt);
+  }
   // console.log("file:" + JSON.stringify(file));
 });
 
