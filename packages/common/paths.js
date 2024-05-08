@@ -580,16 +580,18 @@ function joinPaths(...paths) {
   if (dirSeparator) {
     //&& (dirSeparator === '/' || dirSeparator === '\\')) {
     for (let i = 1; i < paths.length; i += 1) {
-      result =
-        result +
-        (result.endsWith(dirSeparator) ||
-        paths[i].startsWith(dirSeparator) ||
-        (i === 1 &&
-          paths[i].startsWith(".") &&
-          !paths[i].startsWith(AppConfig.metaFolder)) // relative paths
-          ? ""
-          : dirSeparator) +
-        paths[i];
+      if (paths[i]) {
+        result =
+          result +
+          (result.endsWith(dirSeparator) ||
+          paths[i].startsWith(dirSeparator) ||
+          (i === 1 &&
+            paths[i].startsWith(".") &&
+            !paths[i].startsWith(AppConfig.metaFolder)) // relative paths
+            ? ""
+            : dirSeparator) +
+          paths[i];
+      }
     }
   } else {
     throw new Error("Wrong dirSeparator:" + dirSeparator);
