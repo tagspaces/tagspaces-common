@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { commandsCtx, editorViewCtx } from '@milkdown/core';
+import { commandsCtx, EditorStatus, editorViewCtx } from '@milkdown/core';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import DialogActions from '@mui/material/DialogActions';
@@ -38,7 +38,7 @@ function ImageDialog(props: Props) {
       return props.text;
     }
     // get FromSelection
-    if (editor) {
+    if (editor && !loading && editor.status === EditorStatus.Created) {
       const { ctx } = editor;
       if (ctx) {
         try {

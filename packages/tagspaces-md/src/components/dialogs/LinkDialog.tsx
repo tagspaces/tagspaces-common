@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { editorViewCtx } from '@milkdown/core';
+import { EditorStatus, editorViewCtx } from '@milkdown/core';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import DialogActions from '@mui/material/DialogActions';
@@ -35,7 +35,7 @@ function LinkDialog(props: Props) {
       return props.text;
     }
     // get FromSelection
-    if (editor) {
+    if (editor && !loading && editor.status === EditorStatus.Created) {
       const { ctx } = editor;
       if (ctx) {
         try {
@@ -57,7 +57,7 @@ function LinkDialog(props: Props) {
   };
 
   const onHandleSubmit = () => {
-    if (editor) {
+    if (editor && !loading && editor.status === EditorStatus.Created) {
       editor.action(ctx => {
         const view = ctx.get(editorViewCtx);
         if (isEditMode) {

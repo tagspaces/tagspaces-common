@@ -4,6 +4,7 @@ import { useInstance } from '@milkdown/react';
 import { replaceAll } from '@milkdown/utils';
 import { MilkdownRef } from './MilkdownEditor';
 import { useSetDarkMode } from './providers/DarkModeProvider';
+import { EditorStatus } from '@milkdown/core';
 
 type Props = {
   milkdownRef: ForwardedRef<MilkdownRef>;
@@ -15,9 +16,8 @@ const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
 
   React.useImperativeHandle(milkdownRef, () => ({
     update: (markdown: string) => {
-      // if (!editorReady || !editorRef.current) return;
       const editor = getEditor();
-      if (loading || !editor) return;
+      if (loading || !editor || editor.status !== EditorStatus.Created) return;
       editor.action(replaceAll(markdown));
     },
     setDarkMode: (isDarkMode: boolean) => {

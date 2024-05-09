@@ -19,8 +19,10 @@
   "scripts": {
     "start-only": "react-scripts start",
     "start": "npm run build-libs && npm run build && react-scripts start",
+    "start-dev": "npm run build-libs-dev && npm run build && react-scripts start",
     "build": "react-scripts build",
     "build-libs": "cd ../tagspaces-md && npm run build && cd ../tagspaces-codemirror && npm run build && cd ../extension-ui && npm run build && cd ../md-sample",
+    "build-libs-dev": "cd ../tagspaces-md && npm run build-dev && cd ../tagspaces-codemirror && npm run build && cd ../extension-ui && npm run build-dev && cd ../md-sample",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "run-build": "npx serve -s build"

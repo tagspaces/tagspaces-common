@@ -20,7 +20,7 @@
     "copy-files": "npx shx cp src/style.module.css esm && npx shx cp src/style.module.css lib",
     "build": "npm run clean && npm run lib:cjs && npm run lib:esm && npm run copy-files",
     "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
-    "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development",
+    "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development && npm run copy-files",
     "code-format": "npx prettier --write .",
     "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-codemirror-2.1.6.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-codemirror && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"

@@ -22,17 +22,6 @@ import { handleClick } from './utils';
 /*function isExternalLink(url: any) {
     return url.startsWith('http://') || url.startsWith('https://');
   }*/
-function hasURLProtocol(url: any) {
-  // noinspection OverlyComplexBooleanExpressionJS
-  return (
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('file://') ||
-    url.startsWith('data:') ||
-    url.startsWith('ts://?ts') ||
-    url.startsWith('ts:?ts')
-  );
-}
 
 type EditorContextData = {
   editor: UseEditorReturn | null;

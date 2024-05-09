@@ -1,4 +1,4 @@
-import { CmdKey, editorViewCtx } from '@milkdown/core';
+import { CmdKey, EditorStatus, editorViewCtx } from '@milkdown/core';
 import { insertDiagramCommand } from '@milkdown/plugin-diagram';
 import CodeIcon from '@mui/icons-material/Code';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
@@ -38,7 +38,7 @@ export const Slash = () => {
 
   const onRemoveSlash = () => {
     const editor = getEditor();
-    if (loading || !editor) {
+    if (loading || !editor || editor.status !== EditorStatus.Created) {
       return;
     }
 

@@ -31,7 +31,7 @@ export const ImageNode: React.FC = () => {
   const lightboxState = useToggler();
 
   const onImageRemove = () => {
-    if (loading || !editor) {
+    if (loading || !editor || editor.status !== EditorStatus.Created) {
       return;
     }
 
@@ -55,12 +55,13 @@ export const ImageNode: React.FC = () => {
 
   function hasURLProtocol(url: any) {
     return (
-      url.startsWith('http://') ||
-      url.startsWith('https://') ||
-      url.startsWith('file://') ||
-      url.startsWith('data:') ||
-      url.startsWith('ts://?ts') ||
-      url.startsWith('ts:?ts')
+      url &&
+      (url.startsWith('http://') ||
+        url.startsWith('https://') ||
+        url.startsWith('file://') ||
+        url.startsWith('data:') ||
+        url.startsWith('ts://?ts') ||
+        url.startsWith('ts:?ts'))
     );
   }
 

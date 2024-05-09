@@ -2,8 +2,7 @@ import {
   Editor as MilkdownEditor,
   rootCtx,
   defaultValueCtx,
-  editorViewOptionsCtx,
-  remarkStringifyOptionsCtx
+  editorViewOptionsCtx
 } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
 import { clipboard } from '@milkdown/plugin-clipboard';
@@ -11,11 +10,10 @@ import { emoji } from '@milkdown/plugin-emoji';
 import { history } from '@milkdown/plugin-history';
 import { EditorView } from 'prosemirror-view';
 import { trailing } from '@milkdown/plugin-trailing';
+import { cursor } from '@milkdown/plugin-cursor';
 import { useEditor, UseEditorReturn } from '@milkdown/react';
-import { createContext, useMemo } from 'react';
+import { createContext, useEffect, useMemo, useRef } from 'react';
 import { Node } from '@milkdown/prose/model';
-import { findChildrenByMark } from '@milkdown/prose';
-import { linkSchema } from '@milkdown/preset-commonmark';
 
 import { useCommonmarkPlugin } from './hooks/useCommonmarkPlugin/useCommonmarkPlugin';
 import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
@@ -30,6 +28,7 @@ import '@milkdown/theme-nord/style.css';
 import { useDiagramPlugin } from './hooks/useDiagramPlugin';
 import { useTaskList } from './hooks/useTaskList';
 import { handleClick } from './utils';
+import { useBlockPlugin } from './hooks/useBlockPlugin';
 
 /*function isExternalLink(url: any) {
     return url.startsWith('http://') || url.startsWith('https://');
@@ -61,6 +60,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   excludePlugins
 }) => {
   const { mode } = useTextEditorContext();
+  const isEditable = useRef(mode === 'active');
 
   const gfmPlugin = useGfmPlugin();
   const mathPlugin = useMathPlugin();
@@ -71,6 +71,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   const commonmarkPlugin = useCommonmarkPlugin();
   //const prismPlugin = usePrismPlugin();
   const menuBarPlugin = useMenuBarPlugin();
+  const blockPlugin = useBlockPlugin();
   const listenerPlugin = useListenerPlugin({
     onChange,
     onFocus,
@@ -101,7 +102,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
 
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
-            editable: () => mode === 'active',
+            editable: () => isEditable.current,
             handleClickOn: (view: EditorView, pos: number, node: Node) =>
               handleClick(mode, ctx, view, pos) //, node)
           }));
@@ -121,6 +122,8 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .use(gfmPlugin)
         .use(taskList)
         .use(listenerPlugin)
+        .use(blockPlugin)
+        .use(cursor)
         //.use(prismPlugin)
         .use(history)
         .use(trailing)
@@ -145,7 +148,6 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       return editor;
     },
     [
-      mode,
       commonmarkPlugin,
       defaultMarkdownValue,
       listenerPlugin,
@@ -159,6 +161,10 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       //prismPlugin
     ]
   );
+
+  useEffect(() => {
+    isEditable.current = mode === 'active';
+  }, [isEditable, mode]);
 
   const context = useMemo(() => ({ editor }), [editor]);
 

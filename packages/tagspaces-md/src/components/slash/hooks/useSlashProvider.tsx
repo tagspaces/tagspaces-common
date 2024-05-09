@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFindNodesByMark } from '../../../hooks/useFindNodesByMark';
 import { useKeyboardList } from '../../../hooks/useKeyboardList';
 import { useSelectedMarkPosition } from '../../../hooks/useSelectedMarkPosition';
+import { EditorStatus } from '@milkdown/core';
 
 type UseSlashProviderProps = {
   tooltipRef: React.RefObject<HTMLDivElement>;
@@ -49,7 +50,12 @@ export const useSlashProvider = ({ tooltipRef }: UseSlashProviderProps) => {
   useEffect(() => {
     const editor = getEditor();
 
-    if (loading || !tooltipRef?.current || !editor) {
+    if (
+      loading ||
+      !tooltipRef?.current ||
+      !editor ||
+      editor.status !== EditorStatus.Created
+    ) {
       return;
     }
 

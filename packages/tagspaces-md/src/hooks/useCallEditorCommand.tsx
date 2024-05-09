@@ -1,4 +1,4 @@
-import { CmdKey } from '@milkdown/core';
+import { CmdKey, EditorStatus } from '@milkdown/core';
 import { useInstance } from '@milkdown/react';
 import { callCommand } from '@milkdown/utils';
 import { useCallback } from 'react';
@@ -9,7 +9,7 @@ export const useCallEditorCommand = () => {
   const onCallCommand = useCallback(
     <T,>(command: CmdKey<T>, payload?: T | undefined) => {
       const editor = getEditor();
-      if (loading || !editor) {
+      if (loading || !editor || editor.status !== EditorStatus.Created) {
         return;
       }
 
