@@ -15,10 +15,19 @@ export const useSetDarkMode = () => {
 };
 
 export const DarkModeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(
-    typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  );
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window === 'undefined') {
+      // If window object is not available (like during server-side rendering),
+      // default to false or true based on your preference.
+      return false;
+    }
+    // @ts-ignore
+    if (window.theme) {
+      // @ts-ignore
+      return window.theme === 'dark';
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  });
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');

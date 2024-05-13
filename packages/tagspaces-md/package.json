@@ -23,7 +23,7 @@
     "build-dev": "npm run clean && npm run build:css && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development && npm run copy-files",
     "build:css": "npx cross-env NODE_ENV=production tailwindcss -i src/globals.css -o src/tailwind.css -m",
     "code-format": "npx prettier --write .",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-3.0.18.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-4.3.4.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {

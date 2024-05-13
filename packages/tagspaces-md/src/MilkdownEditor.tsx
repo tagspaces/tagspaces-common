@@ -17,7 +17,7 @@ export interface MilkdownRef {
 interface Props {
   content: string; // Content;
   readOnly?: boolean;
-  dark?: boolean;
+  //dark?: boolean;
   onChange?: (markdown: string, prevMarkdown: string | null) => void;
   onFocus?: () => void;
   lightMode?: boolean;
