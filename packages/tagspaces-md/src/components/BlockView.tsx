@@ -7,36 +7,39 @@ import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
 
 export const BlockView = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const tooltipProvider = useRef<BlockProvider>();
+  const tooltipProvider = useRef<BlockProvider>(undefined);
 
   const { mode } = useTextEditorContext();
   const { view } = usePluginViewContext();
   const [loading, getEditor] = useInstance();
+  const editor = getEditor();
 
   useEffect(() => {
     const div = ref.current;
     if (!loading && div) {
-      const editor = getEditor();
-      if (editor && editor.status === EditorStatus.Created) {
-        if (mode === 'active') {
+      if (editor) { // && editor.status === EditorStatus.Created) {
+        if (mode === 'active' && tooltipProvider.current === undefined) {
           tooltipProvider.current = new BlockProvider({
             ctx: editor.ctx,
             content: div
           });
+          tooltipProvider.current?.update(view);
         } else {
-          tooltipProvider?.current?.destroy();
+          tooltipProvider.current?.destroy();
+          tooltipProvider.current = undefined;
         }
       }
     }
 
     return () => {
-      tooltipProvider?.current?.destroy();
+      tooltipProvider.current?.destroy();
+      tooltipProvider.current = undefined;
     };
-  }, [mode, loading, getEditor, ref]);
+  }, [mode, loading, editor, ref.current]);//
 
-  useEffect(() => {
+  /*useEffect(() => {
     tooltipProvider.current?.update(view);
-  });
+  });*/
 
   return (
     <div className="hidden">

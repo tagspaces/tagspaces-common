@@ -62,8 +62,8 @@
     "babel-loader": "^8.2.5",
     "css-loader": "^6.7.1",
     "prettier": "^2.7.1",
-    "ts-loader": "^9.4.1",
-    "typescript": "^4.8.4"
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "react": "*",
