@@ -17,7 +17,8 @@ export const BlockView = () => {
   useEffect(() => {
     const div = ref.current;
     if (!loading && div) {
-      if (editor) { // && editor.status === EditorStatus.Created) {
+      if (editor) {
+        // && editor.status === EditorStatus.Created) {
         if (mode === 'active' && tooltipProvider.current === undefined) {
           tooltipProvider.current = new BlockProvider({
             ctx: editor.ctx,
@@ -35,7 +36,7 @@ export const BlockView = () => {
       tooltipProvider.current?.destroy();
       tooltipProvider.current = undefined;
     };
-  }, [mode, loading, editor, ref.current]);//
+  }, [mode, loading, editor, ref.current]); //
 
   /*useEffect(() => {
     tooltipProvider.current?.update(view);

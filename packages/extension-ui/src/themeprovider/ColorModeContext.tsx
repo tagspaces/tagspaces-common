@@ -1,3 +1,6 @@
 import { createContext } from 'react';
 
-export const ColorModeContext = createContext({ toggleColorMode: () => {} });
+export const ColorModeContext = createContext({
+  toggleColorMode: () => {},
+  setMode: (mode: 'light' | 'dark') => {}
+});

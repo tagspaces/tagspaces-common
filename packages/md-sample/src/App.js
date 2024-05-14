@@ -115,7 +115,9 @@ function App() {
               icon: <DarkModeIcon />,
               name: "Theme Switch",
               action: () => {
-                colorMode.toggleColorMode();
+                colorMode.setMode(
+                  theme.palette.mode === "light" ? "dark" : "light"
+                ); //toggleColorMode();
                 milkdownEditorRef.current.setDarkMode(
                   theme.palette.mode === "light"
                 );

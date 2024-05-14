@@ -33,22 +33,25 @@ const getDesignTokens = mode => ({
 });
 const MUIThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<'light' | 'dark'>(() => {
-      if (typeof window === 'undefined') {
-          // If window object is not available (like during server-side rendering)
-          return 'light';
-      }
+    if (typeof window === 'undefined') {
+      // If window object is not available (like during server-side rendering)
+      return 'light';
+    }
+    // @ts-ignore
+    if (window.theme) {
       // @ts-ignore
-      if (window.theme) {
-          // @ts-ignore
-          return window.theme;
-      }
-      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      return window.theme;
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
   });
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
         setMode(prevMode => (prevMode === 'light' ? 'dark' : 'light'));
-      }
+      },
+      setMode
     }),
     []
   );
