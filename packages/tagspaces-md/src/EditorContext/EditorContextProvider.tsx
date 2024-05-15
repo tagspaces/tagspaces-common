@@ -103,7 +103,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
             attributes: {
-              class: 'mx-auto'
+              class: 'mx-auto' // text-center w-1/2 flex justify-center items-center h-screen
             },
             editable: () => isEditable.current,
             handleClickOn: (view: EditorView, pos: number, node: Node) =>
@@ -125,7 +125,6 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .use(gfmPlugin)
         .use(taskList)
         .use(listenerPlugin)
-        .use(blockPlugin)
         .use(cursor)
         //.use(prismPlugin)
         .use(history)
@@ -133,6 +132,9 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
         .use(emoji)
         .use(clipboard);
 
+      if (!isExcluded('block')) {
+        editor.use(blockPlugin);
+      }
       if (!isExcluded('menu')) {
         editor.use(menuBarPlugin);
       }
@@ -155,6 +157,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       defaultMarkdownValue,
       listenerPlugin,
       menuBarPlugin,
+      blockPlugin,
       gfmPlugin,
       mathPlugin,
       diagramPlugins,

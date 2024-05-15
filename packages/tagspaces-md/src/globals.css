@@ -48,7 +48,7 @@ span[data-type='html'] {
 
 .ProseMirror ul,
 .ProseMirror ol {
-  @apply ml-4;
+  @apply !p-0 ml-4;
 }
 
 .ProseMirror p > img:not(.ProseMirror-separator) {
@@ -84,8 +84,8 @@ h4 {
 }
 
 .prose > *:not(:first-child span) {
-  /*max-width: 65ch;*/
-  @apply px-20;
+  @apply ml-20;
+  /* max-width: 65ch;*/
 }
 
 .emoji {
