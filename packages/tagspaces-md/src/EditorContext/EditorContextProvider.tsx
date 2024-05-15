@@ -102,6 +102,9 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
 
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
+            attributes: {
+              class: 'mx-auto'
+            },
             editable: () => isEditable.current,
             handleClickOn: (view: EditorView, pos: number, node: Node) =>
               handleClick(mode, ctx, view, pos) //, node)

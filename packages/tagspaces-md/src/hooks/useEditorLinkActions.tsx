@@ -9,6 +9,7 @@ import { useMilkdownInstance } from './useMilkdownInstance';
 type LinkValues = {
   href: string;
   text?: string;
+  title?: string;
 };
 
 export const useEditorLinkActions = () => {
@@ -16,14 +17,14 @@ export const useEditorLinkActions = () => {
   const { editor, loading } = useMilkdownInstance();
 
   const getLinkCreationTransaction = useCallback(
-    (view: EditorView, { href, text }: LinkValues) => {
+    (view: EditorView, { href, text, title }: LinkValues) => {
       if (loading || !editor || editor.status !== EditorStatus.Created) {
         return;
       }
       const { ctx } = editor;
       const { state } = view;
 
-      const link = linkSchema.type(ctx).create({ href: href });
+      const link = linkSchema.type(ctx).create({ href: href, title: title });
       const node = state.schema.text(text || href).mark([link]);
       return state.tr.replaceSelectionWith(node, false);
     },
@@ -31,7 +32,7 @@ export const useEditorLinkActions = () => {
   );
 
   const getLinkUpdateTransaction = useCallback(
-    (view: EditorView, { href, text }: LinkValues) => {
+    (view: EditorView, { href, text, title }: LinkValues) => {
       if (loading || !editor || editor.status !== EditorStatus.Created) {
         return;
       }
@@ -42,7 +43,7 @@ export const useEditorLinkActions = () => {
         ctx && getSelectedMarkPosition(view, linkSchema.type(ctx));
 
       if (linkPosition) {
-        const link = linkSchema.type(ctx).create({ href: href });
+        const link = linkSchema.type(ctx).create({ href: href, title: title });
         const node = state.schema.text(text || href).mark([link]);
 
         return state.tr.replaceRangeWith(

@@ -1,4 +1,4 @@
-/*@tailwind base;*/
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -48,7 +48,7 @@ span[data-type='html'] {
 
 .ProseMirror ul,
 .ProseMirror ol {
-  @apply !p-0 ml-4;
+  @apply ml-4;
 }
 
 .ProseMirror p > img:not(.ProseMirror-separator) {
@@ -84,7 +84,8 @@ h4 {
 }
 
 .prose > *:not(:first-child span) {
-  @apply px-4;
+  /*max-width: 65ch;*/
+  @apply px-20;
 }
 
 .emoji {
