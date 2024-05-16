@@ -46,7 +46,7 @@ export const BlockView = () => {
     <div className="hidden">
       <div
         ref={ref}
-        className="w-6 bg-slate-200 rounded hover:bg-slate-300 cursor-grab"
+        className="relative cursor-grab rounded-full border-2 bg-gray-50 border border-solid border-gray-300 dark:border-gray-900 dark:bg-gray-900"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +54,7 @@ export const BlockView = () => {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-6 h-6"
+          className="h-5 w-5"
         >
           <path
             strokeLinecap="round"
