@@ -1,7 +1,12 @@
-@tailwind base;
+/*@import 'minireset.css';*/
+/*@tailwind base;*/
 @tailwind components;
 @tailwind utilities;
 
+/* Manually override box-sizing */
+/* *, :after, :before {
+  box-sizing: content-box;
+}*/
 /*html,
 body,
 #__next {
@@ -15,6 +20,17 @@ body,
 body {
   @apply dark:bg-nord0 bg-white text-gray-900 dark:text-gray-50;
 }
+.milkdown {
+  font-family: Roboto, HelveticaNeue-Light, Helvetica Neue Light, Helvetica Neue,
+    Helvetica, Arial, Lucida Grande, sans-serif;
+  /*font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji*/
+}
+/*.cm-editor {
+  font-family: Consolas, Monaco, Andale Mono, Ubuntu Mono, monospace;
+}*/
+/*.font-sans{
+  font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji
+}*/
 
 /* Prosemirror  */
 .ProseMirror {
@@ -84,7 +100,8 @@ h4 {
 }
 
 .prose > *:not(:first-child span) {
-  @apply ml-20;
+  @apply px-4 ml-10;
+  /*margin-left: 40px;*/
   /* max-width: 65ch;*/
 }
 

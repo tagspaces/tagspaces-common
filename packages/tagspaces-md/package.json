@@ -17,7 +17,7 @@
     "clean": "npx rimraf build lib esm lib-esm",
     "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
     "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
-    "copy-files": "npx shx cp src/tailwind.css esm && npx shx cp src/tailwind.css lib && npx shx cp src/style.module.css esm && npx shx cp src/style.module.css lib && npx shx cp src/milkdown.css esm && npx shx cp src/milkdown.css lib",
+    "copy-files": "npx shx cp src/tailwind.css esm && npx shx cp src/tailwind.css lib && npx shx cp src/style.module.css esm && npx shx cp src/style.module.css lib",
     "build": "npm run clean && npm run build:css && npm run lib:cjs && npm run lib:esm && npm run copy-files",
     "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
     "build-dev": "npm run clean && npm run build:css && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development && npm run copy-files",
@@ -25,7 +25,7 @@
     "code-format": "npx prettier --write .",
     "type-check": "npm run typescript-clean && tsc --noEmit",
     "typescript-clean": "tsc --build --clean",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-4.3.4.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-4.3.9.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
