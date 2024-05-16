@@ -25,6 +25,9 @@ body {
     Helvetica, Arial, Lucida Grande, sans-serif;
   /*font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji*/
 }
+.form-checkbox {
+  border-style: solid;
+}
 /*.cm-editor {
   font-family: Consolas, Monaco, Andale Mono, Ubuntu Mono, monospace;
 }*/

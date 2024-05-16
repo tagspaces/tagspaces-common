@@ -46,6 +46,7 @@ export const BlockView = () => {
     <div className="hidden">
       <div
         ref={ref}
+        style={{ width: '1.25rem', height: '1.25rem' }}
         className="relative cursor-grab rounded-full border-2 bg-gray-50 border border-solid border-gray-300 dark:border-gray-900 dark:bg-gray-900"
       >
         <svg
