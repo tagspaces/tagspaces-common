@@ -103,7 +103,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
           ctx.update(editorViewOptionsCtx, prev => ({
             ...prev,
             attributes: {
-              class: 'mx-auto' // text-center w-1/2 flex justify-center items-center h-screen
+              class: 'mx-auto h-full' // text-center w-1/2 flex justify-center items-center h-screen
             },
             editable: () => isEditable.current,
             handleClickOn: (view: EditorView, pos: number, node: Node) =>

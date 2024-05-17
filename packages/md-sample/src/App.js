@@ -73,6 +73,7 @@ function App() {
         sx={{
           display: "flex",
           width: "100%",
+          height: "100%",
           bgcolor: "background.default",
           color: "text.primary",
         }}
@@ -86,7 +87,7 @@ function App() {
             lightMode={true}
           />
       <hr /> */}
-        <div style={{ width: "50%" }}>
+        <div style={{ width: "50%", height: '100%' }}>
           <MilkdownEditor
             ref={milkdownEditorRef}
             content={text.current}
