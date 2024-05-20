@@ -87,7 +87,7 @@ function App() {
             lightMode={true}
           />
       <hr /> */}
-        <div style={{ width: "50%", height: '100%' }}>
+        <div style={{ width: "50%", height: "100%" }}>
           <MilkdownEditor
             ref={milkdownEditorRef}
             content={text.current}

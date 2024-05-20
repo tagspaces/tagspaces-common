@@ -325,10 +325,9 @@ function extractContainingDirectoryPath(
   filePath,
   dirSeparator = AppConfig.dirSeparator
 ) {
-  if (filePath.indexOf(dirSeparator) === -1) {
-    return dirSeparator;
-  }
-  return filePath.substring(0, filePath.lastIndexOf(dirSeparator));
+  const cleanedPath = cleanTrailingDirSeparator(filePath);
+  const lastIndex = cleanedPath.lastIndexOf(dirSeparator);
+  return lastIndex === -1 ? dirSeparator : cleanedPath.substring(0, lastIndex);
 }
 
 /**
