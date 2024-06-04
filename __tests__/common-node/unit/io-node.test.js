@@ -295,6 +295,14 @@ describe("io-node unit tests", () => {
     await createDirectoryPromise(filePath);
     expect(await isDirectory(filePath)).toBe(true);
   });
+  test("io-node.createDirectory.Hidden", async () => {
+    const filePath = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/new/.ts"
+    );
+    await createDirectoryPromise(filePath);
+    expect(await isDirectory(filePath)).toBe(true);
+  });
   test("io-node.copyFilePromise", async () => {
     const sourcePath = pathLib.resolve(
       __dirname,
