@@ -59,6 +59,9 @@ module.exports = {
       resourceRegExp: /original-fs/,
       contextRegExp: /adm-zip/,
     }),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^fsevents$/,
+    }),
   ],
   target: "node",
 
