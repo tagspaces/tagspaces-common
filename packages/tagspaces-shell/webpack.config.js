@@ -55,7 +55,6 @@ module.exports = {
 
   externals: {
     sharp: "commonjs sharp",
-    fswin: 'commonjs fswin', // Exclude fswin from being bundled
   },
   // Tells webpack what file extesions it should look at.
   resolve: {

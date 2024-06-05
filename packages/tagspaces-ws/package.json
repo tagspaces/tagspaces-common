@@ -28,6 +28,7 @@
   "dependencies": {
     "@tagspaces/tagspaces-workers": "^4.3.14",
     "find-free-ports": "^3.1.1",
+    "fswin": "^3.24.524",
     "jsonwebtoken": "^8.5.1",
     "ws": "^8.15.1"
   },

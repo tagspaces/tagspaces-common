@@ -847,30 +847,35 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               );
             } else {
               const destDirPath = tsPaths.extractParentDirectoryPath(
-                  newFilePath,
-                  AppConfig.dirSeparator
+                newFilePath,
+                AppConfig.dirSeparator
               );
               fs.mkdirp(destDirPath, (error) => {
-                stat({path: destDirPath}).then((destDirStat) => {
+                stat({ path: destDirPath }).then((destDirStat) => {
                   if (!destDirStat) {
                     reject(
-                        'Destination dir "' +
+                      'Destination dir "' +
                         destDirPath +
                         '" not exists. Renaming of "' +
                         filePath +
                         '" failed'
                     );
                   } else if (sourceStat.dev === destDirStat.dev) {
-                    fs.move(filePath, newFilePath, {clobber: true}, (error) => {
-                      // TODO webdav impl
-                      if (error) {
-                        reject(
+                    fs.move(
+                      filePath,
+                      newFilePath,
+                      { clobber: true },
+                      (error) => {
+                        // TODO webdav impl
+                        if (error) {
+                          reject(
                             "Renaming: " + filePath + " failed with: " + error
-                        );
-                        return;
+                          );
+                          return;
+                        }
+                        resolve([filePath, newFilePath]);
                       }
-                      resolve([filePath, newFilePath]);
-                    });
+                    );
                   } else {
                     fs.copy(filePath, newFilePath, (error) => {
                       if (error) {
@@ -880,8 +885,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       fs.unlink(filePath, (error) => {
                         if (error) {
                           console.log(
-                              "renameFilePromise delete " + filePath + " file:",
-                              error
+                            "renameFilePromise delete " + filePath + " file:",
+                            error
                           );
                         }
                         resolve([filePath, newFilePath]);

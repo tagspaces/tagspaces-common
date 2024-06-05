@@ -14,7 +14,6 @@
     "@tagspaces/tagspaces-common": "^4.3.13",
     "adm-zip": "0.5.10",
     "fs-extra": "^10.0.0",
-    "fswin": "^3.24.524",
     "klaw": "^4.1.0",
     "marked": "^3.0.8"
   }

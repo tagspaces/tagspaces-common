@@ -2,6 +2,7 @@
 const ws = require("http");
 const { verifyAuth } = require("./auth");
 const { watchFolder } = require("./endpoints/watchFolderRequest");
+const { hideFolder } = require("./endpoints/hideFolderRequest");
 const { defaultRequest } = require("./endpoints/defaultRequest");
 const { handleIndexer } = require("./endpoints/indexerRequest");
 const { handleThumbGen } = require("./endpoints/thumbGenRequest");
@@ -31,6 +32,11 @@ module.exports.createWS = function (port, key) {
         return;
       }
       watchFolder(req, res);
+    } else if (reqUrl.pathname === "/hide-folder") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
+      hideFolder(req, res);
     } else {
       defaultRequest(req, res);
     }

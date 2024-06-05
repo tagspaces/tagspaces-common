@@ -3,7 +3,6 @@ const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const fs = require("fs-extra");
 const klaw = require("klaw");
 const AdmZip = require("adm-zip");
-const fsWin = require('fswin');
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 const fsClient = createFsClient(fs);
@@ -211,22 +210,14 @@ function extractTextContent(fileName, textContent) {
 }
 
 function createDirectoryPromise(dirPath) {
-  return fsClient.createDirectoryPromise(dirPath).then((result) => {
+  return fsClient.createDirectoryPromise(dirPath);
+  /*.then((result) => {
     if (AppConfig.isWin && dirPath.endsWith("\\" + AppConfig.metaFolder)) {
       // hide .ts folder on Windows
       fsWin.setAttributesSync(dirPath, {IS_HIDDEN: true})
-      /*import("winattr").then((winattr) => {
-        winattr.set(dirPath, { hidden: true }, (err) => {
-          if (err) {
-            console.warn("Error setting hidden attr. to dir: " + dirPath);
-          } else {
-            console.log("Success setting hidden attr. to dir: " + dirPath);
-          }
-        });
-      });*/
     }
     return result;
-  });
+  });*/
 }
 
 function copyFilePromise(sourceFilePath, targetFilePath) {
