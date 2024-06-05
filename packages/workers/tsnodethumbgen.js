@@ -2,6 +2,7 @@
 
 const fs = require("fs-extra");
 const path = require("path");
+const fsWin = require("fswin");
 const tsThumb = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
 const {
   isDirectory,
@@ -37,6 +38,9 @@ module.exports.processAllThumbnails = async function (
       (pathParts.dir ? pathParts.dir + "/" : "") + AppConfig.metaFolder + "/";
     if (!fs.existsSync(dirName)) {
       fs.mkdirSync(dirName, { recursive: true });
+      if (AppConfig.isWin) {
+        fsWin.setAttributesSync(dirName, { IS_HIDDEN: true });
+      }
     }
     const thumbName = dirName + pathParts.base + ".jpg";
 

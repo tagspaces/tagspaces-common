@@ -50,11 +50,20 @@ module.exports = {
   },
 
   // Tells the HTML webpack plug-in to use a template and emit dist/index.html
-  plugins: [],
+  plugins: [
+    new webpack.IgnorePlugin({
+      resourceRegExp: /original-fs/,
+      contextRegExp: /adm-zip/,
+    }),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^fsevents$/,
+    }),
+  ],
   target: "node",
 
   externals: {
     sharp: "commonjs sharp",
+    fswin: "commonjs fswin", // Exclude fswin from being bundled
   },
   // Tells webpack what file extesions it should look at.
   resolve: {
