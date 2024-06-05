@@ -42,7 +42,7 @@ module.exports.processAllThumbnails = async function (
         fsWin.setAttributesSync(dirName, { IS_HIDDEN: true });
       }
     }
-    const thumbName = dirName + pathParts.base + ".jpg";
+    const thumbName = dirName + pathParts.base + AppConfig.thumbFileExt;
 
     if (tsThumb.isReadableStream(data)) {
       // if(data.readable===true) { //data._readableState.ended === false) { //data.readable===true) {
