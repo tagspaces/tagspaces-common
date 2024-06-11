@@ -152,7 +152,10 @@ const showWelcomePanel =
     ? window.ExtShowWelcomePanel
     : true);
 const locationsReadOnly =
-  typeof window !== "undefined" && window.ExtLocations !== undefined;
+  typeof window !== "undefined" &&
+  (window.ExtLocationsReadOnly !== undefined
+    ? window.ExtLocationsReadOnly
+    : false);
 const mapTileServers =
   typeof window !== "undefined" && (window.ExtMapTileServers || false);
 const lightThemeLightColor =
