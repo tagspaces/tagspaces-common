@@ -12,7 +12,6 @@
   "dependencies": {
     "@tagspaces/tagspaces-common": "^4.3.18",
     "@tagspaces/tagspaces-common-node": "^4.3.18",
-    "@tagspaces/tagspaces-platforms": "^4.3.2",
     "@tagspaces/tagspaces-thumbgen-image": "^4.2.3",
     "fswin": "^3.24.524"
   }

@@ -18,10 +18,8 @@
     "install-node-mac": "npm install --arch=x64 --platform=darwin sharp",
     "install-node-win": "npm install --arch=x64 --platform=win32 sharp",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
-    "test-thumbgen": "curl -v -d '[\"file_path.jpg\"]' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/thumb-gen",
-    "test-indexer": "curl -d '{\"directoryPath\":\"/Users/sytolk/Pictures/\"}' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" -X POST http://127.0.0.1:2000/indexer",
-    "test-watcher": "curl -d '{\"path\":\"/Users/sytolk/Pictures/\",\"depth\":\"1\"}' -H \"Content-Type: application/json\" -H \"Authorization: Bearer xxx\" http://127.0.0.1:2000/watch-folder",
-    "sign-jwt": "npx jsonwebtokencli --encode --secret xxx '{\"provider\":\"tagspaces\",\"date\":1638276725}'",
+    "test-data-download": "npx rimraf testdata && git clone --depth 1 https://github.com/tagspaces/testdata",
+    "test": "jest",
     "npmpack": "npm run build && npx shx cp -rL build/** ../../../tagspaces/release/app/node_modules/@tagspaces/tagspaces-ws/",
     "pkg-publish": "npm run build && npm publish --access public"
   },
@@ -32,7 +30,9 @@
     "ws": "^8.15.1"
   },
   "devDependencies": {
-    "node-loader": "^2.0.0"
+    "jest": "^29.7.0",
+    "node-loader": "^2.0.0",
+    "supertest": "^7.0.0"
   },
   "peerDependencies": {
     "sharp": ">=0.32.0"
