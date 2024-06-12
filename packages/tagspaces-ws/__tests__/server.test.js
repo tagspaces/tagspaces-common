@@ -3,6 +3,7 @@ const pathLib = require("path");
 const jwt = require("jsonwebtoken");
 const supertest = require("supertest");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const fswin = require("fswin");
 const { createWS } = require("../ws");
 
 describe("Web Server Endpoints", () => {
@@ -76,12 +77,15 @@ describe("Web Server Endpoints", () => {
   });
 
   test("POST /hide-folder", async () => {
+    const metaFolder = pathLib.join(testDir, ".ts");
     const response = await request
       .post("/hide-folder")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
-      .send({ path: pathLib.join(testDir, ".ts") });
+      .send({ path: metaFolder });
     if (AppConfig.isWin) {
       expect(response.status).toBe(200);
+      const attrs = fswin.getAttributesSync(metaFolder);
+      expect(attrs.IS_HIDDEN).toBe(true);
     } else {
       expect(response.status).toBe(400);
     }
