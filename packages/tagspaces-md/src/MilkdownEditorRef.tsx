@@ -4,7 +4,7 @@ import { useInstance } from '@milkdown/react';
 import { replaceAll } from '@milkdown/utils';
 import { MilkdownRef } from './MilkdownEditor';
 import { useSetDarkMode } from './providers/DarkModeProvider';
-import { EditorStatus } from '@milkdown/core';
+import { EditorStatus, editorViewCtx } from '@milkdown/core';
 
 type Props = {
   milkdownRef: ForwardedRef<MilkdownRef>;
@@ -13,6 +13,18 @@ type Props = {
 const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
   const [loading, getEditor] = useInstance();
   const setDarkMode = useSetDarkMode();
+
+  React.useEffect(() => {
+    // autofocus editor https://github.com/orgs/Milkdown/discussions/843
+    if (loading) {
+      return;
+    }
+    const editor = getEditor();
+    if (!editor) {
+      return;
+    }
+    editor.ctx.get(editorViewCtx).dom.focus();
+  }, [loading]);
 
   React.useImperativeHandle(milkdownRef, () => ({
     update: (markdown: string) => {
