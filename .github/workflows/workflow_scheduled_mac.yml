@@ -1,0 +1,31 @@
+name: Nightly E2E Tests WS MacOS
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  e2eTestsElectronWin:
+    name: Test Common on Mac
+    runs-on: macos-latest
+    steps:
+      - name: Checking out default branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          submodules: true
+      - name: Checkout TestData
+        uses: actions/checkout@v4
+        with:
+          repository: tagspaces/testdata
+          path: packages/tagspaces-ws/testdata
+      - name: Configure NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - name: Running npm install
+        run: |
+          npm run npm-install
+          npm run lerna-build
+      - name: Run Unit tests
+        run: npm run test-ws
