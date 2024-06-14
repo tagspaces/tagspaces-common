@@ -80,6 +80,12 @@ function generateFileName(
   prefixTagContainer = AppConfig.prefixTagContainer,
   filenameTagPlacedAtEnd = true
 ) {
+  function cleanFileName(fileName, prefixTagContainer) {
+    if (prefixTagContainer && fileName.endsWith(prefixTagContainer)) {
+      return fileName.slice(0, -prefixTagContainer.length);
+    }
+    return fileName.trim();
+  }
   let tagsString = "";
   // Creating the string will all the tags by more that 0 tags
   if (tags && tags.length > 0) {
