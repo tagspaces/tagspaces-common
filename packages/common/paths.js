@@ -63,6 +63,106 @@ function extractFileExtension(filePath, dirSeparator = AppConfig.dirSeparator) {
   return extension;
 }
 
+/**
+ * @param fileName: string
+ * @param tags: string[]
+ * @param tagDelimiter: string
+ * @param dirSeparator: string = AppConfig.dirSeparator
+ * @param prefixTagContainer: string = AppConfig.prefixTagContainer
+ * @param filenameTagPlacedAtEnd: boolean = true
+ * @returns {string}
+ */
+function generateFileName(
+  fileName,
+  tags,
+  tagDelimiter,
+  dirSeparator = AppConfig.dirSeparator,
+  prefixTagContainer = AppConfig.prefixTagContainer,
+  filenameTagPlacedAtEnd = true
+) {
+  let tagsString = "";
+  // Creating the string will all the tags by more that 0 tags
+  if (tags && tags.length > 0) {
+    tagsString = AppConfig.beginTagContainer;
+    for (let i = 0; i < tags.length; i += 1) {
+      if (i === tags.length - 1) {
+        tagsString += tags[i].trim();
+      } else {
+        tagsString += tags[i].trim() + tagDelimiter;
+      }
+    }
+    tagsString = tagsString.trim() + AppConfig.endTagContainer;
+  }
+
+  const fileExt = extractFileExtension(fileName, dirSeparator);
+  // Assembling the new filename with the tags
+  let newFileName = "";
+  const beginTagContainer = fileName.indexOf(AppConfig.beginTagContainer);
+  const endTagContainer = fileName.indexOf(AppConfig.endTagContainer);
+  const lastDotPosition = fileName.lastIndexOf(".");
+  if (
+    beginTagContainer < 0 ||
+    endTagContainer < 0 ||
+    beginTagContainer >= endTagContainer
+  ) {
+    // Filename does not contains tags.
+    if (lastDotPosition < 0) {
+      // File does not have an extension
+      newFileName = filenameTagPlacedAtEnd
+        ? fileName.trim() + tagsString
+        : tagsString + fileName.trim();
+    } else {
+      // File has an extension
+      if (filenameTagPlacedAtEnd) {
+        newFileName =
+          cleanFileName(
+            fileName.substring(0, lastDotPosition),
+            prefixTagContainer
+          ) +
+          (tagsString ? prefixTagContainer + tagsString : "") +
+          "." +
+          fileExt;
+      } else {
+        newFileName =
+          (tagsString ? tagsString + prefixTagContainer : "") +
+          cleanFileName(
+            fileName.substring(0, lastDotPosition),
+            prefixTagContainer
+          ) +
+          "." +
+          fileExt;
+      }
+    }
+  } else {
+    // File does not have an extension
+    if (filenameTagPlacedAtEnd) {
+      newFileName =
+        cleanFileName(
+          fileName.substring(0, beginTagContainer),
+          prefixTagContainer
+        ) +
+        (tagsString ? prefixTagContainer + tagsString : "") +
+        fileName.substring(endTagContainer + 1, fileName.length).trim();
+    } else {
+      newFileName =
+        (tagsString ? tagsString + prefixTagContainer : "") +
+        cleanFileName(
+          fileName.substring(0, beginTagContainer),
+          prefixTagContainer
+        ) +
+        fileName.substring(endTagContainer + 1, fileName.length).trim();
+    }
+  }
+  if (newFileName.length < 1) {
+    throw new Error("Generated filename is invalid");
+  }
+  // Removing double prefix todo rethink this ?? there is no double prefix
+  newFileName = newFileName
+    .split(prefixTagContainer + "" + prefixTagContainer)
+    .join(prefixTagContainer);
+  return newFileName;
+}
+
 function getMetaDirectoryPath(
   directoryPath,
   dirSeparator = AppConfig.dirSeparator
@@ -690,6 +790,7 @@ function cleanRootPath(
 module.exports = {
   baseName,
   extractFileExtension,
+  generateFileName,
   getMetaDirectoryPath,
   getThumbFileLocationForFile,
   getThumbFileLocationForDirectory,
