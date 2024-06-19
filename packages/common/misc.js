@@ -514,14 +514,22 @@ function sortBySize(a, b) {
   return aSize - bSize;
 }
 
+function getTimestamp(value) {
+  if (value === undefined) {
+    return 0; // Default to epoch start if undefined
+  }
+  return value; // Already a timestamp
+}
+
 /**
  * @param a: TS.FileSystemEntry
  * @param b: TS.FileSystemEntry
  * @returns {number}
  */
 function sortByDateModified(a, b) {
-  const aLmdt = a.lmdt | 0;
-  const bLmdt = b.lmdt | 0;
+
+  const aLmdt = getTimestamp(a.lmdt);
+  const bLmdt = getTimestamp(b.lmdt);
   return aLmdt - bLmdt;
 }
 
