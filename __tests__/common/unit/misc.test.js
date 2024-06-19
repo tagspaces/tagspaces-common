@@ -135,6 +135,7 @@ describe("Common misc unit tests", () => {
       { name: "b", isFile: true, size: 30 },
       { name: "a", isFile: true, size: 20 },
       { name: "c", isFile: true, size: 10 },
+      { name: "folder", isFile: false },
       { name: "0", isFile: true, size: 11 },
       { name: "2", isFile: true, size: 12 },
       { name: "1", isFile: true, size: 13 },
@@ -146,6 +147,7 @@ describe("Common misc unit tests", () => {
     //asc
     let output = misc.sortByCriteria(items, "byName", true);
     expect(output).toEqual([
+      { name: "folder", isFile: false },
       { name: "a", isFile: true, size: 20 },
       { name: "b", isFile: true, size: 30 },
       { name: "c", isFile: true, size: 10 },
@@ -159,6 +161,7 @@ describe("Common misc unit tests", () => {
     //asc reverse
     output = misc.sortByCriteria(reversedItems, "byName", true);
     expect(output).toEqual([
+      { name: "folder", isFile: false },
       { name: "0", isFile: true, size: 11 },
       { name: "01", isFile: true, size: 15 },
       { name: "1", isFile: true, size: 13 },
@@ -181,6 +184,7 @@ describe("Common misc unit tests", () => {
       { name: "c", isFile: true, size: 10 },
       { name: "b", isFile: true, size: 30 },
       { name: "a", isFile: true, size: 20 },
+      { name: "folder", isFile: false },
     ]);
 
     //desc reversed
@@ -195,10 +199,12 @@ describe("Common misc unit tests", () => {
       { name: "1", isFile: true, size: 13 },
       { name: "01", isFile: true, size: 15 },
       { name: "0", isFile: true, size: 11 },
+      { name: "folder", isFile: false },
     ]);
 
     output = misc.sortByCriteria(items, "byFileSize", true);
     expect(output).toEqual([
+      { name: "folder", isFile: false },
       { name: "c", isFile: true, size: 10 },
       { name: "0", isFile: true, size: 11 },
       { name: "2", isFile: true, size: 12 },

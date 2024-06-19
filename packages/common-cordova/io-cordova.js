@@ -560,7 +560,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   try {
                     const metadata = await getFileMetadata(entry);
                     eentry.size = metadata.size;
-                    eentry.lmdt = metadata.modificationTime;
+                    eentry.lmdt = metadata.lastModifiedDate;
                   } catch (error) {
                     console.log(
                       "Failed to get metadata for file: " + entry.name,

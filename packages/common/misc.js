@@ -509,7 +509,9 @@ function sortByName(a, b) {
  * @returns {number}
  */
 function sortBySize(a, b) {
-  return a.size - b.size;
+  const aSize = a.size | 0;
+  const bSize = b.size | 0;
+  return aSize - bSize;
 }
 
 /**
