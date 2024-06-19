@@ -520,7 +520,9 @@ function sortBySize(a, b) {
  * @returns {number}
  */
 function sortByDateModified(a, b) {
-  return a.lmdt === b.lmdt ? sortAlphaNum(a, b) : a.lmdt - b.lmdt;
+  const aLmdt = a.lmdt | 0;
+  const bLmdt = b.lmdt | 0;
+  return aLmdt === bLmdt ? sortAlphaNum(a, b) : aLmdt - bLmdt;
 }
 
 /**
