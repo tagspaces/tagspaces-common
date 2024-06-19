@@ -71,4 +71,5 @@ module.exports.createWS = function (port, key) {
       `Server running at http://${hostname}:${port}/ and will accept connections from ${hostname} only`
     );
   });
+  return server;
 };

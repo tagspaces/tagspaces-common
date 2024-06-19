@@ -1,4 +1,4 @@
-import { Box, CssBaseline, IconButton, styled } from '@mui/material';
+import { IconButton, styled } from '@mui/material';
 import { commandsCtx } from '@milkdown/core';
 import { redoCommand, undoCommand } from '@milkdown/plugin-history';
 import UndoIcon from '@mui/icons-material/Undo';
@@ -6,8 +6,10 @@ import RedoIcon from '@mui/icons-material/Redo';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import {
+  createCodeBlockCommand,
   toggleEmphasisCommand,
   toggleStrongCommand,
+  turnIntoTextCommand,
   wrapInBlockquoteCommand,
   wrapInBulletListCommand,
   wrapInOrderedListCommand
@@ -18,9 +20,11 @@ import AddLinkIcon from '@mui/icons-material/AddLink';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import {
+  insertTableCommand,
   //  extendListItemSchemaForTask,
   toggleStrikethroughCommand
 } from '@milkdown/preset-gfm';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import FormatStrikethroughIcon from '@mui/icons-material/FormatStrikethrough';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
@@ -30,6 +34,8 @@ import LinkDialog from './components/dialogs/LinkDialog';
 import ImageDialog from './components/dialogs/ImageDialog';
 import { useMilkdownInstance } from './hooks/useMilkdownInstance';
 import { insertTaskListCommand } from './EditorContext/hooks/useGfmPlugin/useGfmPlugin';
+import CodeIcon from '@mui/icons-material/Code';
+import FormatClearIcon from '@mui/icons-material/FormatClear';
 
 const ToolbarButtons: React.FC = () => {
   const { editor, loading } = useMilkdownInstance();
@@ -151,6 +157,47 @@ const ToolbarButtons: React.FC = () => {
             }}
           >
             <FormatQuoteIcon />
+          </IconButton>
+          <IconButton
+            size="small"
+            edge="start"
+            color="default"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onMouseDown={e => {
+              editor.ctx.get(commandsCtx).call(insertTableCommand.key);
+              e.preventDefault();
+            }}
+          >
+            <TableChartIcon />
+          </IconButton>
+          <IconButton
+            size="small"
+            edge="start"
+            color="default"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onMouseDown={e => {
+              editor.ctx.get(commandsCtx).call(turnIntoTextCommand.key);
+              e.preventDefault();
+            }}
+          >
+            {' '}
+            <FormatClearIcon />
+          </IconButton>
+          <IconButton
+            size="small"
+            edge="start"
+            color="default"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onMouseDown={e => {
+              editor.ctx.get(commandsCtx).call(createCodeBlockCommand.key);
+              e.preventDefault();
+            }}
+          >
+            {' '}
+            <CodeIcon />
           </IconButton>
           {/*<IconButton
             size="large"

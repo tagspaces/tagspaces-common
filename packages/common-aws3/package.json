@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-aws3",
   "description": "TagSpaces common aws3 module",
-  "version": "4.3.16",
+  "version": "4.3.20",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
@@ -12,7 +12,7 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.3.16",
+    "@tagspaces/tagspaces-common": "^4.3.20",
     "aws-sdk": "2.1605.0"
   }
 }

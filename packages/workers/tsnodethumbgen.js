@@ -8,7 +8,7 @@ const {
   isDirectory,
   listDirectoryPromise,
   getPropertiesPromise,
-} = require("@tagspaces/tagspaces-platforms/index");
+} = require("@tagspaces/tagspaces-common-node");
 const {
   walkDirectory,
   isThumbGenSupportedFileType,
