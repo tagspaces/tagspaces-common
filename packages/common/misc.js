@@ -522,7 +522,7 @@ function sortBySize(a, b) {
 function sortByDateModified(a, b) {
   const aLmdt = a.lmdt | 0;
   const bLmdt = b.lmdt | 0;
-  return aLmdt === bLmdt ? sortAlphaNum(a, b) : aLmdt - bLmdt;
+  return aLmdt - bLmdt;
 }
 
 /**
