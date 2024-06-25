@@ -367,7 +367,12 @@ function formatDateTime(date, includeTime) {
  * @returns {string}
  */
 function formatDateTime4Tag(date, includeTime, includeMS) {
-  if (date === undefined || date === "" || date.toString() === "Invalid Date") {
+  if (
+    date === undefined ||
+    date === null ||
+    date === "" ||
+    date.toString() === "Invalid Date"
+  ) {
     return "";
   }
   const d = new Date(date);
@@ -527,7 +532,6 @@ function getTimestamp(value) {
  * @returns {number}
  */
 function sortByDateModified(a, b) {
-
   const aLmdt = getTimestamp(a.lmdt);
   const bLmdt = getTimestamp(b.lmdt);
   return aLmdt - bLmdt;

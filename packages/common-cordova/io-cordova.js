@@ -1572,21 +1572,25 @@ function openFile(filePath, fileMIMEType) {
     openUrl(filePath);
   } else if (filePath.startsWith("file://")) {
     cordova.plugins.fileOpener2.open(filePath, fileMIMEType, {
-      error: function(e) {
-        console.log('Error status: ' + e.status + ' - Error message: ' + e.message);
+      error: function (e) {
+        console.log(
+          "Error status: " + e.status + " - Error message: " + e.message
+        );
       },
-      success: function() {
-        console.log('File opened successfully');
-      }
+      success: function () {
+        console.log("File opened successfully");
+      },
     });
   } else {
     cordova.plugins.fileOpener2.open("file://" + filePath, fileMIMEType, {
-      error: function(e) {
-        console.log('Error status: ' + e.status + ' - Error message: ' + e.message);
+      error: function (e) {
+        console.log(
+          "Error status: " + e.status + " - Error message: " + e.message
+        );
       },
-      success: function() {
-        console.log('File opened successfully');
-      }
+      success: function () {
+        console.log("File opened successfully");
+      },
     });
   }
 }
