@@ -560,7 +560,7 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   try {
                     const metadata = await getFileMetadata(entry);
                     eentry.size = metadata.size;
-                    eentry.lmdt = metadata.modificationTime;
+                    eentry.lmdt = metadata.lastModifiedDate;
                   } catch (error) {
                     console.log(
                       "Failed to get metadata for file: " + entry.name,
@@ -1566,14 +1566,32 @@ function openDirectory(dirPath) {
 /**
  * Opens a file with the operating system's default program for the type of the file
  */
-function openFile(filePath) {
+function openFile(filePath, fileMIMEType) {
   console.log("Opening natively: " + filePath);
   if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
     openUrl(filePath);
   } else if (filePath.startsWith("file://")) {
-    cordova.plugins.fileOpener2.open(filePath);
+    cordova.plugins.fileOpener2.open(filePath, fileMIMEType, {
+      error: function (e) {
+        console.log(
+          "Error status: " + e.status + " - Error message: " + e.message
+        );
+      },
+      success: function () {
+        console.log("File opened successfully");
+      },
+    });
   } else {
-    cordova.plugins.fileOpener2.open("file://" + filePath);
+    cordova.plugins.fileOpener2.open("file://" + filePath, fileMIMEType, {
+      error: function (e) {
+        console.log(
+          "Error status: " + e.status + " - Error message: " + e.message
+        );
+      },
+      success: function () {
+        console.log("File opened successfully");
+      },
+    });
   }
 }
 

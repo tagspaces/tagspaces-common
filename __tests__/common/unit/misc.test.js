@@ -132,82 +132,147 @@ describe("Common misc unit tests", () => {
   });
   test("misc.sortByCriteria", () => {
     const items = [
-      { name: "b", isFile: true, size: 30 },
-      { name: "a", isFile: true, size: 20 },
-      { name: "c", isFile: true, size: 10 },
-      { name: "0", isFile: true, size: 11 },
-      { name: "2", isFile: true, size: 12 },
-      { name: "1", isFile: true, size: 13 },
-      { name: "02", isFile: true, size: 14 },
-      { name: "01", isFile: true, size: 15 },
-      { name: "10", isFile: true, size: 16 },
+      {
+        name: "b",
+        isFile: true,
+        size: 30,
+        lmdt: new Date("2024-06-30T00:00:00Z").getTime(),
+      },
+      {
+        name: "a",
+        isFile: true,
+        size: 20,
+        lmdt: new Date("2024-06-20T00:00:00Z").getTime(),
+      },
+      {
+        name: "c",
+        isFile: true,
+        size: 10,
+        lmdt: new Date("2024-06-10T00:00:00Z").getTime(),
+      },
+      { name: "folder", isFile: false },
+      {
+        name: "0",
+        isFile: true,
+        size: 11,
+        lmdt: new Date("2024-06-11T00:00:00Z").getTime(),
+      },
+      {
+        name: "2",
+        isFile: true,
+        size: 12,
+        lmdt: new Date("2024-06-12T00:00:00Z").getTime(),
+      },
+      {
+        name: "1",
+        isFile: true,
+        size: 13,
+        lmdt: new Date("2024-06-13T00:00:00Z").getTime(),
+      },
+      {
+        name: "02",
+        isFile: true,
+        size: 14,
+        lmdt: new Date("2024-06-14T00:00:00Z").getTime(),
+      },
+      {
+        name: "01",
+        isFile: true,
+        size: 15,
+        lmdt: new Date("2024-06-15T00:00:00Z").getTime(),
+      },
+      {
+        name: "10",
+        isFile: true,
+        size: 16,
+        lmdt: new Date("2024-06-16T00:00:00Z").getTime(),
+      },
     ];
     const reversedItems = [...items].reverse();
     //asc
     let output = misc.sortByCriteria(items, "byName", true);
     expect(output).toEqual([
-      { name: "a", isFile: true, size: 20 },
-      { name: "b", isFile: true, size: 30 },
-      { name: "c", isFile: true, size: 10 },
-      { name: "0", isFile: true, size: 11 },
-      { name: "1", isFile: true, size: 13 },
-      { name: "01", isFile: true, size: 15 },
-      { name: "2", isFile: true, size: 12 },
-      { name: "02", isFile: true, size: 14 },
-      { name: "10", isFile: true, size: 16 },
+      items.find((i) => i.name === "folder"),
+      items.find((i) => i.name === "a"),
+      items.find((i) => i.name === "b"),
+      items.find((i) => i.name === "c"),
+      items.find((i) => i.name === "0"),
+      items.find((i) => i.name === "1"),
+      items.find((i) => i.name === "01"),
+      items.find((i) => i.name === "2"),
+      items.find((i) => i.name === "02"),
+      items.find((i) => i.name === "10"),
     ]);
     //asc reverse
     output = misc.sortByCriteria(reversedItems, "byName", true);
     expect(output).toEqual([
-      { name: "0", isFile: true, size: 11 },
-      { name: "01", isFile: true, size: 15 },
-      { name: "1", isFile: true, size: 13 },
-      { name: "02", isFile: true, size: 14 },
-      { name: "2", isFile: true, size: 12 },
-      { name: "10", isFile: true, size: 16 },
-      { name: "a", isFile: true, size: 20 },
-      { name: "b", isFile: true, size: 30 },
-      { name: "c", isFile: true, size: 10 },
+      items.find((i) => i.name === "folder"),
+      items.find((i) => i.name === "0"),
+      items.find((i) => i.name === "01"),
+      items.find((i) => i.name === "1"),
+      items.find((i) => i.name === "02"),
+      items.find((i) => i.name === "2"),
+      items.find((i) => i.name === "10"),
+      items.find((i) => i.name === "a"),
+      items.find((i) => i.name === "b"),
+      items.find((i) => i.name === "c"),
     ]);
     //desc
     output = misc.sortByCriteria(items, "byName", false);
     expect(output).toEqual([
-      { name: "10", isFile: true, size: 16 },
-      { name: "02", isFile: true, size: 14 },
-      { name: "2", isFile: true, size: 12 },
-      { name: "01", isFile: true, size: 15 },
-      { name: "1", isFile: true, size: 13 },
-      { name: "0", isFile: true, size: 11 },
-      { name: "c", isFile: true, size: 10 },
-      { name: "b", isFile: true, size: 30 },
-      { name: "a", isFile: true, size: 20 },
+      items.find((i) => i.name === "10"),
+      items.find((i) => i.name === "02"),
+      items.find((i) => i.name === "2"),
+      items.find((i) => i.name === "01"),
+      items.find((i) => i.name === "1"),
+      items.find((i) => i.name === "0"),
+      items.find((i) => i.name === "c"),
+      items.find((i) => i.name === "b"),
+      items.find((i) => i.name === "a"),
+      items.find((i) => i.name === "folder"),
     ]);
 
     //desc reversed
     output = misc.sortByCriteria(reversedItems, "byName", false);
     expect(output).toEqual([
-      { name: "c", isFile: true, size: 10 },
-      { name: "b", isFile: true, size: 30 },
-      { name: "a", isFile: true, size: 20 },
-      { name: "10", isFile: true, size: 16 },
-      { name: "2", isFile: true, size: 12 },
-      { name: "02", isFile: true, size: 14 },
-      { name: "1", isFile: true, size: 13 },
-      { name: "01", isFile: true, size: 15 },
-      { name: "0", isFile: true, size: 11 },
+      items.find((i) => i.name === "c"),
+      items.find((i) => i.name === "b"),
+      items.find((i) => i.name === "a"),
+      items.find((i) => i.name === "10"),
+      items.find((i) => i.name === "2"),
+      items.find((i) => i.name === "02"),
+      items.find((i) => i.name === "1"),
+      items.find((i) => i.name === "01"),
+      items.find((i) => i.name === "0"),
+      items.find((i) => i.name === "folder"),
     ]);
 
     output = misc.sortByCriteria(items, "byFileSize", true);
     expect(output).toEqual([
-      { name: "c", isFile: true, size: 10 },
-      { name: "0", isFile: true, size: 11 },
-      { name: "2", isFile: true, size: 12 },
-      { name: "1", isFile: true, size: 13 },
-      { name: "02", isFile: true, size: 14 },
-      { name: "01", isFile: true, size: 15 },
-      { name: "10", isFile: true, size: 16 },
-      { name: "a", isFile: true, size: 20 },
-      { name: "b", isFile: true, size: 30 },
+      items.find((i) => i.name === "folder"),
+      items.find((i) => i.name === "c"),
+      items.find((i) => i.name === "0"),
+      items.find((i) => i.name === "2"),
+      items.find((i) => i.name === "1"),
+      items.find((i) => i.name === "02"),
+      items.find((i) => i.name === "01"),
+      items.find((i) => i.name === "10"),
+      items.find((i) => i.name === "a"),
+      items.find((i) => i.name === "b"),
+    ]);
+
+    output = misc.sortByCriteria(items, "byDateModified", true);
+    expect(output).toEqual([
+      items.find((i) => i.name === "folder"),
+      items.find((i) => i.name === "c"),
+      items.find((i) => i.name === "0"),
+      items.find((i) => i.name === "2"),
+      items.find((i) => i.name === "1"),
+      items.find((i) => i.name === "02"),
+      items.find((i) => i.name === "01"),
+      items.find((i) => i.name === "10"),
+      items.find((i) => i.name === "a"),
+      items.find((i) => i.name === "b"),
     ]);
   });
 });

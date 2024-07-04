@@ -367,7 +367,12 @@ function formatDateTime(date, includeTime) {
  * @returns {string}
  */
 function formatDateTime4Tag(date, includeTime, includeMS) {
-  if (date === undefined || date === "" || date.toString() === "Invalid Date") {
+  if (
+    date === undefined ||
+    date === null ||
+    date === "" ||
+    date.toString() === "Invalid Date"
+  ) {
     return "";
   }
   const d = new Date(date);
@@ -509,7 +514,16 @@ function sortByName(a, b) {
  * @returns {number}
  */
 function sortBySize(a, b) {
-  return a.size - b.size;
+  const aSize = a.size | 0;
+  const bSize = b.size | 0;
+  return aSize - bSize;
+}
+
+function getTimestamp(value) {
+  if (value === undefined) {
+    return 0; // Default to epoch start if undefined
+  }
+  return value; // Already a timestamp
 }
 
 /**
@@ -518,7 +532,9 @@ function sortBySize(a, b) {
  * @returns {number}
  */
 function sortByDateModified(a, b) {
-  return a.lmdt === b.lmdt ? sortAlphaNum(a, b) : a.lmdt - b.lmdt;
+  const aLmdt = getTimestamp(a.lmdt);
+  const bLmdt = getTimestamp(b.lmdt);
+  return aLmdt - bLmdt;
 }
 
 /**
