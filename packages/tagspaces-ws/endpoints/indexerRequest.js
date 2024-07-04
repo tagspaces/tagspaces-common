@@ -4,6 +4,7 @@ const {
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
 const { persistIndex, createIndex } = require("@tagspaces/tagspaces-indexer");
+const path = require("path");
 
 function handleIndexer(req, res) {
   if (req.method === "POST") {
@@ -27,7 +28,7 @@ function handleIndexer(req, res) {
           mode.push("extractTextContent");
         }
         return createIndex(
-          directoryPath,
+          path.resolve(directoryPath),
           listDirectoryPromise,
           loadTextFilePromise,
           mode,

@@ -197,7 +197,7 @@ function getPropertiesPromise(entryPath) {
   return fsClient.getPropertiesPromise(entryPath);
 }
 
-function loadTextFilePromise(entryPath) {
+function loadTextFilePromise(entryPath, isPreview = false) {
   return fsClient.loadTextFilePromise(entryPath);
 }
 

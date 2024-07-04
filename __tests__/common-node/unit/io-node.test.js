@@ -294,7 +294,24 @@ describe("io-node unit tests", () => {
     );
     await createDirectoryPromise(filePath);
     expect(await isDirectory(filePath)).toBe(true);
-  }); /*
+  });
+  test("io-node.createDirectoryPromise.duplicate", async () => {
+    const filePath = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/empty_folder/testDir"
+    );
+    try {
+      const result = await createDirectoryPromise(filePath);
+      if (result) {
+        console.log("success");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    expect(await isDirectory(filePath)).toBe(true);
+  });
+
+  /*
   test("io-node.createDirectory.Hidden", async () => {
     const filePath = pathLib.resolve(
       __dirname,

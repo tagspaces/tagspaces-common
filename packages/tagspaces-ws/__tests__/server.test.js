@@ -74,6 +74,23 @@ describe("Web Server Endpoints", () => {
     const filePath = pathLib.join(testDir, ".ts", "tsi.json");
     const fileExists = fs.existsSync(filePath);
     expect(fileExists).toBe(true);
+    fs.unlinkSync(filePath);
+    expect(fs.existsSync(filePath)).toBe(false);
+  });
+
+  test("POST /indexer relative path", async () => {
+    const dir = "./testdata/file-structure/supported-filestypes";
+    const response = await request
+      .post("/indexer")
+      .set("Authorization", "Bearer " + token) // Set your auth header if needed
+      .send({ directoryPath: dir });
+
+    expect(response.status).toBe(200);
+
+    const filePath = pathLib.join(dir, ".ts", "tsi.json");
+    const pathAbsolute = pathLib.resolve(filePath);
+    const fileExists = fs.existsSync(pathAbsolute);
+    expect(fileExists).toBe(true);
   });
 
   test("POST /hide-folder", async () => {
