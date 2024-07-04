@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-cordova",
   "description": "TagSpaces common cordova module",
-  "version": "4.3.25",
+  "version": "4.3.26",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
@@ -11,6 +11,6 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.3.25"
+    "@tagspaces/tagspaces-common": "^4.3.26"
   }
 }
