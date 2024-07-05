@@ -1,4 +1,9 @@
-const AWS = require("aws-sdk");
+const {
+  S3,
+  GetObjectCommand,
+  ListObjectsV2Command,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
@@ -22,21 +27,24 @@ function s3(location) {
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
     if (advancedMode) {
-      const endpoint = new AWS.Endpoint(location.endpointURL);
-      locationsCache[location.uuid] = new AWS.S3({
-        endpoint: endpoint, // as string,
-        accessKeyId: location.accessKeyId,
-        secretAccessKey: location.secretAccessKey,
-        sessionToken: location.sessionToken,
-        s3ForcePathStyle: true, // needed for minio
+      locationsCache[location.uuid] = new S3({
+        endpoint: location.endpointURL,
+        credentials: {
+          accessKeyId: location.accessKeyId,
+          secretAccessKey: location.secretAccessKey,
+          sessionToken: location.sessionToken,
+        },
+        forcePathStyle: true, // needed for minio
         signatureVersion: "v4", // needed for minio
         logger: console,
       });
     } else {
-      locationsCache[location.uuid] = new AWS.S3({
+      locationsCache[location.uuid] = new S3({
         region: location.region,
-        accessKeyId: location.accessKeyId,
-        secretAccessKey: location.secretAccessKey,
+        credentials: {
+          accessKeyId: location.accessKeyId,
+          secretAccessKey: location.secretAccessKey,
+        },
         signatureVersion: "v4",
       });
     }
@@ -49,7 +57,7 @@ function s3(location) {
  * @param expirationInSeconds
  * @returns {string}
  */
-const getURLforPath = (param, expirationInSeconds = 900) => {
+const getURLforPath = async (param, expirationInSeconds = 900) => {
   const path = normalizeRootPath(param.path);
   const bucketName = param.bucketName;
   if (!path || path.length < 1) {
@@ -59,12 +67,16 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
   const params = {
     Bucket: bucketName,
     Key: path,
-    Expires: expirationInSeconds,
   };
   try {
-    return s3(param.location).getSignedUrl("getObject", params);
+    const s3Client = s3(param.location);
+    const command = new GetObjectCommand(params);
+    const url = await getSignedUrl(s3Client, command, {
+      expiresIn: expirationInSeconds,
+    });
+    return url;
   } catch (e) {
-    console.warn("Error by getSignedUrl" + e.toString());
+    console.error("Error by getSignedUrl: ", e);
     return "";
   }
 };
@@ -83,35 +95,31 @@ const listMetaDirectoryPromise = async (param) => {
         : AppConfig.metaFolder + "/",
     Bucket: bucketName,
   };
-  const results = await s3(param.location)
-    .listObjectsV2(params)
-    .promise()
-    .then((data) => {
-      // if (window.walkCanceled) {
-      //     return resolve(entries); // returning results even if walk canceled
-      // }
-      // Handling files
-      data.Contents.forEach((file) => {
-        // console.warn('Meta: ' + JSON.stringify(file));
-        entry = {};
-        entry.name = file.Key; // extractFileName(file.Key, '/');
-        entry.path = file.Key;
-        entry.isFile = true;
-        entry.size = file.Size;
-        entry.lmdt = Date.parse(file.LastModified);
-        if (file.Key !== params.Prefix) {
-          // skipping the current folder
-          entries.push(entry);
-        }
-      });
-      return entries;
-    })
-    .catch((err) => {
-      // console.log(err);
-      console.warn("Error listing meta directory " + path, err);
-      return entries; // returning results even if any promise fails
+
+  try {
+    const s3Client = s3(param.location);
+    const command = new ListObjectsV2Command(params);
+    const data = await s3Client.send(command);
+
+    // Handling files
+    data.Contents.forEach((file) => {
+      entry = {};
+      entry.name = file.Key; // extractFileName(file.Key, '/');
+      entry.path = file.Key;
+      entry.isFile = true;
+      entry.size = file.Size;
+      entry.lmdt = Date.parse(file.LastModified);
+      if (file.Key !== params.Prefix) {
+        // skipping the current folder
+        entries.push(entry);
+      }
     });
-  return results;
+
+    return entries;
+  } catch (err) {
+    console.warn("Error listing meta directory " + path, err);
+    return entries; // returning results even if any promise fails
+  }
 };
 
 /**
