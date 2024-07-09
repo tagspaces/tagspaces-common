@@ -1,7 +1,6 @@
 const fs = require("fs");
 const pathJs = require("path");
 const {
-  configure,
   listDirectoryPromise,
   getURLforPath,
   saveFilePromise,
@@ -16,164 +15,166 @@ const {
   copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-} = require("@tagspaces/tagspaces-common-aws/io-objectstore");
+} = require("@tagspaces/tagspaces-common-aws3/io-objectstore");
+const {
+  createFile,
+  createDir,
+  expectFileExist,
+  expectDirExist,
+} = require("./utils");
 
 beforeAll(async () => {
-  configure({
-    // region: 'eu-central-1',
-    accessKeyId: "S3RVER",
-    secretAccessKey: "S3RVER",
-    endpointURL: "http://localhost:4569",
-    // signatureVersion: "v4",
-  });
+  const dirPath = pathJs.join(__dirname, "..", "buckets", "bucket1", "dir");
+  try {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+    console.log(`${dirPath} is deleted!`);
+  } catch (err) {
+    console.error(`Error while deleting ${dirPath}.`, err);
+  }
 });
+const location = {
+  uuid: "testUuid",
+  type: "1",
+  name: "cloud location",
+  accessKeyId: "S3RVER",
+  secretAccessKey: "S3RVER",
+  endpointURL: "http://localhost:4569",
+};
 
 test("listDirectoryPromise", async () => {
   const list = await listDirectoryPromise({
     path: "",
     bucketName: "bucket1",
+    location,
   });
-  console.log("list:" + JSON.stringify(list));
+  //console.log("list:" + JSON.stringify(list));
+  expect(list.length).toBeGreaterThan(0);
 }); //, 5000);
 
 test("getURLforPath", async () => {
   const url = await getURLforPath({
     path: "img.jpg",
     bucketName: "bucket1",
+    location,
   });
-  console.log("url:" + JSON.stringify(url));
+
+  //console.log("url:" + JSON.stringify(url));
+  expect(url.length).toBeGreaterThan(0);
 });
 
 test("saveFilePromise/saveTextFilePromise", async () => {
-  const file = await saveFilePromise(
-    {
-      path: "dir/test.txt",
-      bucketName: "bucket1",
-    },
-    "test"
-  );
-  console.log("file:" + JSON.stringify(file));
+  await createFile(location, "dir/test.txt");
 });
 
 test("getPropertiesPromiseFile", async () => {
-  const file = await getPropertiesPromise({
-    path: "image.png",
-    bucketName: "bucket1",
-  });
-  console.log("file:" + JSON.stringify(file));
+  const param = await createFile(location, "dir/test_props.txt");
+
+  const file = await getPropertiesPromise(param);
+  expect(file.isFile).toBe(true);
 });
 
 test("getPropertiesPromiseDir", async () => {
-  const dir = await getPropertiesPromise({
-    path: "dir/",
-    bucketName: "bucket1",
-  });
-  console.log("dir:" + JSON.stringify(dir));
+  const param = await createDir(location, "dir/subdir_new/");
+
+  const dir = await getPropertiesPromise(param);
+  expect(dir.isFile).toBe(false);
 });
 
 test("loadTextFilePromise/getFileContentPromise", async () => {
-  const content = await getFileContentPromise({
-    path: "dir/test.txt",
-    bucketName: "bucket1",
-  });
-  console.log("content:" + JSON.stringify(content));
+  const fileContent = "file content";
+  const param = await createFile(location, "dir/test_props.txt", fileContent);
+  const content = await getFileContentPromise(param);
+  expect(content).toBe(fileContent);
 });
 
 test("saveBinaryFilePromise", async () => {
-  const content = await saveBinaryFilePromise(
-    {
-      path: "dir/img.jpg",
-      bucketName: "bucket1",
-    },
+  const filePath = "dir/img.jpg";
+  const param = {
+    path: filePath,
+    bucketName: "bucket1",
+    location,
+  };
+  await saveBinaryFilePromise(
+    param,
     fs.createReadStream(pathJs.resolve(__dirname, "../../img.jpg"))
   );
-  console.log("content:" + JSON.stringify(content));
+  expectFileExist(filePath, true);
 });
 
 test("createDirectoryPromise", async () => {
-  const content = await createDirectoryPromise({
-    path: "dir/subdir/",
-    bucketName: "bucket1",
-  });
-  console.log("content:" + JSON.stringify(content));
+  await createDir(location, "dir/new_dir");
 });
 
 test("copyFilePromise", async () => {
-  const content = await copyFilePromise(
-    {
-      path: "dir/img.jpg",
-      bucketName: "bucket1",
-    },
-    "dir/subdir/img.jpg"
-  );
-  console.log("content:" + JSON.stringify(content));
+  const filePath = "dir/test_copy.txt";
+  const newFilePath = "dir/subdir/test_copy1.txt";
+  const param = await createFile(location, filePath);
+  await copyFilePromise(param, newFilePath);
+  expectFileExist(newFilePath, true);
 });
 
 test("renameFilePromise", async () => {
-  const content = await renameFilePromise(
-    {
-      path: "dir/img.jpg",
-      bucketName: "bucket1",
-    },
-    "dir/img+1.jpg"
-  );
-  console.log("content:" + JSON.stringify(content));
+  const filePath = "dir/test_rename.txt";
+  const newFilePath = "dir/test_rename+d.txt";
+  const param = await createFile(location, filePath);
+  await renameFilePromise(param, newFilePath);
+  expectFileExist(newFilePath, true);
 
-  const content1 = await renameFilePromise(
+  await renameFilePromise(
     {
-      path: "dir/img+1.jpg",
-      bucketName: "bucket1",
+      ...param,
+      path: newFilePath,
     },
-    "dir/im+g1.jpg"
+    filePath
   );
-  console.log("content:" + JSON.stringify(content1));
+  expectFileExist(filePath, true);
 });
 
 test("renameDirectoryPromise", async () => {
-  const content = await renameDirectoryPromise(
-    {
-      path: "dir/subdir/",
-      bucketName: "bucket1",
-    },
-    "subdir4"
-  );
-  console.log("content:" + JSON.stringify(content));
+  const dirPath = "dir/subdir1/";
+  const newDirName = "subdir_renamed";
+  const param = await createDir(location, dirPath);
+
+  const newDirPath = await renameDirectoryPromise(param, newDirName);
+  expectDirExist(dirPath, false);
+  expectDirExist(newDirPath);
 });
 
 test("moveDirectoryPromise", async () => {
-  const content = await moveDirectoryPromise(
-    {
-      path: "dir/subdir4/",
-      bucketName: "bucket1",
-    },
-    "subdir5"
-  );
-  console.log("content:" + JSON.stringify(content));
+  const dirPath = "dir/subdir2/";
+  const newDirPath = "dir/dir2/subdir_moved/";
+  const param = await createDir(location, dirPath);
+
+  await moveDirectoryPromise(param, newDirPath);
+  expectDirExist(dirPath, false);
+  expectDirExist(newDirPath);
 });
 
 test("copyDirectoryPromise", async () => {
-  const content = await copyDirectoryPromise(
-    {
-      path: "subdir5",
-      bucketName: "bucket1",
-    },
-    "dir/subdir_copy/"
-  );
-  console.log("content:" + JSON.stringify(content));
+  const dirPath = "dir/subdir_test/";
+  const newDirPath = "dir/subdir_copy/";
+  const param = await createDir(location, dirPath);
+  await copyDirectoryPromise(param, newDirPath);
+  expectDirExist(newDirPath);
 });
 
 test("deleteFilePromise", async () => {
-  const content = await deleteFilePromise({
-    path: "dir/img1.jpg",
-    bucketName: "bucket1",
-  });
-  console.log("content:" + JSON.stringify(content));
+  const filePath = "dir/test_file.txt";
+  const param = await createFile(location, filePath);
+  await deleteFilePromise(param);
+  expectFileExist(filePath, false);
 });
 
 test("deleteDirectoryPromise", async () => {
-  const content = await deleteDirectoryPromise({
-    path: "dir/subdir/",
+  const dirPath = "dir/subdir_test/";
+  const param = {
+    path: dirPath,
     bucketName: "bucket1",
-  });
-  console.log("content:" + JSON.stringify(content));
+    location,
+  };
+  await createDirectoryPromise(param);
+  const fsDirPath = pathJs.join(__dirname, "..", "buckets", "bucket1", dirPath);
+  expect(fs.existsSync(fsDirPath)).toBe(true);
+  await deleteDirectoryPromise(param);
+  expect(fs.existsSync(fsDirPath)).toBe(false);
 });
