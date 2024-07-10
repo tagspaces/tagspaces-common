@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-cordova",
   "description": "TagSpaces common cordova module",
-  "version": "4.3.26",
+  "version": "4.3.28",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
