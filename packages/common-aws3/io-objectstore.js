@@ -1,5 +1,5 @@
 const {
-  S3,
+  S3Client,
   GetObjectCommand,
   ListObjectsV2Command,
   HeadObjectCommand,
@@ -23,6 +23,14 @@ const {
 } = require("@tagspaces/tagspaces-common/utils-io");
 
 const locationsCache = [];
+const awsRegions = [
+  "us-east-1", "us-east-2", "us-west-1", "us-west-2",
+  "af-south-1", "ap-east-1", "ap-south-1", "ap-northeast-1",
+  "ap-northeast-2", "ap-northeast-3", "ap-southeast-1",
+  "ap-southeast-2", "ca-central-1", "eu-central-1",
+  "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1",
+  "eu-south-1", "me-south-1", "sa-east-1"
+];
 
 function s3(location) {
   if (location) {
@@ -36,26 +44,30 @@ function s3(location) {
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
     if (advancedMode) {
-      locationsCache[location.uuid] = new S3({
+      const region = location.region && location.region.length > 0 ? location.region : awsRegions.find(reg => location.endpointURL.indexOf(reg) > -1);
+      const config = {
         endpoint: location.endpointURL,
+        region: region,
         credentials: {
           accessKeyId: location.accessKeyId,
           secretAccessKey: location.secretAccessKey,
           sessionToken: location.sessionToken,
         },
         forcePathStyle: true, // needed for minio
-        signatureVersion: "v4", // needed for minio
+        //signatureVersion: "v4", // needed for minio
         logger: console,
-      });
+      };
+      locationsCache[location.uuid] = new S3Client(config);
     } else {
-      locationsCache[location.uuid] = new S3({
+      const config = {
         region: location.region,
         credentials: {
           accessKeyId: location.accessKeyId,
           secretAccessKey: location.secretAccessKey,
         },
-        signatureVersion: "v4",
-      });
+        //signatureVersion: "v4",
+      };
+      locationsCache[location.uuid] = new S3Client(config);
     }
     return locationsCache[location.uuid];
   }
@@ -71,7 +83,7 @@ const getURLforPath = async (param, expirationInSeconds = 900) => {
   const bucketName = param.bucketName;
   if (!path || path.length < 1) {
     console.warn("Wrong path param for getURLforPath");
-    return "";
+    return Promise.resolve("");
   }
   const params = {
     Bucket: bucketName,
@@ -86,7 +98,7 @@ const getURLforPath = async (param, expirationInSeconds = 900) => {
     return url;
   } catch (e) {
     console.error("Error by getSignedUrl: ", e);
-    return "";
+    return Promise.resolve("");
   }
 };
 
@@ -110,8 +122,9 @@ const listMetaDirectoryPromise = async (param) => {
     const command = new ListObjectsV2Command(params);
     const data = await s3Client.send(command);
 
+    const contents = data.Contents || [];
     // Handling files
-    data.Contents.forEach((file) => {
+    contents.forEach((file) => {
       entry = {};
       entry.name = file.Key; // extractFileName(file.Key, '/');
       entry.path = file.Key;
@@ -174,8 +187,10 @@ const listDirectoryPromise = (
         if (data.IsTruncated) {
           resultsLimit.IsTruncated = data.IsTruncated;
         }
+
+        const commonPrefixes = data.CommonPrefixes || [];
         // Handling "directories"
-        data.CommonPrefixes.forEach((dir) => {
+        commonPrefixes.forEach((dir) => {
           // console.warn(JSON.stringify(dir));
           const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
           eentry = {};
@@ -209,8 +224,9 @@ const listDirectoryPromise = (
           // }
         });
 
+        const contents = data.Contents || [];
         // Handling files
-        for (const file of data.Contents) {
+        for (const file of contents) {
           eentry = {};
           eentry.name = tsPaths.extractFileName(file.Key);
           eentry.path = file.Key;
@@ -331,9 +347,7 @@ function listDirectoryAll(param, location, maxLoops = 5) {
     function listObjects() {
       const params = {
         ...param,
-        ...(token && {
-          ContinuationToken: token,
-        }),
+        ContinuationToken: token,
       };
 
       const command = new ListObjectsV2Command(params);
@@ -341,11 +355,13 @@ function listDirectoryAll(param, location, maxLoops = 5) {
       s3Client
         .send(command)
         .then((data) => {
+          const commonPrefixes = data.CommonPrefixes || [];
           allObjects.CommonPrefixes = [
             ...allObjects.CommonPrefixes,
-            ...data.CommonPrefixes,
+            ...commonPrefixes,
           ];
-          allObjects.Contents = [...allObjects.Contents, ...data.Contents];
+          const contents = data.Contents || [];
+          allObjects.Contents = [...allObjects.Contents, ...contents];
           allObjects.IsTruncated = data.IsTruncated;
 
           if (data.IsTruncated && loop < maxLoops) {
@@ -538,7 +554,8 @@ function getPropertiesPromise(param) {
                 resolve(false);
               }
             })
-            .catch(() => {
+            .catch((e) => {
+              console.error(e);
               resolve(false);
             });
         });
