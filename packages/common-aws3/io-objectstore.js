@@ -24,6 +24,7 @@ const {
 
 const locationsCache = [];
 const awsRegions = [
+  "us-central-1",
   "us-east-1",
   "us-east-2",
   "us-west-1",
