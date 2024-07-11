@@ -24,12 +24,27 @@ const {
 
 const locationsCache = [];
 const awsRegions = [
-  "us-east-1", "us-east-2", "us-west-1", "us-west-2",
-  "af-south-1", "ap-east-1", "ap-south-1", "ap-northeast-1",
-  "ap-northeast-2", "ap-northeast-3", "ap-southeast-1",
-  "ap-southeast-2", "ca-central-1", "eu-central-1",
-  "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1",
-  "eu-south-1", "me-south-1", "sa-east-1"
+  "us-east-1",
+  "us-east-2",
+  "us-west-1",
+  "us-west-2",
+  "af-south-1",
+  "ap-east-1",
+  "ap-south-1",
+  "ap-northeast-1",
+  "ap-northeast-2",
+  "ap-northeast-3",
+  "ap-southeast-1",
+  "ap-southeast-2",
+  "ca-central-1",
+  "eu-central-1",
+  "eu-west-1",
+  "eu-west-2",
+  "eu-west-3",
+  "eu-north-1",
+  "eu-south-1",
+  "me-south-1",
+  "sa-east-1",
 ];
 
 function s3(location) {
@@ -44,7 +59,10 @@ function s3(location) {
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
     if (advancedMode) {
-      const region = location.region && location.region.length > 0 ? location.region : awsRegions.find(reg => location.endpointURL.indexOf(reg) > -1);
+      const region =
+        location.region && location.region.length > 0
+          ? location.region
+          : awsRegions.find((reg) => location.endpointURL.indexOf(reg) > -1);
       const config = {
         endpoint: location.endpointURL,
         region: region,
@@ -78,7 +96,7 @@ function s3(location) {
  * @param expirationInSeconds
  * @returns {string}
  */
-const getURLforPath = async (param, expirationInSeconds = 900) => {
+const getURLforPath = (param, expirationInSeconds = 900) => {
   const path = normalizeRootPath(param.path);
   const bucketName = param.bucketName;
   if (!path || path.length < 1) {
@@ -92,10 +110,9 @@ const getURLforPath = async (param, expirationInSeconds = 900) => {
   try {
     const s3Client = s3(param.location);
     const command = new GetObjectCommand(params);
-    const url = await getSignedUrl(s3Client, command, {
+    return getSignedUrl(s3Client, command, {
       expiresIn: expirationInSeconds,
     });
-    return url;
   } catch (e) {
     console.error("Error by getSignedUrl: ", e);
     return Promise.resolve("");
