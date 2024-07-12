@@ -66,7 +66,7 @@ function s3(location) {
           : awsRegions.find((reg) => location.endpointURL.indexOf(reg) > -1);
       const config = {
         endpoint: location.endpointURL,
-        region: region,
+        region: region || "auto",
         credentials: {
           accessKeyId: location.accessKeyId,
           secretAccessKey: location.secretAccessKey,
@@ -616,20 +616,16 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
     s3Client
       .send(command)
       .then((data) => {
-        const streamToString = (stream) =>
-          new Promise((resolve, reject) => {
-            const chunks = [];
-            stream.on("data", (chunk) => chunks.push(chunk));
-            stream.on("error", reject);
-            stream.on("end", () =>
-              resolve(Buffer.concat(chunks).toString("utf8"))
-            );
-          });
-
-        if (type === "text") {
-          return streamToString(data.Body).then(resolve).catch(reject);
+        if(data.Body) {
+          if (type === "text") {
+            resolve(data.Body.transformToString('utf-8')); //streamToString(data.Body).then(resolve).catch(reject);
+          } else if(type === "arraybuffer"){
+            resolve(data.Body.transformToByteArray());
+          } else {
+            resolve(data.Body.transformToWebStream());
+          }
         } else {
-          resolve(data.Body);
+          resolve("");
         }
       })
       .catch((e) => {
