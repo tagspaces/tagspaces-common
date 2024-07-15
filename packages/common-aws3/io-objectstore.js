@@ -618,10 +618,10 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
     s3Client
       .send(command)
       .then((data) => {
-        if(data.Body) {
+        if (data.Body) {
           if (type === "text") {
-            resolve(data.Body.transformToString('utf-8')); //streamToString(data.Body).then(resolve).catch(reject);
-          } else if(type === "arraybuffer"){
+            resolve(data.Body.transformToString("utf-8")); //streamToString(data.Body).then(resolve).catch(reject);
+          } else if (type === "arraybuffer") {
             resolve(data.Body.transformToByteArray());
           } else {
             resolve(data.Body.transformToWebStream());
@@ -750,7 +750,13 @@ function normalizeRootPath(filePath) {
  * Persists a given binary content to a specified filepath (tested)
  * return : Promise<TS.FileSystemEntry>
  */
-async function saveBinaryFilePromise(param, content, overWrite) {
+async function saveBinaryFilePromise(
+  param,
+  content,
+  overWrite,
+  onUploadProgress,
+  onAbort
+) {
   if (content === undefined) {
     throw new Error("content is undefined");
   }
@@ -760,40 +766,17 @@ async function saveBinaryFilePromise(param, content, overWrite) {
   const lmdt = param.lmdt;
 
   // Check if file exists and handle overwrite logic if needed
-  if (lmdt) {
-    try {
-      const fileProps = await getPropertiesPromise({
-        path: filePath,
-        bucketName: bucketName,
-        location: param.location,
-      });
-      if (fileProps && fileProps.lmdt !== lmdt) {
-        throw new Error("File was modified externally");
-      }
-    } catch (error) {
-      throw error; // Forward the error
+  if (lmdt && !overWrite) {
+    const fileProps = await getPropertiesPromise(param);
+    if (fileProps && fileProps.lmdt !== lmdt) {
+      return Promise.reject("File was modified externally");
     }
   }
-
-  /* const fileExt = tsPaths.extractFileExtension(filePath);
-  let mimeType;
-  if (fileExt === "md") {
-    mimeType = "text/markdown";
-  } else if (fileExt === "txt") {
-    mimeType = "text/plain";
-  } else if (fileExt === "html") {
-    mimeType = "text/html";
-  } else if (fileExt === "json") {
-    mimeType = "application/json";
-  } else {
-    mimeType = "application/octet-stream"; // Default MIME type for binary data
-  }*/
 
   const params = {
     Bucket: bucketName,
     Key: filePath,
     Body: content,
-    // ContentType: mimeType,
   };
 
   const parallelUploads = new Upload({
@@ -801,24 +784,37 @@ async function saveBinaryFilePromise(param, content, overWrite) {
     params: params,
     leavePartsOnError: false, // optional manually handle dropped parts
   });
+  if (onUploadProgress) {
+    parallelUploads.on("httpUploadProgress", (progress) => {
+      if (onUploadProgress) {
+        onUploadProgress(
+          { key: progress.Key, loaded: progress.loaded, total: progress.total },
+          () => parallelUploads.abort()
+        );
+      }
+    });
+  }
+  if (onAbort) {
+    onAbort = () => parallelUploads.abort();
+  }
   try {
-    const data = await parallelUploads.done().then(putObj => {
-      return  {
+    return parallelUploads.done().then((uploadObj) => {
+      return {
         uuid: uuidv1(),
         name: tsPaths.extractFileName(filePath),
         path: filePath,
-        // url: `https://${bucketName}.s3.amazonaws.com/${filePath}`, // Adjust URL format based on your S3 configuration
+        url: uploadObj.Location,
         isFile: true,
         extension: tsPaths.extractFileExtension(filePath),
-        size: putObj.ContentLength,
-        lmdt: new Date(putObj.LastModified).getTime(),
+        size: content.length,
+        lmdt: new Date().getTime(),
       };
     });
-    console.log("Upload Success", data);
   } catch (err) {
-    console.error("Error upload " + filePath, err);
+    // console.error("Error upload " + filePath, err);
+    throw new Error("saveBinaryFilePromise " + filePath, err);
   }
-    /*const putObjectCommand = new PutObjectCommand(params);
+  /*const putObjectCommand = new PutObjectCommand(params);
     return s3(param.location).send(
       putObjectCommand
     )*/
@@ -1213,14 +1209,19 @@ function copyDirectoryInternal(
  * Delete a specified file
  */
 function deleteFilePromise(param) {
-  const deleteParams = {
-    Bucket: param.bucketName,
-    Key: param.path,
-  };
-  const deleteCommand = new DeleteObjectCommand(deleteParams);
+  try {
+    const deleteParams = {
+      Bucket: param.bucketName,
+      Key: normalizeRootPath(param.path),
+    };
+    const deleteCommand = new DeleteObjectCommand(deleteParams);
 
-  const s3Client = s3(param.location);
-  return s3Client.send(deleteCommand);
+    const s3Client = s3(param.location);
+    return s3Client.send(deleteCommand);
+  } catch (ex) {
+    console.error("Delete error:" + param.path, ex);
+    return Promise.resolve(false);
+  }
 }
 
 /**

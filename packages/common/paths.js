@@ -284,7 +284,7 @@ function getBackupFileLocation(
   const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
   return (
     dirPath +
-    (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
+    (dirPath.endsWith(dirSeparator) ? "" : dirSeparator) +
     AppConfig.metaFolder +
     dirSeparator +
     uuid +
