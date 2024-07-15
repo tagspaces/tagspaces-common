@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-aws3",
   "description": "TagSpaces common aws3 module",
-  "version": "4.4.4",
+  "version": "4.4.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.614.0",
-    "@aws-sdk/s3-request-presigner": "^3.614.0",
     "@aws-sdk/lib-storage": "^3.614.0",
+    "@aws-sdk/s3-request-presigner": "^3.614.0",
     "@tagspaces/tagspaces-common": "^4.3.26"
   }
 }
