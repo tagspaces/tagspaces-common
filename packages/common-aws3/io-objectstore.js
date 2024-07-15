@@ -12,6 +12,7 @@ const {
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
 } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
@@ -774,7 +775,7 @@ async function saveBinaryFilePromise(param, content, overWrite) {
     }
   }
 
-  const fileExt = tsPaths.extractFileExtension(filePath);
+  /* const fileExt = tsPaths.extractFileExtension(filePath);
   let mimeType;
   if (fileExt === "md") {
     mimeType = "text/markdown";
@@ -786,36 +787,41 @@ async function saveBinaryFilePromise(param, content, overWrite) {
     mimeType = "application/json";
   } else {
     mimeType = "application/octet-stream"; // Default MIME type for binary data
-  }
+  }*/
 
   const params = {
     Bucket: bucketName,
     Key: filePath,
     Body: content,
-    ContentType: mimeType,
+    // ContentType: mimeType,
   };
 
+  const parallelUploads = new Upload({
+    client: s3(param.location),
+    params: params,
+    leavePartsOnError: false, // optional manually handle dropped parts
+  });
   try {
-    const putObjectCommand = new PutObjectCommand(params);
-    const { ContentLength, LastModified } = await s3(param.location).send(
-      putObjectCommand
-    );
-
-    // Construct the response object
-    return {
-      uuid: uuidv1(),
-      name: tsPaths.extractFileName(filePath),
-      // url: `https://${bucketName}.s3.amazonaws.com/${filePath}`, // Adjust URL format based on your S3 configuration
-      isFile: true,
-      extension: tsPaths.extractFileExtension(filePath),
-      size: ContentLength,
-      lmdt: new Date(LastModified).getTime(),
-    };
-  } catch (error) {
-    console.error("Error upload " + filePath);
-    console.error(error);
-    throw new Error("saveBinaryFilePromise error");
+    const data = await parallelUploads.done().then(putObj => {
+      return  {
+        uuid: uuidv1(),
+        name: tsPaths.extractFileName(filePath),
+        path: filePath,
+        // url: `https://${bucketName}.s3.amazonaws.com/${filePath}`, // Adjust URL format based on your S3 configuration
+        isFile: true,
+        extension: tsPaths.extractFileExtension(filePath),
+        size: putObj.ContentLength,
+        lmdt: new Date(putObj.LastModified).getTime(),
+      };
+    });
+    console.log("Upload Success", data);
+  } catch (err) {
+    console.error("Error upload " + filePath, err);
   }
+    /*const putObjectCommand = new PutObjectCommand(params);
+    return s3(param.location).send(
+      putObjectCommand
+    )*/
 }
 
 /**
