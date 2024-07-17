@@ -609,6 +609,7 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
     Bucket: bucketName,
     Key: path,
     Range: isPreview ? "bytes=0-10000" : "",
+    ResponseCacheControl: "no-cache",
   };
 
   return new Promise((resolve, reject) => {
