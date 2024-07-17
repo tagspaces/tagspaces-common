@@ -76,7 +76,7 @@ function s3(location) {
         },
         forcePathStyle: true, // needed for minio
         //signatureVersion: "v4", // needed for minio
-        logger: console,
+        //logger: console, todo enable logging in dev build
       };
       locationsCache[location.uuid] = new S3Client(config);
     } else {
