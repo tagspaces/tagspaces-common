@@ -52,7 +52,7 @@ const ToolbarButtons: React.FC = () => {
 
   return (
     <>
-      <AppBar position="sticky">
+      <AppBar position="fixed">
         <StyledToolbar variant="dense">
           <IconButton
             size="small"
