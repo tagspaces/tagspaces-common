@@ -1177,7 +1177,7 @@ function deleteFilePromise(param) {
   return s3()
     .deleteObject({
       Bucket: param.bucketName,
-      Key: param.path,
+      Key: normalizeRootPath(param.path),
     })
     .promise();
 }
