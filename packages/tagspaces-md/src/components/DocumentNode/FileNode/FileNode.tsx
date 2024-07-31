@@ -17,7 +17,7 @@ export const FileNode: React.FC = () => {
   const { node } = useNodeViewContext();
   const { editor, loading } = useMilkdownInstance();
 
-  const { mode } = useTextEditorContext();
+  const { textEditorMode } = useTextEditorContext();
 
   const { attrs } = node;
 
@@ -40,7 +40,7 @@ export const FileNode: React.FC = () => {
 
   return (
     <>
-      {Matcher(mode)
+      {Matcher(textEditorMode)
         .match('active', () => (
           <ActiveContainerStyled>
             <FileNodeContent {...{ name }}>

@@ -95,6 +95,7 @@ function App() {
             readOnly={isReadOnly}
             // dark={dark}
             lightMode={isLightMode}
+            mode="description"
             // excludePlugins={["upload"]}
           />
         </div>

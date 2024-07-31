@@ -1,10 +1,12 @@
 import { createContext, useMemo } from 'react';
 import { useBase64File } from '../hooks/useBase64File';
+import { MilkdownEditorMode } from '../MilkdownEditor';
 
 export type TextEditorMode = 'preview' | 'active';
 
 type TextEditorContextData = {
-  mode: TextEditorMode;
+  textEditorMode: TextEditorMode;
+  mode: MilkdownEditorMode;
   currentFolder?: string;
   stickyOnMenu: number;
   onFileUpload: (file: File) => Promise<string>;
@@ -13,7 +15,8 @@ type TextEditorContextData = {
 };
 
 export const TextEditorContext = createContext<TextEditorContextData>({
-  mode: 'preview',
+  textEditorMode: 'preview',
+  mode: 'extension',
   stickyOnMenu: 10,
   onFileUpload: () => Promise.resolve(''),
   inputAcceptedFormats: '',
@@ -21,7 +24,8 @@ export const TextEditorContext = createContext<TextEditorContextData>({
 });
 
 export type TextEditorContextProviderProps = {
-  mode: TextEditorMode;
+  textEditorMode: TextEditorMode;
+  mode: MilkdownEditorMode;
   currentFolder?: string;
   children: React.ReactNode;
   stickyOnMenu?: number;
@@ -31,6 +35,7 @@ export type TextEditorContextProviderProps = {
 };
 
 export const TextEditorContextProvider = ({
+  textEditorMode,
   mode,
   children,
   stickyOnMenu = 10,
@@ -42,6 +47,7 @@ export const TextEditorContextProvider = ({
 
   const context = useMemo(
     () => ({
+      textEditorMode,
       mode,
       stickyOnMenu,
       onFileUpload: onFileUpload || getBase64,
@@ -49,6 +55,7 @@ export const TextEditorContextProvider = ({
       inputAcceptedFormats
     }),
     [
+      textEditorMode,
       mode,
       onFileUpload,
       getBase64,

@@ -20,7 +20,7 @@ export const LinkTooltip: React.FC = () => {
 
   const { editor, loading } = useMilkdownInstance();
   const { view, prevState } = usePluginViewContext();
-  const { mode } = useTextEditorContext();
+  const { textEditorMode } = useTextEditorContext();
   const { getSelectedMarkPosition } = useSelectedMarkPosition();
 
   const { href } = useHyperlinkAttrs();
@@ -66,13 +66,13 @@ export const LinkTooltip: React.FC = () => {
     return () => {
       tooltipProvider.current?.destroy();
     };
-  }, [editor, getSelectedMarkPosition, mode, loading]);
+  }, [editor, getSelectedMarkPosition, textEditorMode, loading]);
 
   useEffect(() => {
     tooltipProvider.current?.update(view, prevState);
   });
 
-  if (mode === 'preview') {
+  if (textEditorMode === 'preview') {
     return null;
   }
 

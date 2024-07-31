@@ -51,7 +51,7 @@ export const TableTooltip: FC = () => {
   const { view } = usePluginViewContext();
   const tooltipProvider = useRef<TooltipProvider>();
   const [loading, getEditor] = useInstance();
-  const { mode } = useTextEditorContext();
+  const { textEditorMode } = useTextEditorContext();
 
   const isRow =
     view.state.selection instanceof CellSelection &&
@@ -98,7 +98,7 @@ export const TableTooltip: FC = () => {
     };
   }, [getEditor, loading, view]);
 
-  if (mode === 'preview') {
+  if (textEditorMode === 'preview') {
     return null;
   }
 

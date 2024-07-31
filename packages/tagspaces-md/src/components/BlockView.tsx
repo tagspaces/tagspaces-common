@@ -9,7 +9,7 @@ export const BlockView = () => {
   const ref = useRef<HTMLDivElement>(null);
   const tooltipProvider = useRef<BlockProvider>(undefined);
 
-  const { mode } = useTextEditorContext();
+  const { textEditorMode } = useTextEditorContext();
   const { view } = usePluginViewContext();
   const [loading, getEditor] = useInstance();
   const editor = getEditor();
@@ -19,7 +19,10 @@ export const BlockView = () => {
     if (!loading && div) {
       if (editor) {
         // && editor.status === EditorStatus.Created) {
-        if (mode === 'active' && tooltipProvider.current === undefined) {
+        if (
+          textEditorMode === 'active' &&
+          tooltipProvider.current === undefined
+        ) {
           tooltipProvider.current = new BlockProvider({
             ctx: editor.ctx,
             content: div
@@ -36,7 +39,7 @@ export const BlockView = () => {
       tooltipProvider.current?.destroy();
       tooltipProvider.current = undefined;
     };
-  }, [mode, loading, editor, ref.current]); //
+  }, [textEditorMode, loading, editor, ref.current]); //
 
   /*useEffect(() => {
     tooltipProvider.current?.update(view);

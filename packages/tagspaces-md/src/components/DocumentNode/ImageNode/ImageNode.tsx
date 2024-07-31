@@ -20,8 +20,7 @@ export const ImageNode: React.FC = () => {
     width: number;
     height: number;
   }>({ width: 0, height: 0 });
-  const { currentFolder } = useTextEditorContext();
-  const { mode } = useTextEditorContext();
+  const { currentFolder, textEditorMode } = useTextEditorContext();
   const { isSelected } = useIsNodeSelected({ nodeType: imageSchema.type });
 
   const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
@@ -90,7 +89,7 @@ export const ImageNode: React.FC = () => {
           >
             {isLoading => (
               <>
-                {mode === 'active' && !isLoading && (
+                {textEditorMode === 'active' && !isLoading && (
                   <div style={{ maxHeight: 40 }}>
                     <IconButton
                       size="small"

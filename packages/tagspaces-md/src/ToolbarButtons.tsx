@@ -36,9 +36,11 @@ import { useMilkdownInstance } from './hooks/useMilkdownInstance';
 import { insertTaskListCommand } from './EditorContext/hooks/useGfmPlugin/useGfmPlugin';
 import CodeIcon from '@mui/icons-material/Code';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
+import { useTextEditorContext } from './TextEditorContext/useTextEditoContext';
 
 const ToolbarButtons: React.FC = () => {
   const { editor, loading } = useMilkdownInstance();
+  const { mode } = useTextEditorContext();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
   const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
 
@@ -52,7 +54,7 @@ const ToolbarButtons: React.FC = () => {
 
   return (
     <>
-      <AppBar position="fixed">
+      <AppBar position={mode === 'description' ? 'sticky' : 'fixed'}>
         <StyledToolbar variant="dense">
           <IconButton
             size="small"
