@@ -514,6 +514,7 @@ function isFileExist(param) {
       const command = new HeadObjectCommand({
         Bucket: param.bucketName,
         Key: normalizeRootPath(param.path),
+        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
       });
 
       s3Client.send(command).then(
@@ -542,6 +543,7 @@ function getPropertiesPromise(param) {
     const params = {
       Bucket: bucketName,
       Key: path,
+      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
     };
     return new Promise((resolve) => {
       const s3Client = s3(param.location);
