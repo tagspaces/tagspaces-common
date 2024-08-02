@@ -14,6 +14,7 @@ const {
 } = require("@aws-sdk/client-s3");
 const { Upload } = require("@aws-sdk/lib-storage");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const CryptoJS = require("crypto-js");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
@@ -94,6 +95,24 @@ function s3(location) {
   }
 }
 
+function getEncryptionHeaders(ENCRYPTION_KEY){
+  if (ENCRYPTION_KEY.length !== 32) {
+    // throw new Error('The encryption key must be 32 characters long.');
+    return {}
+  }
+  const encoder = new TextEncoder();
+  const ENCRYPTION_KEY_UINT8ARRAY = encoder.encode(ENCRYPTION_KEY);
+
+  const ENCRYPTION_KEY_MD5 = CryptoJS.MD5(ENCRYPTION_KEY).toString(
+      CryptoJS.enc.Base64,
+  );
+  return {
+    SSECustomerAlgorithm: 'AES256',
+    SSECustomerKey: ENCRYPTION_KEY_UINT8ARRAY,
+    SSECustomerKeyMD5: ENCRYPTION_KEY_MD5,
+  }
+}
+
 /**
  * @param param param.path - needs to be not encoded s3().getSignedUrl - this will double encode it
  * @param expirationInSeconds
@@ -135,6 +154,7 @@ const listMetaDirectoryPromise = async (param) => {
         ? normalizeRootPath(path + "/" + AppConfig.metaFolder + "/")
         : AppConfig.metaFolder + "/",
     Bucket: bucketName,
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
 
   try {
@@ -199,6 +219,7 @@ const listDirectoryPromise = (
         path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
+      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
     };
     listDirectoryAll(params, param.location, resultsLimit.maxLoops)
       .then(async (data) => {
@@ -610,6 +631,7 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
     Key: path,
     Range: isPreview ? "bytes=0-10000" : "",
     ResponseCacheControl: "no-cache",
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
 
   return new Promise((resolve, reject) => {
@@ -680,6 +702,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         Key: filePath,
         Body: content,
         ContentType: mimeType,
+        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
       };
 
       const s3Client = s3(param.location);
@@ -778,6 +801,7 @@ async function saveBinaryFilePromise(
     Bucket: bucketName,
     Key: filePath,
     Body: content,
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
 
   const parallelUploads = new Upload({
@@ -1059,6 +1083,7 @@ function copyFilePromise(param, newFilePath) {
     Bucket: param.bucketName,
     CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
     Key: nNewFilePath, //encodeS3URI
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
   const command = new CopyObjectCommand(copyParams);
 
@@ -1083,6 +1108,7 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
     Bucket: param.bucketName,
     CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
     Key: nNewFilePath, //encodeS3URI
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
   const copyCommand = new CopyObjectCommand(copyParams);
 
