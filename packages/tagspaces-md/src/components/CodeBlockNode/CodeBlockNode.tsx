@@ -36,7 +36,7 @@ const options = [
 ];
 
 export const CodeBlockNode: React.FC = () => {
-  const { mode } = useTextEditorContext();
+  const { textEditorMode } = useTextEditorContext();
   //const { onSuccessNotification } = useNotification();
   const { contentRef, selected, node, setAttrs } = useNodeViewContext();
 
@@ -73,7 +73,7 @@ export const CodeBlockNode: React.FC = () => {
         suppressContentEditableWarning
         className="mb-2 flex justify-between"
       >
-        {Matcher(mode)
+        {Matcher(textEditorMode)
           .match('active', () => (
             <Select
               style={{ minWidth: 150 }}

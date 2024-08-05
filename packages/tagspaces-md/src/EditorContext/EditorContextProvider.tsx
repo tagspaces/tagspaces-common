@@ -59,8 +59,8 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   defaultMarkdownValue,
   excludePlugins
 }) => {
-  const { mode } = useTextEditorContext();
-  const isEditable = useRef(mode === 'active');
+  const { textEditorMode } = useTextEditorContext();
+  const isEditable = useRef(textEditorMode === 'active');
 
   const gfmPlugin = useGfmPlugin();
   const mathPlugin = useMathPlugin();
@@ -107,7 +107,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
             },
             editable: () => isEditable.current,
             handleClickOn: (view: EditorView, pos: number, node: Node) =>
-              handleClick(mode, ctx, view, pos) //, node)
+              handleClick(textEditorMode, ctx, view, pos) //, node)
           }));
           //preventDefaultClick
           const observer = new MutationObserver(() => {
@@ -169,8 +169,8 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
   );
 
   useEffect(() => {
-    isEditable.current = mode === 'active';
-  }, [isEditable, mode]);
+    isEditable.current = textEditorMode === 'active';
+  }, [isEditable, textEditorMode]);
 
   const context = useMemo(() => ({ editor }), [editor]);
 

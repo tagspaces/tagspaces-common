@@ -9,8 +9,6 @@ import { EditorView } from 'prosemirror-view';
 import { useEditor, UseEditorReturn } from '@milkdown/react';
 import { createContext, useMemo } from 'react';
 import { Node } from '@milkdown/prose/model';
-import { findChildrenByMark } from '@milkdown/prose';
-import { linkSchema } from '@milkdown/preset-commonmark';
 
 import { useCommonmarkPlugin } from './hooks/useCommonmarkPlugin/useCommonmarkPlugin';
 import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
@@ -43,7 +41,7 @@ type EditorContextProviderProps = {
 
 export const LightEditorContextProvider: React.FC<EditorContextProviderProps> =
   ({ children, onChange, defaultMarkdownValue }) => {
-    const { mode } = useTextEditorContext();
+    const { textEditorMode } = useTextEditorContext();
 
     const gfmPlugin = useGfmPlugin();
     const taskList = useTaskList();
@@ -57,9 +55,9 @@ export const LightEditorContextProvider: React.FC<EditorContextProviderProps> =
             ctx.set(defaultValueCtx, defaultMarkdownValue);
             ctx.update(editorViewOptionsCtx, prev => ({
               ...prev,
-              editable: () => mode === 'active',
+              editable: () => textEditorMode === 'active',
               handleClickOn: (view: EditorView, pos: number, node: Node) =>
-                handleClick(mode, ctx, view, pos) //, node)
+                handleClick(textEditorMode, ctx, view, pos) //, node)
             }));
             //preventDefaultClick
             const observer = new MutationObserver(() => {
@@ -79,7 +77,13 @@ export const LightEditorContextProvider: React.FC<EditorContextProviderProps> =
 
         return editor;
       },
-      [mode, commonmarkPlugin, defaultMarkdownValue, gfmPlugin, onChange]
+      [
+        textEditorMode,
+        commonmarkPlugin,
+        defaultMarkdownValue,
+        gfmPlugin,
+        onChange
+      ]
     );
 
     const context = useMemo(() => ({ editor }), [editor]);

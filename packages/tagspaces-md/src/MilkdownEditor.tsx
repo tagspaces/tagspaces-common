@@ -13,6 +13,7 @@ export interface MilkdownRef {
   update: (markdown: string) => void;
   setDarkMode: (isDark: boolean) => void;
 }
+export type MilkdownEditorMode = 'description' | 'extension';
 
 interface Props {
   content: string; // Content;
@@ -23,13 +24,18 @@ interface Props {
   lightMode?: boolean;
   excludePlugins?: Array<string>;
   currentFolder?: string;
+  mode?: MilkdownEditorMode;
 }
 
 const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
-  ({ readOnly, content, onChange, onFocus, currentFolder, ...rest }, ref) => {
+  (
+    { readOnly, mode, content, onChange, onFocus, currentFolder, ...rest },
+    ref
+  ) => {
     return (
       <TextEditorContextProvider
-        mode={readOnly ? 'preview' : 'active'}
+        mode={mode}
+        textEditorMode={readOnly ? 'preview' : 'active'}
         currentFolder={currentFolder}
       >
         <MilkdownProvider>
