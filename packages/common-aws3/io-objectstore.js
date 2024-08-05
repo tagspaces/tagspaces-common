@@ -1,4 +1,20 @@
-const AWS = require("aws-sdk");
+const {
+  S3Client,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  HeadObjectCommand,
+  PutObjectCommand,
+  CopyObjectCommand,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+} = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const CryptoJS = require("crypto-js");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
@@ -9,6 +25,31 @@ const {
 } = require("@tagspaces/tagspaces-common/utils-io");
 
 const locationsCache = [];
+const awsRegions = [
+  "us-central-1",
+  "us-east-1",
+  "us-east-2",
+  "us-west-1",
+  "us-west-2",
+  "af-south-1",
+  "ap-east-1",
+  "ap-south-1",
+  "ap-northeast-1",
+  "ap-northeast-2",
+  "ap-northeast-3",
+  "ap-southeast-1",
+  "ap-southeast-2",
+  "ca-central-1",
+  "eu-central-1",
+  "eu-central-2",
+  "eu-west-1",
+  "eu-west-2",
+  "eu-west-3",
+  "eu-north-1",
+  "eu-south-1",
+  "me-south-1",
+  "sa-east-1",
+];
 
 function s3(location) {
   if (location) {
@@ -22,25 +63,53 @@ function s3(location) {
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
     if (advancedMode) {
-      const endpoint = new AWS.Endpoint(location.endpointURL);
-      locationsCache[location.uuid] = new AWS.S3({
-        endpoint: endpoint, // as string,
-        accessKeyId: location.accessKeyId,
-        secretAccessKey: location.secretAccessKey,
-        sessionToken: location.sessionToken,
-        s3ForcePathStyle: true, // needed for minio
-        signatureVersion: "v4", // needed for minio
-        logger: console,
-      });
+      const region =
+        location.region && location.region.length > 0
+          ? location.region
+          : awsRegions.find((reg) => location.endpointURL.indexOf(reg) > -1);
+      const config = {
+        endpoint: location.endpointURL,
+        region: region || "auto",
+        credentials: {
+          accessKeyId: location.accessKeyId,
+          secretAccessKey: location.secretAccessKey,
+          sessionToken: location.sessionToken,
+        },
+        forcePathStyle: true, // needed for minio
+        //signatureVersion: "v4", // needed for minio
+        //logger: console, todo enable logging in dev build
+      };
+      locationsCache[location.uuid] = new S3Client(config);
     } else {
-      locationsCache[location.uuid] = new AWS.S3({
+      const config = {
         region: location.region,
-        accessKeyId: location.accessKeyId,
-        secretAccessKey: location.secretAccessKey,
-        signatureVersion: "v4",
-      });
+        credentials: {
+          accessKeyId: location.accessKeyId,
+          secretAccessKey: location.secretAccessKey,
+        },
+        //signatureVersion: "v4",
+      };
+      locationsCache[location.uuid] = new S3Client(config);
     }
     return locationsCache[location.uuid];
+  }
+}
+
+function getEncryptionHeaders(ENCRYPTION_KEY){
+  if (ENCRYPTION_KEY.length !== 32) {
+    // throw new Error('The encryption key must be 32 characters long.');
+    return {}
+  }
+  const encoder = new TextEncoder();
+  const ENCRYPTION_KEY_UINT8ARRAY = encoder.encode(ENCRYPTION_KEY);
+
+  const ENCRYPTION_KEY_MD5 = CryptoJS.MD5(ENCRYPTION_KEY).toString(
+      CryptoJS.enc.Base64,
+  );
+  return {
+    SSECustomerAlgorithm: 'AES256',
+    SSECustomerKey: ENCRYPTION_KEY_UINT8ARRAY,
+    SSECustomerKeyMD5: ENCRYPTION_KEY_MD5,
   }
 }
 
@@ -54,18 +123,21 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
   const bucketName = param.bucketName;
   if (!path || path.length < 1) {
     console.warn("Wrong path param for getURLforPath");
-    return "";
+    return Promise.resolve("");
   }
   const params = {
     Bucket: bucketName,
     Key: path,
-    Expires: expirationInSeconds,
   };
   try {
-    return s3(param.location).getSignedUrl("getObject", params);
+    const s3Client = s3(param.location);
+    const command = new GetObjectCommand(params);
+    return getSignedUrl(s3Client, command, {
+      expiresIn: expirationInSeconds,
+    });
   } catch (e) {
-    console.warn("Error by getSignedUrl" + e.toString());
-    return "";
+    console.error("Error by getSignedUrl: ", e);
+    return Promise.resolve("");
   }
 };
 
@@ -82,36 +154,34 @@ const listMetaDirectoryPromise = async (param) => {
         ? normalizeRootPath(path + "/" + AppConfig.metaFolder + "/")
         : AppConfig.metaFolder + "/",
     Bucket: bucketName,
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
-  const results = await s3(param.location)
-    .listObjectsV2(params)
-    .promise()
-    .then((data) => {
-      // if (window.walkCanceled) {
-      //     return resolve(entries); // returning results even if walk canceled
-      // }
-      // Handling files
-      data.Contents.forEach((file) => {
-        // console.warn('Meta: ' + JSON.stringify(file));
-        entry = {};
-        entry.name = file.Key; // extractFileName(file.Key, '/');
-        entry.path = file.Key;
-        entry.isFile = true;
-        entry.size = file.Size;
-        entry.lmdt = Date.parse(file.LastModified);
-        if (file.Key !== params.Prefix) {
-          // skipping the current folder
-          entries.push(entry);
-        }
-      });
-      return entries;
-    })
-    .catch((err) => {
-      // console.log(err);
-      console.warn("Error listing meta directory " + path, err);
-      return entries; // returning results even if any promise fails
+
+  try {
+    const s3Client = s3(param.location);
+    const command = new ListObjectsV2Command(params);
+    const data = await s3Client.send(command);
+
+    const contents = data.Contents || [];
+    // Handling files
+    contents.forEach((file) => {
+      entry = {};
+      entry.name = file.Key; // extractFileName(file.Key, '/');
+      entry.path = file.Key;
+      entry.isFile = true;
+      entry.size = file.Size;
+      entry.lmdt = Date.parse(file.LastModified);
+      if (file.Key !== params.Prefix) {
+        // skipping the current folder
+        entries.push(entry);
+      }
     });
-  return results;
+
+    return entries;
+  } catch (err) {
+    console.warn("Error listing meta directory " + path, err);
+    return entries; // returning results even if any promise fails
+  }
 };
 
 /**
@@ -149,16 +219,19 @@ const listDirectoryPromise = (
         path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
+      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
     };
     listDirectoryAll(params, param.location, resultsLimit.maxLoops)
-      .then((data) => {
+      .then(async (data) => {
         const metaPromises = [];
 
         if (data.IsTruncated) {
           resultsLimit.IsTruncated = data.IsTruncated;
         }
+
+        const commonPrefixes = data.CommonPrefixes || [];
         // Handling "directories"
-        data.CommonPrefixes.forEach((dir) => {
+        commonPrefixes.forEach((dir) => {
           // console.warn(JSON.stringify(dir));
           const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
           eentry = {};
@@ -192,8 +265,9 @@ const listDirectoryPromise = (
           // }
         });
 
+        const contents = data.Contents || [];
         // Handling files
-        data.Contents.forEach((file) => {
+        for (const file of contents) {
           eentry = {};
           eentry.name = tsPaths.extractFileName(file.Key);
           eentry.path = file.Key;
@@ -221,7 +295,7 @@ const listDirectoryPromise = (
               );
               if (thumbAvailable) {
                 if (mode.includes("extractThumbURL")) {
-                  thumbPath = getURLforPath(
+                  thumbPath = await getURLforPath(
                     {
                       path: thumbPath,
                       bucketName: bucketName,
@@ -256,7 +330,7 @@ const listDirectoryPromise = (
               }
             }
           }
-        });
+        }
 
         if (metaPromises.length > 0) {
           Promise.all(metaPromises)
@@ -301,45 +375,47 @@ const listDirectoryPromise = (
  */
 function listDirectoryAll(param, location, maxLoops = 5) {
   return new Promise((resolve, reject) => {
-    let allObjects = undefined;
+    let allObjects = {
+      CommonPrefixes: [],
+      Contents: [],
+      IsTruncated: false,
+    };
     let loop = 0;
+    let token = undefined;
 
-    function listObjects(token) {
-      s3(location).listObjectsV2(
-        {
-          ...param,
-          ...(token && {
-            ContinuationToken: token,
-          }),
-        },
-        (err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            if (allObjects) {
-              allObjects.CommonPrefixes = [
-                ...allObjects.CommonPrefixes,
-                ...data.CommonPrefixes,
-              ];
-              allObjects.Contents = [...allObjects.Contents, ...data.Contents];
-              allObjects.IsTruncated = data.IsTruncated;
-            } else {
-              allObjects = { ...data };
-            }
+    const s3Client = s3(location);
+
+    function listObjects() {
+      const params = {
+        ...param,
+        ContinuationToken: token,
+      };
+
+      const command = new ListObjectsV2Command(params);
+
+      s3Client
+        .send(command)
+        .then((data) => {
+          const commonPrefixes = data.CommonPrefixes || [];
+          allObjects.CommonPrefixes = [
+            ...allObjects.CommonPrefixes,
+            ...commonPrefixes,
+          ];
+          const contents = data.Contents || [];
+          allObjects.Contents = [...allObjects.Contents, ...contents];
+          allObjects.IsTruncated = data.IsTruncated;
+
+          if (data.IsTruncated && loop < maxLoops) {
             loop += 1;
-
-            if (data.IsTruncated && loop < maxLoops) {
-              if (data.NextContinuationToken) {
-                listObjects(data.NextContinuationToken);
-              } else {
-                resolve(allObjects);
-              }
-            } else {
-              resolve(allObjects);
-            }
+            token = data.NextContinuationToken;
+            listObjects(token);
+          } else {
+            resolve(allObjects);
           }
-        }
-      );
+        })
+        .catch((err) => {
+          reject(`Error listing directory: ${err.message}`);
+        });
     }
 
     listObjects();
@@ -382,7 +458,7 @@ const getEntryMeta = async (eentry, location) => {
           location,
         });
         if (folderThumbProps && folderThumbProps.isFile) {
-          const thumb = getURLforPath(
+          const thumb = await getURLforPath(
             {
               path: folderTmbPath,
               bucketName: eentry.bucketName,
@@ -432,25 +508,29 @@ const getEntryMeta = async (eentry, location) => {
  * @returns {Promise<boolean>}
  */
 function isFileExist(param) {
-  try {
-    return s3(param.location)
-      .headObject({
+  return new Promise((resolve, reject) => {
+    try {
+      const s3Client = s3(param.location);
+      const command = new HeadObjectCommand({
         Bucket: param.bucketName,
         Key: normalizeRootPath(param.path),
-      })
-      .promise()
-      .then(
-        () => true,
+        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+      });
+
+      s3Client.send(command).then(
+        () => resolve(true),
         (err) => {
-          if (err.code === "NotFound") {
-            return false;
+          if (err.name === "NotFound") {
+            resolve(false);
+          } else {
+            reject(err);
           }
-          throw err;
         }
       );
-  } catch (error) {
-    return Promise.resolve(false);
-  }
+    } catch (error) {
+      resolve(false);
+    }
+  });
 }
 /**
  * @param param
@@ -463,29 +543,48 @@ function getPropertiesPromise(param) {
     const params = {
       Bucket: bucketName,
       Key: path,
+      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
     };
     return new Promise((resolve) => {
-      s3(param.location).headObject(params, (err, data) => {
-        if (err) {
-          // workaround for checking if a folder exists on s3
-          // console.log("getPropertiesPromise " + path, err);
+      const s3Client = s3(param.location);
+      const headCommand = new HeadObjectCommand(params);
+
+      s3Client
+        .send(headCommand)
+        .then((data) => {
+          const isFile = !path.endsWith("/");
+          resolve({
+            name: isFile
+              ? tsPaths.extractFileName(path)
+              : tsPaths.extractDirectoryName(path),
+            isFile: !path.endsWith("/"),
+            size: data.ContentLength,
+            lmdt:
+              data.LastModified instanceof Date
+                ? data.LastModified.getTime()
+                : data.LastModified,
+            path,
+          });
+        })
+        .catch((err) => {
+          // Workaround for checking if a folder exists on S3
           const listParams = {
             Bucket: bucketName,
             Prefix: path,
             MaxKeys: 1,
             Delimiter: "/",
           };
-          s3(param.location).listObjectsV2(
-            listParams,
-            (listError, listData) => {
-              if (listError) {
-                resolve(false);
-              }
+          const listCommand = new ListObjectsV2Command(listParams);
+
+          s3Client
+            .send(listCommand)
+            .then((listData) => {
               const folderExists =
-                (listData && listData.KeyCount && listData.KeyCount > 0) || // supported on aws s3
+                (listData && listData.KeyCount && listData.KeyCount > 0) ||
                 (listData &&
                   listData.CommonPrefixes &&
-                  listData.CommonPrefixes.length > 0); // needed for DO
+                  listData.CommonPrefixes.length > 0);
+
               if (folderExists) {
                 resolve({
                   name: tsPaths.extractDirectoryName(path),
@@ -497,39 +596,15 @@ function getPropertiesPromise(param) {
               } else {
                 resolve(false);
               }
-            }
-          );
-        } else {
-          /*
-                                  data = {
-                                    "AcceptRanges":"bytes",
-                                    "LastModified":"2018-10-22T12:57:16.000Z",
-                                    "ContentLength":101003,
-                                    "ETag":"\"02cb1c856f4fdcde6b39062a29b95030\"",
-                                    "ContentType":"image/png",
-                                    "ServerSideEncryption":"AES256",
-                                    "Metadata":{}
-                                  }
-                                  */
-
-          const isFile = !path.endsWith("/");
-          resolve({
-            name: isFile
-              ? tsPaths.extractFileName(path)
-              : tsPaths.extractDirectoryName(path),
-            isFile: !path.endsWith("/"),
-            size: data.ContentLength,
-            lmdt:
-              data.LastModified instanceof Date
-                ? data.LastModified.getTime()
-                : data.LastModified, // Date.parse(data.LastModified),
-            path,
-          });
-        }
-      });
+            })
+            .catch((e) => {
+              console.error(e);
+              resolve(false);
+            });
+        });
     });
   } else {
-    // root folder
+    // Root folder
     return Promise.resolve({
       name: bucketName,
       isFile: false,
@@ -550,42 +625,42 @@ const loadTextFilePromise = (param, isPreview) =>
  * @param isPreview
  * @returns {Promise<string | string>}
  */
-const getFileContentPromise = async (
-  param,
-  type = "text",
-  isPreview = false
-) => {
+function getFileContentPromise(param, type = "text", isPreview = false) {
   const path = normalizeRootPath(param.path);
   const bucketName = param.bucketName;
   const params = {
     Bucket: bucketName,
     Key: path,
     Range: isPreview ? "bytes=0-10000" : "",
+    ResponseCacheControl: "no-cache",
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
   };
-  // console.info("getFileContentPromise:" + JSON.stringify(params));
-  return s3(param.location)
-    .getObject(params)
-    .promise()
-    .then((data) => {
-      // data: {
-      // "AcceptRanges":"bytes",
-      // "LastModified":"2018-10-22T16:24:42.000Z",
-      // "ContentLength":99,
-      // "ETag":"\"407a96716a09a2cf36ca32759cf15497\"",
-      // "ContentType":"application/json",
-      // "ServerSideEncryption":"AES256",
-      // "Metadata":{},
-      // "Body":{"type":"Buffer","data":[123,....,10,125]}}
-      if (type === "text") {
-        return data.Body.toString("utf8");
-      }
-      return data.Body;
-    })
-    .catch((e) => {
-      // console.error("Error getObject " + path + " " + e.message);
-      return ""; //Promise.resolve("");
-    });
-};
+
+  return new Promise((resolve, reject) => {
+    const s3Client = s3(param.location);
+    const command = new GetObjectCommand(params);
+
+    s3Client
+      .send(command)
+      .then((data) => {
+        if (data.Body) {
+          if (type === "text") {
+            resolve(data.Body.transformToString("utf-8")); //streamToString(data.Body).then(resolve).catch(reject);
+          } else if (type === "arraybuffer") {
+            resolve(data.Body.transformToByteArray());
+          } else {
+            resolve(data.Body.transformToWebStream());
+          }
+        } else {
+          resolve("");
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        resolve(""); // Return an empty string on error
+      });
+  });
+}
 
 /**
  * Persists a given content(binary supported) to a specified filepath (tested)
@@ -596,29 +671,18 @@ const getFileContentPromise = async (
  * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
  */
 const saveFilePromise = (param, content, overWrite, mode) =>
-  new Promise(async (resolve, reject) => {
+  new Promise((resolve, reject) => {
     if (content === undefined) {
       reject(new Error("content is undefined"));
-    } else {
-      const path = param.path;
-      const bucketName = param.bucketName;
-      const lmdt = param.lmdt;
-      // let isNewFile = false;
-      // eslint-disable-next-line no-param-reassign
-      const filePath = normalizeRootPath(path);
+      return;
+    }
 
-      if (lmdt) {
-        const fileProps = await getPropertiesPromise({
-          path: filePath,
-          bucketName: bucketName,
-          location: param.location,
-        });
-        if (fileProps && fileProps.lmdt !== lmdt) {
-          reject(new Error("File was modified externally"));
-          return false;
-        }
-      }
+    const path = param.path;
+    const bucketName = param.bucketName;
+    const lmdt = param.lmdt;
+    const filePath = normalizeRootPath(path);
 
+    const handleSave = () => {
       const fileExt = tsPaths.extractFileExtension(filePath);
 
       let mimeType;
@@ -634,36 +698,57 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         // default type
         mimeType = "text/plain";
       }
+
       const params = {
         Bucket: bucketName,
         Key: filePath,
         Body: content,
         ContentType: mimeType,
-      }; // fs.readFileSync(filePath)
-      s3(param.location).putObject(params, (err, data) => {
-        if (err) {
-          console.log("Error upload " + filePath); // an error occurred
-          console.log(err, err.stack); // an error occurred
+        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+      };
+
+      const s3Client = s3(param.location);
+      const command = new PutObjectCommand(params);
+
+      s3Client
+        .send(command)
+        .then((data) => {
+          return getPropertiesPromise({
+            path: filePath,
+            bucketName: bucketName,
+            location: param.location,
+          }).then((entry) => {
+            resolve({
+              ...entry,
+              uuid: data ? data.ETag : uuidv1(),
+              url: data ? data.Location : filePath,
+              isFile: true,
+              extension: tsPaths.extractFileExtension(filePath, "/"),
+            });
+          });
+        })
+        .catch((err) => {
+          console.error("Error upload " + filePath, err);
           resolve(false);
-        }
-        getPropertiesPromise({
-          path: filePath,
-          bucketName: bucketName,
-          location: param.location,
-        }).then((entry) =>
-          resolve({
-            ...entry,
-            uuid: data ? data.ETag : uuidv1(),
-            url: data ? data.Location : filePath,
-            isFile: true,
-            extension: tsPaths.extractFileExtension(filePath, "/"),
-            //name: data && data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
-            //path: filePath,
-            //size: content.length,
-            //lmdt: new Date().getTime(),
-          })
-        );
-      });
+        });
+    };
+
+    if (lmdt) {
+      getPropertiesPromise({
+        path: filePath,
+        bucketName: bucketName,
+        location: param.location,
+      })
+        .then((fileProps) => {
+          if (fileProps && fileProps.lmdt !== lmdt) {
+            reject(new Error("File was modified externally"));
+          } else {
+            handleSave();
+          }
+        })
+        .catch(reject);
+    } else {
+      handleSave();
     }
   });
 
@@ -691,74 +776,75 @@ function normalizeRootPath(filePath) {
  * Persists a given binary content to a specified filepath (tested)
  * return : Promise<TS.FileSystemEntry>
  */
-function saveBinaryFilePromise(
+async function saveBinaryFilePromise(
   param,
   content,
   overWrite,
   onUploadProgress,
   onAbort
 ) {
-  return new Promise((resolve, reject) => {
-    let isNewFile = false;
-    // eslint-disable-next-line no-param-reassign
-    const filePath = normalizeRootPath(param.path);
-    isFileExist(param)
-      .then((result) => {
-        if (result === false) {
-          isNewFile = true;
-        }
-        if (isNewFile || overWrite === true) {
-          const params = {
-            Bucket: param.bucketName,
-            Key: filePath,
-            Body: content,
-          };
-          const request = s3(param.location).upload(params);
+  if (content === undefined) {
+    throw new Error("content is undefined");
+  }
 
-          if (onUploadProgress) {
-            request.on("httpUploadProgress", (progress) => {
-              if (onUploadProgress) {
-                onUploadProgress(progress, () => request.abort());
-              }
-            }); // onUploadProgress as any);
-          }
-          if (onAbort) {
-            onAbort = () => request.abort();
-          }
-          try {
-            request
-              .promise()
-              .then((data) => {
-                resolve({
-                  uuid: uuidv1(), // data.ETag,
-                  name: data.Key
-                    ? data.Key
-                    : tsPaths.extractFileName(filePath, "/"),
-                  url: data.Location,
-                  isFile: true,
-                  path: filePath,
-                  extension: tsPaths.extractFileExtension(filePath, "/"),
-                  size: content.length,
-                  lmdt: new Date().getTime(),
-                  tags: [],
-                  isNewFile,
-                });
-              })
-              .catch((err) => {
-                reject(err);
-              });
-          } catch (err) {
-            console.log("Error upload " + filePath); // an error occurred
-            console.log(err, err.stack); // an error occurred
-            reject("saveBinaryFilePromise error");
-          }
-        } else {
-          resolve(result);
-        }
-        return result;
-      })
-      .catch((err) => reject(err));
+  const filePath = tsPaths.normalizePath(normalizeRootPath(param.path));
+  const bucketName = param.bucketName;
+  const lmdt = param.lmdt;
+
+  // Check if file exists and handle overwrite logic if needed
+  if (lmdt && !overWrite) {
+    const fileProps = await getPropertiesPromise(param);
+    if (fileProps && fileProps.lmdt !== lmdt) {
+      return Promise.reject("File was modified externally");
+    }
+  }
+
+  const params = {
+    Bucket: bucketName,
+    Key: filePath,
+    Body: content,
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+  };
+
+  const parallelUploads = new Upload({
+    client: s3(param.location),
+    params: params,
+    leavePartsOnError: false, // optional manually handle dropped parts
   });
+  if (onUploadProgress) {
+    parallelUploads.on("httpUploadProgress", (progress) => {
+      if (onUploadProgress) {
+        onUploadProgress(
+          { key: progress.Key, loaded: progress.loaded, total: progress.total },
+          () => parallelUploads.abort()
+        );
+      }
+    });
+  }
+  if (onAbort) {
+    onAbort = () => parallelUploads.abort();
+  }
+  try {
+    return parallelUploads.done().then((uploadObj) => {
+      return {
+        uuid: uuidv1(),
+        name: tsPaths.extractFileName(filePath),
+        path: filePath,
+        url: uploadObj.Location,
+        isFile: true,
+        extension: tsPaths.extractFileExtension(filePath),
+        size: content.length,
+        lmdt: new Date().getTime(),
+      };
+    });
+  } catch (err) {
+    // console.error("Error upload " + filePath, err);
+    throw new Error("saveBinaryFilePromise " + filePath, err);
+  }
+  /*const putObjectCommand = new PutObjectCommand(params);
+    return s3(param.location).send(
+      putObjectCommand
+    )*/
 }
 
 /**
@@ -776,58 +862,78 @@ function uploadFileByMultiPart(
   onUploadProgress,
   onAbort
 ) {
-  return new Promise(async (resolve, reject) => {
-    let isNewFile = (await isFileExist(param)) === false;
-    if (isNewFile || overWrite === true) {
-      createMultipartUpload(param).then(async (uploadId) => {
-        onUploadProgress({ key: param.path, loaded: 0, total: file.size }, () =>
-          abortMultipartUpload(param, uploadId)
-        );
-        let partNumber = 0;
-        const completedParts = [];
-        const chunkSize = 5 * 1024 * 1024; // https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
-        let offset = 0;
-        // const reader = file.stream().getReader(); //{mode: "byob"}); TODO create 5MB limit of chunks with stream
-        while (offset < file.size) {
-          const chunkFile = await file.slice(offset, offset + chunkSize);
-          const chunk = await chunkFile.arrayBuffer();
-          onUploadProgress(
-            { key: param.path, loaded: offset, total: file.size },
-            () => {
-              offset = file.size;
-              abortMultipartUpload(param, uploadId);
-              reject(new Error("stopped:" + file.name));
-            }
-          );
-          /* const { done, value } = await reader.read();
-          console.debug(value.length);
-          if (done) {
-            break;
-          } */
-          partNumber++;
-          completedParts.push(
-            uploadPart(
-              param,
-              new Uint8Array(chunk), // value.toString(),
-              partNumber,
-              uploadId
-            )
-          );
-          offset += chunkSize;
+  return new Promise((resolve, reject) => {
+    isFileExist(param)
+      .then((isFileExists) => {
+        const isNewFile = !isFileExists;
+        if (isNewFile || overWrite === true) {
+          createMultipartUpload(param)
+            .then((uploadId) => {
+              onUploadProgress(
+                { key: param.path, loaded: 0, total: file.size },
+                () => abortMultipartUpload(param, uploadId)
+              );
+
+              let partNumber = 0;
+              const completedParts = [];
+              const chunkSize = 5 * 1024 * 1024; // 5 MB
+              let offset = 0;
+
+              const uploadNextPart = () => {
+                if (offset < file.size) {
+                  const chunkFile = file.slice(offset, offset + chunkSize);
+                  chunkFile
+                    .arrayBuffer()
+                    .then((chunk) => {
+                      onUploadProgress(
+                        { key: param.path, loaded: offset, total: file.size },
+                        () => {
+                          offset = file.size;
+                          abortMultipartUpload(param, uploadId);
+                          reject(new Error("stopped:" + file.name));
+                        }
+                      );
+
+                      partNumber++;
+                      uploadPart(
+                        param,
+                        new Uint8Array(chunk),
+                        partNumber,
+                        uploadId
+                      )
+                        .then((part) => {
+                          completedParts.push(part);
+                          offset += chunkSize;
+                          uploadNextPart();
+                        })
+                        .catch(reject);
+                    })
+                    .catch(reject);
+                } else {
+                  completeMultipartUpload(param, uploadId, completedParts)
+                    .then((fsEntry) => {
+                      onUploadProgress(
+                        {
+                          key: param.path,
+                          loaded: file.size,
+                          total: file.size,
+                        },
+                        () => abortMultipartUpload(param, uploadId)
+                      );
+                      resolve({ ...fsEntry, size: file.size, isNewFile });
+                    })
+                    .catch(reject);
+                }
+              };
+
+              uploadNextPart();
+            })
+            .catch(reject);
+        } else {
+          reject(new Error("file exists: " + file.name));
         }
-        Promise.all(completedParts).then((parts) => {
-          completeMultipartUpload(param, uploadId, parts).then((fsEntry) => {
-            onUploadProgress(
-              { key: param.path, loaded: file.size, total: file.size },
-              () => abortMultipartUpload(param, uploadId)
-            );
-            resolve({ ...fsEntry, size: file.size, isNewFile });
-          });
-        });
-      });
-    } else {
-      reject(new Error("file exist:" + file.name));
-    }
+      })
+      .catch(reject);
   });
 }
 
@@ -847,16 +953,16 @@ function uploadPart(param, chunk, partNumber, uploadId) {
       PartNumber: partNumber,
       UploadId: uploadId,
     };
-    s3(param.location).uploadPart(params, function (err, data) {
-      if (err) {
-        reject(err);
-      } else {
+    const command = new UploadPartCommand(params);
+    s3(param.location)
+      .send(command)
+      .then((data) => {
         resolve({
           ETag: data.ETag,
           PartNumber: partNumber,
         });
-      }
-    });
+      })
+      .catch(reject);
   });
 }
 
@@ -869,15 +975,11 @@ function createMultipartUpload(param) {
     Bucket: param.bucketName,
     Key: param.path,
   };
-  return new Promise((resolve, reject) => {
-    s3(param.location).createMultipartUpload(params, function (err, data) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data.UploadId);
-      }
-    });
-  });
+  const command = new CreateMultipartUploadCommand(params);
+  return s3(param.location)
+    .send(command)
+    .then((data) => data.UploadId)
+    .catch((err) => Promise.reject(err));
 }
 
 /**
@@ -897,9 +999,9 @@ function completeMultipartUpload(param, uploadId, parts) {
         Parts: parts,
       },
     };
+    const command = new CompleteMultipartUploadCommand(params);
     return s3(param.location)
-      .completeMultipartUpload(params)
-      .promise()
+      .send(command)
       .then((data) => ({
         uuid: uuidv1(), // data.ETag,
         name: data.Key ? data.Key : tsPaths.extractFileName(filePath, "/"),
@@ -909,19 +1011,22 @@ function completeMultipartUpload(param, uploadId, parts) {
         extension: tsPaths.extractFileExtension(filePath, "/"),
         lmdt: new Date().getTime(),
         tags: [],
-      }));
+      }))
+      .catch((err) => Promise.reject(err));
   }
   return abortMultipartUpload(param, uploadId);
 }
 
 function abortMultipartUpload(param, uploadId) {
+  const params = {
+    Bucket: param.bucketName,
+    Key: param.path,
+    UploadId: uploadId,
+  };
+  const command = new AbortMultipartUploadCommand(params);
   return s3(param.location)
-    .abortMultipartUpload({
-      Bucket: param.bucketName,
-      Key: param.path,
-      UploadId: uploadId,
-    })
-    .promise();
+    .send(command)
+    .catch((err) => Promise.reject(err));
 }
 
 /**
@@ -932,28 +1037,32 @@ function abortMultipartUpload(param, uploadId) {
 function createDirectoryPromise(param) {
   const dirPath = tsPaths.normalizePath(normalizeRootPath(param.path)) + "/";
   console.log("Creating directory: " + dirPath);
+
+  const params = {
+    Bucket: param.bucketName,
+    Key: dirPath,
+  };
+  const command = new PutObjectCommand(params);
+
   return s3(param.location)
-    .putObject({
-      Bucket: param.bucketName,
-      Key: dirPath,
-    })
-    .promise()
+    .send(command)
     .then((result) => {
-      const out = {
-        ...result,
-        dirPath,
-      };
       if (dirPath.endsWith(AppConfig.metaFolder + "/")) {
         return dirPath;
       }
       const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
       const metaContent = '{"id":"' + uuidv1() + '"}';
-      // create meta file with id -> empty folders cannot be shown on S3
+
+      // Create meta file with id -> empty folders cannot be shown on S3
       return saveTextFilePromise(
         { ...param, path: metaFilePath },
         metaContent,
         false
       ).then(() => dirPath);
+    })
+    .catch((err) => {
+      console.error("Error creating directory: " + dirPath, err);
+      throw err;
     });
 }
 
@@ -967,18 +1076,20 @@ function copyFilePromise(param, newFilePath) {
   const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
   const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
   console.log("Copying file: " + nFilePath + " to " + nNewFilePath);
+
   if (nFilePath.toLowerCase() === nNewFilePath.toLowerCase()) {
-    return new Promise((resolve, reject) => {
-      reject("Copying file failed, files have the same path");
-    });
+    return Promise.reject("Copying file failed, files have the same path");
   }
-  return s3(param.location)
-    .copyObject({
-      Bucket: param.bucketName,
-      CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
-      Key: nNewFilePath, //encodeS3URI
-    })
-    .promise();
+
+  const copyParams = {
+    Bucket: param.bucketName,
+    CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
+    Key: nNewFilePath, //encodeS3URI
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+  };
+  const command = new CopyObjectCommand(copyParams);
+
+  return s3(param.location).send(command);
 }
 
 /**
@@ -989,37 +1100,36 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
   const nFilePath = tsPaths.normalizePath(normalizeRootPath(param.path));
   const nNewFilePath = tsPaths.normalizePath(normalizeRootPath(newFilePath));
   console.log("Renaming file: " + nFilePath + " to " + newFilePath);
+
   if (nFilePath === nNewFilePath) {
-    return new Promise((resolve, reject) => {
-      reject("Renaming file failed, files have the same path");
-    });
+    return Promise.reject("Renaming file failed, files have the same path");
   }
+
   // Copy the object to a new location
-  return new Promise((resolve, reject) => {
-    s3(param.location)
-      .copyObject({
-        Bucket: param.bucketName,
-        CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
-        Key: nNewFilePath, //encodeS3URI
-      })
-      .promise()
-      .then(() =>
-        // Delete the old object
-        s3(param.location)
-          .deleteObject({
-            Bucket: param.bucketName,
-            Key: nFilePath,
-          })
-          .promise()
-          .then(() => {
-            resolve([param.path, nNewFilePath]);
-          })
-      )
-      .catch((e) => {
-        console.log(e);
-        reject("Renaming file failed" + e.code);
-      });
-  });
+  const copyParams = {
+    Bucket: param.bucketName,
+    CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
+    Key: nNewFilePath, //encodeS3URI
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+  };
+  const copyCommand = new CopyObjectCommand(copyParams);
+
+  const deleteParams = {
+    Bucket: param.bucketName,
+    Key: nFilePath,
+  };
+  const deleteCommand = new DeleteObjectCommand(deleteParams);
+
+  const s3Client = s3(param.location);
+
+  return s3Client
+    .send(copyCommand)
+    .then(() => s3Client.send(deleteCommand))
+    .then(() => [param.path, nNewFilePath])
+    .catch((e) => {
+      console.log(e);
+      return Promise.reject("Renaming file failed: " + e.message);
+    });
 }
 
 /**
@@ -1057,59 +1167,6 @@ function moveDirectoryPromise(param, newDirPath, onProgress) {
       deleteDirectoryInternal(param, prefixes).then(() => newDirPath)
     )
   );
-  /*
-  const listParams = {
-    Bucket: param.bucketName,
-    Prefix: param.path,
-    Delimiter: "/",
-  };
-  return s3(param.location)
-    .listObjectsV2(listParams)
-    .promise()
-    .then((listedObjects) => {
-      if (listedObjects.Contents.length > 0) {
-        const promises = [];
-        listedObjects.Contents.forEach(({ Key }) => {
-          if (Key.endsWith("/")) {
-            promises.push(
-              createDirectoryPromise({
-                ...param,
-                path:
-                  tsPaths.cleanTrailingDirSeparator(newDirectoryPath) +
-                  "/" +
-                  dirName,
-              })
-            );
-          } else {
-            const newFilePath =
-              tsPaths.cleanTrailingDirSeparator(newDirectoryPath) +
-              "/" +
-              dirName +
-              "/" +
-              tsPaths.extractFileName(Key, "/");
-            promises.push(
-              copyFilePromise({ ...param, path: Key }, newFilePath)
-            );
-          }
-        });
-
-        return Promise.all(promises).then(() =>
-          deleteDirectoryPromise(param).then(() => newDirectoryPath)
-        );
-      } else {
-        // empty Dir
-        return createDirectoryPromise({
-          ...param,
-          path: newDirectoryPath,
-        }).then(() =>
-          deleteDirectoryPromise(param).then(() => newDirectoryPath)
-        );
-      }
-    })
-    .catch((e) => {
-      console.log(e);
-      return Promise.reject("No directory exist:" + param.path);
-    });*/
 }
 
 function copyDirectoryPromise(param, newDirPath, onProgress = undefined) {
@@ -1181,12 +1238,19 @@ function copyDirectoryInternal(
  * Delete a specified file
  */
 function deleteFilePromise(param) {
-  return s3(param.location)
-    .deleteObject({
+  try {
+    const deleteParams = {
       Bucket: param.bucketName,
-      Key: param.path,
-    })
-    .promise();
+      Key: normalizeRootPath(param.path),
+    };
+    const deleteCommand = new DeleteObjectCommand(deleteParams);
+
+    const s3Client = s3(param.location);
+    return s3Client.send(deleteCommand);
+  } catch (ex) {
+    console.error("Delete error:" + param.path, ex);
+    return Promise.resolve(false);
+  }
 }
 
 /**
@@ -1200,7 +1264,7 @@ function deleteDirectoryPromise(param) {
   );
 }
 
-function deleteDirectoryInternal(param, prefixes) {
+async function deleteDirectoryInternal(param, prefixes) {
   if (prefixes.length > 0) {
     const deleteParams = {
       Bucket: param.bucketName,
@@ -1208,18 +1272,20 @@ function deleteDirectoryInternal(param, prefixes) {
     };
 
     try {
-      return s3(param.location).deleteObjects(deleteParams).promise();
+      const deleteCommand = new DeleteObjectsCommand(deleteParams);
+      return await s3(param.location).send(deleteCommand);
     } catch (e) {
       console.error(e);
       return Promise.resolve();
     }
-  }
-  return s3(param.location)
-    .deleteObject({
+  } else {
+    const deleteParams = {
       Bucket: param.bucketName,
       Key: param.path,
-    })
-    .promise();
+    };
+    const deleteCommand = new DeleteObjectCommand(deleteParams);
+    return s3(param.location).send(deleteCommand);
+  }
 }
 
 /**
@@ -1238,25 +1304,21 @@ async function getDirectoryPrefixes(param) {
       ContinuationToken: param.ContinuationToken,
     }),
   };
-  const listedObjects = await s3(param.location)
-    .listObjectsV2(listParams)
-    .promise();
+  const listCommand = new ListObjectsV2Command(listParams);
+  const listedObjects = await s3(param.location).send(listCommand);
 
-  if (
-    listedObjects.Contents.length > 0 ||
-    listedObjects.CommonPrefixes.length > 0
-  ) {
+  if (listedObjects.Contents && listedObjects.Contents.length > 0) {
     listedObjects.Contents.forEach(({ Key }) => {
       addPrefix(prefixes, { Key });
     });
-
+  }
+  if (listedObjects.CommonPrefixes && listedObjects.CommonPrefixes.length > 0) {
     listedObjects.CommonPrefixes.forEach(({ Prefix }) => {
       addPrefix(prefixes, { Key: Prefix });
       promises.push(getDirectoryPrefixes({ ...param, path: Prefix }));
     });
   }
   if (listedObjects.IsTruncated) {
-    // console.log('More files available');
     if (listedObjects.NextContinuationToken) {
       promises.push(
         getDirectoryPrefixes({
@@ -1267,8 +1329,8 @@ async function getDirectoryPrefixes(param) {
     }
   }
   const subPrefixes = await Promise.all(promises);
-  subPrefixes.map((arrPrefixes) => {
-    arrPrefixes.map((prefix) => {
+  subPrefixes.forEach((arrPrefixes) => {
+    arrPrefixes.forEach((prefix) => {
       addPrefix(prefixes, prefix);
     });
   });

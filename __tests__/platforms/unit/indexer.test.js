@@ -6,23 +6,38 @@ const {
 } = require("@tagspaces/tagspaces-indexer");
 const { cleanRootPath } = require("@tagspaces/tagspaces-common/paths");
 const {
-  configure,
-  s3,
+  saveBinaryFilePromise,
   createDirectoryPromise,
   listDirectoryPromise,
   loadTextFilePromise,
   saveTextFilePromise,
-} = require("@tagspaces/tagspaces-common-aws/io-objectstore");
+} = require("@tagspaces/tagspaces-common-aws3/io-objectstore");
 
 beforeAll(async () => {
-  configure({
-    // region: 'eu-central-1',
-    accessKeyId: "S3RVER",
-    secretAccessKey: "S3RVER",
-    endpointURL: "http://localhost:4569",
-    // signatureVersion: "v4",
-  });
+  const dirPath = pathJs.join(
+    __dirname,
+    "..",
+    "..",
+    "common-aws",
+    "buckets",
+    "bucket1",
+    "dir"
+  );
+  try {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+    console.log(`${dirPath} is deleted!`);
+  } catch (err) {
+    console.error(`Error while deleting ${dirPath}.`, err);
+  }
 });
+const location = {
+  uuid: "testUuid",
+  type: "1",
+  name: "cloud location",
+  accessKeyId: "S3RVER",
+  secretAccessKey: "S3RVER",
+  endpointURL: "http://localhost:4569",
+};
 
 test("cleanRootPath", async () => {
   const path = await cleanRootPath(
@@ -32,15 +47,6 @@ test("cleanRootPath", async () => {
   );
   expect(path).toEqual("DSCN1.jpg");
 });
-
-/*test("createIndex1", async () => {
-  const index = await createIndex(
-    { path: "C:\\Users\\smari\\Music\\sub" },
-    ["extractThumbPath"], //, "extractThumbURL"],
-    []
-  );
-  console.log(index);
-});*/
 
 test("createIndex", async () => {
   await uploadImage("../../img.jpg", "image.png");
@@ -52,6 +58,7 @@ test("createIndex", async () => {
   const param = {
     path: "",
     bucketName: "bucket1",
+    location,
   };
   const index = await createIndex(
     param,
@@ -80,6 +87,7 @@ test("createIndex", async () => {
     {
       path: "",
       bucketName: "bucket1",
+      location,
     },
     index
   );
@@ -87,26 +95,20 @@ test("createIndex", async () => {
 }, 20000);
 
 function createDirectory(path) {
-  return createDirectoryPromise({ path, bucketName: "bucket1" });
+  return createDirectoryPromise({ path, bucketName: "bucket1", location });
 }
 
 function uploadImage(pathFrom, pathTo) {
-  return new Promise(function (resolve, reject) {
-    const params = {
-      Key: pathTo,
-      Bucket: "bucket1",
-      Body: fs.createReadStream(pathJs.resolve(__dirname, pathFrom)),
-    };
+  const param = {
+    path: pathTo,
+    bucketName: "bucket1",
+    location,
+  };
 
-    s3().upload(params, function uploadCallback(err, data) {
-      console.log(err, data);
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
+  return saveBinaryFilePromise(
+    param,
+    fs.createReadStream(pathJs.resolve(__dirname, pathFrom))
+  );
 }
 
 function persistIndex(param, directoryIndex) {

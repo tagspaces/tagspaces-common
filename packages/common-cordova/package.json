@@ -1,16 +1,16 @@
 {
   "name": "@tagspaces/tagspaces-common-cordova",
   "description": "TagSpaces common cordova module",
-  "version": "4.3.28",
+  "version": "4.4.6",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
     "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
-    "npmpack-ts": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-cordova-4.1.19.tgz && npx shx cp -rL ./package/** ../../../tagspaces3/node_modules/@tagspaces/tagspaces-common-cordova && npx rimraf package",
+    "npmpack-ts": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-cordova-4.3.26.tgz && npx shx cp -rL ./package/** ../../../tagspaces3/node_modules/@tagspaces/tagspaces-common-cordova && npx rimraf package",
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.3.26"
+    "@tagspaces/tagspaces-common": "^4.4.6"
   }
 }
