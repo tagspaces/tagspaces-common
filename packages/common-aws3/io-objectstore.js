@@ -95,22 +95,22 @@ function s3(location) {
   }
 }
 
-function getEncryptionHeaders(ENCRYPTION_KEY){
+function getEncryptionHeaders(ENCRYPTION_KEY) {
   if (ENCRYPTION_KEY.length !== 32) {
     // throw new Error('The encryption key must be 32 characters long.');
-    return {}
+    return {};
   }
   const encoder = new TextEncoder();
   const ENCRYPTION_KEY_UINT8ARRAY = encoder.encode(ENCRYPTION_KEY);
 
   const ENCRYPTION_KEY_MD5 = CryptoJS.MD5(ENCRYPTION_KEY).toString(
-      CryptoJS.enc.Base64,
+    CryptoJS.enc.Base64
   );
   return {
-    SSECustomerAlgorithm: 'AES256',
+    SSECustomerAlgorithm: "AES256",
     SSECustomerKey: ENCRYPTION_KEY_UINT8ARRAY,
     SSECustomerKeyMD5: ENCRYPTION_KEY_MD5,
-  }
+  };
 }
 
 /**
@@ -154,7 +154,7 @@ const listMetaDirectoryPromise = async (param) => {
         ? normalizeRootPath(path + "/" + AppConfig.metaFolder + "/")
         : AppConfig.metaFolder + "/",
     Bucket: bucketName,
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
   };
 
   try {
@@ -219,7 +219,7 @@ const listDirectoryPromise = (
         path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
-      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
     };
     listDirectoryAll(params, param.location, resultsLimit.maxLoops)
       .then(async (data) => {
@@ -255,7 +255,9 @@ const listDirectoryPromise = (
             if (!ignored) {
               enhancedEntries.push(eentry);
               if (loadMeta) {
-                metaPromises.push(getEntryMeta(eentry, param.location));
+                metaPromises.push(
+                  getEntryMeta(eentry, param.location, param.encryptionKey)
+                );
               }
             }
           }
@@ -422,7 +424,7 @@ function listDirectoryAll(param, location, maxLoops = 5) {
   });
 }
 
-const getEntryMeta = async (eentry, location) => {
+const getEntryMeta = async (eentry, location, encryptionKey) => {
   const promise = new Promise(async (resolve) => {
     const entryPath = tsPaths.normalizePath(eentry.path);
     if (eentry.isFile) {
@@ -432,6 +434,7 @@ const getEntryMeta = async (eentry, location) => {
           path: metaFilePath,
           bucketName: eentry.bucketName,
           location,
+          encryptionKey,
         });
         eentry.meta = JSON.parse(metaFileContent.trim());
       } catch (ex) {
@@ -456,6 +459,7 @@ const getEntryMeta = async (eentry, location) => {
           path: folderTmbPath,
           bucketName: eentry.bucketName,
           location,
+          encryptionKey,
         });
         if (folderThumbProps && folderThumbProps.isFile) {
           const thumb = await getURLforPath(
@@ -481,6 +485,7 @@ const getEntryMeta = async (eentry, location) => {
           path: folderMetaPath,
           bucketName: eentry.bucketName,
           location,
+          encryptionKey,
         });
         if (folderProps && folderProps.isFile) {
           try {
@@ -488,6 +493,7 @@ const getEntryMeta = async (eentry, location) => {
               path: folderMetaPath,
               bucketName: eentry.bucketName,
               location,
+              encryptionKey,
             });
             eentry.meta = JSON.parse(metaFileContent.trim());
           } catch (ex) {
@@ -514,7 +520,7 @@ function isFileExist(param) {
       const command = new HeadObjectCommand({
         Bucket: param.bucketName,
         Key: normalizeRootPath(param.path),
-        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
       });
 
       s3Client.send(command).then(
@@ -534,7 +540,7 @@ function isFileExist(param) {
 }
 /**
  * @param param
- * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>}
+ * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>} true - encryption error
  */
 function getPropertiesPromise(param) {
   const path = normalizeRootPath(param.path);
@@ -543,7 +549,7 @@ function getPropertiesPromise(param) {
     const params = {
       Bucket: bucketName,
       Key: path,
-      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
     };
     return new Promise((resolve) => {
       const s3Client = s3(param.location);
@@ -559,6 +565,7 @@ function getPropertiesPromise(param) {
               : tsPaths.extractDirectoryName(path),
             isFile: !path.endsWith("/"),
             size: data.ContentLength,
+            isEncrypted: !!param.encryptionKey, //data.SSECustomerAlgorithm === 'AES256',
             lmdt:
               data.LastModified instanceof Date
                 ? data.LastModified.getTime()
@@ -567,40 +574,45 @@ function getPropertiesPromise(param) {
           });
         })
         .catch((err) => {
-          // Workaround for checking if a folder exists on S3
-          const listParams = {
-            Bucket: bucketName,
-            Prefix: path,
-            MaxKeys: 1,
-            Delimiter: "/",
-          };
-          const listCommand = new ListObjectsV2Command(listParams);
+          if (err && err.name === "400") {
+            // encryption error
+            resolve(true);
+          } else {
+            // Workaround for checking if a folder exists on S3
+            const listParams = {
+              Bucket: bucketName,
+              Prefix: path,
+              MaxKeys: 1,
+              Delimiter: "/",
+            };
+            const listCommand = new ListObjectsV2Command(listParams);
 
-          s3Client
-            .send(listCommand)
-            .then((listData) => {
-              const folderExists =
-                (listData && listData.KeyCount && listData.KeyCount > 0) ||
-                (listData &&
-                  listData.CommonPrefixes &&
-                  listData.CommonPrefixes.length > 0);
+            s3Client
+              .send(listCommand)
+              .then((listData) => {
+                const folderExists =
+                  (listData && listData.KeyCount && listData.KeyCount > 0) ||
+                  (listData &&
+                    listData.CommonPrefixes &&
+                    listData.CommonPrefixes.length > 0);
 
-              if (folderExists) {
-                resolve({
-                  name: tsPaths.extractDirectoryName(path),
-                  isFile: false,
-                  size: 0,
-                  lmdt: undefined,
-                  path: path,
-                });
-              } else {
+                if (folderExists) {
+                  resolve({
+                    name: tsPaths.extractDirectoryName(path),
+                    isFile: false,
+                    size: 0,
+                    lmdt: undefined,
+                    path: path,
+                  });
+                } else {
+                  resolve(false);
+                }
+              })
+              .catch((e) => {
+                console.error(e);
                 resolve(false);
-              }
-            })
-            .catch((e) => {
-              console.error(e);
-              resolve(false);
-            });
+              });
+          }
         });
     });
   } else {
@@ -633,7 +645,7 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
     Key: path,
     Range: isPreview ? "bytes=0-10000" : "",
     ResponseCacheControl: "no-cache",
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
   };
 
   return new Promise((resolve, reject) => {
@@ -704,7 +716,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         Key: filePath,
         Body: content,
         ContentType: mimeType,
-        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+        ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
       };
 
       const s3Client = s3(param.location);
@@ -717,6 +729,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
             path: filePath,
             bucketName: bucketName,
             location: param.location,
+            ...(param.encryptionKey && { encryptionKey: param.encryptionKey }),
           }).then((entry) => {
             resolve({
               ...entry,
@@ -738,6 +751,7 @@ const saveFilePromise = (param, content, overWrite, mode) =>
         path: filePath,
         bucketName: bucketName,
         location: param.location,
+        ...(param.encryptionKey && { encryptionKey: param.encryptionKey }),
       })
         .then((fileProps) => {
           if (fileProps && fileProps.lmdt !== lmdt) {
@@ -803,7 +817,7 @@ async function saveBinaryFilePromise(
     Bucket: bucketName,
     Key: filePath,
     Body: content,
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
   };
 
   const parallelUploads = new Upload({
@@ -1085,7 +1099,7 @@ function copyFilePromise(param, newFilePath) {
     Bucket: param.bucketName,
     CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
     Key: nNewFilePath, //encodeS3URI
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
   };
   const command = new CopyObjectCommand(copyParams);
 
@@ -1110,7 +1124,7 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
     Bucket: param.bucketName,
     CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
     Key: nNewFilePath, //encodeS3URI
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey))
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
   };
   const copyCommand = new CopyObjectCommand(copyParams);
 
