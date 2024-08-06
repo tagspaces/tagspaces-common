@@ -31,6 +31,8 @@ beforeAll(async () => {
   } catch (err) {
     console.error(`Error while deleting ${dirPath}.`, err);
   }
+  global.TextEncoder = require('util').TextEncoder;
+  //global.TextDecoder = require('util').TextDecoder;
 });
 const location = {
   uuid: "testUuid",
@@ -56,6 +58,18 @@ test("getURLforPath", async () => {
     path: "img.jpg",
     bucketName: "bucket1",
     location,
+  });
+
+  //console.log("url:" + JSON.stringify(url));
+  expect(url.length).toBeGreaterThan(0);
+});
+
+test("getURLforPath encrypted file", async () => {
+  const url = await getURLforPath({
+    path: "img.jpg",
+    bucketName: "bucket1",
+    location,
+    encryptionKey: "12345678901234567890123456789012"
   });
 
   //console.log("url:" + JSON.stringify(url));

@@ -13,7 +13,10 @@ const {
   AbortMultipartUploadCommand,
 } = require("@aws-sdk/client-s3");
 const { Upload } = require("@aws-sdk/lib-storage");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+//const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { formatUrl } = require("@aws-sdk/util-format-url");
+const { createRequest } = require("@aws-sdk/util-create-request");
+const { S3RequestPresigner } = require("@aws-sdk/s3-request-presigner");
 const CryptoJS = require("crypto-js");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
@@ -128,13 +131,19 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
   const params = {
     Bucket: bucketName,
     Key: path,
+    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
   };
   try {
     const s3Client = s3(param.location);
-    const command = new GetObjectCommand(params);
+    const signer = new S3RequestPresigner({ ...s3Client.config });
+    return createRequest(s3Client, new GetObjectCommand(params))
+        .then(request => signer.presign(request, { expiresIn: expirationInSeconds }))
+        .then(url => formatUrl(url));
+
+    /*const command = new GetObjectCommand(params);
     return getSignedUrl(s3Client, command, {
       expiresIn: expirationInSeconds,
-    });
+    });*/
   } catch (e) {
     console.error("Error by getSignedUrl: ", e);
     return Promise.resolve("");
