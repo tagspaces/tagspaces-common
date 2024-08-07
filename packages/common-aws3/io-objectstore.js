@@ -79,7 +79,7 @@ function s3(location) {
           sessionToken: location.sessionToken,
         },
         forcePathStyle: true, // needed for minio
-        //signatureVersion: "v4", // needed for minio
+        signatureVersion: "v4", // needed for signed url of encrypted file
         //logger: console, todo enable logging in dev build
       };
       locationsCache[location.uuid] = new S3Client(config);
@@ -90,7 +90,7 @@ function s3(location) {
           accessKeyId: location.accessKeyId,
           secretAccessKey: location.secretAccessKey,
         },
-        //signatureVersion: "v4",
+        signatureVersion: "v4",
       };
       locationsCache[location.uuid] = new S3Client(config);
     }
@@ -131,14 +131,16 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
   const params = {
     Bucket: bucketName,
     Key: path,
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
+    //...(param.isEncrypted && {SSECustomerAlgorithm: "AES256"}),
   };
   try {
     const s3Client = s3(param.location);
     const signer = new S3RequestPresigner({ ...s3Client.config });
     return createRequest(s3Client, new GetObjectCommand(params))
-        .then(request => signer.presign(request, { expiresIn: expirationInSeconds }))
-        .then(url => formatUrl(url));
+      .then((request) =>
+        signer.presign(request, { expiresIn: expirationInSeconds })
+      )
+      .then((url) => formatUrl(url));
 
     /*const command = new GetObjectCommand(params);
     return getSignedUrl(s3Client, command, {
@@ -1085,7 +1087,8 @@ function createDirectoryPromise(param) {
     })
     .catch((err) => {
       console.error("Error creating directory: " + dirPath, err);
-      throw err;
+      return undefined;
+      //throw err;
     });
 }
 

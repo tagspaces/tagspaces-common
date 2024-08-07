@@ -31,7 +31,7 @@ beforeAll(async () => {
   } catch (err) {
     console.error(`Error while deleting ${dirPath}.`, err);
   }
-  global.TextEncoder = require('util').TextEncoder;
+  global.TextEncoder = require("util").TextEncoder;
   //global.TextDecoder = require('util').TextDecoder;
 });
 const location = {
@@ -69,7 +69,7 @@ test("getURLforPath encrypted file", async () => {
     path: "img.jpg",
     bucketName: "bucket1",
     location,
-    encryptionKey: "12345678901234567890123456789012"
+    encryptionKey: "12345678901234567890123456789012",
   });
 
   //console.log("url:" + JSON.stringify(url));
