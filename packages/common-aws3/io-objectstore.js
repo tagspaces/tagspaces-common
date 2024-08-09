@@ -14,9 +14,9 @@ const {
 } = require("@aws-sdk/client-s3");
 const { Upload } = require("@aws-sdk/lib-storage");
 //const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { formatUrl } = require("@aws-sdk/util-format-url");
-const { createRequest } = require("@aws-sdk/util-create-request");
-const { S3RequestPresigner } = require("@aws-sdk/s3-request-presigner");
+/*const { formatUrl } = require("@aws-sdk/util-format-url");
+const { createRequest } = require("@aws-sdk/util-create-request");*/
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const CryptoJS = require("crypto-js");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
@@ -119,7 +119,7 @@ function getEncryptionHeaders(ENCRYPTION_KEY) {
 /**
  * @param param param.path - needs to be not encoded s3().getSignedUrl - this will double encode it
  * @param expirationInSeconds
- * @returns {string}
+ * @returns {Promise<string>}
  */
 const getURLforPath = (param, expirationInSeconds = 900) => {
   const path = normalizeRootPath(param.path);
@@ -135,17 +135,17 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
   };
   try {
     const s3Client = s3(param.location);
-    const signer = new S3RequestPresigner({ ...s3Client.config });
+    /*const signer = new S3RequestPresigner({ ...s3Client.config });
     return createRequest(s3Client, new GetObjectCommand(params))
       .then((request) =>
         signer.presign(request, { expiresIn: expirationInSeconds })
       )
-      .then((url) => formatUrl(url));
+      .then((url) => formatUrl(url));*/
 
-    /*const command = new GetObjectCommand(params);
+    const command = new GetObjectCommand(params);
     return getSignedUrl(s3Client, command, {
       expiresIn: expirationInSeconds,
-    });*/
+    });
   } catch (e) {
     console.error("Error by getSignedUrl: ", e);
     return Promise.resolve("");
