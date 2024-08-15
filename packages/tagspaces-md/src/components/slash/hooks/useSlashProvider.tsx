@@ -1,14 +1,14 @@
 import { SlashProvider } from '@milkdown/plugin-slash';
-import { linkSchema } from '@milkdown/preset-commonmark';
-import { findSelectedNodeOfType } from '@milkdown/prose';
+//import { linkSchema } from '@milkdown/preset-commonmark';
+//import { findSelectedNodeOfType } from '@milkdown/prose';
 import { TextSelection } from '@milkdown/prose/state';
 import { useInstance } from '@milkdown/react';
 import { usePluginViewContext } from '@prosemirror-adapter/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useFindNodesByMark } from '../../../hooks/useFindNodesByMark';
+//import { useFindNodesByMark } from '../../../hooks/useFindNodesByMark';
 import { useKeyboardList } from '../../../hooks/useKeyboardList';
-import { useSelectedMarkPosition } from '../../../hooks/useSelectedMarkPosition';
+//import { useSelectedMarkPosition } from '../../../hooks/useSelectedMarkPosition';
 import { EditorStatus } from '@milkdown/core';
 
 type UseSlashProviderProps = {
@@ -22,7 +22,7 @@ export const useSlashProvider = ({ tooltipRef }: UseSlashProviderProps) => {
 
   const [loading, getEditor] = useInstance();
   const { view, prevState } = usePluginViewContext();
-  const { getNodesPositions } = useSelectedMarkPosition();
+  //const { getNodesPositions } = useSelectedMarkPosition();
 
   const { keyboardListRefs, setActive, active } =
     useKeyboardList<HTMLButtonElement>({
