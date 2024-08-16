@@ -8,6 +8,7 @@ import { EditorContextModeProvider } from './EditorContext/EditorContextModeProv
 import { TextEditorContextProvider } from './TextEditorContext/TextEditorContextProvider';
 import MilkdownEditorRef from './MilkdownEditorRef';
 import { DarkModeProvider } from './providers/DarkModeProvider';
+import { SearchDialogContextProvider } from './components/dialogs/SearchDialogContextProvider';
 
 export interface MilkdownRef {
   update: (markdown: string) => void;
@@ -39,18 +40,20 @@ const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(
         currentFolder={currentFolder}
       >
         <MilkdownProvider>
-          <ProsemirrorAdapterProvider>
-            <EditorContextModeProvider
-              defaultMarkdownValue={content}
-              onChange={onChange}
-              onFocus={onFocus}
-              {...rest}
-            >
-              <DarkModeProvider>
-                <MilkdownEditorRef milkdownRef={ref} />
-              </DarkModeProvider>
-            </EditorContextModeProvider>
-          </ProsemirrorAdapterProvider>
+          <SearchDialogContextProvider>
+            <ProsemirrorAdapterProvider>
+              <EditorContextModeProvider
+                defaultMarkdownValue={content}
+                onChange={onChange}
+                onFocus={onFocus}
+                {...rest}
+              >
+                <DarkModeProvider>
+                  <MilkdownEditorRef milkdownRef={ref} />
+                </DarkModeProvider>
+              </EditorContextModeProvider>
+            </ProsemirrorAdapterProvider>
+          </SearchDialogContextProvider>
         </MilkdownProvider>
       </TextEditorContextProvider>
     );

@@ -2,8 +2,6 @@ import { Ctx } from '@milkdown/ctx';
 import { slashFactory } from '@milkdown/plugin-slash';
 import { usePluginViewFactory } from '@prosemirror-adapter/react';
 import { useMemo } from 'react';
-import { TextSelection } from '@milkdown/prose/state';
-import { EditorView } from '@milkdown/prose/view';
 
 // import { SlashNode } from '../../../components/SlashNode/SlashNode';
 import { Plugin } from '../../types/plugins';
@@ -14,7 +12,7 @@ const slash = slashFactory('MILKDOWN');
 export const useSlashPlugin = (): Plugin => {
   const pluginViewFactory = usePluginViewFactory();
 
-  function searchAndSelect(view: EditorView, searchText: string) {
+  /*function searchAndSelect(view: EditorView, searchText: string) {
     const { state } = view;
     const { selection } = state;
     let { from, to } = selection;
@@ -56,6 +54,7 @@ export const useSlashPlugin = (): Plugin => {
 
           // Select the found text
           tr = tr.setSelection(TextSelection.create(doc, start, end));
+          tr = tr.scrollIntoView();
           view.focus();
 
           found = true;
@@ -88,6 +87,7 @@ export const useSlashPlugin = (): Plugin => {
 
         // Select the found text
         tr = tr.setSelection(TextSelection.create(doc, start, end));
+        tr = tr.scrollIntoView();
         view.focus();
 
         found = true;
@@ -137,7 +137,7 @@ export const useSlashPlugin = (): Plugin => {
     const selection = TextSelection.create(tr.doc, tr.selection.from);
     tr = tr.setSelection(selection);
     view.focus();
-  }
+  }*/
 
   const slashPlugin = useMemo(
     () =>
@@ -145,7 +145,7 @@ export const useSlashPlugin = (): Plugin => {
         slash,
         (ctx: Ctx) => () => {
           ctx.set(slash.key, {
-            props: {
+            /*props: {
               handleKeyDown: (view, event) => {
                 if (event.ctrlKey) {
                   if (event.key === 's') {
@@ -171,7 +171,7 @@ export const useSlashPlugin = (): Plugin => {
                 }
                 return false;
               }
-            },
+            },*/
             view: pluginViewFactory({
               component: Slash
             })
