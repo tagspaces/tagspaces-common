@@ -87,7 +87,6 @@ export const SearchDialogContextProvider = ({
       <SearchDialogAsync
         open={open.current}
         onClose={closeDialog}
-        openDialog={openDialog}
         searchTxt={searchTxt.current}
       />
       {children}

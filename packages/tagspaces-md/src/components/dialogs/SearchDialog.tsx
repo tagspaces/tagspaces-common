@@ -14,27 +14,23 @@ import { TextSelection } from '@milkdown/prose/state';
 import { EditorView } from '@milkdown/prose/view';
 import { EditorStatus, editorViewCtx } from '@milkdown/core';
 import Paper, { PaperProps } from '@mui/material/Paper';
+import FormatSizeIcon from '@mui/icons-material/FormatSize';
 //import Draggable from 'react-draggable';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  openDialog: (txt?: string) => void;
   searchTxt?: string;
 }
 
 function SearchDialog(props: Props) {
   const { editor, loading } = useMilkdownInstance();
 
-  const { open, onClose, openDialog, searchTxt } = props;
+  const { open, onClose, searchTxt } = props;
   const [searchText, setSearch] = useState(searchTxt || '');
   const [replaceMode, setReplaceMode] = useState(false);
   const [replaceText, setReplaceText] = useState('');
-  //   const searchRef = useRef<HTMLInputElement>(null);
-
-  /*  const onClose = () => {
-    props.onClose();
-  };*/
+  const [caseSensitive, setCaseSensitive] = useState(false);
 
   function searchAndSelect(view: EditorView, searchText: string) {
     const { state } = view;
@@ -69,7 +65,7 @@ function SearchDialog(props: Props) {
       if (found || !node.isText) return;
 
       if (pos >= from) {
-        const text = node.text!;
+        const text = caseSensitive ? node.text! : node.text!.toLowerCase();
         const index = text.indexOf(searchText, pos === from ? to - pos : 0);
 
         if (index !== -1) {
@@ -79,7 +75,7 @@ function SearchDialog(props: Props) {
           // Select the found text
           tr = tr.setSelection(TextSelection.create(doc, start, end));
           tr = tr.scrollIntoView();
-          view.focus();
+          view.dom.focus();
 
           found = true;
         }
@@ -102,7 +98,7 @@ function SearchDialog(props: Props) {
     doc.descendants((node, pos) => {
       if (found || !node.isText) return;
 
-      const text = node.text!;
+      const text = caseSensitive ? node.text! : node.text!.toLowerCase();
       const index = text.indexOf(searchText);
 
       if (index !== -1) {
@@ -112,7 +108,7 @@ function SearchDialog(props: Props) {
         // Select the found text
         tr = tr.setSelection(TextSelection.create(doc, start, end));
         tr = tr.scrollIntoView();
-        view.focus();
+        view.dom.focus();
 
         found = true;
       }
@@ -138,7 +134,7 @@ function SearchDialog(props: Props) {
 
     state.doc.descendants((node, pos) => {
       if (node.isText) {
-        const text = node.text!;
+        const text = caseSensitive ? node.text! : node.text!.toLowerCase();
         let startIndex = 0;
 
         while ((startIndex = text.indexOf(searchText, startIndex)) !== -1) {
@@ -160,7 +156,7 @@ function SearchDialog(props: Props) {
     // Restore the selection
     const selection = TextSelection.create(tr.doc, tr.selection.from);
     tr = tr.setSelection(selection);
-    view.focus();
+    view.dom.focus();
   }
 
   /*function DraggablePaper(props: PaperProps) {
@@ -178,10 +174,14 @@ function SearchDialog(props: Props) {
       open={open}
       onClose={onClose}
       PaperComponent={Paper}
-      BackdropProps={{ style: { backgroundColor: 'transparent' } }}
+      /*BackdropProps={{ style: { backgroundColor: 'transparent' } }}*/
       keepMounted
       scroll="paper"
       aria-labelledby="draggable-dialog-title"
+      hideBackdrop
+      disableAutoFocus
+      disableEnforceFocus
+      //disableRestoreFocus
     >
       <DialogTitle id="draggable-dialog-title">
         {replaceMode ? 'Search and replace' : 'Search'}
@@ -246,10 +246,14 @@ function SearchDialog(props: Props) {
                         const { ctx } = editor;
                         if (ctx) {
                           try {
-                            onClose();
                             const view = ctx.get(editorViewCtx);
-                            searchAndSelect(view, searchText);
-                            openDialog(searchText);
+                            //view.dom.focus();
+                            searchAndSelect(
+                              view,
+                              caseSensitive
+                                ? searchText
+                                : searchText.toLowerCase()
+                            );
                           } catch (e) {
                             console.debug('searchAndSelect', e);
                           }
@@ -259,6 +263,15 @@ function SearchDialog(props: Props) {
                     size="large"
                   >
                     <SearchIcon />
+                  </IconButton>
+                  <IconButton
+                    aria-label="case sensitive"
+                    onClick={() => setCaseSensitive(!caseSensitive)}
+                    size="large"
+                  >
+                    <FormatSizeIcon
+                      style={{ color: caseSensitive ? 'blue' : 'gray' }}
+                    />
                   </IconButton>
                 </InputAdornment>
               )
@@ -290,7 +303,13 @@ function SearchDialog(props: Props) {
                         if (ctx) {
                           try {
                             const view = ctx.get(editorViewCtx);
-                            searchAndReplace(view, searchText, replaceText);
+                            searchAndReplace(
+                              view,
+                              caseSensitive
+                                ? searchText
+                                : searchText.toLowerCase(),
+                              replaceText
+                            );
                           } catch (e) {
                             console.debug('searchAndSelect', e);
                           }
