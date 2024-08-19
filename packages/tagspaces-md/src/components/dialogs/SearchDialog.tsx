@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMilkdownInstance } from '../../hooks/useMilkdownInstance';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -31,6 +31,26 @@ function SearchDialog(props: Props) {
   const [replaceMode, setReplaceMode] = useState(false);
   const [replaceText, setReplaceText] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
+
+  useEffect(() => {
+    if (searchTxt && searchTxt.length > 0) {
+      if (editor && !loading && editor.status === EditorStatus.Created) {
+        const { ctx } = editor;
+        if (ctx) {
+          try {
+            const view = ctx.get(editorViewCtx);
+            //view.dom.focus();
+            searchAndSelect(
+              view,
+              caseSensitive ? searchTxt : searchTxt.toLowerCase()
+            );
+          } catch (e) {
+            console.debug('searchAndSelect', e);
+          }
+        }
+      }
+    }
+  }, [searchTxt]);
 
   function searchAndSelect(view: EditorView, searchText: string) {
     const { state } = view;

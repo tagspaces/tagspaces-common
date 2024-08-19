@@ -19,7 +19,7 @@
 import React, { createContext, useMemo, useReducer, useRef } from 'react';
 
 type SearchDialogContextData = {
-  openSearchDialog: () => void;
+  openSearchDialog: (txt?: string) => void;
   closeSearchDialog: () => void;
 };
 
