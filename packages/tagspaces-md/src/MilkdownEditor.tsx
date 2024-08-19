@@ -26,6 +26,7 @@ interface Props {
   excludePlugins?: Array<string>;
   currentFolder?: string;
   mode?: MilkdownEditorMode;
+  query?: string;
 }
 
 const MilkdownEditor = React.forwardRef<MilkdownRef, Props>(

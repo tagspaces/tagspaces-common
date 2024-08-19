@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { EditorContextProvider } from './EditorContextProvider';
 import { LightEditorContextProvider } from './LightEditorContextProvider';
+import { useSearchDialogContext } from '../components/dialogs/useSearchDialogContext';
 
 type EditorContextProviderProps = {
   onFocus?: () => void;
@@ -12,7 +14,15 @@ type EditorContextProviderProps = {
 };
 
 export const EditorContextModeProvider: React.FC<EditorContextProviderProps> =
-  ({ lightMode, children, ...rest }) => {
+  ({ lightMode, query, children, ...rest }) => {
+    const { openSearchDialog } = useSearchDialogContext();
+
+    useEffect(() => {
+      if (query) {
+        openSearchDialog(query);
+      }
+    }, []);
+
     if (lightMode) {
       return (
         <LightEditorContextProvider {...rest}>
