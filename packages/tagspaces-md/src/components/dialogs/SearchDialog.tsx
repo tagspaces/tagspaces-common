@@ -67,7 +67,7 @@ function SearchDialog(props: Props) {
       return;
     }
 
-    alert('Text not found.');
+    // alert('Text not found.');
   }
 
   function searchFromSelection(

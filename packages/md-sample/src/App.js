@@ -35,6 +35,7 @@ function App() {
   const text = useRef(initMarkdown);
   const colorMode = useContext(ColorModeContext);
   const theme = useTheme();
+  const query = window.query;
 
   useEffect(() => {
     fetch(init)
@@ -96,6 +97,7 @@ function App() {
             // dark={dark}
             lightMode={isLightMode}
             mode="description"
+            query={query}
             // excludePlugins={["upload"]}
           />
         </div>
