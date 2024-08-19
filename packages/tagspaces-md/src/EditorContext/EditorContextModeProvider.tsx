@@ -11,6 +11,7 @@ type EditorContextProviderProps = {
   lightMode?: boolean;
   excludePlugins?: Array<string>;
   defaultMarkdownValue: string;
+  query?: string;
 };
 
 export const EditorContextModeProvider: React.FC<EditorContextProviderProps> =
