@@ -12,11 +12,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Button, InputAdornment } from '@mui/material';
 import { TextSelection } from '@milkdown/prose/state';
 import { EditorView } from '@milkdown/prose/view';
-import {
-  EditorStatus,
-  editorViewCtx,
-  rootCtx
-} from '@milkdown/core';
+import { EditorStatus, editorViewCtx, rootCtx } from '@milkdown/core';
 import Paper, { PaperProps } from '@mui/material/Paper';
 import FormatSizeIcon from '@mui/icons-material/FormatSize';
 import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';

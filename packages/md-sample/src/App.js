@@ -6,6 +6,7 @@ import { MilkdownEditor } from "@tagspaces/tagspaces-md";
 import { CodeMirror } from "@tagspaces/tagspaces-codemirror";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import EditIcon from "@mui/icons-material/Edit";
+import SearchIcon from "@mui/icons-material/Search";
 
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useCallback, useRef, useState, useEffect, useContext } from "react";
@@ -115,6 +116,14 @@ function App() {
         </div>
         <MainMenu
           menuItems={[
+            {
+              id: "searchId",
+              icon: <SearchIcon />,
+              name: "Search",
+              action: () => {
+                milkdownEditorRef.current.openSearchDialog();
+              },
+            },
             {
               id: "themeSwitch",
               icon: <DarkModeIcon />,

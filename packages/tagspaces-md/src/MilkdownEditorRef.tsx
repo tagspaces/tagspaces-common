@@ -5,6 +5,7 @@ import { replaceAll } from '@milkdown/utils';
 import { MilkdownRef } from './MilkdownEditor';
 import { useSetDarkMode } from './providers/DarkModeProvider';
 import { EditorStatus, editorViewCtx } from '@milkdown/core';
+import { useSearchDialogContext } from './components/dialogs/useSearchDialogContext';
 
 type Props = {
   milkdownRef: ForwardedRef<MilkdownRef>;
@@ -13,6 +14,7 @@ type Props = {
 const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
   const [loading, getEditor] = useInstance();
   const setDarkMode = useSetDarkMode();
+  const { openSearchDialog } = useSearchDialogContext();
 
   React.useEffect(() => {
     // autofocus editor https://github.com/orgs/Milkdown/discussions/843
@@ -34,6 +36,9 @@ const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
     },
     setDarkMode: (isDarkMode: boolean) => {
       setDarkMode(isDarkMode);
+    },
+    openSearchDialog: () => {
+      openSearchDialog();
     }
     // https://github.com/Saul-Mirone/milkdown/issues/204#issuecomment-985977031
     /*isEqualMarkdown: (prev: string, next: string) => {

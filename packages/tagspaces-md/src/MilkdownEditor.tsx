@@ -13,6 +13,7 @@ import { SearchDialogContextProvider } from './components/dialogs/SearchDialogCo
 export interface MilkdownRef {
   update: (markdown: string) => void;
   setDarkMode: (isDark: boolean) => void;
+  openSearchDialog: () => void;
 }
 export type MilkdownEditorMode = 'description' | 'extension';
 

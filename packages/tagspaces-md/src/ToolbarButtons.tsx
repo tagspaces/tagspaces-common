@@ -16,13 +16,11 @@ import {
 } from '@milkdown/preset-commonmark';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ChecklistIcon from '@mui/icons-material/Checklist';
-import SearchIcon from '@mui/icons-material/Search';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import {
   insertTableCommand,
-  //  extendListItemSchemaForTask,
   toggleStrikethroughCommand
 } from '@milkdown/preset-gfm';
 import TableChartIcon from '@mui/icons-material/TableChart';
@@ -38,12 +36,10 @@ import { insertTaskListCommand } from './EditorContext/hooks/useGfmPlugin/useGfm
 import CodeIcon from '@mui/icons-material/Code';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
 import { useTextEditorContext } from './TextEditorContext/useTextEditoContext';
-import { useSearchDialogContext } from './components/dialogs/useSearchDialogContext';
 
 const ToolbarButtons: React.FC = () => {
   const { editor, loading } = useMilkdownInstance();
   const { mode } = useTextEditorContext();
-  const { openSearchDialog } = useSearchDialogContext();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
   const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
 
@@ -257,18 +253,6 @@ const ToolbarButtons: React.FC = () => {
             }}
           >
             <ChecklistIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            edge="start"
-            color="default"
-            aria-label="menu"
-            onMouseDown={e => {
-              openSearchDialog();
-              e.preventDefault();
-            }}
-          >
-            <SearchIcon />
           </IconButton>
         </StyledToolbar>
       </AppBar>
