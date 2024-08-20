@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMilkdownInstance } from '../../hooks/useMilkdownInstance';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -12,9 +12,15 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Button, InputAdornment } from '@mui/material';
 import { TextSelection } from '@milkdown/prose/state';
 import { EditorView } from '@milkdown/prose/view';
-import { EditorStatus, editorViewCtx } from '@milkdown/core';
+import {
+  EditorStatus,
+  editorViewCtx,
+  rootCtx
+} from '@milkdown/core';
 import Paper, { PaperProps } from '@mui/material/Paper';
 import FormatSizeIcon from '@mui/icons-material/FormatSize';
+import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
+import { HtmlSearcher } from './HtmlSearcher';
 //import Draggable from 'react-draggable';
 
 interface Props {
@@ -25,32 +31,113 @@ interface Props {
 
 function SearchDialog(props: Props) {
   const { editor, loading } = useMilkdownInstance();
+  const { textEditorMode } = useTextEditorContext();
 
   const { open, onClose, searchTxt } = props;
   const [searchText, setSearch] = useState(searchTxt || '');
   const [replaceMode, setReplaceMode] = useState(false);
   const [replaceText, setReplaceText] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
+  const searcher = useRef<HtmlSearcher>(getHtmlSearcher());
 
   useEffect(() => {
     if (searchTxt && searchTxt.length > 0) {
-      if (editor && !loading && editor.status === EditorStatus.Created) {
-        const { ctx } = editor;
-        if (ctx) {
-          try {
+      search(searchTxt);
+    }
+  }, [searchTxt]);
+
+  useEffect(() => {
+    if (!open) {
+      searcher.current = undefined;
+    }
+  }, [open]);
+
+  function getHtmlSearcher() {
+    if (editor && !loading && editor.status === EditorStatus.Created) {
+      const { ctx } = editor;
+      if (ctx) {
+        const container: HTMLElement = ctx.get(rootCtx) as HTMLElement;
+        return new HtmlSearcher(container);
+      }
+    }
+    return undefined;
+  }
+
+  function search(searchText) {
+    if (editor && !loading && editor.status === EditorStatus.Created) {
+      const { ctx } = editor;
+      if (ctx) {
+        try {
+          if (textEditorMode === 'active') {
             const view = ctx.get(editorViewCtx);
-            //view.dom.focus();
             searchAndSelect(
               view,
-              caseSensitive ? searchTxt : searchTxt.toLowerCase()
+              caseSensitive ? searchText : searchText.toLowerCase()
             );
-          } catch (e) {
-            console.debug('searchAndSelect', e);
+          } else {
+            if (!searcher.current) {
+              searcher.current = getHtmlSearcher();
+            }
+            if (searcher.current) {
+              searcher.current.searchAndSelect(searchText, caseSensitive);
+            }
+            /*const container = ctx.get(rootCtx);
+            searchAndSelectHtml(
+              container,
+              caseSensitive ? searchText : searchText.toLowerCase()
+            );*/
           }
+        } catch (e) {
+          console.debug('searchAndSelect', e);
         }
       }
     }
-  }, [searchTxt]);
+  }
+
+  /*function searchAndSelectHtml(container, searchText) {
+    if (!container) {
+      console.error(`Container not found.`);
+      return;
+    }
+
+    // Create a new Range object for the selection.
+    const selection = window.getSelection();
+    selection.removeAllRanges(); // Clear any existing selection.
+
+    // Get the current selection range or start from the beginning if no selection exists.
+    let currentNode = selection.anchorNode || container;
+    let currentOffset = selection.anchorOffset || 0;
+    // Function to search for the text starting from the current node.
+    function searchInNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = caseSensitive
+          ? node.nodeValue
+          : node.nodeValue.toLowerCase();
+        const startIndex = node === currentNode ? currentOffset : 0;
+        const index = text.indexOf(searchText, startIndex);
+        if (index !== -1) {
+          const range = document.createRange();
+          range.setStart(node, index);
+          range.setEnd(node, index + searchText.length);
+          selection.addRange(range); // Apply the range to the selection.
+          return true; // Indicate that the search was successful.
+        }
+      } else {
+        // Recursively search in child nodes.
+        for (let i = 0; i < node.childNodes.length; i++) {
+          if (searchInNode(node.childNodes[i])) {
+            return true;
+          }
+        }
+      }
+      return false; // Text not found in this node or its children.
+    }
+
+    // Start searching from the container's root node.
+    if (!searchInNode(currentNode)) {
+      console.log(`Text "${searchText}" not found in container.`);
+    }
+  }*/
 
   function searchAndSelect(view: EditorView, searchText: string) {
     const { state } = view;
@@ -236,13 +323,15 @@ function SearchDialog(props: Props) {
             width: 400
           }}
         >
-          <IconButton
-            sx={{ p: '10px' }}
-            aria-label="menu"
-            onClick={() => setReplaceMode(!replaceMode)}
-          >
-            <MenuIcon />
-          </IconButton>
+          {textEditorMode === 'active' && (
+            <IconButton
+              sx={{ p: '10px' }}
+              aria-label="menu"
+              onClick={() => setReplaceMode(!replaceMode)}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
           <TextField
             sx={{ ml: 1, flex: 1 }}
             margin="dense"
@@ -258,27 +347,7 @@ function SearchDialog(props: Props) {
                   <IconButton
                     aria-label="start searching"
                     onClick={() => {
-                      if (
-                        editor &&
-                        !loading &&
-                        editor.status === EditorStatus.Created
-                      ) {
-                        const { ctx } = editor;
-                        if (ctx) {
-                          try {
-                            const view = ctx.get(editorViewCtx);
-                            //view.dom.focus();
-                            searchAndSelect(
-                              view,
-                              caseSensitive
-                                ? searchText
-                                : searchText.toLowerCase()
-                            );
-                          } catch (e) {
-                            console.debug('searchAndSelect', e);
-                          }
-                        }
-                      }
+                      search(searchText);
                     }}
                     size="large"
                   >

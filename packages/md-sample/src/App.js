@@ -24,10 +24,12 @@ The quote is built by a custom react component.`;
 function App() {
   const searchParams = new URLSearchParams(window.location.search);
   const lightMode = searchParams.get("lightMode");
+  const query = searchParams.get("query");
+  const readOnly = searchParams.get("readonly");
   const milkdownEditorRef = useRef(null);
   const codeMirrorRef = useRef(null);
   // const [dark, setDark] = useState(false);
-  const [isReadOnly, setReadOnly] = useState(false);
+  const [isReadOnly, setReadOnly] = useState(!!readOnly);
   const [isLightMode, setLightMode] = useState(
     lightMode ? Boolean(lightMode) : false
   );
@@ -35,7 +37,6 @@ function App() {
   const text = useRef(initMarkdown);
   const colorMode = useContext(ColorModeContext);
   const theme = useTheme();
-  const query = window.query;
 
   useEffect(() => {
     fetch(init)
