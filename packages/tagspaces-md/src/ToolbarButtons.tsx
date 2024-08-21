@@ -268,7 +268,7 @@ const ToolbarButtons: React.FC = () => {
         onClose={() => setImageModalOpened(false)}
         isEditMode={false}
       />
-      {mode !== 'description' && <div style={{ marginTop: '34px' }} />}
+      {mode !== 'description' && <div style={{ paddingTop: 34 }} />}
     </>
   );
 };
