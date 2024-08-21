@@ -45,7 +45,9 @@ const ToolbarButtons: React.FC = () => {
 
   const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     minHeight: `30px`,
-    height: `30px`,
+    //height: `30px`,
+    overflowX: 'auto', // Enable horizontal scrolling
+    whiteSpace: 'nowrap', // Prevent line breaks in the toolbar
     //justifyContent: 'center',
     //alignItems: 'center',
     backgroundColor: theme.palette.background.default
@@ -266,6 +268,7 @@ const ToolbarButtons: React.FC = () => {
         onClose={() => setImageModalOpened(false)}
         isEditMode={false}
       />
+      {mode !== 'description' && <div style={{ marginTop: '34px' }} />}
     </>
   );
 };
