@@ -84,7 +84,7 @@ const isFirefox =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("firefox"); // typeof InstallTrigger !== 'undefined';
 const isWin =
-  (typeof navigator !== "undefined" && navigator.appVersion.includes("Win")) ||
+  (typeof navigator !== "undefined" && navigator.userAgent.includes("Win")) ||
   (typeof process !== "undefined" &&
     (process.platform === "win32" ||
       /^(msys|cygwin)$/.test(process.env.OSTYPE)));
