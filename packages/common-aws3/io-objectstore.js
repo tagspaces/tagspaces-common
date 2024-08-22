@@ -794,7 +794,12 @@ function normalizeRootPath(filePath) {
   if (filePath.indexOf("/") === 0) {
     filePath = filePath.substr(1);
   }
-  return decodeURIComponent(filePath);
+  try {
+    return decodeURIComponent(filePath);
+  } catch (e) {
+    console.error("Failed to decode URI component:", e);
+    return filePath; // Return the original path if decoding fails
+  }
 }
 
 /**
