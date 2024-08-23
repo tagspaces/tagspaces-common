@@ -27,6 +27,7 @@ function App() {
   const lightMode = searchParams.get("lightMode");
   const query = searchParams.get("query");
   const readOnly = searchParams.get("readonly");
+  const mode = searchParams.get("mode");
   const milkdownEditorRef = useRef(null);
   const codeMirrorRef = useRef(null);
   // const [dark, setDark] = useState(false);
@@ -98,7 +99,10 @@ function App() {
             readOnly={isReadOnly}
             // dark={dark}
             lightMode={isLightMode}
-            mode="description"
+            excludePlugins={
+              isReadOnly ? ["menu", "upload", "slash"] : ["slash", "block"]
+            }
+            mode={mode || "description"}
             query={query}
             // excludePlugins={["upload"]}
           />

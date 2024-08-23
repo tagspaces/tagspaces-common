@@ -153,6 +153,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
       return editor;
     },
     [
+      textEditorMode,
       commonmarkPlugin,
       defaultMarkdownValue,
       listenerPlugin,
