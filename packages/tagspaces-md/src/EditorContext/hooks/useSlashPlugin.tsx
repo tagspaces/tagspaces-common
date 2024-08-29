@@ -6,11 +6,13 @@ import { useMemo } from 'react';
 // import { SlashNode } from '../../../components/SlashNode/SlashNode';
 import { Plugin } from '../../types/plugins';
 import { Slash } from '../../components/slash/Slash';
+import { useSearchDialogContext } from '../../components/dialogs/useSearchDialogContext';
 
 const slash = slashFactory('MILKDOWN');
 
 export const useSlashPlugin = (): Plugin => {
   const pluginViewFactory = usePluginViewFactory();
+  const { openSearchDialog } = useSearchDialogContext();
 
   /*function searchAndSelect(view: EditorView, searchText: string) {
     const { state } = view;
@@ -145,10 +147,13 @@ export const useSlashPlugin = (): Plugin => {
         slash,
         (ctx: Ctx) => () => {
           ctx.set(slash.key, {
-            /*props: {
+            props: {
               handleKeyDown: (view, event) => {
                 if (event.ctrlKey) {
-                  if (event.key === 's') {
+                  if (event.key === 'f') {
+                    openSearchDialog();
+                  }
+                  /*if (event.key === 's') {
                     event.preventDefault(); // Prevent browser search
 
                     const searchText = prompt('Enter the text to search:');
@@ -167,11 +172,11 @@ export const useSlashPlugin = (): Plugin => {
                     }
 
                     return true;
-                  }
+                  }*/
                 }
                 return false;
               }
-            },*/
+            },
             view: pluginViewFactory({
               component: Slash
             })

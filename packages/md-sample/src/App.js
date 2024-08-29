@@ -100,7 +100,7 @@ function App() {
             // dark={dark}
             lightMode={isLightMode}
             excludePlugins={
-              isReadOnly ? ["menu", "upload", "slash"] : ["slash", "block"]
+              isReadOnly ? ["menu"] : [] //, "upload", "slash" "block"
             }
             mode={mode || "description"}
             query={query}
