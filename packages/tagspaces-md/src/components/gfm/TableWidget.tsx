@@ -75,9 +75,9 @@ export const TableTooltip: FC = () => {
     ) {
       const provider = new TooltipProvider({
         content: ref.current,
-        tippyOptions: {
+        /*tippyOptions: {
           zIndex: 30
-        },
+        },*/
         shouldShow: () => {
           return false;
         }
@@ -278,11 +278,11 @@ const TableSelectorWidget: FC = () => {
 
         getEditor().action(ctx => {
           const tooltip = ctx.get(tableTooltipCtx.key);
-          tooltip?.getInstance()?.setProps({
+          /*tooltip?.getInstance()?.setProps({
             getReferenceClientRect: () => {
               return div.getBoundingClientRect();
             }
-          });
+          });*/
           tooltip?.show();
 
           const commands = ctx.get(commandsCtx);

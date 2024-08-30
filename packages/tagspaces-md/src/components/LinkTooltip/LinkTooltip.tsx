@@ -36,11 +36,11 @@ export const LinkTooltip: React.FC = () => {
     ) {
       const provider = new TooltipProvider({
         content: ref.current,
-        tippyOptions: {
+        /*tippyOptions: {
           zIndex: 30,
           arrow: true,
           placement: 'bottom'
-        },
+        },*/
         shouldShow: view => {
           if (loading || !editor || editor.status !== EditorStatus.Created) {
             return false;

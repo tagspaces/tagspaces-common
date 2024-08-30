@@ -86,8 +86,8 @@ export const useSlashProvider = ({ tooltipRef }: UseSlashProviderProps) => {
         );
 
         return currentTextBlockContent.includes('/');
-      },
-      tippyOptions: {
+      }
+      /*tippyOptions: {
         arrow: false,
         onMount: () => {
           const [firstElementRef] = keyboardListRefs.current;
@@ -100,7 +100,7 @@ export const useSlashProvider = ({ tooltipRef }: UseSlashProviderProps) => {
           setActive(null);
           setBodyKeyDownActive(false);
         }
-      }
+      }*/
     });
 
     return () => {

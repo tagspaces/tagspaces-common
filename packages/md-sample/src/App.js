@@ -28,6 +28,7 @@ function App() {
   const query = searchParams.get("query");
   const readOnly = searchParams.get("readonly");
   const mode = searchParams.get("mode");
+  const themeMode = searchParams.get("theme");
   const milkdownEditorRef = useRef(null);
   const codeMirrorRef = useRef(null);
   // const [dark, setDark] = useState(false);
@@ -46,6 +47,10 @@ function App() {
       .then((text) => {
         milkdownListener(text);
       });
+    if (themeMode) {
+      colorMode.setMode(themeMode);
+      milkdownEditorRef.current.setDarkMode(themeMode === "dark");
+    }
   }, []);
 
   const milkdownListener = useCallback((markdown, prevMarkdown) => {

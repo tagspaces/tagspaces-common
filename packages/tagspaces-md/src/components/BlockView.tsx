@@ -27,7 +27,7 @@ export const BlockView = () => {
             ctx: editor.ctx,
             content: div
           });
-          tooltipProvider.current?.update(view);
+          tooltipProvider.current?.update(); //view);
         } else {
           tooltipProvider.current?.destroy();
           tooltipProvider.current = undefined;
