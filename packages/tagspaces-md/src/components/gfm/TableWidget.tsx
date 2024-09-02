@@ -8,11 +8,6 @@ import {
   deleteSelectedCellsCommand,
   getCellsInCol,
   getCellsInRow,
-  moveColCommand,
-  moveRowCommand,
-  selectColCommand,
-  selectRowCommand,
-  selectTableCommand,
   setAlignCommand
 } from '@milkdown/preset-gfm';
 import { Plugin, PluginKey } from '@milkdown/prose/state';
@@ -30,15 +25,13 @@ import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import type { useWidgetViewFactory } from '@prosemirror-adapter/react';
-import {
-  usePluginViewContext,
-  useWidgetViewContext
-} from '@prosemirror-adapter/react';
-import clsx from 'clsx';
+import { usePluginViewContext } from '@prosemirror-adapter/react';
 import type { FC } from 'react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import IconButton from '@mui/material/IconButton';
 import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContext';
+import { TableSelectorWidget } from './TableSelectorWidget';
+import { useTheme } from '@mui/material';
 
 export const tableTooltipCtx = $ctx<TooltipProvider | null, 'tableTooltip'>(
   null,
@@ -52,6 +45,7 @@ export const TableTooltip: FC = () => {
   const tooltipProvider = useRef<TooltipProvider>();
   const [loading, getEditor] = useInstance();
   const { textEditorMode } = useTextEditorContext();
+  const theme = useTheme();
 
   const isRow =
     view.state.selection instanceof CellSelection &&
@@ -76,7 +70,8 @@ export const TableTooltip: FC = () => {
       const provider = new TooltipProvider({
         content: ref.current,
         tippyOptions: {
-          zIndex: 30
+          zIndex: 30,
+          theme: theme.palette.mode
         },
         shouldShow: () => {
           return false;
@@ -240,7 +235,7 @@ export const TableTooltip: FC = () => {
   );
 };
 
-const TableSelectorWidget: FC = () => {
+/*const TableSelectorWidget: FC = () => {
   const { spec } = useWidgetViewContext();
   const type = spec?.type;
   const index = spec?.index ?? 0;
@@ -338,7 +333,7 @@ const TableSelectorWidget: FC = () => {
       }}
     />
   );
-};
+};*/
 
 export const tableSelectorPlugin = (
   widgetViewFactory: ReturnType<typeof useWidgetViewFactory>

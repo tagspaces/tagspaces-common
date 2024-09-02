@@ -177,3 +177,14 @@ span[data-type='html'] {
     opacity: 0;
   }
 }
+
+/* Define a dark theme for Tippy.js */
+.tippy-box[data-theme~='dark'] .tippy-content div {
+  @apply text-gray-100;
+  background-color: #2d3748 !important;
+}
+
+/* Customize the arrow */
+.tippy-box[data-theme~='dark'] .tippy-arrow {
+  color: #333; /* Match arrow color with background */
+}

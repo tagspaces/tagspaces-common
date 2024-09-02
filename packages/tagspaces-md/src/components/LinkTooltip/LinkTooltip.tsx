@@ -12,6 +12,7 @@ import { useTextEditorContext } from '../../TextEditorContext/useTextEditoContex
 import { useSelectedMarkPosition } from '../../hooks/useSelectedMarkPosition';
 import LinkDialog from '../dialogs/LinkDialog';
 import { useMilkdownInstance } from '../../hooks/useMilkdownInstance';
+import { useTheme } from '@mui/material';
 
 export const LinkTooltip: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -22,6 +23,7 @@ export const LinkTooltip: React.FC = () => {
   const { view, prevState } = usePluginViewContext();
   const { textEditorMode } = useTextEditorContext();
   const { getSelectedMarkPosition } = useSelectedMarkPosition();
+  const theme = useTheme();
 
   const { href } = useHyperlinkAttrs();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
@@ -39,7 +41,8 @@ export const LinkTooltip: React.FC = () => {
         tippyOptions: {
           zIndex: 30,
           arrow: true,
-          placement: 'bottom'
+          placement: 'bottom',
+          theme: theme.palette.mode
         },
         shouldShow: view => {
           if (loading || !editor || editor.status !== EditorStatus.Created) {
