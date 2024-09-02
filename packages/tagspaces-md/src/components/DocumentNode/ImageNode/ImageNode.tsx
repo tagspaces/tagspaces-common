@@ -1,4 +1,4 @@
-import { commandsCtx, EditorStatus, editorViewCtx } from '@milkdown/core';
+import { EditorStatus, editorViewCtx } from '@milkdown/core';
 import { imageSchema } from '@milkdown/preset-commonmark';
 import { useNodeViewContext } from '@prosemirror-adapter/react';
 import React, { useState } from 'react';
@@ -16,15 +16,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton } from '@mui/material';
 
 export const ImageNode: React.FC = () => {
-  const [imageProperties, setImageProperties] = useState<{
+  /* const [imageProperties, setImageProperties] = useState<{
     width: number;
     height: number;
-  }>({ width: 0, height: 0 });
+  }>({ width: 0, height: 0 });*/
   const { currentFolder, textEditorMode } = useTextEditorContext();
   const { isSelected } = useIsNodeSelected({ nodeType: imageSchema.type });
 
   const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
-  const { node, contentRef, setAttrs } = useNodeViewContext();
+  const { node, contentRef } = useNodeViewContext();
   const { attrs } = node;
   const { editor, loading } = useMilkdownInstance();
   const lightboxState = useToggler();
@@ -43,10 +43,11 @@ export const ImageNode: React.FC = () => {
   };
 
   const onImageLoad = ({
+    // eslint-disable-next-line no-unused-vars
     currentTarget
   }: React.SyntheticEvent<HTMLImageElement>) => {
-    const { naturalHeight, naturalWidth } = currentTarget;
-    setImageProperties({ width: naturalWidth, height: naturalHeight });
+    //const { naturalHeight, naturalWidth } = currentTarget;
+    //setImageProperties({ width: naturalWidth, height: naturalHeight });
   };
 
   const alt = attrs.alt || '';

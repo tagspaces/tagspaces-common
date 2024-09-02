@@ -36,7 +36,8 @@ interface ImageContainerProps extends StyledComponentProps {
 }
 
 const ImageContainerStyled = styled('div')<ImageContainerProps>(
-  ({ theme, loaderWidth, loaderHeight }) => ({
+  ({ theme }) => ({
+    //, loaderWidth, loaderHeight }) => ({
     position: 'relative',
     backgroundColor: theme.palette.background.default
     //width: loaderWidth,

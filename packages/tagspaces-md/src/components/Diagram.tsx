@@ -1,11 +1,11 @@
 import { useNodeViewContext } from '@prosemirror-adapter/react';
 import mermaid from 'mermaid';
 import type { FC } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDarkMode } from '../providers/DarkModeProvider';
 
 export const Diagram: FC = () => {
-  const { node, setAttrs, selected } = useNodeViewContext();
+  const { node } = useNodeViewContext();
   const code = useMemo(() => node.attrs.value, [node.attrs.value]);
   const id = node.attrs.identity;
   const codePanel = useRef<HTMLDivElement>(null);

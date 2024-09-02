@@ -24,6 +24,7 @@
     "build:css": "npx cross-env NODE_ENV=production tailwindcss -i src/globals.css -o src/tailwind.css -m",
     "code-format": "npx prettier --write .",
     "type-check": "npm run typescript-clean && tsc --noEmit",
+    "oxlint-check": "npx --yes oxlint@latest",
     "typescript-clean": "tsc --build --clean",
     "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-4.3.9.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"

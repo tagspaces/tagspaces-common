@@ -31,7 +31,7 @@ function ImageDialog(props: Props) {
   const [link, setLink] = useState(props.href);
   const { open, isEditMode } = props;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { onFileUpload, onFileValidation } = useTextEditorContext();
+  const { onFileUpload } = useTextEditorContext();
 
   function getTitle() {
     if (props.text) {

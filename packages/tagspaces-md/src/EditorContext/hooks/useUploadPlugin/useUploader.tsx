@@ -32,6 +32,7 @@ export const useUploader = () => {
           })
         );
       } catch (e) {
+        console.error(e);
         //onErrorNotification('Something bad happened');
         return [];
       }

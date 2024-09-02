@@ -1,6 +1,6 @@
 import { math, mathBlockSchema } from '@milkdown/plugin-math';
 import { setBlockType } from '@milkdown/prose/commands';
-import { $view, $command } from '@milkdown/utils';
+import { $command } from '@milkdown/utils';
 import { useNodeViewFactory } from '@prosemirror-adapter/react';
 import { useMemo } from 'react';
 

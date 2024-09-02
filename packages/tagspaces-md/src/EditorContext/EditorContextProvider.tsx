@@ -13,7 +13,6 @@ import { trailing } from '@milkdown/plugin-trailing';
 import { cursor } from '@milkdown/plugin-cursor';
 import { useEditor, UseEditorReturn } from '@milkdown/react';
 import { createContext, useEffect, useMemo, useRef } from 'react';
-import { Node } from '@milkdown/prose/model';
 
 import { useCommonmarkPlugin } from './hooks/useCommonmarkPlugin/useCommonmarkPlugin';
 import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
@@ -106,7 +105,7 @@ export const EditorContextProvider: React.FC<EditorContextProviderProps> = ({
               class: 'mx-auto h-full' // text-center w-1/2 flex justify-center items-center h-screen
             },
             editable: () => isEditable.current,
-            handleClickOn: (view: EditorView, pos: number, node: Node) =>
+            handleClickOn: (view: EditorView, pos: number) =>
               handleClick(textEditorMode, ctx, view, pos) //, node)
           }));
           //preventDefaultClick

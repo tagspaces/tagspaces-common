@@ -8,7 +8,6 @@ import { nord } from '@milkdown/theme-nord';
 import { EditorView } from 'prosemirror-view';
 import { useEditor, UseEditorReturn } from '@milkdown/react';
 import { createContext, useMemo } from 'react';
-import { Node } from '@milkdown/prose/model';
 
 import { useCommonmarkPlugin } from './hooks/useCommonmarkPlugin/useCommonmarkPlugin';
 import { useGfmPlugin } from './hooks/useGfmPlugin/useGfmPlugin';
@@ -56,7 +55,7 @@ export const LightEditorContextProvider: React.FC<EditorContextProviderProps> =
             ctx.update(editorViewOptionsCtx, prev => ({
               ...prev,
               editable: () => textEditorMode === 'active',
-              handleClickOn: (view: EditorView, pos: number, node: Node) =>
+              handleClickOn: (view: EditorView, pos: number) =>
                 handleClick(textEditorMode, ctx, view, pos) //, node)
             }));
             //preventDefaultClick

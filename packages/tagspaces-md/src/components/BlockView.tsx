@@ -2,7 +2,6 @@ import { BlockProvider } from '@milkdown/plugin-block';
 import { useInstance } from '@milkdown/react';
 import { usePluginViewContext } from '@prosemirror-adapter/react';
 import { useEffect, useRef } from 'react';
-import { EditorStatus } from '@milkdown/core';
 import { useTextEditorContext } from '../TextEditorContext/useTextEditoContext';
 
 export const BlockView = () => {

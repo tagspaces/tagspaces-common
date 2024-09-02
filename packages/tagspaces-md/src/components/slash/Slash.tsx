@@ -32,7 +32,7 @@ export const Slash = () => {
   const [loading, getEditor] = useInstance();
   const { onCallCommand } = useCallEditorCommand();
 
-  const { keyboardListRefs, activeItemIndex } = useSlashProvider({
+  const { activeItemIndex } = useSlashProvider({
     tooltipRef
   });
 

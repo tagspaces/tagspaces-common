@@ -40,6 +40,7 @@ export const SearchDialogContextProvider = ({
   const open = useRef<boolean>(false);
   const searchTxt = useRef<string>(undefined);
 
+  // eslint-disable-next-line no-unused-vars
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0, undefined);
 
   function openDialog(txt = undefined) {

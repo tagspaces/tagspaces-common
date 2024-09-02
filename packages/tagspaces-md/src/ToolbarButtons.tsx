@@ -38,7 +38,7 @@ import FormatClearIcon from '@mui/icons-material/FormatClear';
 import { useTextEditorContext } from './TextEditorContext/useTextEditoContext';
 
 const ToolbarButtons: React.FC = () => {
-  const { editor, loading } = useMilkdownInstance();
+  const { editor } = useMilkdownInstance();
   const { mode } = useTextEditorContext();
   const [isLinkModalOpened, setLinkModalOpened] = useState<boolean>(false);
   const [isImageModalOpened, setImageModalOpened] = useState<boolean>(false);
