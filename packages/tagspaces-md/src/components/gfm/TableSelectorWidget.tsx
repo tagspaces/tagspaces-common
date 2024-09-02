@@ -37,10 +37,6 @@ export const TableSelectorWidget: FC = () => {
 
   //const position = useMemo(() => getWidgetPosition(type), [type]);
 
-  if (textEditorMode === 'preview') {
-    return null;
-  }
-
   const common = useMemo(
     () =>
       clsx(
@@ -57,6 +53,10 @@ export const TableSelectorWidget: FC = () => {
 
     return 'h-3 w-3 -left-4 -top-4 rounded-full';
   }, [type]);
+
+  if (textEditorMode === 'preview') {
+    return null;
+  }
 
   return (
     <div
