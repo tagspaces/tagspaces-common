@@ -224,8 +224,13 @@ function copyFilePromise(sourceFilePath, targetFilePath) {
   return fsClient.copyFilePromise(sourceFilePath, targetFilePath);
 }
 
-function renameFilePromise(filePath, newFilePath, onProgress = undefined) {
-  return fsClient.renameFilePromise(filePath, newFilePath, onProgress);
+function renameFilePromise(
+  filePath,
+  newFilePath,
+  onProgress = undefined,
+  force = false
+) {
+  return fsClient.renameFilePromise(filePath, newFilePath, onProgress, force);
 }
 
 function renameDirectoryPromise(dirPath, newDirName) {

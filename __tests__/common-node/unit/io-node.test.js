@@ -353,6 +353,15 @@ describe("io-node unit tests", () => {
     await renameFilePromise(targetPath, targetPath2);
     const targetFile2 = fs.lstatSync(targetPath2);
     expect(targetFile2.size).toBe(0);
+
+    // dest file exist and override with force
+    const targetPath3 = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/sample.coffee"
+    );
+    await renameFilePromise(targetPath2, targetPath3, undefined, true);
+    const targetFile3 = fs.lstatSync(targetPath3);
+    expect(targetFile3.size).toBe(0);
   });
   test("io-node.renameDirectoryPromise", async () => {
     const sourcePath = pathLib.resolve(
