@@ -13,6 +13,6 @@
     "@tagspaces/tagspaces-common": "^4.5.19",
     "@tagspaces/tagspaces-common-node": "^4.5.19",
     "@tagspaces/tagspaces-thumbgen-image": "^4.2.3",
-    "fswin": "^3.24.524"
+    "fswin": "^3.24.829"
   }
 }

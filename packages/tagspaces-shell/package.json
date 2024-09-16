@@ -13,15 +13,17 @@
     "meta-clean": "node bin/cli.js -m metacleaner -a false ./__test__",
     "meta-clean-dev": "node bin/clidev.js -m metacleaner -a false ./__test__",
     "gen-thumbnails": "node bin/cli.js -m thumbgen ./__test__",
-    "gen-thumbnails-dev": "node bin/clidev.js ./__test__",
+    "gen-thumbnails-dev": "node bin/clidev.js -m thumbgen ./__test__",
     "pkg-publish": "npm run node-install && npm run build:prod && npm publish --access public"
   },
   "bin": {
     "tscmd": "./bin/cli.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "@tagspaces/tagspaces-metacleaner": "^4.5.19",
-    "@tagspaces/tagspaces-workers": "^4.5.19",
+    "@tagspaces/tagspaces-workers": "^4.5.19"
+  },
+  "devDependencies": {
     "rimraf": "^3.0.2",
     "webpack": "^5.57.1",
     "webpack-cli": "^4.8.0",
