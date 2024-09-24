@@ -40,6 +40,7 @@ const cleanMeta = (
       lite: true,
     },
     (fileEntry) => {
+      const isRelative = fileEntry.path.startsWith(".");
       const pathObj = filepath.create(fileEntry.path);
       const parts = pathObj.split();
       if (isMeta(parts)) {
@@ -52,11 +53,15 @@ const cleanMeta = (
         originPathParts.push(
           fileName.substring(0, fileName.length - fileExtension.length)
         );
+        const currentDir = __dirname.replace(/^\//, "");
         const relativeFilePath = path.relative(
-          __dirname.replace(/^\//, ""),
+          currentDir,
           path.join(...originPathParts)
         );
-        const originFilePath = path.join(__dirname, relativeFilePath);
+        const originFilePath = path.join(
+          isRelative ? currentDir : __dirname,
+          relativeFilePath
+        );
         // this works on Windows only
         // const originFilePath = path.resolve(...originPathParts);
 

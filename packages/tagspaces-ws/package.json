@@ -19,7 +19,7 @@
     "install-node-win": "npm install --arch=x64 --platform=win32 sharp",
     "kill-process": "lsof -n -i4TCP:49352 | awk '{print$2}' | tail -1 | xargs kill -9",
     "test-data-download": "npx rimraf testdata && git clone --depth 1 https://github.com/tagspaces/testdata",
-    "test": "jest",
+    "test": "npm run test-data-download && jest",
     "npmpack": "npm run build && npx shx cp -rL build/** ../../../tagspaces/release/app/node_modules/@tagspaces/tagspaces-ws/",
     "pkg-publish": "npm run build && npm publish --access public"
   },

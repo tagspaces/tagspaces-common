@@ -107,7 +107,7 @@ describe("Web Server Endpoints", () => {
       const attrs = fswin.getAttributesSync(metaFolder);
       expect(attrs.IS_HIDDEN).toBe(true);
     } else {
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
     }
   });
   /*
