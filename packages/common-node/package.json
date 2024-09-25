@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-node",
   "description": "TagSpaces common node module",
-  "version": "4.5.19",
+  "version": "4.5.22",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
@@ -11,7 +11,7 @@
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.5.19",
+    "@tagspaces/tagspaces-common": "^4.5.22",
     "adm-zip": "0.5.10",
     "fs-extra": "^10.0.0",
     "klaw": "^4.1.0",
