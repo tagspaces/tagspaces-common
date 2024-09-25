@@ -35,6 +35,9 @@ function baseName(
 }
 
 function extractFileExtension(filePath, dirSeparator = AppConfig.dirSeparator) {
+  if (!filePath) {
+    return "";
+  }
   const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
   const lastIndexEndTagContainer = filePath.lastIndexOf(
     AppConfig.endTagContainer
@@ -324,7 +327,7 @@ function getMetaFileLocationForDir(
 }
 
 function extractFileName(filePath, dirSeparator = AppConfig.dirSeparator) {
-  if (filePath.endsWith(dirSeparator)) {
+  if (!filePath || filePath.endsWith(dirSeparator)) {
     return "";
   }
   if (filePath) {
