@@ -230,7 +230,6 @@ const listDirectoryPromise = (
         path.length > 0 && path !== "/" ? normalizeRootPath(path + "/") : "",
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
-      ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
     };
     listDirectoryAll(params, param.location, resultsLimit.maxLoops)
       .then(async (data) => {
@@ -267,7 +266,11 @@ const listDirectoryPromise = (
               enhancedEntries.push(eentry);
               if (loadMeta) {
                 metaPromises.push(
-                  getEntryMeta(eentry, param.location, param.encryptionKey)
+                  getEntryMeta(
+                    eentry,
+                    param.location,
+                    param.location.encryptionKey
+                  )
                 );
               }
             }
@@ -338,7 +341,13 @@ const listDirectoryPromise = (
                   (obj) => obj.path === metaFilePath
                 );
                 if (metaFileAvailable) {
-                  metaPromises.push(getEntryMeta(eentry, param.location));
+                  metaPromises.push(
+                    getEntryMeta(
+                      eentry,
+                      param.location,
+                      param.location.encryptionKey
+                    )
+                  );
                 }
               }
             }
@@ -348,16 +357,30 @@ const listDirectoryPromise = (
         if (metaPromises.length > 0) {
           Promise.all(metaPromises)
             .then((entriesMeta) => {
-              entriesMeta.forEach((entryMeta) => {
+              const entriesMetaMap = new Map(
+                entriesMeta.map((e) => [e.path, e])
+              );
+
+              const updatedEntries = enhancedEntries.map((enhancedEntry) => {
+                const entryMeta = entriesMetaMap.get(enhancedEntry.path);
+                if (entryMeta) {
+                  return {
+                    ...enhancedEntry,
+                    meta: { ...enhancedEntry.meta, ...entryMeta },
+                  };
+                }
+                return enhancedEntry;
+              });
+              /*entriesMeta.forEach((entryMeta) => {
                 enhancedEntries.some((enhancedEntry) => {
                   if (enhancedEntry.path === entryMeta.path) {
-                    enhancedEntry = entryMeta;
+                    enhancedEntry.meta = {...enhancedEntry.meta,...entryMeta.meta};
                     return true;
                   }
                   return false;
                 });
-              });
-              resolve(enhancedEntries);
+              });*/
+              resolve(updatedEntries);
               return true;
             })
             .catch(() => {
@@ -435,89 +458,89 @@ function listDirectoryAll(param, location, maxLoops = 5) {
   });
 }
 
+/**
+ * @param eentry
+ * @param location
+ * @param encryptionKey
+ * @returns {Promise<TS>FileSystemEntryMeta>}
+ */
 const getEntryMeta = async (eentry, location, encryptionKey) => {
-  const promise = new Promise(async (resolve) => {
-    const entryPath = tsPaths.normalizePath(eentry.path);
-    if (eentry.isFile) {
-      try {
-        const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
-        const metaFileContent = await loadTextFilePromise({
-          path: metaFilePath,
-          bucketName: eentry.bucketName,
-          location,
-          encryptionKey,
-        });
-        eentry.meta = JSON.parse(metaFileContent.trim());
-      } catch (ex) {
-        eentry.meta = {};
-        console.warn("Error getEntryMeta for " + entryPath, ex);
-      }
-      resolve(eentry);
-      // resolve({ ...eentry, meta: JSON.parse(metaFileContent.trim()) });
-    } else {
-      if (
-        !entryPath.includes("/" + AppConfig.metaFolder) &&
-        !entryPath.includes(AppConfig.metaFolder + "/")
-      ) {
-        // skipping meta folder
-        const folderTmbPath =
-          entryPath +
-          "/" +
-          AppConfig.metaFolder +
-          "/" +
-          AppConfig.folderThumbFile;
-        const folderThumbProps = await getPropertiesPromise({
-          path: folderTmbPath,
-          bucketName: eentry.bucketName,
-          location,
-          encryptionKey,
-        });
-        if (folderThumbProps && folderThumbProps.isFile) {
-          const thumb = await getURLforPath(
-            {
-              path: folderTmbPath,
-              bucketName: eentry.bucketName,
-              location,
-            },
-            604800
-          ); // 60 * 60 * 24 * 7 = 1 week ;
-
-          eentry.meta = { thumbPath: thumb };
-        }
-        // }
-        // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
-        const folderMetaPath =
-          entryPath +
-          "/" +
-          AppConfig.metaFolder +
-          "/" +
-          AppConfig.metaFolderFile;
-        const folderProps = await getPropertiesPromise({
-          path: folderMetaPath,
-          bucketName: eentry.bucketName,
-          location,
-          encryptionKey,
-        });
-        if (folderProps && folderProps.isFile) {
-          try {
-            const metaFileContent = await loadTextFilePromise({
-              path: folderMetaPath,
-              bucketName: eentry.bucketName,
-              location,
-              encryptionKey,
-            });
-            eentry.meta = JSON.parse(metaFileContent.trim());
-          } catch (ex) {
-            console.warn("Error getEntryMeta for " + folderMetaPath, ex);
-          }
-          // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
-        }
-      }
-      resolve(eentry);
+  const entryPath = tsPaths.normalizePath(eentry.path);
+  if (eentry.isFile) {
+    try {
+      const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
+      const metaFileContent = await loadTextFilePromise({
+        path: metaFilePath,
+        bucketName: eentry.bucketName,
+        location,
+        encryptionKey,
+      });
+      return JSON.parse(metaFileContent.trim());
+    } catch (ex) {
+      console.warn("Error getEntryMeta for " + entryPath, ex);
+      return {};
     }
-  });
-  const result = await promise;
-  return result;
+  } else {
+    if (
+      !entryPath.includes("/" + AppConfig.metaFolder) &&
+      !entryPath.includes(AppConfig.metaFolder + "/")
+    ) {
+      // skipping meta folder
+      let meta = {};
+      const folderTmbPath =
+        entryPath +
+        "/" +
+        AppConfig.metaFolder +
+        "/" +
+        AppConfig.folderThumbFile;
+      const folderThumbProps = await getPropertiesPromise({
+        path: folderTmbPath,
+        bucketName: eentry.bucketName,
+        location,
+        encryptionKey,
+      });
+      if (folderThumbProps && folderThumbProps.isFile) {
+        const thumb = await getURLforPath(
+          {
+            path: folderTmbPath,
+            bucketName: eentry.bucketName,
+            location,
+          },
+          604800
+        ); // 60 * 60 * 24 * 7 = 1 week ;
+
+        meta = { thumbPath: thumb };
+      }
+      // }
+      // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
+      const folderMetaPath =
+        entryPath + "/" + AppConfig.metaFolder + "/" + AppConfig.metaFolderFile;
+      const folderProps = await getPropertiesPromise({
+        path: folderMetaPath,
+        bucketName: eentry.bucketName,
+        location,
+        encryptionKey,
+      });
+      if (folderProps && folderProps.isFile) {
+        try {
+          const metaFileContent = await loadTextFilePromise({
+            path: folderMetaPath,
+            bucketName: eentry.bucketName,
+            location,
+            encryptionKey,
+          });
+          if (metaFileContent) {
+            meta = { ...meta, ...JSON.parse(metaFileContent.trim()) };
+          }
+        } catch (ex) {
+          console.warn("Error getEntryMeta for " + folderMetaPath, ex);
+        }
+        // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
+      }
+      return meta;
+    }
+    return {};
+  }
 };
 
 /**
@@ -646,7 +669,7 @@ const loadTextFilePromise = (param, isPreview) =>
  * @param param
  * @param type text | arraybuffer
  * @param isPreview
- * @returns {Promise<string | string>}
+ * @returns {Promise<string | undefined>}
  */
 function getFileContentPromise(param, type = "text", isPreview = false) {
   const path = normalizeRootPath(param.path);
@@ -680,7 +703,11 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
       })
       .catch((e) => {
         console.log(e);
-        resolve(""); // Return an empty string on error
+        if(e.message && e.message.indexOf("The object was stored using a form of Server Side Encryption") !== -1){
+          resolve(undefined);
+        } else {
+          resolve(""); // Return an empty string on error
+        }
       });
   });
 }
@@ -1112,11 +1139,21 @@ function copyFilePromise(param, newFilePath) {
     return Promise.reject("Copying file failed, files have the same path");
   }
 
+  let encryptionParams;
+  if (param.encryptionKey) {
+    const headerParams = getEncryptionHeaders(param.encryptionKey);
+    const copySourcesParam = {
+      CopySourceSSECustomerAlgorithm: headerParams.SSECustomerAlgorithm,
+      CopySourceSSECustomerKey: headerParams.SSECustomerKey,
+      CopySourceSSECustomerKeyMD5: headerParams.SSECustomerKeyMD5,
+    };
+    encryptionParams = { ...headerParams, ...copySourcesParam };
+  }
   const copyParams = {
     Bucket: param.bucketName,
     CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
     Key: nNewFilePath, //encodeS3URI
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
+    ...encryptionParams,
   };
   const command = new CopyObjectCommand(copyParams);
 
@@ -1137,11 +1174,21 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
   }
 
   // Copy the object to a new location
+  let encryptionParams;
+  if (param.encryptionKey) {
+    const headerParams = getEncryptionHeaders(param.encryptionKey);
+    const copySourcesParam = {
+      CopySourceSSECustomerAlgorithm: headerParams.SSECustomerAlgorithm,
+      CopySourceSSECustomerKey: headerParams.SSECustomerKey,
+      CopySourceSSECustomerKeyMD5: headerParams.SSECustomerKeyMD5,
+    };
+    encryptionParams = { ...headerParams, ...copySourcesParam };
+  }
   const copyParams = {
     Bucket: param.bucketName,
     CopySource: encodeURI(param.bucketName + "/" + nFilePath), // encodeS3URI(nFilePath),
     Key: nNewFilePath, //encodeS3URI
-    ...(param.encryptionKey && getEncryptionHeaders(param.encryptionKey)),
+    ...encryptionParams,
   };
   const copyCommand = new CopyObjectCommand(copyParams);
 
