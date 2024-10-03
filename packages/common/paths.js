@@ -448,14 +448,15 @@ function extractParentDirectoryPath(
   dirPath,
   dirSeparator = AppConfig.dirSeparator
 ) {
-  if (!dirPath) return;
-  let path = dirPath;
-  if (path.endsWith(dirSeparator)) {
-    path = path.substring(0, path.lastIndexOf(dirSeparator));
-  }
-  const lastIndex = getDirSeparatorPosition(path, dirSeparator);
-  if (lastIndex !== -1) {
-    return path.substring(0, lastIndex);
+  if (dirPath) {
+    let path = dirPath;
+    if (path.endsWith(dirSeparator)) {
+      path = path.substring(0, path.lastIndexOf(dirSeparator));
+    }
+    const lastIndex = getDirSeparatorPosition(path, dirSeparator);
+    if (lastIndex !== -1) {
+      return path.substring(0, lastIndex);
+    }
   }
   // return root dir in cases that dirPath not start with dirSeparator (AWS)
   return "";

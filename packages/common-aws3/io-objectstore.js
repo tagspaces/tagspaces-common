@@ -358,7 +358,7 @@ const listDirectoryPromise = (
           Promise.all(metaPromises)
             .then((entriesMeta) => {
               const entriesMetaMap = new Map(
-                entriesMeta.map((e) => [e.path, e])
+                entriesMeta.map((e) => [e.path, e.meta])
               );
 
               const updatedEntries = enhancedEntries.map((enhancedEntry) => {
@@ -462,10 +462,11 @@ function listDirectoryAll(param, location, maxLoops = 5) {
  * @param eentry
  * @param location
  * @param encryptionKey
- * @returns {Promise<TS>FileSystemEntryMeta>}
+ * @returns {Promise<TS>FileSystemEntry>}
  */
 const getEntryMeta = async (eentry, location, encryptionKey) => {
   const entryPath = tsPaths.normalizePath(eentry.path);
+  let meta = {};
   if (eentry.isFile) {
     try {
       const metaFilePath = tsPaths.getMetaFileLocationForFile(entryPath, "/");
@@ -475,10 +476,9 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
         location,
         encryptionKey,
       });
-      return JSON.parse(metaFileContent.trim());
+      meta = JSON.parse(metaFileContent.trim());
     } catch (ex) {
       console.warn("Error getEntryMeta for " + entryPath, ex);
-      return {};
     }
   } else {
     if (
@@ -486,7 +486,6 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
       !entryPath.includes(AppConfig.metaFolder + "/")
     ) {
       // skipping meta folder
-      let meta = {};
       const folderTmbPath =
         entryPath +
         "/" +
@@ -537,10 +536,9 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
         }
         // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
       }
-      return meta;
     }
-    return {};
   }
+  return { ...eentry, meta: { ...eentry.meta, ...meta } };
 };
 
 /**
@@ -703,7 +701,15 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
       })
       .catch((e) => {
         console.log(e);
-        if(e.message && e.message.indexOf("The object was stored using a form of Server Side Encryption") !== -1){
+        if (
+          e.message && (
+          e.message.indexOf(
+            "The object was stored using a form of Server Side Encryption"
+          ) !== -1 || e.message.indexOf(
+            "The encryption parameters are not applicable to this object"
+          ) !== -1
+            )
+        ) {
           resolve(undefined);
         } else {
           resolve(""); // Return an empty string on error

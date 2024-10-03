@@ -8,7 +8,7 @@
   "scripts": {
     "test": "jest",
     "clean-install": "rimraf package-lock.json && rimraf node_modules && npm install",
-    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-aws3-4.5.22.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common-aws3 && rimraf package",
+    "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-aws3-4.5.23.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common-aws3 && rimraf package",
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
   "dependencies": {
