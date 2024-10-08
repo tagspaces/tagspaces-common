@@ -17,6 +17,7 @@ const { Upload } = require("@aws-sdk/lib-storage");
 /*const { formatUrl } = require("@aws-sdk/util-format-url");
 const { createRequest } = require("@aws-sdk/util-create-request");*/
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+//import { NodeHttpHandler } from "@smithy/node-http-handler";
 const CryptoJS = require("crypto-js");
 // const pathJS = require("path"); DONT use it add for windows platform delimiter \
 const { v1: uuidv1 } = require("uuid");
@@ -63,6 +64,11 @@ function s3(location) {
         return locationsCache[location.uuid];
       }
     }
+    const commonConfig = {
+      //followRegionRedirects: true, // https://github.com/aws/aws-sdk-js-v3/blob/main/supplemental-docs/CLIENTS.md#s3
+      signatureVersion: "v4", // needed for signed url of encrypted file
+      //...(AppConfig.isNode && {requestHandler:NodeHttpHandler})
+    }
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
     if (advancedMode) {
@@ -71,6 +77,7 @@ function s3(location) {
           ? location.region
           : awsRegions.find((reg) => location.endpointURL.indexOf(reg) > -1);
       const config = {
+        ...commonConfig,
         endpoint: location.endpointURL,
         region: region || "auto",
         credentials: {
@@ -79,18 +86,17 @@ function s3(location) {
           sessionToken: location.sessionToken,
         },
         forcePathStyle: true, // needed for minio
-        signatureVersion: "v4", // needed for signed url of encrypted file
-        //logger: console, todo enable logging in dev build
+        //logger: console, //todo enable logging in dev build
       };
       locationsCache[location.uuid] = new S3Client(config);
     } else {
       const config = {
+        ...commonConfig,
         region: location.region,
         credentials: {
           accessKeyId: location.accessKeyId,
           secretAccessKey: location.secretAccessKey,
         },
-        signatureVersion: "v4",
       };
       locationsCache[location.uuid] = new S3Client(config);
     }
@@ -570,6 +576,28 @@ function isFileExist(param) {
     }
   });
 }
+
+function checkFileEncryptedPromise(param) {
+    const path = normalizeRootPath(param.path);
+    const bucketName = param.bucketName;
+    if (path && !path.endsWith("/") && param.encryptionKey) {
+      const params = {
+        Bucket: bucketName,
+        Key: path,
+        ...getEncryptionHeaders(param.encryptionKey),
+      };
+      const s3Client = s3(param.location);
+      const headCommand = new HeadObjectCommand(params);
+      return s3Client
+          .send(headCommand)
+          .then(() => true)
+          .catch(() => {
+            return false; //err && err.$metadata && err.$metadata.httpStatusCode === 400 ? !param.encryptionKey : false;
+          })
+    }
+  return Promise.resolve(false);
+}
+
 /**
  * @param param
  * @returns {Promise<{path: *, lmdt: S3.LastModified, isFile: boolean, size: S3.ContentLength, name: (*|string)} | boolean>} true - encryption error
@@ -1145,25 +1173,27 @@ function copyFilePromise(param, newFilePath) {
     return Promise.reject("Copying file failed, files have the same path");
   }
 
-  let encryptionParams;
-  if (param.encryptionKey) {
-    const headerParams = getEncryptionHeaders(param.encryptionKey);
-    const copySourcesParam = {
-      CopySourceSSECustomerAlgorithm: headerParams.SSECustomerAlgorithm,
-      CopySourceSSECustomerKey: headerParams.SSECustomerKey,
-      CopySourceSSECustomerKeyMD5: headerParams.SSECustomerKeyMD5,
+  return checkFileEncryptedPromise(param).then(encrypted => {
+    let encryptionParams;
+    if (param.encryptionKey && encrypted) {
+      const headerParams = getEncryptionHeaders(param.encryptionKey);
+      const copySourcesParam = {
+        CopySourceSSECustomerAlgorithm: headerParams.SSECustomerAlgorithm,
+        CopySourceSSECustomerKey: headerParams.SSECustomerKey,
+        CopySourceSSECustomerKeyMD5: headerParams.SSECustomerKeyMD5,
+      };
+      encryptionParams = { ...headerParams, ...copySourcesParam };
+    }
+    const copyParams = {
+      Bucket: param.bucketName,
+      CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
+      Key: nNewFilePath, //encodeS3URI
+      ...encryptionParams,
     };
-    encryptionParams = { ...headerParams, ...copySourcesParam };
-  }
-  const copyParams = {
-    Bucket: param.bucketName,
-    CopySource: encodeURI(param.bucketName + "/" + nFilePath), //encodeS3URI
-    Key: nNewFilePath, //encodeS3URI
-    ...encryptionParams,
-  };
-  const command = new CopyObjectCommand(copyParams);
+    const command = new CopyObjectCommand(copyParams);
 
-  return s3(param.location).send(command);
+    return s3(param.location).send(command);
+  });
 }
 
 /**

@@ -309,6 +309,7 @@ module.exports = {
   defaultFileColor,
   defaultFolderColor,
   isElectron,
+  isNode,
   isFirefox,
   isWin,
   isLinux,
