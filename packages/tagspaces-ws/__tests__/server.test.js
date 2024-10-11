@@ -110,6 +110,17 @@ describe("Web Server Endpoints", () => {
       expect(response.status).toBe(200);
     }
   });
+
+  /* test('POST /llama-session', async () => {
+    const response = await request
+        .post('/llama-session')
+        .set('Authorization', 'Bearer test-key') // Set your auth header if needed
+        .send({ path: "/Users/sytolk/Downloads/gemma-2-2b-it-Q4_K_M.gguf" });
+
+    expect(response.status).toBe(200);
+    // Add more assertions based on expected response
+  });*/
+
   /*
   test('POST /watch-folder', async () => {
       const response = await request

@@ -6,6 +6,10 @@ const { hideFolder } = require("./endpoints/hideFolderRequest");
 const { defaultRequest } = require("./endpoints/defaultRequest");
 const { handleIndexer } = require("./endpoints/indexerRequest");
 const { handleThumbGen } = require("./endpoints/thumbGenRequest");
+const {
+  startNewChatSession,
+  sendPromptMessage,
+} = require("./endpoints/llamaRequest");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
@@ -27,6 +31,16 @@ module.exports.createWS = function (port, key) {
         return;
       }
       handleIndexer(req, res);
+    } else if (reqUrl.pathname === "/llama-session") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
+      startNewChatSession(req, res);
+    } else if (reqUrl.pathname === "/llama-message") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
+      sendPromptMessage(req, res);
     } else if (reqUrl.pathname === "/watch-folder") {
       if (!verifyAuth(req.headers.authorization, res, key)) {
         return;

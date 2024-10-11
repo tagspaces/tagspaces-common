@@ -68,7 +68,7 @@ function s3(location) {
       //followRegionRedirects: true, // https://github.com/aws/aws-sdk-js-v3/blob/main/supplemental-docs/CLIENTS.md#s3
       signatureVersion: "v4", // needed for signed url of encrypted file
       //...(AppConfig.isNode && {requestHandler:NodeHttpHandler})
-    }
+    };
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
     if (advancedMode) {
@@ -578,23 +578,23 @@ function isFileExist(param) {
 }
 
 function checkFileEncryptedPromise(param) {
-    const path = normalizeRootPath(param.path);
-    const bucketName = param.bucketName;
-    if (path && !path.endsWith("/") && param.encryptionKey) {
-      const params = {
-        Bucket: bucketName,
-        Key: path,
-        ...getEncryptionHeaders(param.encryptionKey),
-      };
-      const s3Client = s3(param.location);
-      const headCommand = new HeadObjectCommand(params);
-      return s3Client
-          .send(headCommand)
-          .then(() => true)
-          .catch(() => {
-            return false; //err && err.$metadata && err.$metadata.httpStatusCode === 400 ? !param.encryptionKey : false;
-          })
-    }
+  const path = normalizeRootPath(param.path);
+  const bucketName = param.bucketName;
+  if (path && !path.endsWith("/") && param.encryptionKey) {
+    const params = {
+      Bucket: bucketName,
+      Key: path,
+      ...getEncryptionHeaders(param.encryptionKey),
+    };
+    const s3Client = s3(param.location);
+    const headCommand = new HeadObjectCommand(params);
+    return s3Client
+      .send(headCommand)
+      .then(() => true)
+      .catch(() => {
+        return false; //err && err.$metadata && err.$metadata.httpStatusCode === 400 ? !param.encryptionKey : false;
+      });
+  }
   return Promise.resolve(false);
 }
 
@@ -730,13 +730,13 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
       .catch((e) => {
         console.log(e);
         if (
-          e.message && (
-          e.message.indexOf(
+          e.message &&
+          (e.message.indexOf(
             "The object was stored using a form of Server Side Encryption"
-          ) !== -1 || e.message.indexOf(
-            "The encryption parameters are not applicable to this object"
-          ) !== -1
-            )
+          ) !== -1 ||
+            e.message.indexOf(
+              "The encryption parameters are not applicable to this object"
+            ) !== -1)
         ) {
           resolve(undefined);
         } else {
@@ -1173,7 +1173,7 @@ function copyFilePromise(param, newFilePath) {
     return Promise.reject("Copying file failed, files have the same path");
   }
 
-  return checkFileEncryptedPromise(param).then(encrypted => {
+  return checkFileEncryptedPromise(param).then((encrypted) => {
     let encryptionParams;
     if (param.encryptionKey && encrypted) {
       const headerParams = getEncryptionHeaders(param.encryptionKey);
