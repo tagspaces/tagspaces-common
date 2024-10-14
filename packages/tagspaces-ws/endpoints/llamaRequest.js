@@ -1,9 +1,4 @@
 const findFreePorts = require("find-free-ports");
-const {
-  getLlama,
-  LlamaChatSession,
-  resolveModelFile,
-} = require("node-llama-cpp");
 
 let session, wss;
 
@@ -24,6 +19,11 @@ function sendMessage(message) {
   }
 }
 async function startLlama(folderPath) {
+
+  const {
+    getLlama,
+    LlamaChatSession,
+    resolveModelFile } = await import("node-llama-cpp");
   const modelPath = await resolveModelFile(
     "{{modelUriOrFilename|escape}}",
     folderPath
