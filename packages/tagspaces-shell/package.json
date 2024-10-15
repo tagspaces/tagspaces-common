@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/shell",
   "description": "Shell script for creating thumbnails and search index for the TagSpaces applications",
-  "version": "4.5.25",
+  "version": "5.0.0",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -21,8 +21,8 @@
     "tscmd": "./bin/cli.js"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-metacleaner": "^4.5.25",
-    "@tagspaces/tagspaces-workers": "^4.5.25"
+    "@tagspaces/tagspaces-metacleaner": "^5.0.0",
+    "@tagspaces/tagspaces-workers": "^5.0.0"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
