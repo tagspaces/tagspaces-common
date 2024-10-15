@@ -1,21 +1,21 @@
 "use strict";
-const ws = require("http");
-const { verifyAuth } = require("./auth");
-const { watchFolder } = require("./endpoints/watchFolderRequest");
-const { hideFolder } = require("./endpoints/hideFolderRequest");
-const { defaultRequest } = require("./endpoints/defaultRequest");
-const { handleIndexer } = require("./endpoints/indexerRequest");
-const { handleThumbGen } = require("./endpoints/thumbGenRequest");
-const {
+import ws from "http";
+import { verifyAuth } from "./auth.js";
+import { watchFolder } from "./endpoints/watchFolderRequest.js";
+import { hideFolder } from "./endpoints/hideFolderRequest.js";
+import { defaultRequest } from "./endpoints/defaultRequest.js";
+import { handleIndexer } from "./endpoints/indexerRequest.js";
+import { handleThumbGen } from "./endpoints/thumbGenRequest.js";
+import {
   startNewChatSession,
   sendPromptMessage,
-} = require("./endpoints/llamaRequest");
+} from "./endpoints/llamaRequest.js";
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
  * curl -d '{"directoryPath":"/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/indexer
  */
-module.exports.createWS = function (port, key) {
+export function createWS(port, key) {
   const hostname = "127.0.0.1";
 
   const requestHandler = (req, res) => {
@@ -86,4 +86,4 @@ module.exports.createWS = function (port, key) {
     );
   });
   return server;
-};
+}

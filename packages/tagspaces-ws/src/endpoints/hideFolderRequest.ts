@@ -1,6 +1,6 @@
-const fsWin = require("fswin");
+import fsWin from "fswin";
 
-function hideFolder(req, res) {
+export function hideFolder(req, res) {
   if (req.method === "POST") {
     let body = "";
     req.on("data", function (data) {
@@ -38,6 +38,3 @@ function hideFolder(req, res) {
     });
   }
 }
-module.exports = {
-  hideFolder,
-};

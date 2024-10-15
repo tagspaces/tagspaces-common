@@ -1,0 +1,33 @@
+{
+  "extends": "@tsconfig/recommended",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitOverride": true,
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "strictNullChecks": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "outDir": "./build",
+    "rootDir": "./src",
+    "strict": true,
+    "sourceMap": true,
+    "composite": false,
+    "declaration": true
+  },
+  "include": ["src/**/*.ts"]
+  //"exclude": ["node_modules"]
+}

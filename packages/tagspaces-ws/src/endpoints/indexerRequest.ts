@@ -1,11 +1,11 @@
-const {
+import {
   listDirectoryPromise,
   loadTextFilePromise,
   saveTextFilePromise,
-} = require("@tagspaces/tagspaces-common-node/io-node");
-const { persistIndex, createIndex } = require("@tagspaces/tagspaces-indexer");
+} from "@tagspaces/tagspaces-common-node/io-node.js";
+import { persistIndex, createIndex } from "@tagspaces/tagspaces-indexer";
 
-function handleIndexer(req, res) {
+export function handleIndexer(req, res) {
   if (req.method === "POST") {
     let body = "";
     req.on("data", function (data) {
@@ -73,7 +73,3 @@ function handleError(res, err) {
     })
   );
 }
-
-module.exports = {
-  handleIndexer,
-};
