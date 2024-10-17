@@ -208,6 +208,23 @@ function getMetaFileLocationForFile(
   );
 }
 
+function getMetaContentFileLocation(
+  entryPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
+  const containingFolder = extractContainingDirectoryPath(
+    entryPath,
+    dirSeparator
+  );
+  const metaFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
+  return (
+    metaFolder +
+    dirSeparator +
+    extractFileName(entryPath, dirSeparator) +
+    AppConfig.contentFileExt
+  );
+}
+
 function getFileLocationFromMetaFile(
   entryPath,
   dirSeparator // = AppConfig.dirSeparator
@@ -809,6 +826,7 @@ module.exports = {
   getBackupFileDir,
   getFileLocationFromMetaFile,
   getMetaFileLocationForFile,
+  getMetaContentFileLocation,
   getMetaFileLocationForDir,
   extractFileName,
   encodeFileName,
