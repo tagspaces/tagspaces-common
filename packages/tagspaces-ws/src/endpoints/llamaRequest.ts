@@ -24,21 +24,24 @@ async function startLlama(folderPath) {
     "{{modelUriOrFilename|escape}}",
     folderPath
   );*/
+  try {
+    const nodeLame = await import("node-llama-cpp");
+    const { getLlama, LlamaChatSession, resolveModelFile } = nodeLame;
+    sendMessage("Loading model: " + folderPath);
+    const llama = await getLlama();
+    const model = await llama.loadModel({ modelPath: folderPath });
 
-  const nodeLame = await import("node-llama-cpp");
-  const { getLlama, LlamaChatSession, resolveModelFile } = nodeLame;
-  sendMessage("Loading model: " + folderPath);
-  const llama = await getLlama();
-  const model = await llama.loadModel({ modelPath: folderPath });
+    sendMessage("\nCreating context...");
+    const context = await model.createContext();
 
-  sendMessage("Creating context...");
-  const context = await model.createContext();
+    session = new LlamaChatSession({
+      contextSequence: context.getSequence(),
+    });
 
-  session = new LlamaChatSession({
-    contextSequence: context.getSequence(),
-  });
-
-  sendMessage("Chat Session ready! Hi there, how are you?");
+    sendMessage("\nChat Session ready! Hi there, how are you?");
+  } catch (e: any) {
+    sendMessage("\nError creating chat Session! " + (e.message ? e.message : ''));
+  }
 }
 
 export function sendPromptMessage(req, res) {
