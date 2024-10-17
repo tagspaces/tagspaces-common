@@ -1,5 +1,6 @@
-const chokidar = require("chokidar");
-const findFreePorts = require("find-free-ports");
+import chokidar from "chokidar";
+import WebSocket from "ws";
+import findFreePorts from "find-free-ports";
 
 let watcher, wss;
 
@@ -37,7 +38,7 @@ function startWatching(folderPath, depth) {
   });
 }
 
-function watchFolder(req, res) {
+export function watchFolder(req, res) {
   if (req.method === "POST") {
     stopWatching();
     // console.log('POST');
@@ -52,7 +53,7 @@ function watchFolder(req, res) {
         const data = JSON.parse(body);
 
         findFreePorts(1, { startPort: 8889 }).then(([freePort]) => {
-          const WebSocket = require("ws");
+          // const WebSocket = require("ws");
           wss = new WebSocket.Server({
             port: freePort,
             perMessageDeflate: {
@@ -91,6 +92,3 @@ function watchFolder(req, res) {
     });
   }
 }
-module.exports = {
-  watchFolder,
-};

@@ -1,8 +1,6 @@
-const {
-  processAllThumbnails,
-} = require("@tagspaces/tagspaces-workers/tsnodethumbgen");
+import { processAllThumbnails } from "@tagspaces/tagspaces-workers/tsnodethumbgen.js";
 
-function handleThumbGen(req, res) {
+export function handleThumbGen(req, res) {
   const baseURL = "http://" + req.headers.host + "/";
   const reqUrl = new URL(req.url, baseURL);
 
@@ -28,7 +26,7 @@ function handleThumbGen(req, res) {
           arrayPaths = JSON.parse(body);
         }
 
-        const thumbs = [];
+        const thumbs: any[] = [];
         let statusCode = 200;
         if (arrayPaths && arrayPaths.length > 0) {
           for (const path of arrayPaths) {
@@ -58,7 +56,3 @@ function handleThumbGen(req, res) {
     });
   }
 }
-
-module.exports = {
-  handleThumbGen,
-};

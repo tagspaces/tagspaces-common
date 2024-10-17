@@ -1,4 +1,4 @@
-function defaultRequest(req, res) {
+export function defaultRequest(req, res) {
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/html");
   res.end(
@@ -50,6 +50,3 @@ function defaultRequest(req, res) {
       "</html>"
   );
 }
-module.exports = {
-  defaultRequest,
-};

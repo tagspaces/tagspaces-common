@@ -1,10 +1,10 @@
-const fs = require("fs");
-const pathLib = require("path");
-const jwt = require("jsonwebtoken");
-const supertest = require("supertest");
-const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const fswin = require("fswin");
-const { createWS } = require("../ws");
+import fs from "fs";
+import pathLib from "path";
+import jwt from "jsonwebtoken";
+import supertest from "supertest";
+import AppConfig from "@tagspaces/tagspaces-common/AppConfig";
+import fswin from "fswin";
+import { createWS } from "../build/ws.js";
 
 describe("Web Server Endpoints", () => {
   let server;
@@ -111,15 +111,15 @@ describe("Web Server Endpoints", () => {
     }
   });
 
-  /* test('POST /llama-session', async () => {
+  test("POST /llama-session", async () => {
     const response = await request
-        .post('/llama-session')
-        .set('Authorization', 'Bearer test-key') // Set your auth header if needed
-        .send({ path: "/Users/sytolk/Downloads/gemma-2-2b-it-Q4_K_M.gguf" });
+      .post("/llama-session")
+      .set("Authorization", "Bearer " + token) // Set your auth header if needed
+      .send({ path: "/Users/sytolk/Downloads/gemma-2-2b-it-Q4_K_M.gguf" });
 
     expect(response.status).toBe(200);
     // Add more assertions based on expected response
-  });*/
+  });
 
   /*
   test('POST /watch-folder', async () => {
