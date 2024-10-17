@@ -15,7 +15,7 @@
     "lerna-build": "npx lerna run build",
     "lerna-link": "lerna link --force-local",
     "update-dynamic-libs-version": "echo 'Run this script before and after lerna-version' && node scripts/updateLocalVersions.js",
-    "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer && npm run test-webdav && npm run test-node && npm run test-common && npm run test-shell",
+    "test": "npm run test-aws && npm run test-platform-io-node && npm run test-indexer && npm run test-webdav && npm run test-node && npm run test-common && npm run test-ws && npm run test-shell",
     "test-aws": "lerna bootstrap --no-ci && jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/platforms/unit/indexer.test.js",
     "test-webdav": "npx cross-env PD_PLATFORM=web lerna bootstrap --no-ci && jest --config=jest.config.webdav.unit.js ./__tests__/common-webdav/unit/io-webdav.test.js",

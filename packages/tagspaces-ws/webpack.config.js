@@ -67,7 +67,6 @@ module.exports = {
 
   externals: {
     sharp: "commonjs sharp",
-    "node-llama-cpp": "commonjs node-llama-cpp",
     fswin: "commonjs fswin", // Exclude fswin from being bundled
     bufferutil: "bufferutil",
     "utf-8-validate": "utf-8-validate",
