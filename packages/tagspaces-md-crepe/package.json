@@ -1,0 +1,64 @@
+{
+  "name": "@tagspaces/tagspaces-md-crepe",
+  "description": "MD editor used by the TagSpaces application and extensions based on Milkdown crepe editor",
+  "version": "4.5.18",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/",
+    "esm/",
+    "src/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "clean": "rm -rf dist",
+    "oxlint-check": "npx --yes oxlint@latest",
+    "typescript-clean": "tsc --build --clean",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-crepe-4.3.9.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md-crepe && rimraf package",
+    "pkg-publish": "npm run build && npm publish --access public"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@milkdown/crepe": "7.5.3",
+    "@type-config/strict": "^1.2.1",
+    "tslib": "^2.4.1",
+    "typescript": "^4.9.3",
+    "vite": "^5.2.6"
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.25.4",
+    "vite-plugin-dts": "^4.1.0"
+  },
+  "peerDependencies": {
+    "@emotion/react": "*",
+    "@emotion/styled": "*",
+    "@mui/icons-material": "*",
+    "@mui/material": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
