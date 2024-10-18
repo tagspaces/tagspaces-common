@@ -34,9 +34,19 @@ describe("Web Server Endpoints", () => {
     server.close(done);
   });
 
+  test("POST /extract-pdf", async () => {
+    const pdfFilePath = pathLib.join(testDir, 'sample.pdf');
+    const response = await request
+        .post("/extract-pdf")
+        .set("Authorization", "Bearer " + token) // Set your auth header if needed
+        .send({path: pdfFilePath});
+
+    expect(response.status).toBe(200);
+  }, 10000);
+
   test("POST /thumb-gen", async () => {
     const response = await request
-      .post("/thumb-gen")
+      .post("/thumb-gen?pdf=false")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
       .send([testDir]);
 

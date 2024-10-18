@@ -6,6 +6,7 @@ const { hideFolder } = require("./endpoints/hideFolderRequest");
 const { defaultRequest } = require("./endpoints/defaultRequest");
 const { handleIndexer } = require("./endpoints/indexerRequest");
 const { handleThumbGen } = require("./endpoints/thumbGenRequest");
+const { extractPdf } = require("./endpoints/extractPdfContentRequest");
 
 /**
  * curl -d '["/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.png","/Users/sytolk/IdeaProjects/tagspaces/tests/testdata-tmp/file-structure/supported-filestypes/sample.jpg"]' -H "Content-Type: application/json" -X POST http://127.0.0.1:2000/thumb-gen
@@ -22,6 +23,11 @@ module.exports.createWS = function (port, key) {
         return;
       }
       handleThumbGen(req, res);
+    } else if (reqUrl.pathname === "/extract-pdf") {
+      if (!verifyAuth(req.headers.authorization, res, key)) {
+        return;
+      }
+      extractPdf(req, res);
     } else if (reqUrl.pathname === "/indexer") {
       if (!verifyAuth(req.headers.authorization, res, key)) {
         return;

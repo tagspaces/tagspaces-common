@@ -82,7 +82,16 @@ module.exports.processAllThumbnails = async function (
               console.error("Generating thumbnail failed: " + filePath, error);
             });
         } else if (fileType === "pdf" && generatePdf) {
-          // TODO pdf thumb is generated for MACOS only
+          console.info(filePath+": PDF thumbs generation not supported from WS!");
+          return Promise.resolve(true);
+          /*const pdf = fs.readFileSync(filePath);
+          return generatePDFThumbnail(pdf, 400).then((buffer) => {
+            if (buffer) {
+              upload(filePath, buffer);
+              return thumbGenResults(true);
+            }
+            return undefined;
+          });*/
           /* const pdfFile = fs.readFileSync(filePath);
           return tsThumb
             .generatePDFThumbnail(pdfFile, filePath, "application/pdf", upload)

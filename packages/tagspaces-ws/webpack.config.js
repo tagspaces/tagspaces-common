@@ -1,5 +1,6 @@
 const { join, resolve } = require("path");
-var webpack = require("webpack");
+const webpack = require("webpack");
+const CleanPlugin = require("clean-webpack-plugin");
 
 // package.json contains the version number of the dependencies
 // that we want to make external.  Parsing the package.json
@@ -55,6 +56,7 @@ module.exports = {
   // Tells the HTML webpack plug-in to use a template and emit dist/index.html
   // plugins: [],
   plugins: [
+    new CleanPlugin.CleanWebpackPlugin(),
     new webpack.IgnorePlugin({
       resourceRegExp: /original-fs/,
       contextRegExp: /adm-zip/,
@@ -64,14 +66,13 @@ module.exports = {
     }),
   ],
   target: "node",
-
   externals: {
-    sharp: "commonjs sharp",
-    fswin: "commonjs fswin", // Exclude fswin from being bundled
-    bufferutil: "bufferutil",
-    "utf-8-validate": "utf-8-validate",
+    sharp: "commonjs sharp",           // Manually exclude 'sharp'
+    fswin: "commonjs fswin",           // Manually exclude 'fswin'
+    bufferutil: "bufferutil",          // Manually exclude 'bufferutil'
+    "utf-8-validate": "utf-8-validate" // Manually exclude 'utf-8-validate'
   },
-  // Tells webpack what file extesions it should look at.
+  // Tells webpack what file extensions it should look at.
   resolve: {
     extensions: [".js", ".json"],
   },

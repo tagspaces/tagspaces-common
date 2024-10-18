@@ -1,6 +1,6 @@
 {
   "name": "@tagspaces/tagspaces-thumbgen-pdf",
-  "description": "TagSpaces pdf thumbnails generation module",
+  "description": "TagSpaces pdf thumbnails generation module @deprecated",
   "version": "4.0.2",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
