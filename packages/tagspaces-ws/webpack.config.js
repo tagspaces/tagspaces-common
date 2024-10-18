@@ -67,10 +67,10 @@ module.exports = {
   ],
   target: "node",
   externals: {
-    sharp: "commonjs sharp",           // Manually exclude 'sharp'
-    fswin: "commonjs fswin",           // Manually exclude 'fswin'
-    bufferutil: "bufferutil",          // Manually exclude 'bufferutil'
-    "utf-8-validate": "utf-8-validate" // Manually exclude 'utf-8-validate'
+    sharp: "commonjs sharp", // Manually exclude 'sharp'
+    fswin: "commonjs fswin", // Manually exclude 'fswin'
+    bufferutil: "bufferutil", // Manually exclude 'bufferutil'
+    "utf-8-validate": "utf-8-validate", // Manually exclude 'utf-8-validate'
   },
   // Tells webpack what file extensions it should look at.
   resolve: {

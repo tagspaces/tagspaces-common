@@ -9,7 +9,7 @@ const {
   saveBinaryFilePromise,
   createDirectoryPromise,
   listDirectoryPromise,
-  loadTextFilePromise,
+  getFileContentPromise,
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-aws3/io-objectstore");
 
@@ -63,7 +63,7 @@ test("createIndex", async () => {
   const index = await createIndex(
     param,
     listDirectoryPromise,
-    loadTextFilePromise,
+    getFileContentPromise,
     ["extractThumbPath"], //, "extractThumbURL"],
     []
   );
@@ -76,7 +76,7 @@ test("createIndex", async () => {
   const indexIgnore = await createIndex(
     param,
     listDirectoryPromise,
-    loadTextFilePromise,
+    getFileContentPromise,
     ["extractThumbPath"], //, "extractThumbURL"],
     ["image.png"]
   );

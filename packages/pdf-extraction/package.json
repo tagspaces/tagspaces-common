@@ -1,0 +1,19 @@
+{
+  "name": "@tagspaces/tagspaces-pdf-extraction",
+  "description": "TagSpaces pdf extraction module",
+  "version": "4.0.2",
+  "main": "./src/index.js",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "files": [
+    "src/",
+    "package.json",
+    "LICENSE"
+  ],
+  "scripts": {
+    "pkg-publish": "npm publish --access public"
+  },
+  "dependencies": {
+    "pdf2json": "^3.1.4"
+  }
+}

@@ -82,7 +82,9 @@ module.exports.processAllThumbnails = async function (
               console.error("Generating thumbnail failed: " + filePath, error);
             });
         } else if (fileType === "pdf" && generatePdf) {
-          console.info(filePath+": PDF thumbs generation not supported from WS!");
+          console.info(
+            filePath + ": PDF thumbs generation not supported from WS!"
+          );
           return Promise.resolve(true);
           /*const pdf = fs.readFileSync(filePath);
           return generatePDFThumbnail(pdf, 400).then((buffer) => {

@@ -11,6 +11,7 @@
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.5.26"
+    "@tagspaces/tagspaces-common": "^4.5.26",
+    "@tagspaces/tagspaces-pdf-extraction": "^4.0.2"
   }
 }

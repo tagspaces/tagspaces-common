@@ -35,11 +35,11 @@ describe("Web Server Endpoints", () => {
   });
 
   test("POST /extract-pdf", async () => {
-    const pdfFilePath = pathLib.join(testDir, 'sample.pdf');
+    const pdfFilePath = pathLib.join(testDir, "sample.pdf");
     const response = await request
-        .post("/extract-pdf")
-        .set("Authorization", "Bearer " + token) // Set your auth header if needed
-        .send({path: pdfFilePath});
+      .post("/extract-pdf")
+      .set("Authorization", "Bearer " + token) // Set your auth header if needed
+      .send({ path: pdfFilePath });
 
     expect(response.status).toBe(200);
   }, 10000);

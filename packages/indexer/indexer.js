@@ -14,6 +14,7 @@ const {
   enhanceEntry,
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const { extractPDFcontent } = require("@tagspaces/tagspaces-pdf-extraction");
 
 /*function cleanPath(filePath, rootPathLength) {
   const cleanPath = filePath
@@ -32,14 +33,14 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  * @param listDirectoryPromise function
  * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
  * @param ignorePatterns: Array<string>
- * @param loadTextFilePromise function
+ * @param getFileContentPromise function
  * @param isWalking
  * @returns {Promise<*>}
  */
 function createIndex(
   param,
   listDirectoryPromise,
-  loadTextFilePromise,
+  getFileContentPromise,
   mode = ["extractThumbPath"],
   ignorePatterns = [],
   isWalking = () => true
@@ -78,18 +79,20 @@ function createIndex(
             AppConfig.dirSeparator
           ),
         },
-        loadTextFilePromise
+        getFileContentPromise
       );
-      /*const thumb =
-        fileEntry.meta && fileEntry.meta.thumbPath
-          ? cleanRootPath(
-              fileEntry.meta.thumbPath,
-              path,
-              AppConfig.dirSeparator
-            )
-          : undefined;*/
+
+      let textContent;
+      if (
+        fileEntry.path.endsWith("pdf") &&
+        mode.includes("extractTextContent")
+      ) {
+        const buffer = await getFileContentPromise({ path }, "arraybuffer");
+        textContent = await extractPDFcontent(buffer);
+      }
       const entry = {
         ...fileEntry,
+        ...textContent, // Spreads textContent only if it exists
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
         meta: meta,
         //meta: { ...(meta && meta), ...(thumb && { thumbPath: thumb }) },
@@ -104,7 +107,7 @@ function createIndex(
             ...param,
             path: getMetaFileLocationForDir(directoryEntry.path),
           },
-          loadTextFilePromise
+          getFileContentPromise
         );
         const entry = {
           name: directoryEntry.name,
@@ -144,14 +147,14 @@ function createIndex(
 
 /**
  * @param param = {path: , bucketName: }
- * @param loadTextFilePromise  function
+ * @param getFileContentPromise  function
  * @returns {Promise<*>}
  */
-async function getEntryMeta(param, loadTextFilePromise) {
+async function getEntryMeta(param, getFileContentPromise) {
   //metaFilePath) {
   // const metaFileProps = await getPropertiesPromise(metaFilePath);
   // if (metaFileProps.isFile) {
-  const meta = await loadJSONFile(param, loadTextFilePromise); // { path: metaFilePath });
+  const meta = await loadJSONFile(param, getFileContentPromise); // { path: metaFilePath });
   //}
   return meta;
 }
@@ -217,13 +220,13 @@ function hasIndex(param, getPropertiesPromise) {
 /**
  * @param param = {directoryPath:string, locationID:string}
  * @param dirSeparator: string
- * @param loadTextFilePromise function
+ * @param getFileContentPromise function
  * @returns {Promise<Array<Object>>}
  */
 function loadIndex(
   param,
   dirSeparator = AppConfig.dirSeparator,
-  loadTextFilePromise
+  getFileContentPromise
 ) {
   let directoryPath, locationID;
   if (typeof param === "object" && param !== null) {
@@ -233,7 +236,10 @@ function loadIndex(
     directoryPath = param;
   }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  return loadJSONFile({ ...param, path: folderIndexPath }, loadTextFilePromise)
+  return loadJSONFile(
+    { ...param, path: folderIndexPath },
+    getFileContentPromise
+  )
     .then((directoryIndex) => {
       return enhanceDirectoryIndex(
         param,
@@ -328,8 +334,8 @@ function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
 }
 
 function addToIndex(param, size, LastModified, thumbPath) {
-  if (!param.loadTextFilePromise) {
-    console.error("addToIndex param.loadTextFilePromise is not set!");
+  if (!param.getFileContentPromise) {
+    console.error("addToIndex param.getFileContentPromise is not set!");
     return Promise.resolve(false);
   }
   if (!param.saveTextFilePromise) {
@@ -355,10 +361,13 @@ function addToIndex(param, size, LastModified, thumbPath) {
       param.bucketName
   );
   return param
-    .loadTextFilePromise({
-      path: metaFilePath,
-      bucketName: param.bucketName,
-    })
+    .getFileContentPromise(
+      {
+        path: metaFilePath,
+        bucketName: param.bucketName,
+      },
+      "text"
+    )
     .then((metaFileContent) => {
       console.info("addToIndex metaFileContent:" + metaFileContent);
       let tsi = [];
@@ -394,8 +403,8 @@ function addToIndex(param, size, LastModified, thumbPath) {
 }
 
 function removeFromIndex(param) {
-  if (!param.loadTextFilePromise) {
-    console.error("removeFromIndex param.loadTextFilePromise is not set!");
+  if (!param.getFileContentPromise) {
+    console.error("removeFromIndex param.getFileContentPromise is not set!");
     return Promise.resolve(false);
   }
   if (!param.saveTextFilePromise) {
@@ -412,10 +421,13 @@ function removeFromIndex(param) {
   const dirPath = extractContainingDirectoryPath(param.path, "/");
   const metaFilePath = getMetaIndexFilePath(dirPath);
   return param
-    .loadTextFilePromise({
-      ...param,
-      path: metaFilePath,
-    })
+    .getFileContentPromise(
+      {
+        ...param,
+        path: metaFilePath,
+      },
+      "text"
+    )
     .then((metaFileContent) => {
       if (metaFileContent) {
         let tsi = [];
@@ -459,14 +471,14 @@ function getMetaIndexFilePath(
 /**
  * @returns {Promise<*>}
  * @param param
- * @param loadTextFilePromise
+ * @param getFileContentPromise
  */
-function loadJSONFile(param, loadTextFilePromise) {
-  if (!loadTextFilePromise) {
-    console.error("loadJSONFile loadTextFilePromise is not set!");
+function loadJSONFile(param, getFileContentPromise) {
+  if (!getFileContentPromise) {
+    console.error("loadJSONFile getFileContentPromise is not set!");
     return Promise.resolve(false);
   }
-  return loadTextFilePromise(param)
+  return getFileContentPromise(param, "text")
     .then((jsonContent) => loadJSONString(jsonContent))
     .catch((e) => {
       console.log("File not exist: " + param.path, e);

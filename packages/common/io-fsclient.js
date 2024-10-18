@@ -662,7 +662,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   /**
    * @param param
-   * @param type = text | arraybuffer (for text use loadTextFilePromise) text return type is not supported for node
+   * @param type = text | arraybuffer (for text you can use loadTextFilePromise with preview option too)
    * @returns {Promise<ArrayBuffer>}
    */
   function getFileContentPromise(param, type = "arraybuffer") {
@@ -672,13 +672,23 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       filePath = pathLib.resolve(filePath);
     }*/
     return new Promise((resolve, reject) => {
-      fs.readFile(filePath, (error, content) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(content);
-        }
-      });
+      if (type === "text") {
+        fs.readFile(filePath, "utf8", (error, content) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(content);
+          }
+        });
+      } else {
+        fs.readFile(filePath, (error, content) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(content);
+          }
+        });
+      }
     });
   }
 

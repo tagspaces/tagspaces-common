@@ -50,12 +50,12 @@ module.exports = function tscmd() {
     } = require("@tagspaces/tagspaces-indexer");
     const {
       listDirectoryPromise,
-      loadTextFilePromise,
+      getFileContentPromise,
       saveTextFilePromise,
     } = require("@tagspaces/tagspaces-common-node/io-node");
 
     for (const dir of argv._) {
-      createIndex(dir, listDirectoryPromise, loadTextFilePromise).then(
+      createIndex(dir, listDirectoryPromise, getFileContentPromise).then(
         (directoryIndex) => {
           persistIndex({ path: dir, saveTextFilePromise }, directoryIndex).then(
             (success) => {

@@ -17,22 +17,22 @@ function extractPDFcontent(arrayBuffer) {
         console.error("Error pdfParser:", errData.parserError);
         reject(errData);
       });
-      let extractedText = '';
+      let extractedText = "";
       // Handle successful parsing
       pdfParser.on("pdfParser_dataReady", (pdfDocument) => {
         //extractedText = pdfParser.getRawTextContent();
         for (let i = 0; i <= pdfDocument.Pages.length; i++) {
           const page = pdfDocument.Pages[i];
-          if(page) {
+          if (page) {
             page.Texts.forEach((textItem) => {
               textItem.R.forEach((textRun) => {
                 extractedText += decodeURIComponent(textRun.T) + " "; // Decode the text
               });
             });
-            extractedText += '\n';
+            extractedText += "\n";
           }
         }
-        resolve(extractedText + '\r\n');
+        resolve(extractedText + "\r\n");
       });
     } catch (error) {
       console.error("Error:", error);

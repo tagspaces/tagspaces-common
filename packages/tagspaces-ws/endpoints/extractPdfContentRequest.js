@@ -1,7 +1,5 @@
 const fs = require("fs-extra");
-const {
-  extractPDFcontent,
-} = require("@tagspaces/tagspaces-workers/pdfTextExtractor");
+const { extractPDFcontent } = require("@tagspaces/tagspaces-pdf-extraction");
 
 function extractPdf(req, res) {
   if (req.method === "POST") {
@@ -21,7 +19,7 @@ function extractPdf(req, res) {
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-store, must-revalidate");
         // res.write(JSON.stringify(thumbs));
-        res.end(JSON.stringify({content}));
+        res.end(JSON.stringify({ content }));
       } catch (e) {
         console.log(e);
         res.statusCode = 400;

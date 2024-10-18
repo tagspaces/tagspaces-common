@@ -1,6 +1,6 @@
 const {
   listDirectoryPromise,
-  loadTextFilePromise,
+  getFileContentPromise,
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
 const { persistIndex, createIndex } = require("@tagspaces/tagspaces-indexer");
@@ -29,7 +29,7 @@ function handleIndexer(req, res) {
         return createIndex(
           directoryPath,
           listDirectoryPromise,
-          loadTextFilePromise,
+          getFileContentPromise,
           mode,
           ignorePatterns ? ignorePatterns : []
         )
