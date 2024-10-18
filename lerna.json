@@ -3,5 +3,10 @@
   "useNx": false,
   "useWorkspaces": true,
   "version": "4.5.27",
-  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "command": {
+    "publish": {
+      "ignoreChanges": ["**/md-sample/**"]
+    }
+  }
 }
