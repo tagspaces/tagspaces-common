@@ -29,7 +29,7 @@ const cleanMeta = (
   options = { considerMetaJSON: true, considerThumb: true }
 ) => {
   return walkDirectory(
-    dirPath,
+    { path: dirPath },
     listDirectoryPromise,
     {
       recursive: true,

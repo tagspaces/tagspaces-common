@@ -14,7 +14,6 @@ const {
   enhanceEntry,
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const { extractPDFcontent } = require("@tagspaces/tagspaces-pdf-extraction");
 
 /*function cleanPath(filePath, rootPathLength) {
   const cleanPath = filePath
@@ -29,41 +28,44 @@ const { extractPDFcontent } = require("@tagspaces/tagspaces-pdf-extraction");
 }*/
 
 /**
- * @param param
- * @param listDirectoryPromise function
+ * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
  * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
  * @param ignorePatterns: Array<string>
- * @param getFileContentPromise function
  * @param isWalking
  * @returns {Promise<*>}
  */
 function createIndex(
   param,
-  listDirectoryPromise,
-  getFileContentPromise,
   mode = ["extractThumbPath"],
   ignorePatterns = [],
   isWalking = () => true
 ) {
-  let path;
-  if (typeof param === "object" && param !== null) {
-    path = param.path;
-  } else {
-    path = param;
+  const {
+    listDirectoryPromise,
+    getFileContentPromise,
+    extractPDFcontent,
+    ...restParam
+  } = param;
+  if (!listDirectoryPromise) {
+    return Promise.reject(
+      new Error("Error creating index: no listDirectoryPromise in params!")
+    );
   }
+  const path = restParam.path;
   // console.log("createDirectoryIndex started:" + path);
   // console.time("createDirectoryIndex");
   const directoryIndex = [];
   let counter = 0;
 
   return walkDirectory(
-    param,
+    restParam,
     listDirectoryPromise,
     {
       recursive: true,
       skipMetaFolder: true,
       skipDotHiddenFolder: true,
       mode,
+      ...(extractPDFcontent && { extractText: extractPDFcontent }),
     },
     async (fileEntry) => {
       counter += 1;
@@ -71,44 +73,40 @@ function createIndex(
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      const meta = await getEntryMeta(
-        {
-          ...param,
-          path: getMetaFileLocationForFile(
-            fileEntry.path,
-            AppConfig.dirSeparator
-          ),
-        },
-        getFileContentPromise
-      );
-
-      let textContent;
-      if (
-        fileEntry.path.endsWith("pdf") &&
-        mode.includes("extractTextContent")
-      ) {
-        const buffer = await getFileContentPromise({ path }, "arraybuffer");
-        textContent = await extractPDFcontent(buffer);
+      let textContent, meta;
+      if (getFileContentPromise) {
+        meta = await getEntryMeta(
+          {
+            ...restParam,
+            path: getMetaFileLocationForFile(
+              fileEntry.path,
+              AppConfig.dirSeparator
+            ),
+          },
+          getFileContentPromise
+        );
       }
       const entry = {
         ...fileEntry,
-        ...textContent, // Spreads textContent only if it exists
+        ...(textContent && { textContent }), // Spreads textContent only if it exists
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
-        meta: meta,
-        //meta: { ...(meta && meta), ...(thumb && { thumbPath: thumb }) },
+        ...(meta && meta),
       };
       directoryIndex.push(enhanceEntry(entry));
     },
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        const meta = await getEntryMeta(
-          {
-            ...param,
-            path: getMetaFileLocationForDir(directoryEntry.path),
-          },
-          getFileContentPromise
-        );
+        let meta;
+        if (getFileContentPromise) {
+          meta = await getEntryMeta(
+            {
+              ...restParam,
+              path: getMetaFileLocationForDir(directoryEntry.path),
+            },
+            getFileContentPromise
+          );
+        }
         const entry = {
           name: directoryEntry.name,
           isFile: directoryEntry.isFile,
@@ -118,7 +116,7 @@ function createIndex(
             path,
             AppConfig.dirSeparator
           ),
-          meta: meta,
+          ...(meta && meta),
         };
         directoryIndex.push(enhanceEntry(entry));
       }
@@ -142,6 +140,7 @@ function createIndex(
       // window.walkCanceled = false;
       // console.timeEnd("createDirectoryIndex");
       console.warn("Error creating index: " + err);
+      return directoryIndex;
     });
 }
 

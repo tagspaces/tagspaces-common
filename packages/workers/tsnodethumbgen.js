@@ -22,7 +22,8 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 module.exports.processAllThumbnails = async function (
   entryPath,
-  generatePdf = false
+  generatePdf = false,
+  extractPDFcontent = undefined
 ) {
   if (
     entryPath.endsWith(AppConfig.dirSeparator + AppConfig.metaFolder) ||
@@ -117,13 +118,14 @@ module.exports.processAllThumbnails = async function (
   }
   if (isDir) {
     return walkDirectory(
-      entryPath,
+      { path: entryPath },
       listDirectoryPromise,
       {
         recursive: true,
         skipMetaFolder: true,
         skipDotHiddenFolder: true,
-        extractText: false,
+        mode: extractPDFcontent ? ["extractTextContent"] : [],
+        ...(extractPDFcontent && { extractText: extractPDFcontent }),
       },
       (fileEntry) => generateThumbnail(fileEntry.path),
 

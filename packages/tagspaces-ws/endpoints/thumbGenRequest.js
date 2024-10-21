@@ -10,6 +10,10 @@ function handleThumbGen(req, res) {
     ? reqUrl.searchParams.get("pdf")
     : false;
 
+  const extractPdfContent = reqUrl.searchParams.has("pdfContent")
+    ? reqUrl.searchParams.get("pdfContent")
+    : false;
+
   if (req.method === "POST") {
     // console.log('POST');
     let body = "";
@@ -27,12 +31,21 @@ function handleThumbGen(req, res) {
         } else {
           arrayPaths = JSON.parse(body);
         }
+        let extractPDFfunction;
+        if (extractPdfContent) {
+          extractPDFfunction =
+            require("@tagspaces/tagspaces-pdf-extraction").extractPDFcontent;
+        }
 
         const thumbs = [];
         let statusCode = 200;
         if (arrayPaths && arrayPaths.length > 0) {
           for (const path of arrayPaths) {
-            const success = await processAllThumbnails(path, generatePdf);
+            const success = await processAllThumbnails(
+              path,
+              generatePdf,
+              extractPDFfunction
+            );
             if (success) {
               // console.log("Thumbnails generated");
               if (typeof success === "object") {

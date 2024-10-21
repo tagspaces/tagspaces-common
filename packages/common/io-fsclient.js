@@ -389,7 +389,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   /**
-   * @param param
+   * @param param      param.extractPDFcontent need to exist
    * @param mode = ['extractTextContent', 'extractThumbPath']
    * @param ignorePatterns
    * @returns {Promise<FileSystemEntry[]>}
@@ -530,6 +530,34 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       fileName,
                       fileContent
                     );
+                  } else if (fileName.toLowerCase().endsWith(".pdf")) {
+                    const pdfContentPath = tsPaths.getMetaContentFileLocation(
+                      eentry.path
+                    );
+                    const pdfStats = await stat({ path: pdfContentPath });
+
+                    if (
+                      pdfStats &&
+                      pdfStats.mtime.getTime &&
+                      pdfStats.mtime.getTime() > eentry.lmdt
+                    ) {
+                      eentry.textContent = await getFileContentPromise(
+                        { path: pdfContentPath },
+                        "text"
+                      );
+                    } else if (param.extractPDFcontent) {
+                      const buffer = await getFileContentPromise(
+                        { path: eentry.path },
+                        "arraybuffer"
+                      );
+                      const textContent = await param.extractPDFcontent(buffer);
+                      eentry.textContent = textContent;
+                      await saveTextFilePromise(
+                        { path: pdfContentPath },
+                        textContent,
+                        true
+                      );
+                    }
                   }
                 }
 
@@ -538,9 +566,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     return;
                   }*/
               } catch (e) {
-                console.warn(
-                  "Can not load properties for: " + entryPath + " " + e
-                );
+                console.error("Can not load properties for: " + entryPath, e);
               }
               enhancedEntries.push(eentry);
             }

@@ -59,11 +59,11 @@ test("createIndex", async () => {
     path: "",
     bucketName: "bucket1",
     location,
+    listDirectoryPromise,
+    getFileContentPromise,
   };
   const index = await createIndex(
     param,
-    listDirectoryPromise,
-    getFileContentPromise,
     ["extractThumbPath"], //, "extractThumbURL"],
     []
   );
@@ -75,8 +75,6 @@ test("createIndex", async () => {
 
   const indexIgnore = await createIndex(
     param,
-    listDirectoryPromise,
-    getFileContentPromise,
     ["extractThumbPath"], //, "extractThumbURL"],
     ["image.png"]
   );

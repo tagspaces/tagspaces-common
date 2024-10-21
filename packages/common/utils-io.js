@@ -22,12 +22,7 @@ function walkDirectory(
   ignorePatterns = [],
   isWalking = () => true
 ) {
-  let path;
-  if (typeof param === "object" && param !== null) {
-    path = param.path;
-  } else {
-    path = param;
-  }
+  const path = param.path;
   if (ignorePatterns.length > 0) {
     const isMatch = picomatch(ignorePatterns);
     if (isMatch(path)) {
@@ -41,10 +36,16 @@ function walkDirectory(
     skipDotHiddenFiles: false,
     loadMetaData: true,
     extractText: false,
-    mode: [],
+    mode: options.extractText ? ["extractTextContent"] : [],
     ...options,
   };
-  return listDirectoryPromise(param, mergedOptions.mode, ignorePatterns)
+  const listParams = {
+    ...param,
+    ...(mergedOptions.extractText && {
+      extractPDFcontent: mergedOptions.extractText,
+    }),
+  };
+  return listDirectoryPromise(listParams, mergedOptions.mode, ignorePatterns)
     .then((entries) => {
       if (!isWalking() || entries === undefined) {
         return false;
@@ -99,7 +100,7 @@ function walkDirectory(
                 ? { ...path, path: entry.path }
                 : entry.path;
             return walkDirectory(
-              { ...param, path: subPath },
+              { ...listParams, path: subPath },
               listDirectoryPromise,
               mergedOptions,
               fileCallback,
@@ -113,7 +114,7 @@ function walkDirectory(
       );
     })
     .catch((err) => {
-      console.warn("Error walking directory " + err);
+      console.warn("Error walking directory ", err);
       return err;
     });
 }

@@ -4,6 +4,7 @@ const {
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
 const { persistIndex, createIndex } = require("@tagspaces/tagspaces-indexer");
+const { extractPDFcontent } = require("@tagspaces/tagspaces-pdf-extraction");
 
 function handleIndexer(req, res) {
   if (req.method === "POST") {
@@ -26,13 +27,13 @@ function handleIndexer(req, res) {
         if (extractText) {
           mode.push("extractTextContent");
         }
-        return createIndex(
-          directoryPath,
+        const param = {
+          path: directoryPath,
           listDirectoryPromise,
           getFileContentPromise,
-          mode,
-          ignorePatterns ? ignorePatterns : []
-        )
+          ...(extractText && { extractPDFcontent }),
+        };
+        return createIndex(param, mode, ignorePatterns ? ignorePatterns : [])
           .then((directoryIndex) => {
             return persistIndex(
               { path: directoryPath, saveTextFilePromise },

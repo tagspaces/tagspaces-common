@@ -55,17 +55,20 @@ module.exports = function tscmd() {
     } = require("@tagspaces/tagspaces-common-node/io-node");
 
     for (const dir of argv._) {
-      createIndex(dir, listDirectoryPromise, getFileContentPromise).then(
-        (directoryIndex) => {
-          persistIndex({ path: dir, saveTextFilePromise }, directoryIndex).then(
-            (success) => {
-              if (success) {
-                console.log("Index generated in folder: " + dir);
-              }
+      const param = {
+        path: dir,
+        listDirectoryPromise,
+        getFileContentPromise,
+      };
+      createIndex(param).then((directoryIndex) => {
+        persistIndex({ path: dir, saveTextFilePromise }, directoryIndex).then(
+          (success) => {
+            if (success) {
+              console.log("Index generated in folder: " + dir);
             }
-          );
-        }
-      );
+          }
+        );
+      });
     }
   } else if (argv.mode === "metacleaner") {
     const {

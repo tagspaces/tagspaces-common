@@ -17,7 +17,10 @@ describe("Common utils-io unit tests", () => {
       "file-structure",
       "supported-filestypes"
     );
-    const entries = await utilsIO.walkDirectory(dir, listDirectoryPromise);
+    const entries = await utilsIO.walkDirectory(
+      { path: dir },
+      listDirectoryPromise
+    );
     // try {
     const files = fs.readdirSync(dir);
     expect(entries.length).toBe(files.length);
@@ -37,7 +40,10 @@ describe("Common utils-io unit tests", () => {
       "file-structure",
       "supported-filestypes"
     );
-    const entries = await utilsIO.walkDirectory(dir, listDirectoryPromise);
+    const entries = await utilsIO.walkDirectory(
+      { path: dir },
+      listDirectoryPromise
+    );
     const enhancedEntries = entries.map(utilsIO.enhanceEntry);
     const files = fs.readdirSync(dir);
     expect(enhancedEntries.length).toBe(files.length);

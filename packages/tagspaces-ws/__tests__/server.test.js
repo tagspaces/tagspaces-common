@@ -77,15 +77,15 @@ describe("Web Server Endpoints", () => {
     const response = await request
       .post("/indexer")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
-      .send({ directoryPath: testDir });
+      .send({ directoryPath: testDir, extractText: true });
 
     expect(response.status).toBe(200);
 
     const filePath = pathLib.join(testDir, ".ts", "tsi.json");
     const fileExists = fs.existsSync(filePath);
     expect(fileExists).toBe(true);
-    fs.unlinkSync(filePath);
-    expect(fs.existsSync(filePath)).toBe(false);
+    //fs.unlinkSync(filePath);
+    //expect(fs.existsSync(filePath)).toBe(false);
   });
 
   /**
