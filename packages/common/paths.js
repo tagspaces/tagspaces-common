@@ -34,6 +34,11 @@ function baseName(
   return fileName || dirPath;
 }
 
+/**
+ * @param filePath
+ * @param dirSeparator
+ * @returns {string}
+ */
 function extractFileExtension(filePath, dirSeparator = AppConfig.dirSeparator) {
   if (!filePath) {
     return "";
