@@ -388,6 +388,31 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
+  async function extractAndSavePdf(entry, extractPDFcontent) {
+    let textContent;
+    const pdfContentPath = tsPaths.getMetaContentFileLocation(entry.path);
+    const pdfStats = await stat({ path: pdfContentPath });
+
+    if (
+      pdfStats &&
+      pdfStats.mtime.getTime &&
+      pdfStats.mtime.getTime() > entry.lmdt
+    ) {
+      textContent = await getFileContentPromise(
+        { path: pdfContentPath },
+        "text"
+      );
+    } else if (extractPDFcontent) {
+      const buffer = await getFileContentPromise(
+        { path: entry.path },
+        "arraybuffer"
+      );
+      textContent = await extractPDFcontent(buffer);
+      await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
+    }
+    return textContent;
+  }
+
   /**
    * @param param      param.extractPDFcontent need to exist
    * @param mode = ['extractTextContent', 'extractThumbPath']
@@ -531,33 +556,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       fileContent
                     );
                   } else if (fileName.toLowerCase().endsWith(".pdf")) {
-                    const pdfContentPath = tsPaths.getMetaContentFileLocation(
-                      eentry.path
+                    eentry.textContent = await extractAndSavePdf(
+                      eentry,
+                      param.extractPDFcontent
                     );
-                    const pdfStats = await stat({ path: pdfContentPath });
-
-                    if (
-                      pdfStats &&
-                      pdfStats.mtime.getTime &&
-                      pdfStats.mtime.getTime() > eentry.lmdt
-                    ) {
-                      eentry.textContent = await getFileContentPromise(
-                        { path: pdfContentPath },
-                        "text"
-                      );
-                    } else if (param.extractPDFcontent) {
-                      const buffer = await getFileContentPromise(
-                        { path: eentry.path },
-                        "arraybuffer"
-                      );
-                      const textContent = await param.extractPDFcontent(buffer);
-                      eentry.textContent = textContent;
-                      await saveTextFilePromise(
-                        { path: pdfContentPath },
-                        textContent,
-                        true
-                      );
-                    }
                   }
                 }
 
@@ -1125,6 +1127,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     saveBinaryFilePromise,
     getPropertiesPromise,
     loadTextFilePromise,
+    extractAndSavePdf,
     getFileContentPromise,
     extractTextContent,
     createDirectoryPromise,

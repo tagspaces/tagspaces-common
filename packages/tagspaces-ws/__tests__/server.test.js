@@ -73,7 +73,7 @@ describe("Web Server Endpoints", () => {
     });
   });
 
- /* test("POST /indexer", async () => {
+  test("POST /indexer", async () => {
     const response = await request
       .post("/indexer")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
@@ -86,7 +86,7 @@ describe("Web Server Endpoints", () => {
     expect(fileExists).toBe(true);
     //fs.unlinkSync(filePath);
     //expect(fs.existsSync(filePath)).toBe(false);
-  });*/
+  });
 
   /**
    * indexer cannot work with relative paths: /Users/sytolk/IdeaProjects/tagspaces/release/app/node_modules/@tagspaces/Downloads/Music

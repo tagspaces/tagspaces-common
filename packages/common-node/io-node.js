@@ -205,6 +205,10 @@ function getFileContentPromise(param, type) {
   return fsClient.getFileContentPromise(param, type);
 }
 
+function extractAndSavePdf(entry, extractPDFcontent) {
+  return fsClient.extractAndSavePdf(entry, extractPDFcontent);
+}
+
 function extractTextContent(fileName, textContent) {
   return fsClient.extractTextContent(fileName, textContent);
 }
@@ -421,6 +425,7 @@ module.exports = {
   isDirectory,
   loadTextFilePromise,
   getFileContentPromise,
+  extractAndSavePdf,
   extractTextContent,
   createDirectoryPromise,
   copyFilePromise,

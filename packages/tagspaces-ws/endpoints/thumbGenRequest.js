@@ -32,7 +32,10 @@ function handleThumbGen(req, res) {
           arrayPaths = JSON.parse(body);
         }
         let extractPDFfunction;
-        if (extractPdfContent) {
+        if (
+          extractPdfContent &&
+          arrayPaths.some((path) => path.toLowerCase().endsWith(".pdf"))
+        ) {
           extractPDFfunction =
             require("@tagspaces/tagspaces-pdf-extraction").extractPDFcontent;
         }

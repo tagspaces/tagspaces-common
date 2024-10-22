@@ -62,29 +62,35 @@ module.exports.processAllThumbnails = async function (
     }
   };
 
-  const generateThumbnail = (filePath) => {
+  const generateThumbnail = (fsEntry) => {
     const thumbGenResults = (success) => {
       if (success) {
-        return { filePath: filePath, tmbPath: getThumbFileLocation(filePath) };
+        return {
+          filePath: fsEntry.path,
+          tmbPath: getThumbFileLocation(fsEntry.path),
+        };
       }
       return undefined;
     };
 
-    return checkThumbUpToDate(filePath).then((upToDate) => {
+    return checkThumbUpToDate(fsEntry).then((upToDate) => {
       if (!upToDate) {
-        const fileType = tsThumb.getFileType(filePath);
-        console.log("Generating thumbnail for: " + filePath);
+        const fileType = tsThumb.getFileType(fsEntry.path);
+        console.log("Generating thumbnail for: " + fsEntry.path);
         if (isThumbGenSupportedFileType(fileType, "image")) {
-          const image = fs.readFileSync(filePath);
+          const image = fs.readFileSync(fsEntry.path);
           return tsThumb
-            .generateImageThumbnail(image, fileType, filePath, upload)
+            .generateImageThumbnail(image, fileType, fsEntry.path, upload)
             .then(thumbGenResults)
             .catch((error) => {
-              console.error("Generating thumbnail failed: " + filePath, error);
+              console.error(
+                "Generating thumbnail failed: " + fsEntry.path,
+                error
+              );
             });
         } else if (fileType === "pdf" && generatePdf) {
           console.info(
-            filePath + ": PDF thumbs generation not supported from WS!"
+            fsEntry.path + ": PDF thumbs generation not supported from WS!"
           );
           return Promise.resolve(true);
           /*const pdf = fs.readFileSync(filePath);
@@ -104,7 +110,7 @@ module.exports.processAllThumbnails = async function (
           return Promise.resolve(true);
         }
       } else {
-        console.log("Thumbnail is up to Date: " + filePath);
+        console.log("Thumbnail is up to Date: " + fsEntry.path);
         return Promise.resolve(thumbGenResults(true));
       }
     });
@@ -127,7 +133,7 @@ module.exports.processAllThumbnails = async function (
         mode: extractPDFcontent ? ["extractTextContent"] : [],
         ...(extractPDFcontent && { extractText: extractPDFcontent }),
       },
-      (fileEntry) => generateThumbnail(fileEntry.path),
+      (fileEntry) => generateThumbnail(fileEntry),
 
       /*return fs.readFile(fileEntry.path, function (err, data) {
                         if (err) {
@@ -153,7 +159,12 @@ module.exports.processAllThumbnails = async function (
         console.warn("Error creating thumbnails: ", err);
       });
   } else {
-    return generateThumbnail(entryPath);
+    return getPropertiesPromise(entryPath).then((fsEntry) => {
+      if (extractPDFcontent) {
+        extractAndSavePdf(fsEntry, extractPDFcontent);
+      }
+      return generateThumbnail(fsEntry);
+    });
   }
 };
 
@@ -168,18 +179,16 @@ function getThumbFileLocation(filePath) {
   );
 }
 
-const checkThumbUpToDate = (filePath) => {
-  return getPropertiesPromise(filePath).then((origStats) => {
-    const thumbFilePath = getThumbFileLocation(filePath);
-    return getPropertiesPromise(thumbFilePath).then((stats) => {
-      if (stats) {
-        // Thumbnail exists
-        return origStats.lmdt <= stats.lmdt;
-      } else {
-        // Thumbnail does not exists
-      }
-      return false;
-    });
+const checkThumbUpToDate = (fsEntry) => {
+  const thumbFilePath = getThumbFileLocation(fsEntry.path);
+  return getPropertiesPromise(thumbFilePath).then((stats) => {
+    if (stats) {
+      // Thumbnail exists
+      return fsEntry.lmdt <= stats.lmdt;
+    } else {
+      // Thumbnail does not exists
+    }
+    return false;
   });
 };
 
