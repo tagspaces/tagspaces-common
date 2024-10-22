@@ -8,6 +8,7 @@ const {
   isDirectory,
   listDirectoryPromise,
   getPropertiesPromise,
+  extractAndSavePdf,
 } = require("@tagspaces/tagspaces-common-node");
 const {
   walkDirectory,

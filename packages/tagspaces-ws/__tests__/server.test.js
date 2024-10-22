@@ -44,7 +44,20 @@ describe("Web Server Endpoints", () => {
     expect(response.status).toBe(200);
   }, 10000);
 
-  test("POST /thumb-gen", async () => {
+  test("POST /thumb-gen file", async () => {
+    const response = await request
+      .post("/thumb-gen?pdfContent=true")
+      .set("Authorization", "Bearer " + token) // Set your auth header if needed
+      .send([pathLib.join(testDir, "sample.pdf")]);
+
+    expect(response.status).toBe(200);
+    /*
+      const filePath = pathLib.join(testDir, ".ts", "sample.pdf.txt");
+      const fileExists = fs.existsSync(filePath);
+      expect(fileExists).toBe(true);*/
+  });
+
+  test("POST /thumb-gen dir", async () => {
     const response = await request
       .post("/thumb-gen?pdf=false&pdfContent=true")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
@@ -84,8 +97,8 @@ describe("Web Server Endpoints", () => {
     const filePath = pathLib.join(testDir, ".ts", "tsi.json");
     const fileExists = fs.existsSync(filePath);
     expect(fileExists).toBe(true);
-    //fs.unlinkSync(filePath);
-    //expect(fs.existsSync(filePath)).toBe(false);
+    fs.unlinkSync(filePath);
+    expect(fs.existsSync(filePath)).toBe(false);
   });
 
   /**
