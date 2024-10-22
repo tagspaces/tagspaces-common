@@ -13,8 +13,11 @@ function extractPdf(req, res) {
       // console.log('Body: ' + parse(body));
       try {
         const { path } = JSON.parse(body);
-        const file = fs.readFileSync(path);
-        const content = await extractPDFcontent(file);
+        let content;
+        if (path && path.toLowerCase().endsWith(".pdf")) {
+          const file = fs.readFileSync(path);
+          content = await extractPDFcontent(file);
+        }
         res.statusCode = content ? 200 : 400;
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-store, must-revalidate");

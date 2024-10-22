@@ -75,7 +75,7 @@ function createIndex(
       // }
       let textContent, meta;
       if (getFileContentPromise) {
-        meta = await getEntryMeta(
+        meta = await loadJSONFile(
           {
             ...restParam,
             path: getMetaFileLocationForFile(
@@ -99,7 +99,7 @@ function createIndex(
         counter += 1;
         let meta;
         if (getFileContentPromise) {
-          meta = await getEntryMeta(
+          meta = await loadJSONFile(
             {
               ...restParam,
               path: getMetaFileLocationForDir(directoryEntry.path),
@@ -142,20 +142,6 @@ function createIndex(
       console.warn("Error creating index: " + err);
       return directoryIndex;
     });
-}
-
-/**
- * @param param = {path: , bucketName: }
- * @param getFileContentPromise  function
- * @returns {Promise<*>}
- */
-async function getEntryMeta(param, getFileContentPromise) {
-  //metaFilePath) {
-  // const metaFileProps = await getPropertiesPromise(metaFilePath);
-  // if (metaFileProps.isFile) {
-  const meta = await loadJSONFile(param, getFileContentPromise); // { path: metaFilePath });
-  //}
-  return meta;
 }
 
 /**

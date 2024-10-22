@@ -403,12 +403,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         "text"
       );
     } else if (extractPDFcontent) {
-      const buffer = await getFileContentPromise(
-        { path: entry.path },
-        "arraybuffer"
-      );
-      textContent = await extractPDFcontent(buffer);
-      await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
+      try {
+        const buffer = await getFileContentPromise(
+          { path: entry.path },
+          "arraybuffer"
+        );
+        textContent = await extractPDFcontent(buffer);
+        await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
+      } catch (e) {
+        console.error("Failed to extractPDFcontent in:" + entry.path, e);
+      }
     }
     return textContent;
   }
