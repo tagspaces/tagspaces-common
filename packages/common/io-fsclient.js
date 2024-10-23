@@ -730,7 +730,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       // clear duplicate string, remove spaces and empty string
       const trimmedTokens = textContent.split(" ").filter((s) => s.trim());
       const noDuplicatesArray = [...new Set(trimmedTokens)];
-      return noDuplicatesArray.join(" ").trim();
+      return noDuplicatesArray.join(" ").replace(/\n/g, "").trim();
     }
     return "";
   }
