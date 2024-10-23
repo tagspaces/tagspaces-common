@@ -409,6 +409,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           "arraybuffer"
         );
         textContent = await extractPDFcontent(buffer);
+        textContent = createTextIndex(textContent);
         await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
       } catch (e) {
         console.error("Failed to extractPDFcontent in:" + entry.path, e);
@@ -724,6 +725,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
+  function createTextIndex(textContent) {
+    if (textContent) {
+      // clear duplicate string, remove spaces and empty string
+      const trimmedTokens = textContent.split(" ").filter((s) => s.trim());
+      const noDuplicatesArray = [...new Set(trimmedTokens)];
+      return noDuplicatesArray.join(" ").trim();
+    }
+    return "";
+  }
+
   function extractTextContent(fileName, textContent) {
     let fileContent = textContent.toLowerCase();
     let contentArray;
@@ -770,6 +781,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       joinedTokens = fileContent;
     }
 
+    return createTextIndex(joinedTokens);
+
     /*if (fileName.endsWith(".html")) {
       // Use only the content in the body
       const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
@@ -788,15 +801,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     // replace unnecessary chars. leave only chars, numbers and space
     // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
     // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
-
-    // clear duplicate string, remove spaces and empty string
-    const trimmedTokens = joinedTokens.split(" ").filter((s) => s.trim());
-    // console.log(JSON.stringify(trimmedTokens));
-    const noDuplicatesArray = [...new Set(trimmedTokens)];
-    // console.log(JSON.stringify(noDuplicatesArray));
-    cleanedContent = noDuplicatesArray.join(" ").trim();
-    // console.log("Extracted content: '" + cleanedContent + "'");
-    return cleanedContent;
   }
 
   function createDirectoryPromise(dirPath) {
