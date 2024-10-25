@@ -90,7 +90,7 @@ function createIndex(
         ...fileEntry,
         ...(textContent && { textContent }), // Spreads textContent only if it exists
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
-        ...(meta && meta),
+        ...(meta && { meta: meta }),
       };
       directoryIndex.push(enhanceEntry(entry));
     },
@@ -116,7 +116,7 @@ function createIndex(
             path,
             AppConfig.dirSeparator
           ),
-          ...(meta && meta),
+          ...(meta && { meta: meta }),
         };
         directoryIndex.push(enhanceEntry(entry));
       }

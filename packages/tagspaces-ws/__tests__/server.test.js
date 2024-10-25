@@ -87,6 +87,10 @@ describe("Web Server Endpoints", () => {
   });
 
   test("POST /indexer", async () => {
+    fs.writeFileSync(
+      pathLib.join(testDir, ".ts", "sample.pdf.json"),
+      '{"id":"54dc1af0f43c4670b7138ee133a97396"}'
+    );
     const response = await request
       .post("/indexer")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
@@ -97,8 +101,8 @@ describe("Web Server Endpoints", () => {
     const filePath = pathLib.join(testDir, ".ts", "tsi.json");
     const fileExists = fs.existsSync(filePath);
     expect(fileExists).toBe(true);
-    fs.unlinkSync(filePath);
-    expect(fs.existsSync(filePath)).toBe(false);
+    //fs.unlinkSync(filePath);
+    //expect(fs.existsSync(filePath)).toBe(false);
   });
 
   /**
