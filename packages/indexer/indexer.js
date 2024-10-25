@@ -27,6 +27,39 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
   return cleanPath;
 }*/
 
+/*function getRelativeIndexPath(
+  basePath,
+  absolutePath,
+  dirSeparator = AppConfig.dirSeparator
+) {
+  // Split paths into segments
+  const baseSegments = basePath
+    .split(dirSeparator)
+    .filter((segment) => segment.length > 0);
+  const absoluteSegments = absolutePath
+    .split(dirSeparator)
+    .filter((segment) => segment.length > 0);
+
+  // Find the index where paths diverge
+  let divergeIndex = 0;
+  while (
+    divergeIndex < baseSegments.length &&
+    divergeIndex < absoluteSegments.length &&
+    baseSegments[divergeIndex] === absoluteSegments[divergeIndex]
+  ) {
+    divergeIndex++;
+  }
+
+  // Calculate the number of levels to go up from the base path
+  const upLevels = baseSegments.length - divergeIndex;
+  const upPath = new Array(upLevels).fill("..");
+
+  // Calculate the remaining path to reach the absolute path
+  const remainingPath = absoluteSegments.slice(divergeIndex);
+
+  // Combine up levels and remaining path
+  return [...upPath, ...remainingPath].join(dirSeparator);
+}*/
 /**
  * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
  * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
@@ -73,7 +106,7 @@ function createIndex(
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      let textContent, meta;
+      let meta;
       if (getFileContentPromise) {
         meta = await loadJSONFile(
           {
@@ -85,10 +118,16 @@ function createIndex(
           },
           getFileContentPromise
         );
+        meta = {
+          ...fileEntry.meta,
+          ...(fileEntry.meta?.thumbPath && {
+            thumbPath: cleanRootPath(fileEntry.meta.thumbPath, path, AppConfig.dirSeparator),
+          }),
+          ...meta,
+        };
       }
       const entry = {
         ...fileEntry,
-        ...(textContent && { textContent }), // Spreads textContent only if it exists
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
         ...(meta && { meta: meta }),
       };
