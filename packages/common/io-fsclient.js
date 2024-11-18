@@ -1,5 +1,6 @@
 //const pathLib = require("path");
 const tsPaths = require("./paths");
+const tsMisc = require("./misc");
 const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
@@ -409,7 +410,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           "arraybuffer"
         );
         textContent = await extractPDFcontent(buffer);
-        textContent = createTextIndex(textContent);
         await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
       } catch (e) {
         console.error("Failed to extractPDFcontent in:" + entry.path, e);
@@ -548,6 +548,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   }
                 }
 
+                eentry.links = [];
+
                 if (mode.includes("extractTextContent") && eentry.isFile) {
                   const fileName = eentry.name.toLowerCase();
                   if (
@@ -555,16 +557,37 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     fileName.endsWith(".md") ||
                     fileName.endsWith(".html")
                   ) {
-                    const fileContent = await fs.readFile(eentry.path, "utf8");
-                    eentry.textContent = extractTextContent(
-                      fileName,
-                      fileContent
-                    );
+                    const textContent = await fs.readFile(eentry.path, "utf8");
+                    if (textContent) {
+                      eentry.textContent = extractTextContent(
+                        fileName,
+                        textContent
+                      );
+                      const links = tsMisc.extractLinks(textContent);
+                      links?.forEach((link) => {
+                        if (
+                          !eentry.links.some((item) => item.href === link.href)
+                        ) {
+                          eentry.links.push(link);
+                        }
+                      });
+                    }
                   } else if (fileName.toLowerCase().endsWith(".pdf")) {
-                    eentry.textContent = await extractAndSavePdf(
+                    const textContent = await extractAndSavePdf(
                       eentry,
                       param.extractPDFcontent
                     );
+                    if (textContent) {
+                      const links = tsMisc.extractLinks(textContent);
+                      links?.forEach((link) => {
+                        if (
+                          !eentry.links.some((item) => item.href === link.href)
+                        ) {
+                          eentry.links.push(link);
+                        }
+                      });
+                      eentry.textContent = createTextIndex(textContent);
+                    }
                   }
                 }
 
@@ -603,6 +626,20 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       enhancedEntries.forEach((enhancedEntry) => {
                         if (enhancedEntry.name === fileNameWithoutMetaExt) {
                           enhancedEntry.meta = metaFileObj;
+                          if (enhancedEntry.meta?.description) {
+                            const links = tsMisc.extractLinks(
+                              enhancedEntry.meta.description
+                            );
+                            links?.forEach((link) => {
+                              if (
+                                !enhancedEntry.links.some(
+                                  (item) => item.href === link.href
+                                )
+                              ) {
+                                enhancedEntry.links.push(link);
+                              }
+                            });
+                          }
                         }
                       });
                     }
@@ -727,9 +764,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   function createTextIndex(textContent) {
     if (textContent) {
+      // Removing BOM
+      // if (textContent.charCodeAt(0) === 0xFEFF) {
+      //   textContent = textContent.substr(1);
+      // }
       // clear duplicate string, remove spaces and empty string
-      const trimmedTokens = textContent.split(" ").filter((s) => s.trim());
-      const noDuplicatesArray = [...new Set(trimmedTokens)];
+      const trimmedTokens = textContent.replace(/\s+/g, " ");
+      const noDuplicatesArray = [...new Set(trimmedTokens.split(" "))];
       return noDuplicatesArray.join(" ").replace(/\n/g, "").trim();
     }
     return "";
