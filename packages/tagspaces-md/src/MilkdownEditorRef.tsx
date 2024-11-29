@@ -1,7 +1,7 @@
 import React, { ForwardedRef } from 'react';
 import { Milkdown } from '@milkdown/react';
 import { useInstance } from '@milkdown/react';
-import { replaceAll } from '@milkdown/utils';
+import { insert, replaceAll, getMarkdown } from '@milkdown/utils';
 import { MilkdownRef } from './MilkdownEditor';
 import { useSetDarkMode } from './providers/DarkModeProvider';
 import { EditorStatus, editorViewCtx } from '@milkdown/core';
@@ -29,10 +29,20 @@ const MilkdownEditorRef: React.FC<Props> = ({ milkdownRef }) => {
   }, [loading]);
 
   React.useImperativeHandle(milkdownRef, () => ({
+    getMarkdown: () => {
+      const editor = getEditor();
+      if (loading || !editor || editor.status !== EditorStatus.Created) return;
+      return editor.action(getMarkdown());
+    },
     update: (markdown: string) => {
       const editor = getEditor();
       if (loading || !editor || editor.status !== EditorStatus.Created) return;
       editor.action(replaceAll(markdown));
+    },
+    insert: (markdown: string) => {
+      const editor = getEditor();
+      if (loading || !editor || editor.status !== EditorStatus.Created) return;
+      editor.action(insert(markdown));
     },
     setDarkMode: (isDarkMode: boolean) => {
       setDarkMode(isDarkMode);

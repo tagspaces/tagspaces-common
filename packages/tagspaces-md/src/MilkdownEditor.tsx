@@ -11,6 +11,8 @@ import { DarkModeProvider } from './providers/DarkModeProvider';
 import { SearchDialogContextProvider } from './components/dialogs/SearchDialogContextProvider';
 
 export interface MilkdownRef {
+  getMarkdown: () => string;
+  insert: (markdown: string) => void;
   update: (markdown: string) => void;
   setDarkMode: (isDark: boolean) => void;
   openSearchDialog: () => void;
