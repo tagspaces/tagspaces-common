@@ -191,8 +191,9 @@ function getMetaDirectoryPath(
     return directoryPath;
   }
   return (
-    (directoryPath ? normalizePath(directoryPath) + dirSeparator : "") +
-    AppConfig.metaFolder
+    (directoryPath
+      ? cleanTrailingDirSeparator(directoryPath) + dirSeparator
+      : "") + AppConfig.metaFolder
   );
 }
 

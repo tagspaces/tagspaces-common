@@ -49,6 +49,27 @@ describe("Common Paths unit tests", () => {
     );
   });
 
+  test("paths getThumbFileLocationForFile video", async () => {
+    const filePath =
+      "video:///Users/sytolk/Movies/file_example_AVI_480_750kB.avi";
+    const thumbPath = paths.getThumbFileLocationForFile(
+      filePath,
+      AppConfig.dirSeparator,
+      false
+    );
+    const containingFolder = paths.extractContainingDirectoryPath(
+      filePath,
+      AppConfig.dirSeparator
+    );
+    expect(thumbPath).toBe(
+      containingFolder +
+        AppConfig.dirSeparator +
+        ".ts" +
+        AppConfig.dirSeparator +
+        "file_example_AVI_480_750kB.avi.jpg"
+    );
+  });
+
   test("paths getThumbFileLocationForDirectory", async () => {
     const dirPath = pathLib.join(__dirname, "..", "..");
     const thumbPath = paths.getThumbFileLocationForDirectory(
