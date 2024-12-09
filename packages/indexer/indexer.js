@@ -121,7 +121,11 @@ function createIndex(
         meta = {
           ...fileEntry.meta,
           ...(fileEntry.meta?.thumbPath && {
-            thumbPath: cleanRootPath(fileEntry.meta.thumbPath, path, AppConfig.dirSeparator),
+            thumbPath: cleanRootPath(
+              fileEntry.meta.thumbPath,
+              path,
+              AppConfig.dirSeparator
+            ),
           }),
           ...meta,
         };

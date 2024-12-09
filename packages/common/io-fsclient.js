@@ -165,7 +165,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
 
         if (stats) {
-          resolve({
+          const fsEntry = {
             name: path.substring(
               path.lastIndexOf(dirSeparator) + 1,
               path.length
@@ -174,7 +174,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             size: stats.size,
             lmdt: stats.mtime.getTime ? stats.mtime.getTime() : stats.mtime,
             path,
-          });
+          };
+          if (param.extractLinks) {
+            extractTextContentLinks(fsEntry, true, true).then(() =>
+              resolve(fsEntry)
+            );
+          } else {
+            resolve(fsEntry);
+          }
         } else {
           resolve(false);
         }
@@ -420,7 +427,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   /**
    * @param param      param.extractPDFcontent need to exist
-   * @param mode = ['extractTextContent', 'extractThumbPath']
+   * @param mode = ['extractTextContent','extractLinks','extractThumbPath']
    * @param ignorePatterns
    * @returns {Promise<FileSystemEntry[]>}
    */
@@ -548,49 +555,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   }
                 }
 
-                eentry.links = [];
-
                 if (mode.includes("extractTextContent") && eentry.isFile) {
-                  const fileName = eentry.name.toLowerCase();
-                  if (
-                    fileName.endsWith(".txt") ||
-                    fileName.endsWith(".md") ||
-                    fileName.endsWith(".html")
-                  ) {
-                    const textContent = await fs.readFile(eentry.path, "utf8");
-                    if (textContent) {
-                      eentry.textContent = extractTextContent(
-                        fileName,
-                        textContent
-                      );
-                      const links = tsMisc.extractLinks(textContent);
-                      links?.forEach((link) => {
-                        if (
-                          !eentry.links.some((item) => item.href === link.href)
-                        ) {
-                          eentry.links.push(link);
-                        }
-                      });
-                    }
-                  } else if (fileName.toLowerCase().endsWith(".pdf")) {
-                    const textContent = await extractAndSavePdf(
-                      eentry,
-                      param.extractPDFcontent
-                    );
-                    if (textContent) {
-                      const links = tsMisc.extractLinks(textContent);
-                      links?.forEach((link) => {
-                        if (
-                          !eentry.links.some((item) => item.href === link.href)
-                        ) {
-                          eentry.links.push(link);
-                        }
-                      });
-                      eentry.textContent = createTextIndex(textContent);
-                    }
-                  }
+                  await extractTextContentLinks(
+                    eentry,
+                    param.extractPDFcontent,
+                    mode.includes("extractLinks")
+                  );
                 }
-
                 /*if (window.walkCanceled) {
                     resolve(enhancedEntries);
                     return;
@@ -626,19 +597,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       enhancedEntries.forEach((enhancedEntry) => {
                         if (enhancedEntry.name === fileNameWithoutMetaExt) {
                           enhancedEntry.meta = metaFileObj;
-                          if (enhancedEntry.meta?.description) {
-                            const links = tsMisc.extractLinks(
+                          if (
+                            mode.includes("extractLinks") &&
+                            enhancedEntry.meta?.description
+                          ) {
+                            setEntryLinks(
+                              enhancedEntry,
                               enhancedEntry.meta.description
                             );
-                            links?.forEach((link) => {
-                              if (
-                                !enhancedEntry.links.some(
-                                  (item) => item.href === link.href
-                                )
-                              ) {
-                                enhancedEntry.links.push(link);
-                              }
-                            });
                           }
                         }
                       });
@@ -683,6 +649,51 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         reject(new Error("Error listing directory " + path)); // returning results even if any promise fails
       }
     });
+  }
+
+  function setEntryLinks(entry, textContent) {
+    const links = tsMisc.extractLinks(textContent);
+    if (links && links.length > 0) {
+      if (entry.links && entry.links.length > 0) {
+        const newLinks = links.filter(
+          (link) => !entry.links.some((item) => item.href === link.href)
+        );
+        entry.links = [...entry.links, ...newLinks];
+      } else {
+        entry.links = links;
+      }
+    }
+    entry.textContent = createTextIndex(textContent);
+  }
+
+  async function extractTextContentLinks(
+    eentry,
+    extractPDFcontent = false,
+    extractLinks = false
+  ) {
+    const fileName = eentry.name.toLowerCase();
+    if (
+      fileName.endsWith(".txt") ||
+      fileName.endsWith(".md") ||
+      fileName.endsWith(".html")
+    ) {
+      try {
+        const textContent = await fs.readFile(eentry.path, "utf8");
+        if (textContent) {
+          eentry.textContent = extractTextContent(fileName, textContent);
+          if (extractLinks) {
+            setEntryLinks(eentry, textContent);
+          }
+        }
+      } catch (error) {
+        console.error(`Error reading file at ${eentry.path}:`, error);
+      }
+    } else if (fileName.toLowerCase().endsWith(".pdf")) {
+      const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
+      if (textContent && extractLinks) {
+        setEntryLinks(eentry, textContent);
+      }
+    }
   }
 
   /**
