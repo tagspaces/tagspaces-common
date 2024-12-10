@@ -26,6 +26,7 @@ function handleIndexer(req, res) {
         const mode = ["extractThumbPath"];
         if (extractText) {
           mode.push("extractTextContent");
+          mode.push("extractLinks");
         }
         const param = {
           path: directoryPath,
