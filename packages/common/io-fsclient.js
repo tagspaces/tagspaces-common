@@ -601,7 +601,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                             mode.includes("extractLinks") &&
                             enhancedEntry.meta?.description
                           ) {
-                            setEntryLinks(
+                            tsMisc.setEntryLinks(
                               enhancedEntry,
                               enhancedEntry.meta.description
                             );
@@ -651,21 +651,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
-  function setEntryLinks(entry, textContent) {
-    const links = tsMisc.extractLinks(textContent);
-    if (links && links.length > 0) {
-      if (entry.links && entry.links.length > 0) {
-        const newLinks = links.filter(
-          (link) => !entry.links.some((item) => item.href === link.href)
-        );
-        entry.links = [...entry.links, ...newLinks];
-      } else {
-        entry.links = links;
-      }
-    }
-    entry.textContent = createTextIndex(textContent);
-  }
-
   async function extractTextContentLinks(
     eentry,
     extractPDFcontent = false,
@@ -682,7 +667,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         if (textContent) {
           eentry.textContent = extractTextContent(fileName, textContent);
           if (extractLinks) {
-            setEntryLinks(eentry, textContent);
+            tsMisc.setEntryLinks(eentry, textContent);
           }
         }
       } catch (error) {
@@ -690,8 +675,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       }
     } else if (fileName.toLowerCase().endsWith(".pdf")) {
       const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
+      eentry.textContent = createTextIndex(textContent);
       if (textContent && extractLinks) {
-        setEntryLinks(eentry, textContent);
+        tsMisc.setEntryLinks(eentry, textContent);
       }
     }
   }

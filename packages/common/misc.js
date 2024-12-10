@@ -61,6 +61,20 @@ function extractLinks(textContent) {
   return links;
 }
 
+function setEntryLinks(entry, textContent) {
+  const links = extractLinks(textContent);
+  if (links && links.length > 0) {
+    if (entry.links && entry.links.length > 0) {
+      const newLinks = links.filter(
+          (link) => !entry.links.some((item) => item.href === link.href)
+      );
+      entry.links = [...entry.links, ...newLinks];
+    } else {
+      entry.links = links;
+    }
+  }
+}
+
 function getUrlParameterByName(url, paramName) {
   const name = paramName.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
   const regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
@@ -1068,6 +1082,7 @@ const filterByDuplicate = (items, key, duplicateLength = 2) =>
 module.exports = {
   locationType,
   extractLinks,
+  setEntryLinks,
   getUrlParameterByName,
   prepareTagGroupForExport,
   prepareTagForExport,
