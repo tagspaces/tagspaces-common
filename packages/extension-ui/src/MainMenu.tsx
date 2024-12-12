@@ -19,7 +19,7 @@ import useEventListener from './useEventListener';
 export type MainMenuItem = {
   id: string;
   icon?: any;
-  name: 'Toggle Line Numbers';
+  name: string;
   action: () => void;
 };
 
