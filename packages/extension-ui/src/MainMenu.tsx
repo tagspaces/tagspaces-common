@@ -15,6 +15,7 @@ import AboutIcon from '@mui/icons-material/Info';
 import PrintIcon from '@mui/icons-material/Print';
 import DialogCloseButton from './DialogCloseButton';
 import useEventListener from './useEventListener';
+import './common.css';
 
 export type MainMenuItem = {
   id: string;
@@ -54,7 +55,11 @@ const MainMenu: React.FC<{
         icon: <PrintIcon />,
         action: () => {
           setAnchorEl(null);
-          window.print();
+          if (item.action) {
+            item.action();
+          } else {
+            window.print();
+          }
         }
       };
     } else if (item.id === 'about') {
@@ -70,28 +75,6 @@ const MainMenu: React.FC<{
     }
     return { ...item, dataTID: item.id + 'TID' };
   });
-
-  /* const primaryBackgroundColor = window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--primary-color')
-      .trim();
-    const primaryTextColor = window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--primary-text-color')
-      .trim();
-
-    const tsTheme = createTheme({
-      palette: {
-        primary: {
-          main: primaryBackgroundColor ? primaryBackgroundColor : '#11cb5f',
-          contrastText: primaryTextColor ? primaryTextColor : '#ffffff'
-        },
-        secondary: {
-          main: '#11cb5f',
-          contrastText: '#ffffff'
-        }
-      }
-    });*/
 
   const dialogContent = aboutDialogContent ? (
     aboutDialogContent
@@ -117,7 +100,7 @@ const MainMenu: React.FC<{
   return (
     <>
       <Menu
-        id="fab-menu"
+        id="mainMenuId"
         anchorEl={anchorEl}
         anchorOrigin={{
           vertical: 'top',
@@ -143,6 +126,7 @@ const MainMenu: React.FC<{
       </Menu>
       {isFabVisible && (
         <Fab
+          id="extFabMenu"
           data-tid="mainMenuTID"
           color="primary"
           aria-label="open extension menu"

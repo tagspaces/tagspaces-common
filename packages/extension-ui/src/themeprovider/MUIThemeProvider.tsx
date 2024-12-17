@@ -3,9 +3,26 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { ColorModeContext } from './ColorModeContext';
 //import { amber, deepOrange, grey } from "@mui/material/colors";
 
+const primaryBackgroundColor = window
+  .getComputedStyle(document.documentElement)
+  .getPropertyValue('--primary-color')
+  .trim();
+const primaryTextColor = window
+  .getComputedStyle(document.documentElement)
+  .getPropertyValue('--primary-text-color')
+  .trim();
+
 const getDesignTokens = mode => ({
   palette: {
-    mode
+    mode,
+    primary: {
+      main: primaryBackgroundColor || '#FFFFFF',
+      contrastText: primaryTextColor || '#000000'
+    },
+    secondary: {
+      main: '#11cb5f',
+      contrastText: '#ffffff'
+    }
     /* ...(mode === "light"
       ? {
           // palette values for light mode
