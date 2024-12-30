@@ -16,7 +16,6 @@
  *
  */
 const paths = require("./paths");
-const linkify = require("linkifyjs");
 
 const locationType = {
   TYPE_LOCAL: "0",
@@ -27,37 +26,49 @@ const locationType = {
 
 function extractLinks(textContent) {
   const links = [];
-  const parsedLinks = linkify.find(textContent);
-  // links.push({ "parsedLinks": parsedLinks });
-  parsedLinks?.forEach((parsedLink) => {
-    if (
-      parsedLink.isLink &&
-      !links.some((item) => item.href === parsedLink.href)
-    ) {
-      const link = {};
-      link.type = parsedLink.type;
-      link.href = parsedLink.href;
-      links.push(link);
-    }
-  });
-  // const tsUrlRegex = /(ts:\/\/\?[^\s]+)/g;
-  const tsUrlRegex = /ts?:\/\/\?([-a-zA-Z0-9@:%_\+.~#?&\\//=]*)/g;
-  const tsUrls = textContent.match(tsUrlRegex);
-  // ts://?tslid=e78bf5d0-4546-86a5-eb81d8da4a38&tsepath=05252023171513.pdf&tseid=398a089d1c02405e87ba96530b2f81ca
-  // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
-  // ts://?tslid=1f915e7fd93a4527e4396e1dcab2e&tsdpath=contacts&tseid=2df0135aa2cd4e01a804b60d70ac39eb
-  tsUrls?.forEach((tsUrl) => {
-    if (tsUrl?.length > 5 && !links.some((item) => item.href === tsUrl)) {
-      const link = {};
-      link.type = "tslink";
-      link.href = tsUrl;
-      const tseid = getUrlParameterByName(tsUrl, "tseid");
-      if (tseid) {
-        link.tseid = tseid;
+
+  try {
+    const urlRegex = /(https?:\/\/[^\s]+)/g; // urlRegexSafe()
+    const urlMatches = textContent.match(urlRegex) || [];
+    for (const match of urlMatches) {
+      console.log("URL match", match);
+      try {
+        const validUrl = new URL(match);
+        const link = {};
+        link.href = validUrl.href;
+        if (validUrl.protocol === "http:" || validUrl.protocol === "https:") {
+          link.type = "url";
+        }
+        links.push(link);
+      } catch {
+        console.log("invalid url");
       }
-      links.push(link);
     }
-  });
+  } catch (e) {
+    console.error("Extracting URL failed with: " + e);
+  }
+
+  try {
+    const tsUrlRegex = /ts?:\/\/\?([-a-zA-Z0-9@:%_\+.~#?&\\//=]*)/g;
+    const tsUrls = textContent.match(tsUrlRegex);
+    // ts://?tslid=e78bf5d0-4546-86a5-eb81d8da4a38&tsepath=05252023171513.pdf&tseid=398a089d1c02405e87ba96530b2f81ca
+    // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
+    // ts://?tslid=1f915e7fd93a4527e4396e1dcab2e&tsdpath=contacts&tseid=2df0135aa2cd4e01a804b60d70ac39eb
+    tsUrls?.forEach((tsUrl) => {
+      if (tsUrl?.length > 5 && !links.some((item) => item.href === tsUrl)) {
+        const link = {};
+        link.type = "tslink";
+        link.href = tsUrl;
+        const tseid = getUrlParameterByName(tsUrl, "tseid");
+        if (tseid) {
+          link.tseid = tseid;
+        }
+        links.push(link);
+      }
+    });
+  } catch (e) {
+    console.error("Extracting TSlinks failed with: " + e);
+  }
   return links;
 }
 
@@ -66,7 +77,7 @@ function setEntryLinks(entry, textContent) {
   if (links && links.length > 0) {
     if (entry.links && entry.links.length > 0) {
       const newLinks = links.filter(
-          (link) => !entry.links.some((item) => item.href === link.href)
+        (link) => !entry.links.some((item) => item.href === link.href)
       );
       entry.links = [...entry.links, ...newLinks];
     } else {

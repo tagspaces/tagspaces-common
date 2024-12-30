@@ -657,14 +657,51 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     extractLinks = false
   ) {
     const fileName = eentry.name.toLowerCase();
+    // Ignoring files starting with ._ e.g. on macOS
+    if (fileName.startsWith("._")) {
+      return;
+    }
     if (
       fileName.endsWith(".txt") ||
       fileName.endsWith(".md") ||
+      fileName.endsWith(".htm") ||
       fileName.endsWith(".html")
     ) {
       try {
-        const textContent = await fs.readFile(eentry.path, "utf8");
+        let textContent = await fs.readFile(eentry.path, "utf8");
         if (textContent) {
+          console.log("Extracting content from: " + eentry.path);
+          if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
+            // Extracting the content of the body tag (a screenshot in the body tag is also ignored)
+            // const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m;
+            const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+            try {
+              textContent = textContent.match(bodyRegex)[1].trim();
+
+              // removing img tags with dataurl
+              // const regex = new RegExp(
+              //   "<img[^>]*src=[\"']data:[^\"']*[\"'][^>]*>",
+              //   "gi"
+              // );
+              // textContent = textContent.replace(regex, "");
+
+              // remove src attributes containing dataurls
+              textContent = textContent.replace(
+                /src=["']data:[^"']*["']/gi,
+                ""
+              );
+
+              // console.error("html: " + textContent);
+            } catch (e) {
+              console.error(
+                "Error parsing the body of the HTML document: " +
+                  fileName +
+                  " with: " +
+                  e
+              );
+              // console.error("HTML document. " + eentry.path);
+            }
+          }
           eentry.textContent = extractTextContent(fileName, textContent);
           if (extractLinks) {
             tsMisc.setEntryLinks(eentry, textContent);
@@ -673,7 +710,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       } catch (error) {
         console.error(`Error reading file at ${eentry.path}:`, error);
       }
-    } else if (fileName.toLowerCase().endsWith(".pdf")) {
+    } else if (fileName.endsWith(".pdf")) {
       const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
       eentry.textContent = createTextIndex(textContent);
       if (textContent && extractLinks) {
@@ -794,15 +831,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return "";
       });
       joinedTokens = contentArray.join(" ");
-    } else if (fileName.endsWith(".html")) {
-      const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m; // jshint ignore:line
-      try {
-        fileContent = fileContent.match(bodyRegex)[1];
-      } catch (e) {
-        console.log(
-          "Error parsing the body of this HTML document: " + fileName
-        );
-      }
+    } else if (fileName.endsWith(".html") || fileName.endsWith(".htm")) {
       const marked = require("marked");
       const lexer = new marked.Lexer({});
       const tokens = lexer.inlineTokens(fileContent);
