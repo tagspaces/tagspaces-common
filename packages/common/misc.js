@@ -28,20 +28,35 @@ function extractLinks(textContent) {
   const links = [];
 
   try {
-    const urlRegex = /(https?:\/\/[^\s]+)/g; // urlRegexSafe()
+    // const sourceUrlRegex = /data-sourceurl=["'](http[^"']*)["']/g;
+    const sourceUrlRegex = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
+    const sourceUrlMatches = textContent.match(sourceUrlRegex) || [];
+    for (const match of sourceUrlMatches) {
+      const link = createLink(match);
+      if (link) {
+        links.push(link);
+      }
+    }
+
+    // if content is html link should be in href attributes
+    const urlRegex = /(?<=href=["'])(http[^"']*)(?=["'])/g;
     const urlMatches = textContent.match(urlRegex) || [];
     for (const match of urlMatches) {
-      console.log("URL match", match);
-      try {
-        const validUrl = new URL(match);
-        const link = {};
-        link.href = validUrl.href;
-        if (validUrl.protocol === "http:" || validUrl.protocol === "https:") {
-          link.type = "url";
-        }
+      const link = createLink(match);
+      if (link) {
         links.push(link);
-      } catch {
-        console.log("invalid url");
+      }
+    }
+
+    // if plain text or markdown try to find links beginning with http
+    if (links.length < 1) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urlMatches = textContent.match(urlRegex) || [];
+      for (const match of urlMatches) {
+        const link = createLink(match);
+        if (link) {
+          links.push(link);
+        }
       }
     }
   } catch (e) {
@@ -55,21 +70,45 @@ function extractLinks(textContent) {
     // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
     // ts://?tslid=1f915e7fd93a4527e4396e1dcab2e&tsdpath=contacts&tseid=2df0135aa2cd4e01a804b60d70ac39eb
     tsUrls?.forEach((tsUrl) => {
-      if (tsUrl?.length > 5 && !links.some((item) => item.href === tsUrl)) {
-        const link = {};
-        link.type = "tslink";
-        link.href = tsUrl;
-        const tseid = getUrlParameterByName(tsUrl, "tseid");
-        if (tseid) {
-          link.tseid = tseid;
+      if (tsUrl?.length > 5) {
+        try {
+          const validUrl = new URL(tsUrl);
+          const link = {};
+          link.type = "tslink";
+          link.href = validUrl.href;
+          const tseid = validUrl.searchParams.get("tseid");
+          // const tseid = getUrlParameterByName(link.href, "tseid");
+          if (tseid) {
+            link.tseid = tseid;
+          }
+          // skip duplicates
+          if (!links.some((item) => item.href === link.href)) {
+            links.push(link);
+          }
+        } catch {
+          console.log("invalid url: " + tsUrl);
         }
-        links.push(link);
       }
     });
   } catch (e) {
     console.error("Extracting TSlinks failed with: " + e);
   }
   return links;
+}
+
+function createLink(urlmatch) {
+  // console.log("URL match", urlmatch);
+  try {
+    const validUrl = new URL(urlmatch);
+    const link = {};
+    link.href = validUrl.href;
+    if (validUrl.protocol === "http:" || validUrl.protocol === "https:") {
+      link.type = "url";
+    }
+    return link;
+  } catch {
+    console.log("invalid url: " + urlmatch);
+  }
 }
 
 function setEntryLinks(entry, textContent) {

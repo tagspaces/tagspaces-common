@@ -665,33 +665,40 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       fileName.endsWith(".txt") ||
       fileName.endsWith(".md") ||
       fileName.endsWith(".htm") ||
-      fileName.endsWith(".html")
+      fileName.endsWith(".html") ||
+      fileName.endsWith(".mhtml") ||
+      fileName.endsWith(".website") ||
+      fileName.endsWith(".url")
     ) {
       try {
         let textContent = await fs.readFile(eentry.path, "utf8");
         if (textContent) {
-          console.log("Extracting content from: " + eentry.path);
+          // console.log("Extracting content from: " + eentry.path);
+          try {
+            // remove all dataurls
+            textContent = textContent.replace(/data:[^ \t\r\n]+/g, "");
+          } catch (e) {
+            console.error(
+              "Error removing data urls: " + fileName + " with: " + e
+            );
+          }
           if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
-            // Extracting the content of the body tag (a screenshot in the body tag is also ignored)
+            // Extracting the body tag
             // const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m;
             const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
             try {
-              textContent = textContent.match(bodyRegex)[1].trim();
-
-              // removing img tags with dataurl
-              // const regex = new RegExp(
-              //   "<img[^>]*src=[\"']data:[^\"']*[\"'][^>]*>",
-              //   "gi"
+              textContent = textContent.match(bodyRegex)[0].trim();
+              // // remove src attributes containing dataurls
+              // textContent = textContent.replace(
+              //   /src=["']data:[^"']*["']/gi,
+              //   ""
               // );
-              // textContent = textContent.replace(regex, "");
-
-              // remove src attributes containing dataurls
-              textContent = textContent.replace(
-                /src=["']data:[^"']*["']/gi,
-                ""
-              );
-
-              // console.error("html: " + textContent);
+              // // remove screenshot attribute
+              // // data-screenshot="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
+              // textContent = textContent.replace(
+              //   /data-screenshot=["']data:[^"']*["']/gi,
+              //   ""
+              // );
             } catch (e) {
               console.error(
                 "Error parsing the body of the HTML document: " +
@@ -699,9 +706,34 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   " with: " +
                   e
               );
-              // console.error("HTML document. " + eentry.path);
+            }
+          } else if (fileName.endsWith(".mhtml")) {
+            //TODO handling of = at line end unclear
+            const sourceURLRegex =
+              /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
+            const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+            try {
+              const sourceUrl = textContent.match(sourceURLRegex)[0].trim();
+              // const bodyContent = textContent.match(bodyRegex)[0];
+              // console.log("Body: " + bodyContent);
+              // const oneLineContent = bodyContent
+              //   .split("\n")
+              //   .map((line) => (line.endsWith("=") ? line.slice(0, -1) : line))
+              //   .join("");
+              // console.log("One line: " + oneLineContent);
+              // textContent =
+              //   sourceUrl + "\n" + oneLineContent.split("=3D").join("=");
+              textContent = sourceUrl;
+            } catch (e) {
+              console.error(
+                "Error parsing the body of the MHTML document: " +
+                  fileName +
+                  " with: " +
+                  e
+              );
             }
           }
+          // console.log("Content from: " + eentry.path + "\n" + textContent);
           eentry.textContent = extractTextContent(fileName, textContent);
           if (extractLinks) {
             tsMisc.setEntryLinks(eentry, textContent);
@@ -710,6 +742,25 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       } catch (error) {
         console.error(`Error reading file at ${eentry.path}:`, error);
       }
+      // } else if (fileName.endsWith(".website") || fileName.endsWith(".url")) {
+      //   try {
+      //     let textContent = await fs.readFile(eentry.path, "utf8");
+      //     const regex = /(?<=URL=)([^ \t\r\n]+)/g;
+      //     const match = textContent.match(regex);
+      //     console.log("URL match " + match);
+      //     if (match) {
+      //       textContent = match[0]; // Extracted URL
+      //       // textContent = "URL=" + match[0]; // Extracted URL
+      //       console.log("URL match 2 " + textContent);
+      //     } else {
+      //       textContent = "";
+      //     }
+      //     if (textContent && extractLinks) {
+      //       tsMisc.setEntryLinks(eentry, textContent);
+      //     }
+      //   } catch (error) {
+      //     console.error(`Error reading file at ${eentry.path}:`, error);
+      //   }
     } else if (fileName.endsWith(".pdf")) {
       const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
       eentry.textContent = createTextIndex(textContent);
@@ -831,7 +882,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return "";
       });
       joinedTokens = contentArray.join(" ");
-    } else if (fileName.endsWith(".html") || fileName.endsWith(".htm")) {
+    } else if (
+      fileName.endsWith(".mhtml") ||
+      fileName.endsWith(".html") ||
+      fileName.endsWith(".htm")
+    ) {
       const marked = require("marked");
       const lexer = new marked.Lexer({});
       const tokens = lexer.inlineTokens(fileContent);
