@@ -555,17 +555,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   }
                 }
 
-                if (mode.includes("extractTextContent") && eentry.isFile) {
-                  await extractTextContentLinks(
+                if (mode.includes("extractTextContent")) {
+                  const tmp = await extractTextContentLinks(
                     eentry,
                     param.extractPDFcontent,
                     mode.includes("extractLinks")
                   );
                 }
-                /*if (window.walkCanceled) {
-                    resolve(enhancedEntries);
-                    return;
-                  }*/
               } catch (e) {
                 console.error("Can not load properties for: " + entryPath, e);
               }
@@ -631,17 +627,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     }
                   });
                 }
-
-                /*if (window.walkCanceled) {
-                      resolve(enhancedEntries);
-                    }*/
               }
             }
             resolve(enhancedEntries);
-            /*});
-            } else {
-              resolve(enhancedEntries);
-            }*/
           }
         });
       } catch (e) {
@@ -661,12 +649,15 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     if (fileName.startsWith("._")) {
       return;
     }
-    if (
+    if (!eentry.isFile && eentry.meta?.description && extractLinks) {
+      tsMisc.setEntryLinks(eentry, eentry.meta?.description);
+      return;
+    } else if (
       fileName.endsWith(".txt") ||
       fileName.endsWith(".md") ||
       fileName.endsWith(".htm") ||
       fileName.endsWith(".html") ||
-      fileName.endsWith(".mhtml") ||
+      // fileName.endsWith(".mhtml") || // mhtml extraction disable due to heavy parsing
       fileName.endsWith(".website") ||
       fileName.endsWith(".url")
     ) {
@@ -688,17 +679,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
             try {
               textContent = textContent.match(bodyRegex)[0].trim();
-              // // remove src attributes containing dataurls
-              // textContent = textContent.replace(
-              //   /src=["']data:[^"']*["']/gi,
-              //   ""
-              // );
-              // // remove screenshot attribute
-              // // data-screenshot="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
-              // textContent = textContent.replace(
-              //   /data-screenshot=["']data:[^"']*["']/gi,
-              //   ""
-              // );
             } catch (e) {
               console.error(
                 "Error parsing the body of the HTML document: " +
@@ -733,7 +713,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               );
             }
           }
-          // console.log("Content from: " + eentry.path + "\n" + textContent);
           eentry.textContent = extractTextContent(fileName, textContent);
           if (extractLinks) {
             tsMisc.setEntryLinks(eentry, textContent);
@@ -742,31 +721,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       } catch (error) {
         console.error(`Error reading file at ${eentry.path}:`, error);
       }
-      // } else if (fileName.endsWith(".website") || fileName.endsWith(".url")) {
-      //   try {
-      //     let textContent = await fs.readFile(eentry.path, "utf8");
-      //     const regex = /(?<=URL=)([^ \t\r\n]+)/g;
-      //     const match = textContent.match(regex);
-      //     console.log("URL match " + match);
-      //     if (match) {
-      //       textContent = match[0]; // Extracted URL
-      //       // textContent = "URL=" + match[0]; // Extracted URL
-      //       console.log("URL match 2 " + textContent);
-      //     } else {
-      //       textContent = "";
-      //     }
-      //     if (textContent && extractLinks) {
-      //       tsMisc.setEntryLinks(eentry, textContent);
-      //     }
-      //   } catch (error) {
-      //     console.error(`Error reading file at ${eentry.path}:`, error);
-      //   }
+      return;
     } else if (fileName.endsWith(".pdf")) {
       const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
       eentry.textContent = createTextIndex(textContent);
       if (textContent && extractLinks) {
         tsMisc.setEntryLinks(eentry, textContent);
       }
+      return;
     }
   }
 

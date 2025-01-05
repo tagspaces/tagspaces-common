@@ -28,6 +28,7 @@ function extractLinks(textContent) {
   const links = [];
 
   try {
+    // Extracting source url from HTML files saved with the browser extension
     // const sourceUrlRegex = /data-sourceurl=["'](http[^"']*)["']/g;
     const sourceUrlRegex = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
     const sourceUrlMatches = textContent.match(sourceUrlRegex) || [];
@@ -65,7 +66,8 @@ function extractLinks(textContent) {
   }
 
   try {
-    const tsUrlRegex = /ts?:\/\/\?([-a-zA-Z0-9@:%_\+.~#?&\\//=]*)/g;
+    // const tsUrlRegex = /ts?:\/\/\?([-a-zA-Z0-9@:%_\+.~#?&\\//=]*)/g;
+    const tsUrlRegex = /(?:ts):\/\/[^\s\)]+/g;
     const tsUrls = textContent.match(tsUrlRegex);
     // ts://?tslid=e78bf5d0-4546-86a5-eb81d8da4a38&tsepath=05252023171513.pdf&tseid=398a089d1c02405e87ba96530b2f81ca
     // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
@@ -86,7 +88,7 @@ function extractLinks(textContent) {
             links.push(link);
           }
         } catch {
-          console.log("invalid url: " + tsUrl);
+          console.log("invalid tslink: " + tsUrl);
         }
       }
     });
@@ -112,17 +114,26 @@ function createLink(urlmatch) {
 }
 
 function setEntryLinks(entry, textContent) {
+  // console.log(
+  //   "Ext. links for " + entry.path + " content: " + textContent.substr(0, 200)
+  // );
   const links = extractLinks(textContent);
+  // console.log("Extracted links: " + JSON.stringify(links));
   if (links && links.length > 0) {
     if (entry.links && entry.links.length > 0) {
+      // console.log("Entry links already avail");
       const newLinks = links.filter(
         (link) => !entry.links.some((item) => item.href === link.href)
       );
       entry.links = [...entry.links, ...newLinks];
     } else {
+      // console.log("Entry links not avail");
       entry.links = links;
     }
   }
+  console.log(
+    "Entry links for " + entry.path + "\n" + JSON.stringify(entry.links)
+  );
 }
 
 function getUrlParameterByName(url, paramName) {
