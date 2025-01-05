@@ -50,7 +50,8 @@ function extractLinks(textContent) {
 
     // if plain text or markdown try to find links beginning with http
     if (links.length < 1) {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      // const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urlRegex = /https?:\/\/[^\s\)]+|(?<=\()\s*https?:\/\/[^\s\)]+/g;
       const urlMatches = textContent.match(urlRegex) || [];
       for (const match of urlMatches) {
         const link = createLink(match);
@@ -76,11 +77,10 @@ function extractLinks(textContent) {
           const link = {};
           link.type = "tslink";
           link.href = validUrl.href;
-          const tseid = validUrl.searchParams.get("tseid");
-          // const tseid = getUrlParameterByName(link.href, "tseid");
-          if (tseid) {
-            link.tseid = tseid;
-          }
+          // const tseid = validUrl.searchParams.get("tseid");
+          // if (tseid) {
+          //   link.tseid = tseid;
+          // }
           // skip duplicates
           if (!links.some((item) => item.href === link.href)) {
             links.push(link);
