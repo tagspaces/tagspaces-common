@@ -140,6 +140,7 @@ function createIndex(
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
+        /*
         let meta;
         if (getFileContentPromise) {
           meta = await loadJSONFile(
@@ -150,16 +151,14 @@ function createIndex(
             getFileContentPromise
           );
         }
+        */
         const entry = {
-          name: directoryEntry.name,
-          isFile: directoryEntry.isFile,
-          tags: directoryEntry.tags,
+          ...directoryEntry,
           path: cleanRootPath(
             directoryEntry.path,
             path,
             AppConfig.dirSeparator
           ),
-          ...(meta && { meta: meta }),
         };
         directoryIndex.push(enhanceEntry(entry));
       }
