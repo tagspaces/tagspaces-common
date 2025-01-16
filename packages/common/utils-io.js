@@ -227,6 +227,91 @@ function isThumbGenSupportedFileType(fileExtension, fileType) {
   return false;
 }
 
+function extractTextContent(fileName, textContent) {
+  let fileContent = textContent.toLowerCase();
+  let joinedTokens;
+  if (fileName.endsWith(".md")) {
+    const marked = require("marked");
+    const lexer = new marked.Lexer({});
+    const tokens = lexer.inlineTokens(fileContent);
+    const contentArray = tokens.map((token) => {
+      // console.log(JSON.stringify(token));
+      if (token.type === "text" && token.text) {
+        let cleanedText = token.text.replace(
+          /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
+          ""
+        );
+        cleanedText = cleanedText.replace(/\n/g, "");
+        return cleanedText.trim();
+      }
+      return "";
+    });
+    joinedTokens = contentArray.join(" ");
+  } else if (
+    fileName.endsWith(".mhtml") ||
+    fileName.endsWith(".html") ||
+    fileName.endsWith(".htm")
+  ) {
+    const marked = require("marked");
+    const preprocessHTML = (html) => {
+      return html
+        ?.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "");
+    };
+
+    const cleanedHTML = preprocessHTML(fileContent);
+
+    /*const tokens = marked.lexer(cleanedHTML);
+    const contentArray = tokens
+        .filter(token => token.type === "text" && token.text)
+        .map(token => token.text);*/
+
+    const lexer = new marked.Lexer({});
+    const tokens = lexer.inlineTokens(cleanedHTML);
+    joinedTokens = tokens
+      .filter((token) => token.type === "text" && token.text)
+      .map((token) => token.text)
+      .join(" ");
+  } else {
+    joinedTokens = fileContent;
+  }
+
+  return createTextIndex(joinedTokens);
+
+  /*if (fileName.endsWith(".html")) {
+    // Use only the content in the body
+    const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
+    const matches = pattern.exec(fileContent);
+    if (matches && matches.length > 0) {
+      fileContent = matches[1];
+    }
+
+    const span = document.createElement("span");
+    span.innerHTML = fileContent;
+    fileContent = span.textContent || span.innerText;
+  }*/
+
+  // Todo remove very long word e.g. dataUrls or other binary data which could be in the text
+
+  // replace unnecessary chars. leave only chars, numbers and space
+  // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
+  // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
+}
+
+function createTextIndex(textContent) {
+  if (textContent) {
+    // Removing BOM
+    // if (textContent.charCodeAt(0) === 0xFEFF) {
+    //   textContent = textContent.substr(1);
+    // }
+    // clear duplicate string, remove spaces and empty string
+    const trimmedTokens = textContent.replace(/\s+/g, " ");
+    const noDuplicatesArray = [...new Set(trimmedTokens.split(" "))];
+    return noDuplicatesArray.join(" ").replace(/\n/g, "").trim();
+  }
+  return "";
+}
+
 module.exports = {
   getUuid,
   walkDirectory,
@@ -234,4 +319,6 @@ module.exports = {
   loadJSONString,
   runPromisesSynchronously,
   isThumbGenSupportedFileType,
+  extractTextContent,
+  createTextIndex,
 };

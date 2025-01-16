@@ -1,7 +1,6 @@
 const {
   unZip,
   isDirectory,
-  extractTextContent,
   listDirectoryPromise,
   saveTextFilePromise,
   saveBinaryFilePromise,
@@ -17,6 +16,7 @@ const {
   deleteFilePromise,
   deleteDirectoryPromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
+const { extractTextContent } = require("@tagspaces/tagspaces-common/utils-io");
 const pathLib = require("path");
 const fs = require("fs");
 const { clean } = require("../../../scripts/webdav/webdavserver-v2");

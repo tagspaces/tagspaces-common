@@ -1,7 +1,11 @@
 //const pathLib = require("path");
 const tsPaths = require("./paths");
-const tsMisc = require("./misc");
-const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
+const { createTextIndex, extractTextContent } = require("./utils-io");
+const {
+  arrayBufferToBuffer,
+  streamToBuffer,
+  setEntryLinks,
+} = require("./misc");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
 
@@ -485,7 +489,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             originalEntry.meta = metaFileObj;
 
             if (mode.includes("extractLinks") && metaFileObj?.description) {
-              tsMisc.setEntryLinks(originalEntry, metaFileObj.description);
+              setEntryLinks(originalEntry, metaFileObj.description);
             }
           } catch (err) {
             console.warn(`Error reading metadata file: ${metaEntry.path}`, err);
@@ -621,7 +625,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       return;
     }
     if (!eentry.isFile && eentry.meta?.description && extractLinks) {
-      tsMisc.setEntryLinks(eentry, eentry.meta?.description);
+      setEntryLinks(eentry, eentry.meta?.description);
       return;
     } else if (
       fileName.endsWith(".txt") ||
@@ -686,7 +690,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           }
           eentry.textContent = extractTextContent(fileName, textContent);
           if (extractLinks) {
-            tsMisc.setEntryLinks(eentry, textContent);
+            setEntryLinks(eentry, textContent);
           }
         }
       } catch (error) {
@@ -697,7 +701,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
       eentry.textContent = createTextIndex(textContent);
       if (textContent && extractLinks) {
-        tsMisc.setEntryLinks(eentry, textContent);
+        setEntryLinks(eentry, textContent);
       }
       return;
     }
@@ -778,84 +782,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         });
       }
     });
-  }
-
-  function createTextIndex(textContent) {
-    if (textContent) {
-      // Removing BOM
-      // if (textContent.charCodeAt(0) === 0xFEFF) {
-      //   textContent = textContent.substr(1);
-      // }
-      // clear duplicate string, remove spaces and empty string
-      const trimmedTokens = textContent.replace(/\s+/g, " ");
-      const noDuplicatesArray = [...new Set(trimmedTokens.split(" "))];
-      return noDuplicatesArray.join(" ").replace(/\n/g, "").trim();
-    }
-    return "";
-  }
-
-  function extractTextContent(fileName, textContent) {
-    let fileContent = textContent.toLowerCase();
-    let contentArray;
-    let joinedTokens;
-    if (fileName.endsWith(".md")) {
-      const marked = require("marked");
-      const lexer = new marked.Lexer({});
-      const tokens = lexer.inlineTokens(fileContent);
-      contentArray = tokens.map((token) => {
-        // console.log(JSON.stringify(token));
-        if (token.type === "text" && token.text) {
-          let cleanedText = token.text.replace(
-            /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
-            ""
-          );
-          cleanedText = cleanedText.replace(/\n/g, "");
-          return cleanedText.trim();
-        }
-        return "";
-      });
-      joinedTokens = contentArray.join(" ");
-    } else if (
-      fileName.endsWith(".mhtml") ||
-      fileName.endsWith(".html") ||
-      fileName.endsWith(".htm")
-    ) {
-      const marked = require("marked");
-      const lexer = new marked.Lexer({});
-      const tokens = lexer.inlineTokens(fileContent);
-      // const tokens = marked.lexer(fileContent, { });
-      contentArray = tokens.map((token) => {
-        // console.log(JSON.stringify(token));
-        if (token.type === "text" && token.text) {
-          return token.text;
-        }
-        return "";
-      });
-      joinedTokens = contentArray.join(" ");
-    } else {
-      joinedTokens = fileContent;
-    }
-
-    return createTextIndex(joinedTokens);
-
-    /*if (fileName.endsWith(".html")) {
-      // Use only the content in the body
-      const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
-      const matches = pattern.exec(fileContent);
-      if (matches && matches.length > 0) {
-        fileContent = matches[1];
-      }
-
-      const span = document.createElement("span");
-      span.innerHTML = fileContent;
-      fileContent = span.textContent || span.innerText;
-    }*/
-
-    // Todo remove very long word e.g. dataUrls or other binary data which could be in the text
-
-    // replace unnecessary chars. leave only chars, numbers and space
-    // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
-    // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
   }
 
   function createDirectoryPromise(dirPath) {
@@ -1192,7 +1118,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     loadTextFilePromise,
     extractAndSavePdf,
     getFileContentPromise,
-    extractTextContent,
     createDirectoryPromise,
     copyFilePromise,
     renameFilePromise,

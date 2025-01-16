@@ -209,9 +209,9 @@ function extractAndSavePdf(entry, extractPDFcontent) {
   return fsClient.extractAndSavePdf(entry, extractPDFcontent);
 }
 
-function extractTextContent(fileName, textContent) {
+/*function extractTextContent(fileName, textContent) {
   return fsClient.extractTextContent(fileName, textContent);
-}
+}*/
 
 function createDirectoryPromise(dirPath) {
   return fsClient.createDirectoryPromise(dirPath);
@@ -426,7 +426,6 @@ module.exports = {
   loadTextFilePromise,
   getFileContentPromise,
   extractAndSavePdf,
-  extractTextContent,
   createDirectoryPromise,
   copyFilePromise,
   renameFilePromise,
