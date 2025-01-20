@@ -53,9 +53,12 @@ function extractLinks(textContent) {
     if (links.length < 1) {
       // const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urlRegex = /https?:\/\/[^\s\)]+|(?<=\()\s*https?:\/\/[^\s\)]+/g;
+      // const urlRegex = /https?:\/\/[^\s<>]+|<https?:\/\/[^\s<>]+>/g;
       const urlMatches = textContent.match(urlRegex) || [];
       for (const match of urlMatches) {
-        const link = createLink(match);
+        // Recognizing correctly <https://example.com>
+        const cleanedMatch = match.replace(/^<|>$/g, "");
+        const link = createLink(cleanedMatch);
         if (link) {
           links.push(link);
         }
