@@ -2,5 +2,11 @@
   "packages": ["packages/*"],
   "useNx": false,
   "useWorkspaces": true,
-  "version": "4.5.18"
+  "version": "4.5.51",
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "command": {
+    "publish": {
+      "ignoreChanges": ["**/md-sample/**"]
+    }
+  }
 }

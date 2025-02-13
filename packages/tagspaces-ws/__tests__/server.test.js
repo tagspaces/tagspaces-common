@@ -34,9 +34,32 @@ describe("Web Server Endpoints", () => {
     server.close(done);
   });
 
-  test("POST /thumb-gen", async () => {
+  test("POST /extract-pdf", async () => {
+    const pdfFilePath = pathLib.join(testDir, "sample.pdf");
     const response = await request
-      .post("/thumb-gen")
+      .post("/extract-pdf")
+      .set("Authorization", "Bearer " + token) // Set your auth header if needed
+      .send({ path: pdfFilePath });
+
+    expect(response.status).toBe(200);
+  }, 10000);
+
+  test("POST /thumb-gen file", async () => {
+    const response = await request
+      .post("/thumb-gen?pdfContent=true")
+      .set("Authorization", "Bearer " + token) // Set your auth header if needed
+      .send([pathLib.join(testDir, "sample.pdf")]);
+
+    expect(response.status).toBe(200);
+    /*
+      const filePath = pathLib.join(testDir, ".ts", "sample.pdf.txt");
+      const fileExists = fs.existsSync(filePath);
+      expect(fileExists).toBe(true);*/
+  });
+
+  test("POST /thumb-gen dir", async () => {
+    const response = await request
+      .post("/thumb-gen?pdf=false&pdfContent=true")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
       .send([testDir]);
 
@@ -64,18 +87,22 @@ describe("Web Server Endpoints", () => {
   });
 
   test("POST /indexer", async () => {
+    fs.writeFileSync(
+      pathLib.join(testDir, ".ts", "sample.pdf.json"),
+      '{"id":"54dc1af0f43c4670b7138ee133a97396"}'
+    );
     const response = await request
       .post("/indexer")
       .set("Authorization", "Bearer " + token) // Set your auth header if needed
-      .send({ directoryPath: testDir });
+      .send({ directoryPath: testDir, extractText: true });
 
     expect(response.status).toBe(200);
 
     const filePath = pathLib.join(testDir, ".ts", "tsi.json");
     const fileExists = fs.existsSync(filePath);
     expect(fileExists).toBe(true);
-    fs.unlinkSync(filePath);
-    expect(fs.existsSync(filePath)).toBe(false);
+    //fs.unlinkSync(filePath);
+    //expect(fs.existsSync(filePath)).toBe(false);
   });
 
   /**
@@ -107,9 +134,20 @@ describe("Web Server Endpoints", () => {
       const attrs = fswin.getAttributesSync(metaFolder);
       expect(attrs.IS_HIDDEN).toBe(true);
     } else {
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
     }
   });
+
+  /* test('POST /llama-session', async () => {
+    const response = await request
+        .post('/llama-session')
+        .set('Authorization', 'Bearer test-key') // Set your auth header if needed
+        .send({ path: "/Users/sytolk/Downloads/gemma-2-2b-it-Q4_K_M.gguf" });
+
+    expect(response.status).toBe(200);
+    // Add more assertions based on expected response
+  });*/
+
   /*
   test('POST /watch-folder', async () => {
       const response = await request

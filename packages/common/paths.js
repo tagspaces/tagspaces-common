@@ -34,7 +34,15 @@ function baseName(
   return fileName || dirPath;
 }
 
+/**
+ * @param filePath
+ * @param dirSeparator
+ * @returns {string}
+ */
 function extractFileExtension(filePath, dirSeparator = AppConfig.dirSeparator) {
+  if (!filePath) {
+    return "";
+  }
   const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
   const lastIndexEndTagContainer = filePath.lastIndexOf(
     AppConfig.endTagContainer
@@ -183,8 +191,9 @@ function getMetaDirectoryPath(
     return directoryPath;
   }
   return (
-    (directoryPath ? normalizePath(directoryPath) + dirSeparator : "") +
-    AppConfig.metaFolder
+    (directoryPath
+      ? cleanTrailingDirSeparator(directoryPath) + dirSeparator
+      : "") + AppConfig.metaFolder
   );
 }
 
@@ -202,6 +211,23 @@ function getMetaFileLocationForFile(
     dirSeparator +
     extractFileName(entryPath, dirSeparator) +
     AppConfig.metaFileExt
+  );
+}
+
+function getMetaContentFileLocation(
+  entryPath,
+  dirSeparator = AppConfig.dirSeparator
+) {
+  const containingFolder = extractContainingDirectoryPath(
+    entryPath,
+    dirSeparator
+  );
+  const metaFolder = getMetaDirectoryPath(containingFolder, dirSeparator);
+  return (
+    metaFolder +
+    dirSeparator +
+    extractFileName(entryPath, dirSeparator) +
+    AppConfig.contentFileExt
   );
 }
 
@@ -324,7 +350,7 @@ function getMetaFileLocationForDir(
 }
 
 function extractFileName(filePath, dirSeparator = AppConfig.dirSeparator) {
-  if (filePath.endsWith(dirSeparator)) {
+  if (!filePath || filePath.endsWith(dirSeparator)) {
     return "";
   }
   if (filePath) {
@@ -445,14 +471,15 @@ function extractParentDirectoryPath(
   dirPath,
   dirSeparator = AppConfig.dirSeparator
 ) {
-  if (!dirPath) return;
-  let path = dirPath;
-  if (path.endsWith(dirSeparator)) {
-    path = path.substring(0, path.lastIndexOf(dirSeparator));
-  }
-  const lastIndex = getDirSeparatorPosition(path, dirSeparator);
-  if (lastIndex !== -1) {
-    return path.substring(0, lastIndex);
+  if (dirPath) {
+    let path = dirPath;
+    if (path.endsWith(dirSeparator)) {
+      path = path.substring(0, path.lastIndexOf(dirSeparator));
+    }
+    const lastIndex = getDirSeparatorPosition(path, dirSeparator);
+    if (lastIndex !== -1) {
+      return path.substring(0, lastIndex);
+    }
   }
   // return root dir in cases that dirPath not start with dirSeparator (AWS)
   return "";
@@ -805,6 +832,7 @@ module.exports = {
   getBackupFileDir,
   getFileLocationFromMetaFile,
   getMetaFileLocationForFile,
+  getMetaContentFileLocation,
   getMetaFileLocationForDir,
   extractFileName,
   encodeFileName,

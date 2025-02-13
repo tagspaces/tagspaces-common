@@ -27,42 +27,78 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
   return cleanPath;
 }*/
 
+/*function getRelativeIndexPath(
+  basePath,
+  absolutePath,
+  dirSeparator = AppConfig.dirSeparator
+) {
+  // Split paths into segments
+  const baseSegments = basePath
+    .split(dirSeparator)
+    .filter((segment) => segment.length > 0);
+  const absoluteSegments = absolutePath
+    .split(dirSeparator)
+    .filter((segment) => segment.length > 0);
+
+  // Find the index where paths diverge
+  let divergeIndex = 0;
+  while (
+    divergeIndex < baseSegments.length &&
+    divergeIndex < absoluteSegments.length &&
+    baseSegments[divergeIndex] === absoluteSegments[divergeIndex]
+  ) {
+    divergeIndex++;
+  }
+
+  // Calculate the number of levels to go up from the base path
+  const upLevels = baseSegments.length - divergeIndex;
+  const upPath = new Array(upLevels).fill("..");
+
+  // Calculate the remaining path to reach the absolute path
+  const remainingPath = absoluteSegments.slice(divergeIndex);
+
+  // Combine up levels and remaining path
+  return [...upPath, ...remainingPath].join(dirSeparator);
+}*/
 /**
- * @param param
- * @param listDirectoryPromise function
+ * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
  * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
  * @param ignorePatterns: Array<string>
- * @param loadTextFilePromise function
  * @param isWalking
  * @returns {Promise<*>}
  */
 function createIndex(
   param,
-  listDirectoryPromise,
-  loadTextFilePromise,
   mode = ["extractThumbPath"],
   ignorePatterns = [],
   isWalking = () => true
 ) {
-  let path;
-  if (typeof param === "object" && param !== null) {
-    path = param.path;
-  } else {
-    path = param;
+  const {
+    listDirectoryPromise,
+    getFileContentPromise,
+    extractPDFcontent,
+    ...restParam
+  } = param;
+  if (!listDirectoryPromise) {
+    return Promise.reject(
+      new Error("Error creating index: no listDirectoryPromise in params!")
+    );
   }
+  const path = restParam.path;
   // console.log("createDirectoryIndex started:" + path);
   // console.time("createDirectoryIndex");
   const directoryIndex = [];
   let counter = 0;
 
   return walkDirectory(
-    param,
+    restParam,
     listDirectoryPromise,
     {
       recursive: true,
       skipMetaFolder: true,
       skipDotHiddenFolder: true,
       mode,
+      ...(extractPDFcontent && { extractText: extractPDFcontent }),
     },
     async (fileEntry) => {
       counter += 1;
@@ -70,52 +106,59 @@ function createIndex(
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      const meta = await getEntryMeta(
-        {
-          ...param,
-          path: getMetaFileLocationForFile(
-            fileEntry.path,
-            AppConfig.dirSeparator
-          ),
-        },
-        loadTextFilePromise
-      );
-      /*const thumb =
-        fileEntry.meta && fileEntry.meta.thumbPath
-          ? cleanRootPath(
+      let meta;
+      if (getFileContentPromise) {
+        meta = await loadJSONFile(
+          {
+            ...restParam,
+            path: getMetaFileLocationForFile(
+              fileEntry.path,
+              AppConfig.dirSeparator
+            ),
+          },
+          getFileContentPromise
+        );
+        meta = {
+          ...fileEntry.meta,
+          ...(fileEntry.meta?.thumbPath && {
+            thumbPath: cleanRootPath(
               fileEntry.meta.thumbPath,
               path,
               AppConfig.dirSeparator
-            )
-          : undefined;*/
+            ),
+          }),
+          ...meta,
+        };
+      }
       const entry = {
         ...fileEntry,
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
-        meta: meta,
-        //meta: { ...(meta && meta), ...(thumb && { thumbPath: thumb }) },
+        ...(meta && { meta: meta }),
       };
       directoryIndex.push(enhanceEntry(entry));
     },
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        const meta = await getEntryMeta(
-          {
-            ...param,
-            path: getMetaFileLocationForDir(directoryEntry.path),
-          },
-          loadTextFilePromise
-        );
+        /*
+        let meta;
+        if (getFileContentPromise) {
+          meta = await loadJSONFile(
+            {
+              ...restParam,
+              path: getMetaFileLocationForDir(directoryEntry.path),
+            },
+            getFileContentPromise
+          );
+        }
+        */
         const entry = {
-          name: directoryEntry.name,
-          isFile: directoryEntry.isFile,
-          tags: directoryEntry.tags,
+          ...directoryEntry,
           path: cleanRootPath(
             directoryEntry.path,
             path,
             AppConfig.dirSeparator
           ),
-          meta: meta,
         };
         directoryIndex.push(enhanceEntry(entry));
       }
@@ -139,21 +182,8 @@ function createIndex(
       // window.walkCanceled = false;
       // console.timeEnd("createDirectoryIndex");
       console.warn("Error creating index: " + err);
+      return directoryIndex;
     });
-}
-
-/**
- * @param param = {path: , bucketName: }
- * @param loadTextFilePromise  function
- * @returns {Promise<*>}
- */
-async function getEntryMeta(param, loadTextFilePromise) {
-  //metaFilePath) {
-  // const metaFileProps = await getPropertiesPromise(metaFilePath);
-  // if (metaFileProps.isFile) {
-  const meta = await loadJSONFile(param, loadTextFilePromise); // { path: metaFilePath });
-  //}
-  return meta;
 }
 
 /**
@@ -217,13 +247,13 @@ function hasIndex(param, getPropertiesPromise) {
 /**
  * @param param = {directoryPath:string, locationID:string}
  * @param dirSeparator: string
- * @param loadTextFilePromise function
+ * @param getFileContentPromise function
  * @returns {Promise<Array<Object>>}
  */
 function loadIndex(
   param,
   dirSeparator = AppConfig.dirSeparator,
-  loadTextFilePromise
+  getFileContentPromise
 ) {
   let directoryPath, locationID;
   if (typeof param === "object" && param !== null) {
@@ -233,7 +263,10 @@ function loadIndex(
     directoryPath = param;
   }
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  return loadJSONFile({ ...param, path: folderIndexPath }, loadTextFilePromise)
+  return loadJSONFile(
+    { ...param, path: folderIndexPath },
+    getFileContentPromise
+  )
     .then((directoryIndex) => {
       return enhanceDirectoryIndex(
         param,
@@ -328,8 +361,8 @@ function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
 }
 
 function addToIndex(param, size, LastModified, thumbPath) {
-  if (!param.loadTextFilePromise) {
-    console.error("addToIndex param.loadTextFilePromise is not set!");
+  if (!param.getFileContentPromise) {
+    console.error("addToIndex param.getFileContentPromise is not set!");
     return Promise.resolve(false);
   }
   if (!param.saveTextFilePromise) {
@@ -355,10 +388,13 @@ function addToIndex(param, size, LastModified, thumbPath) {
       param.bucketName
   );
   return param
-    .loadTextFilePromise({
-      path: metaFilePath,
-      bucketName: param.bucketName,
-    })
+    .getFileContentPromise(
+      {
+        path: metaFilePath,
+        bucketName: param.bucketName,
+      },
+      "text"
+    )
     .then((metaFileContent) => {
       console.info("addToIndex metaFileContent:" + metaFileContent);
       let tsi = [];
@@ -394,8 +430,8 @@ function addToIndex(param, size, LastModified, thumbPath) {
 }
 
 function removeFromIndex(param) {
-  if (!param.loadTextFilePromise) {
-    console.error("removeFromIndex param.loadTextFilePromise is not set!");
+  if (!param.getFileContentPromise) {
+    console.error("removeFromIndex param.getFileContentPromise is not set!");
     return Promise.resolve(false);
   }
   if (!param.saveTextFilePromise) {
@@ -412,10 +448,13 @@ function removeFromIndex(param) {
   const dirPath = extractContainingDirectoryPath(param.path, "/");
   const metaFilePath = getMetaIndexFilePath(dirPath);
   return param
-    .loadTextFilePromise({
-      ...param,
-      path: metaFilePath,
-    })
+    .getFileContentPromise(
+      {
+        ...param,
+        path: metaFilePath,
+      },
+      "text"
+    )
     .then((metaFileContent) => {
       if (metaFileContent) {
         let tsi = [];
@@ -459,14 +498,14 @@ function getMetaIndexFilePath(
 /**
  * @returns {Promise<*>}
  * @param param
- * @param loadTextFilePromise
+ * @param getFileContentPromise
  */
-function loadJSONFile(param, loadTextFilePromise) {
-  if (!loadTextFilePromise) {
-    console.error("loadJSONFile loadTextFilePromise is not set!");
+function loadJSONFile(param, getFileContentPromise) {
+  if (!getFileContentPromise) {
+    console.error("loadJSONFile getFileContentPromise is not set!");
     return Promise.resolve(false);
   }
-  return loadTextFilePromise(param)
+  return getFileContentPromise(param, "text")
     .then((jsonContent) => loadJSONString(jsonContent))
     .catch((e) => {
       console.log("File not exist: " + param.path, e);

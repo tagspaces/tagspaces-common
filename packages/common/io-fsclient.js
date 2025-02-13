@@ -1,6 +1,11 @@
 //const pathLib = require("path");
 const tsPaths = require("./paths");
-const { arrayBufferToBuffer, streamToBuffer } = require("./misc");
+const { createTextIndex, extractTextContent } = require("./utils-io");
+const {
+  arrayBufferToBuffer,
+  streamToBuffer,
+  setEntryLinks,
+} = require("./misc");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
 
@@ -164,7 +169,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
 
         if (stats) {
-          resolve({
+          const fsEntry = {
             name: path.substring(
               path.lastIndexOf(dirSeparator) + 1,
               path.length
@@ -173,7 +178,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             size: stats.size,
             lmdt: stats.mtime.getTime ? stats.mtime.getTime() : stats.mtime,
             path,
-          });
+          };
+          if (param.extractLinks) {
+            extractTextContentLinks(fsEntry, true, true).then(() =>
+              resolve(fsEntry)
+            );
+          } else {
+            resolve(fsEntry);
+          }
         } else {
           resolve(false);
         }
@@ -388,9 +400,125 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
+  async function extractAndSavePdf(entry, extractPDFcontent) {
+    let textContent;
+    const pdfContentPath = tsPaths.getMetaContentFileLocation(entry.path);
+    const pdfStats = await stat({ path: pdfContentPath });
+
+    if (
+      pdfStats &&
+      pdfStats.mtime.getTime &&
+      pdfStats.mtime.getTime() > entry.lmdt
+    ) {
+      textContent = await getFileContentPromise(
+        { path: pdfContentPath },
+        "text"
+      );
+    } else if (extractPDFcontent) {
+      try {
+        const buffer = await getFileContentPromise(
+          { path: entry.path },
+          "arraybuffer"
+        );
+        textContent = await extractPDFcontent(buffer);
+        await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
+      } catch (e) {
+        console.error("Failed to extractPDFcontent in:" + entry.path, e);
+      }
+    }
+    return textContent;
+  }
+
+  async function processDirectoryMeta(eentry) {
+    const dirMetaContent = await listMetaDirectoryPromise({
+      path: eentry.path,
+    });
+    const metaFolderPath = tsPaths.getMetaDirectoryPath(
+      eentry.path,
+      dirSeparator
+    );
+
+    // Load folder metadata
+    const folderMetaPath = tsPaths.getMetaFileLocationForDir(
+      eentry.path,
+      dirSeparator
+    );
+    if (
+      dirMetaContent.some(
+        (meta) => metaFolderPath + dirSeparator + meta.path === folderMetaPath
+      )
+    ) {
+      try {
+        eentry.meta = await fs.readJson(folderMetaPath);
+      } catch (err) {
+        console.error("Failed reading meta folder file " + folderMetaPath, err);
+      }
+    }
+
+    // Loading thumbs for folders tst.jpg
+    const folderThumbPath = tsPaths.getThumbFileLocationForDirectory(
+      eentry.path,
+      dirSeparator
+    );
+    if (
+      dirMetaContent.some(
+        (meta) => metaFolderPath + dirSeparator + meta.path === folderThumbPath
+      ) &&
+      // skipping meta folder
+      !eentry.path.includes("/" + AppConfig.metaFolder)
+    ) {
+      eentry.meta = { ...eentry.meta, thumbPath: folderThumbPath };
+    }
+  }
+
+  async function processMetaContent(path, enhancedEntries, metaContent, mode) {
+    const metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
+
+    for (const metaEntry of metaContent) {
+      // Process metadata JSON files
+      if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
+        const baseName = metaEntry.path.slice(0, -AppConfig.metaFileExt.length);
+        const originalEntry = enhancedEntries.find(
+          (entry) => entry.name === baseName
+        );
+
+        if (originalEntry) {
+          try {
+            const metaFilePath = metaFolderPath + dirSeparator + metaEntry.path;
+            const metaFileObj = await fs.readJson(metaFilePath);
+            originalEntry.meta = metaFileObj;
+
+            if (mode.includes("extractLinks") && metaFileObj?.description) {
+              setEntryLinks(originalEntry, metaFileObj.description);
+            }
+          } catch (err) {
+            console.warn(`Error reading metadata file: ${metaEntry.path}`, err);
+          }
+        }
+      }
+
+      // Process thumbnails
+      if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
+        const baseName = metaEntry.path.slice(
+          0,
+          -AppConfig.thumbFileExt.length
+        );
+        const thumbPath =
+          metaFolderPath + dirSeparator + encodeURIComponent(metaEntry.path);
+        const enhancedEntry = enhancedEntries.find(
+          (entry) => entry.name === baseName
+        );
+
+        if (enhancedEntry) {
+          enhancedEntry.meta = { ...enhancedEntry.meta, thumbPath };
+        }
+      }
+    }
+  }
+
   /**
-   * @param param
-   * @param mode = ['extractTextContent', 'extractThumbPath']
+   * @param param      param.extractPDFcontent need to exist
+   * @param mode = ['extractTextContent','extractLinks','extractThumbPath']
    * @param ignorePatterns
    * @returns {Promise<FileSystemEntry[]>}
    */
@@ -399,27 +527,20 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     mode = ["extractThumbPath"],
     ignorePatterns = []
   ) {
-    let path = getPath(param);
+    const path = getPath(param);
+    const loadMeta = mode.includes("extractThumbPath");
 
     return new Promise(async (resolve, reject) => {
       try {
-        const loadMeta = mode.includes("extractThumbPath");
-        let metaContent = [];
-        if (loadMeta) {
-          metaContent = await listMetaDirectoryPromise(param);
-        }
+        const metaContent = loadMeta
+          ? await listMetaDirectoryPromise(param)
+          : [];
 
         const enhancedEntries = [];
+        const isMatch =
+          ignorePatterns.length > 0 ? picomatch(ignorePatterns) : null;
         let entryPath;
-        let metaFolderPath;
-        let stats;
-        let eentry;
-        // let containsMetaFolder = false;
-        // const metaMetaFolder = metaFolder + pathLib.sep + metaFolder;
-        /*if (path.startsWith("./") || path.startsWith("../")) {
-          // relative tsPaths
-          path = pathLib.resolve(path);
-        }*/
+
         fs.readdir(path, async (error, entries) => {
           if (error) {
             console.warn("Error listing directory " + path);
@@ -427,11 +548,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             return;
           }
 
-          /*if (window.walkCanceled) {
-                resolve(enhancedEntries); // returning results even if walk canceled
-                return;
-            }
-    */
           if (entries) {
             for (const entry of entries) {
               entryPath =
@@ -439,21 +555,20 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 (path.endsWith(dirSeparator) ? "" : dirSeparator) +
                 entry;
 
-              if (ignorePatterns.length > 0) {
-                const isMatch = picomatch(ignorePatterns); //, { options: windows }); you can configure the matcher function to accept windows paths
-                if (isMatch(entryPath) || isMatch(entry)) {
-                  continue;
-                }
+              // Skip ignored patterns
+              if (isMatch && (isMatch(entryPath) || isMatch(entry))) {
+                continue;
               }
 
-              eentry = {};
-              eentry.name = entry;
-              eentry.path = entryPath;
-              eentry.tags = [];
-              eentry.meta = {};
+              const eentry = {
+                name: entry,
+                path: entryPath,
+                tags: [],
+                meta: {},
+              };
 
               try {
-                stats = await stat({ path: entryPath });
+                const stats = await stat({ path: entryPath });
                 if (stats) {
                   eentry.isFile = stats.isFile();
                   eentry.size = stats.size;
@@ -462,150 +577,34 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     : stats.mtime;
                 }
 
-                // Load meta for dirs
-                if (
-                  !eentry.isFile &&
-                  !eentry.path.endsWith(dirSeparator + AppConfig.metaFolder) &&
-                  loadMeta
-                ) {
-                  const dirMetaContent = await listMetaDirectoryPromise({
-                    ...param,
-                    path: eentry.path,
-                  });
-                  metaFolderPath = tsPaths.getMetaDirectoryPath(
-                    eentry.path,
-                    dirSeparator
-                  );
-                  // Read tsm.json from sub folders
-                  const folderMetaPath = tsPaths.getMetaFileLocationForDir(
-                    eentry.path,
-                    dirSeparator
-                  );
-                  if (
-                    dirMetaContent.some(
-                      (meta) =>
-                        metaFolderPath + dirSeparator + meta.path ===
-                        folderMetaPath
-                    )
-                  ) {
-                    try {
-                      eentry.meta = await fs.readJson(folderMetaPath);
-                      // console.log('Success reading meta folder file ' + folderMetaPath);
-                    } catch (err) {
-                      console.error(
-                        "Failed reading meta folder file " + folderMetaPath
-                      );
-                    }
-                  }
-
-                  // Loading thumbs for folders tst.jpg
-                  const folderTmbPath =
-                    tsPaths.getThumbFileLocationForDirectory(
-                      eentry.path,
-                      dirSeparator
-                    );
-                  if (
-                    dirMetaContent.some(
-                      (meta) =>
-                        metaFolderPath + dirSeparator + meta.path ===
-                        folderTmbPath
-                    )
-                  ) {
-                    if (!eentry.path.includes("/" + AppConfig.metaFolder)) {
-                      // skipping meta folder
-                      eentry.meta = { thumbPath: folderTmbPath };
-                    }
-                  }
+                // Handle directory meta
+                if (!eentry.isFile && loadMeta) {
+                  await processDirectoryMeta(eentry);
                 }
-
-                if (mode.includes("extractTextContent") && eentry.isFile) {
-                  const fileName = eentry.name.toLowerCase();
-                  if (
-                    fileName.endsWith(".txt") ||
-                    fileName.endsWith(".md") ||
-                    fileName.endsWith(".html")
-                  ) {
-                    const fileContent = await fs.readFile(eentry.path, "utf8");
-                    eentry.textContent = extractTextContent(
-                      fileName,
-                      fileContent
-                    );
-                  }
+                // Optionally extract text content and links
+                if (mode.includes("extractTextContent")) {
+                  await extractTextContentLinks(
+                    eentry,
+                    param.extractPDFcontent,
+                    mode.includes("extractLinks")
+                  );
                 }
-
-                /*if (window.walkCanceled) {
-                    resolve(enhancedEntries);
-                    return;
-                  }*/
               } catch (e) {
-                console.warn(
-                  "Can not load properties for: " + entryPath + " " + e
-                );
+                console.error("Can not load properties for: " + entryPath, e);
               }
               enhancedEntries.push(eentry);
             }
 
+            // Process meta content
             if (metaContent.length > 0) {
-              metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
-              for (const metaEntry of metaContent) {
-                // Reading meta json files with tags and description
-                if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
-                  const fileNameWithoutMetaExt = metaEntry.path.substr(
-                    0,
-                    metaEntry.path.lastIndexOf(AppConfig.metaFileExt)
-                  );
-                  const origFile = enhancedEntries.find(
-                    (result) => result.name === fileNameWithoutMetaExt
-                  );
-                  if (origFile) {
-                    const metaFilePath =
-                      metaFolderPath + dirSeparator + metaEntry.path;
-                    let metaFileObj;
-                    try {
-                      metaFileObj = await fs.readJson(metaFilePath);
-                    } catch (ex) {
-                      console.warn("Error readJson for " + metaFilePath, ex);
-                    }
-                    if (metaFileObj) {
-                      enhancedEntries.forEach((enhancedEntry) => {
-                        if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                          enhancedEntry.meta = metaFileObj;
-                        }
-                      });
-                    }
-                  }
-                }
-
-                // Finding if thumbnail available
-                if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
-                  const fileNameWithoutMetaExt = metaEntry.path.substr(
-                    0,
-                    metaEntry.path.lastIndexOf(AppConfig.thumbFileExt)
-                  );
-                  enhancedEntries.forEach((enhancedEntry) => {
-                    if (enhancedEntry.name === fileNameWithoutMetaExt) {
-                      const thumbPath =
-                        metaFolderPath +
-                        dirSeparator +
-                        encodeURIComponent(metaEntry.path);
-                      enhancedEntry.meta = {
-                        ...(enhancedEntry.meta && enhancedEntry.meta),
-                        thumbPath,
-                      };
-                    }
-                  });
-                }
-
-                /*if (window.walkCanceled) {
-                      resolve(enhancedEntries);
-                    }*/
-              }
+              await processMetaContent(
+                path,
+                enhancedEntries,
+                metaContent,
+                mode
+              );
             }
             resolve(enhancedEntries);
-            /*});
-            } else {
-              resolve(enhancedEntries);
-            }*/
           }
         });
       } catch (e) {
@@ -613,6 +612,99 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         reject(new Error("Error listing directory " + path)); // returning results even if any promise fails
       }
     });
+  }
+
+  async function extractTextContentLinks(
+    eentry,
+    extractPDFcontent = false,
+    extractLinks = false
+  ) {
+    const fileName = eentry.name.toLowerCase();
+    // Ignoring files starting with ._ e.g. on macOS
+    if (fileName.startsWith("._")) {
+      return;
+    }
+    if (!eentry.isFile && eentry.meta?.description && extractLinks) {
+      setEntryLinks(eentry, eentry.meta?.description);
+      return;
+    } else if (
+      fileName.endsWith(".txt") ||
+      fileName.endsWith(".md") ||
+      fileName.endsWith(".htm") ||
+      fileName.endsWith(".html") ||
+      // fileName.endsWith(".mhtml") || // mhtml extraction disable due to heavy parsing
+      fileName.endsWith(".website") ||
+      fileName.endsWith(".url")
+    ) {
+      try {
+        let textContent = await fs.readFile(eentry.path, "utf8");
+        if (textContent) {
+          // console.log("Extracting content from: " + eentry.path);
+          try {
+            // remove all dataurls
+            textContent = textContent.replace(/data:[^ \t\r\n]+/g, "");
+          } catch (e) {
+            console.error(
+              "Error removing data urls: " + fileName + " with: " + e
+            );
+          }
+          if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
+            // Extracting the body tag
+            // const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m;
+            const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+            try {
+              textContent = textContent.match(bodyRegex)[0].trim();
+            } catch (e) {
+              console.error(
+                "Error parsing the body of the HTML document: " +
+                  fileName +
+                  " with: " +
+                  e
+              );
+            }
+          } else if (fileName.endsWith(".mhtml")) {
+            //TODO handling of = at line end unclear
+            const sourceURLRegex =
+              /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
+            const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+            try {
+              const sourceUrl = textContent.match(sourceURLRegex)[0].trim();
+              // const bodyContent = textContent.match(bodyRegex)[0];
+              // console.log("Body: " + bodyContent);
+              // const oneLineContent = bodyContent
+              //   .split("\n")
+              //   .map((line) => (line.endsWith("=") ? line.slice(0, -1) : line))
+              //   .join("");
+              // console.log("One line: " + oneLineContent);
+              // textContent =
+              //   sourceUrl + "\n" + oneLineContent.split("=3D").join("=");
+              textContent = sourceUrl;
+            } catch (e) {
+              console.error(
+                "Error parsing the body of the MHTML document: " +
+                  fileName +
+                  " with: " +
+                  e
+              );
+            }
+          }
+          eentry.textContent = extractTextContent(fileName, textContent);
+          if (extractLinks) {
+            setEntryLinks(eentry, textContent);
+          }
+        }
+      } catch (error) {
+        console.error(`Error reading file at ${eentry.path}:`, error);
+      }
+      return;
+    } else if (fileName.endsWith(".pdf")) {
+      const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
+      eentry.textContent = createTextIndex(textContent);
+      if (textContent && extractLinks) {
+        setEntryLinks(eentry, textContent);
+      }
+      return;
+    }
   }
 
   /**
@@ -662,7 +754,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   /**
    * @param param
-   * @param type = text | arraybuffer (for text use loadTextFilePromise) text return type is not supported for node
+   * @param type = text | arraybuffer (for text you can use loadTextFilePromise with preview option too)
    * @returns {Promise<ArrayBuffer>}
    */
   function getFileContentPromise(param, type = "arraybuffer") {
@@ -672,89 +764,24 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       filePath = pathLib.resolve(filePath);
     }*/
     return new Promise((resolve, reject) => {
-      fs.readFile(filePath, (error, content) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(content);
-        }
-      });
+      if (type === "text") {
+        fs.readFile(filePath, "utf8", (error, content) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(content);
+          }
+        });
+      } else {
+        fs.readFile(filePath, (error, content) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(content);
+          }
+        });
+      }
     });
-  }
-
-  function extractTextContent(fileName, textContent) {
-    let fileContent = textContent.toLowerCase();
-    let contentArray;
-    let joinedTokens;
-    if (fileName.endsWith(".md")) {
-      const marked = require("marked");
-      const lexer = new marked.Lexer({});
-      const tokens = lexer.inlineTokens(fileContent);
-      contentArray = tokens.map((token) => {
-        // console.log(JSON.stringify(token));
-        if (token.type === "text" && token.text) {
-          let cleanedText = token.text.replace(
-            /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
-            ""
-          );
-          cleanedText = cleanedText.replace(/\n/g, "");
-          return cleanedText.trim();
-        }
-        return "";
-      });
-      joinedTokens = contentArray.join(" ");
-    } else if (fileName.endsWith(".html")) {
-      const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m; // jshint ignore:line
-      try {
-        fileContent = fileContent.match(bodyRegex)[1];
-      } catch (e) {
-        console.log(
-          "Error parsing the body of this HTML document: " + fileName
-        );
-      }
-      const marked = require("marked");
-      const lexer = new marked.Lexer({});
-      const tokens = lexer.inlineTokens(fileContent);
-      // const tokens = marked.lexer(fileContent, { });
-      contentArray = tokens.map((token) => {
-        // console.log(JSON.stringify(token));
-        if (token.type === "text" && token.text) {
-          return token.text;
-        }
-        return "";
-      });
-      joinedTokens = contentArray.join(" ");
-    } else {
-      joinedTokens = fileContent;
-    }
-
-    /*if (fileName.endsWith(".html")) {
-      // Use only the content in the body
-      const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
-      const matches = pattern.exec(fileContent);
-      if (matches && matches.length > 0) {
-        fileContent = matches[1];
-      }
-
-      const span = document.createElement("span");
-      span.innerHTML = fileContent;
-      fileContent = span.textContent || span.innerText;
-    }*/
-
-    // Todo remove very long word e.g. dataUrls or other binary data which could be in the text
-
-    // replace unnecessary chars. leave only chars, numbers and space
-    // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
-    // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
-
-    // clear duplicate string, remove spaces and empty string
-    const trimmedTokens = joinedTokens.split(" ").filter((s) => s.trim());
-    // console.log(JSON.stringify(trimmedTokens));
-    const noDuplicatesArray = [...new Set(trimmedTokens)];
-    // console.log(JSON.stringify(noDuplicatesArray));
-    cleanedContent = noDuplicatesArray.join(" ").trim();
-    // console.log("Extracted content: '" + cleanedContent + "'");
-    return cleanedContent;
   }
 
   function createDirectoryPromise(dirPath) {
@@ -809,7 +836,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
   }
 
-  function renameFilePromise(filePath, newFilePath, onProgress = undefined) {
+  function renameFilePromise(
+    filePath,
+    newFilePath,
+    onProgress = undefined,
+    force = false
+  ) {
     console.log("Renaming file: " + filePath + " to " + newFilePath);
     // stopWatchingDirectories();
     return new Promise((resolve, reject) => {
@@ -836,66 +868,65 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     "move a directory:" + filePath + " to:" + newFilePath
                 );*/
         } else {
-          stat({ path: newFilePath }).then((destStat) => {
+          stat({ path: newFilePath }).then(async (destStat) => {
             if (destStat) {
-              reject(
-                'Target filename "' +
-                  newFilePath +
-                  '" exists. Renaming of "' +
-                  filePath +
-                  '" failed'
-              );
-            } else {
-              const destDirPath = tsPaths.extractParentDirectoryPath(
-                newFilePath,
-                AppConfig.dirSeparator
-              );
-              fs.mkdirp(destDirPath, (error) => {
-                stat({ path: destDirPath }).then((destDirStat) => {
-                  if (!destDirStat) {
-                    reject(
-                      'Destination dir "' +
-                        destDirPath +
-                        '" not exists. Renaming of "' +
-                        filePath +
-                        '" failed'
-                    );
-                  } else if (sourceStat.dev === destDirStat.dev) {
-                    fs.move(
-                      filePath,
-                      newFilePath,
-                      { clobber: true },
-                      (error) => {
-                        // TODO webdav impl
-                        if (error) {
-                          reject(
-                            "Renaming: " + filePath + " failed with: " + error
-                          );
-                          return;
-                        }
-                        resolve([filePath, newFilePath]);
-                      }
-                    );
-                  } else {
-                    fs.copy(filePath, newFilePath, (error) => {
-                      if (error) {
-                        reject("Copying: " + filePath + " failed.");
-                        return;
-                      }
-                      fs.unlink(filePath, (error) => {
-                        if (error) {
-                          console.log(
-                            "renameFilePromise delete " + filePath + " file:",
-                            error
-                          );
-                        }
-                        resolve([filePath, newFilePath]);
-                      });
-                    });
-                  }
-                });
-              });
+              if (force) {
+                await deleteFilePromise(newFilePath);
+              } else {
+                reject(
+                  'Target filename "' +
+                    newFilePath +
+                    '" exists. Renaming of "' +
+                    filePath +
+                    '" failed'
+                );
+                return;
+              }
             }
+            const destDirPath = tsPaths.extractParentDirectoryPath(
+              newFilePath,
+              AppConfig.dirSeparator
+            );
+            fs.mkdirp(destDirPath, (error) => {
+              stat({ path: destDirPath }).then((destDirStat) => {
+                if (!destDirStat) {
+                  reject(
+                    'Destination dir "' +
+                      destDirPath +
+                      '" not exists. Renaming of "' +
+                      filePath +
+                      '" failed'
+                  );
+                } else if (sourceStat.dev === destDirStat.dev) {
+                  fs.move(filePath, newFilePath, { clobber: true }, (error) => {
+                    // TODO webdav impl
+                    if (error) {
+                      reject(
+                        "Renaming: " + filePath + " failed with: " + error
+                      );
+                      return;
+                    }
+                    resolve([filePath, newFilePath]);
+                  });
+                } else {
+                  fs.copy(filePath, newFilePath, (error) => {
+                    if (error) {
+                      reject("Copying: " + filePath + " failed.");
+                      return;
+                    }
+                    fs.unlink(filePath, (error) => {
+                      if (error) {
+                        console.log(
+                          "renameFilePromise delete " + filePath + " file:",
+                          error
+                        );
+                      }
+                      resolve([filePath, newFilePath]);
+                    });
+                  });
+                }
+              });
+            });
           });
         }
       });
@@ -1085,8 +1116,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     saveBinaryFilePromise,
     getPropertiesPromise,
     loadTextFilePromise,
+    extractAndSavePdf,
     getFileContentPromise,
-    extractTextContent,
     createDirectoryPromise,
     copyFilePromise,
     renameFilePromise,

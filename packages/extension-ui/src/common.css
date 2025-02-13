@@ -1,0 +1,13 @@
+body {
+  margin: 0px;
+}
+@media print {
+  /*.monaco-editor, .monaco-editor div { // .editor-scrollable
+        overflow: visible!important;
+        height: 100vh;
+    }*/
+
+  #extFabMenu {
+    display: none;
+  }
+}

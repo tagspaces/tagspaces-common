@@ -1,7 +1,6 @@
 const {
   unZip,
   isDirectory,
-  extractTextContent,
   listDirectoryPromise,
   saveTextFilePromise,
   saveBinaryFilePromise,
@@ -17,6 +16,7 @@ const {
   deleteFilePromise,
   deleteDirectoryPromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
+const { extractTextContent } = require("@tagspaces/tagspaces-common/utils-io");
 const pathLib = require("path");
 const fs = require("fs");
 const { clean } = require("../../../scripts/webdav/webdavserver-v2");
@@ -183,7 +183,7 @@ describe("io-node unit tests", () => {
         
     `;
     expectedContent =
-      "milkdown gt is a wysiwyg markdown editor framework here the right click to open link we only support commonmark gfm also supported features x 📝 write in an elegant way 🎨 theme can be shared and used with npm packages 🎮 your awesome idea by plugin";
+      "milkdown is a wysiwyg markdown editor framework here the right click to open link we only support commonmark gfm also supported features x 📝 write in an elegant way 🎨 theme can be shared and used with npm packages 🎮 your awesome idea by plugin";
     extractedContent = extractTextContent("test.md", complexMD);
     // console.log(expectedContent);
     // console.log(extractedContent);
@@ -353,6 +353,15 @@ describe("io-node unit tests", () => {
     await renameFilePromise(targetPath, targetPath2);
     const targetFile2 = fs.lstatSync(targetPath2);
     expect(targetFile2.size).toBe(0);
+
+    // dest file exist and override with force
+    const targetPath3 = pathLib.resolve(
+      __dirname,
+      "../../../scripts/testContents/sample.coffee"
+    );
+    await renameFilePromise(targetPath2, targetPath3, undefined, true);
+    const targetFile3 = fs.lstatSync(targetPath3);
+    expect(targetFile3.size).toBe(0);
   });
   test("io-node.renameDirectoryPromise", async () => {
     const sourcePath = pathLib.resolve(

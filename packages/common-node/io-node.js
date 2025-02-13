@@ -205,9 +205,13 @@ function getFileContentPromise(param, type) {
   return fsClient.getFileContentPromise(param, type);
 }
 
-function extractTextContent(fileName, textContent) {
-  return fsClient.extractTextContent(fileName, textContent);
+function extractAndSavePdf(entry, extractPDFcontent) {
+  return fsClient.extractAndSavePdf(entry, extractPDFcontent);
 }
+
+/*function extractTextContent(fileName, textContent) {
+  return fsClient.extractTextContent(fileName, textContent);
+}*/
 
 function createDirectoryPromise(dirPath) {
   return fsClient.createDirectoryPromise(dirPath);
@@ -224,8 +228,13 @@ function copyFilePromise(sourceFilePath, targetFilePath) {
   return fsClient.copyFilePromise(sourceFilePath, targetFilePath);
 }
 
-function renameFilePromise(filePath, newFilePath, onProgress = undefined) {
-  return fsClient.renameFilePromise(filePath, newFilePath, onProgress);
+function renameFilePromise(
+  filePath,
+  newFilePath,
+  onProgress = undefined,
+  force = false
+) {
+  return fsClient.renameFilePromise(filePath, newFilePath, onProgress, force);
 }
 
 function renameDirectoryPromise(dirPath, newDirName) {
@@ -416,7 +425,7 @@ module.exports = {
   isDirectory,
   loadTextFilePromise,
   getFileContentPromise,
-  extractTextContent,
+  extractAndSavePdf,
   createDirectoryPromise,
   copyFilePromise,
   renameFilePromise,

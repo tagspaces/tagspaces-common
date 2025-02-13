@@ -1,9 +1,10 @@
 const {
   listDirectoryPromise,
-  loadTextFilePromise,
+  getFileContentPromise,
   saveTextFilePromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
 const { persistIndex, createIndex } = require("@tagspaces/tagspaces-indexer");
+const { extractPDFcontent } = require("@tagspaces/tagspaces-pdf-extraction");
 
 function handleIndexer(req, res) {
   if (req.method === "POST") {
@@ -25,14 +26,15 @@ function handleIndexer(req, res) {
         const mode = ["extractThumbPath"];
         if (extractText) {
           mode.push("extractTextContent");
+          mode.push("extractLinks");
         }
-        return createIndex(
-          directoryPath,
+        const param = {
+          path: directoryPath,
           listDirectoryPromise,
-          loadTextFilePromise,
-          mode,
-          ignorePatterns ? ignorePatterns : []
-        )
+          getFileContentPromise,
+          ...(extractText && { extractPDFcontent }),
+        };
+        return createIndex(param, mode, ignorePatterns ? ignorePatterns : [])
           .then((directoryIndex) => {
             return persistIndex(
               { path: directoryPath, saveTextFilePromise },

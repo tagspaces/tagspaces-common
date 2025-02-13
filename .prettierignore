@@ -5,3 +5,5 @@ lib
 .minio.sys
 testdata
 testContents
+
+/.nx/workspace-data

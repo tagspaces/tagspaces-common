@@ -9,16 +9,27 @@ function hideFolder(req, res) {
     });
     req.on("end", async () => {
       // console.log('Body: ' + parse(body));
+      function resSuccess(succeeded) {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-store, must-revalidate");
+        res.end(JSON.stringify({ success: succeeded }));
+      }
       try {
         const data = JSON.parse(body);
         const dirPath = data.path;
 
-        fsWin.setAttributes(dirPath, { IS_HIDDEN: true }, function (succeeded) {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.setHeader("Cache-Control", "no-store, must-revalidate");
-          res.end(JSON.stringify({ success: succeeded }));
-        });
+        if (fsWin) {
+          fsWin.setAttributes(
+            dirPath,
+            { IS_HIDDEN: true },
+            function (succeeded) {
+              resSuccess(succeeded);
+            }
+          );
+        } else {
+          resSuccess(true);
+        }
       } catch (e) {
         console.log(e);
         res.statusCode = 400;

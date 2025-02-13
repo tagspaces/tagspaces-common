@@ -23,9 +23,11 @@ let maxIndexAge = 600000; // 10 minutes
 let defaultFileColor = "#808080";
 let defaultFolderColor = "#582727"; // # 555 transparent #FDEEBD #ff791b #2c001e #880e4f
 let tsProtocol = "ts://";
+let mediaProtocol = "tsfile";
 
 if (typeof process !== "undefined") {
   if (process.env.tsProtocol) tsProtocol = process.env.tsProtocol;
+  if (process.env.mediaProtocol) mediaProtocol = process.env.mediaProtocol;
   if (process.env.metaFolder) metaFolder = process.env.metaFolder;
   if (process.env.metaFolderFile) metaFolderFile = process.env.metaFolderFile;
   if (process.env.folderLocationsFile)
@@ -309,6 +311,7 @@ module.exports = {
   defaultFileColor,
   defaultFolderColor,
   isElectron,
+  isNode,
   isFirefox,
   isWin,
   isLinux,
@@ -339,6 +342,7 @@ module.exports = {
   darkThemeLightColor,
   darkThemeMainColor,
   tsProtocol,
+  mediaProtocol,
   FileTypeGroups,
   ThumbGenSupportedFileTypes,
 };

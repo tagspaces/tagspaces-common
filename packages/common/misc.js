@@ -24,6 +24,133 @@ const locationType = {
   TYPE_WEBDAV: "3",
 };
 
+function extractLinks(textContent) {
+  const links = [];
+
+  try {
+    // Extracting source url from HTML files saved with the browser extension
+    // const sourceUrlRegex = /data-sourceurl=["'](http[^"']*)["']/g;
+    const sourceUrlRegex = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
+    const sourceUrlMatches = textContent.match(sourceUrlRegex) || [];
+    for (const match of sourceUrlMatches) {
+      const link = createLink(match);
+      if (link) {
+        links.push(link);
+      }
+    }
+
+    // if content is html link should be in href attributes
+    const urlRegex = /(?<=href=["'])(http[^"']*)(?=["'])/g;
+    const urlMatches = textContent.match(urlRegex) || [];
+    for (const match of urlMatches) {
+      const link = createLink(match);
+      if (link) {
+        links.push(link);
+      }
+    }
+
+    // if plain text or markdown try to find links beginning with http
+    if (links.length < 1) {
+      // const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urlRegex = /https?:\/\/[^\s\)]+|(?<=\()\s*https?:\/\/[^\s\)]+/g;
+      // const urlRegex = /https?:\/\/[^\s<>]+|<https?:\/\/[^\s<>]+>/g;
+      const urlMatches = textContent.match(urlRegex) || [];
+      for (const match of urlMatches) {
+        // Recognizing correctly <https://example.com>
+        const cleanedMatch = match.replace(/^<|>$/g, "");
+        const link = createLink(cleanedMatch);
+        if (link) {
+          links.push(link);
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Extracting URL failed with: " + e);
+  }
+
+  try {
+    // const tsUrlRegex = /ts?:\/\/\?([-a-zA-Z0-9@:%_\+.~#?&\\//=]*)/g;
+    const tsUrlRegex = /(?:ts):\/\/[^\s\)]+/g;
+    const tsUrls = textContent.match(tsUrlRegex);
+    // ts://?tslid=e78bf5d0-4546-86a5-eb81d8da4a38&tsepath=05252023171513.pdf&tseid=398a089d1c02405e87ba96530b2f81ca
+    // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
+    // ts://?tslid=1f915e7fd93a4527e4396e1dcab2e&tsdpath=contacts&tseid=2df0135aa2cd4e01a804b60d70ac39eb
+    tsUrls?.forEach((tsUrl) => {
+      if (tsUrl?.length > 5) {
+        try {
+          const validUrl = new URL(tsUrl);
+          const link = {};
+          link.type = "tslink";
+          link.href = validUrl.href;
+          // const tseid = validUrl.searchParams.get("tseid");
+          // if (tseid) {
+          //   link.tseid = tseid;
+          // }
+          // skip duplicates
+          if (!links.some((item) => item.href === link.href)) {
+            links.push(link);
+          }
+        } catch {
+          console.log("invalid tslink: " + tsUrl);
+        }
+      }
+    });
+  } catch (e) {
+    console.error("Extracting TSlinks failed with: " + e);
+  }
+  return links;
+}
+
+function createLink(urlmatch) {
+  // console.log("URL match", urlmatch);
+  try {
+    const validUrl = new URL(urlmatch);
+    const link = {};
+    link.href = validUrl.href;
+    if (validUrl.protocol === "http:" || validUrl.protocol === "https:") {
+      link.type = "url";
+    }
+    return link;
+  } catch {
+    console.log("invalid url: " + urlmatch);
+  }
+}
+
+function setEntryLinks(entry, textContent) {
+  // console.log(
+  //   "Ext. links for " + entry.path + " content: " + textContent.substr(0, 200)
+  // );
+  const links = extractLinks(textContent);
+  // console.log("Extracted links: " + JSON.stringify(links));
+  if (links && links.length > 0) {
+    if (entry.links && entry.links.length > 0) {
+      // console.log("Entry links already avail");
+      const newLinks = links.filter(
+        (link) => !entry.links.some((item) => item.href === link.href)
+      );
+      entry.links = [...entry.links, ...newLinks];
+    } else {
+      // console.log("Entry links not avail");
+      entry.links = links;
+    }
+  }
+  console.log(
+    "Entry links for " + entry.path + "\n" + JSON.stringify(entry.links)
+  );
+}
+
+function getUrlParameterByName(url, paramName) {
+  const name = paramName.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  const regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+  const results = regex.exec(url);
+  let param =
+    results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  if (param.includes("#")) {
+    param = param.split("#").join("%23");
+  }
+  return param;
+}
+
 /**
  * @param tagGroup: TS.TagGroup
  * @returns {TS.TagGroup}
@@ -1018,6 +1145,9 @@ const filterByDuplicate = (items, key, duplicateLength = 2) =>
 
 module.exports = {
   locationType,
+  extractLinks,
+  setEntryLinks,
+  getUrlParameterByName,
   prepareTagGroupForExport,
   prepareTagForExport,
   escapeRegExp,

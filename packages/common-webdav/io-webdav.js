@@ -122,9 +122,9 @@ function getFileContentPromise(param, type) {
   return fsClient.getFileContentPromise(param, type);
 }
 
-function extractTextContent(fileName, textContent) {
+/*function extractTextContent(fileName, textContent) {
   return fsClient.extractTextContent(fileName, textContent);
-}
+}*/
 
 function createDirectoryPromise(dirPath) {
   return fsClient.createDirectoryPromise(dirPath);
@@ -177,7 +177,6 @@ module.exports = {
   getPropertiesPromise,
   loadTextFilePromise,
   getFileContentPromise,
-  extractTextContent,
   createDirectoryPromise,
   copyFilePromise,
   renameFilePromise,

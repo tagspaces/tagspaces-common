@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-md",
   "description": "MD editor used by the TagSpaces application and extensions",
-  "version": "4.5.18",
+  "version": "4.5.38",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "lib/index.js",
@@ -26,7 +26,7 @@
     "type-check": "npm run typescript-clean && tsc --noEmit",
     "oxlint-check": "npx --yes oxlint@latest",
     "typescript-clean": "tsc --build --clean",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-4.3.9.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-4.5.19.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {

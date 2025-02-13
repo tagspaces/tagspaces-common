@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-extension-ui",
   "description": "Extension ui library used by the TagSpaces extensions",
-  "version": "4.3.7",
+  "version": "4.5.46",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "lib/index.js",
@@ -15,14 +15,14 @@
   ],
   "scripts": {
     "clean": "npx rimraf build lib esm lib-esm",
-    "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
-    "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
+    "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib && npx shx cp src/common.css lib/",
+    "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm && npx shx cp src/common.css esm/",
     "build": "npm run clean && npm run lib:cjs && npm run lib:esm",
     "build-webpack": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode production",
     "build-dev": "npm run clean && tsc && tsc -m es6 --outDir lib-esm && webpack --config webpack.config.js --mode development",
     "code-format": "npx prettier --write .",
     "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-extension-ui-2.1.45.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-extension-ui && rimraf package",
-    "npmpack-ext": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-extension-ui-2.1.45.tgz && npx shx cp -rL package/** ../../../tagspaces/extensions/text-editor-react/node_modules/@tagspaces/tagspaces-extension-ui && rimraf package",
+    "npmpack-ext": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-extension-ui-4.5.45.tgz && npx shx cp -rL package/** ../../../tagspaces/extensions/text-editor/node_modules/@tagspaces/tagspaces-extension-ui && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
