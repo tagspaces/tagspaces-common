@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-md-toolbar",
   "description": "MD toolbar plugin used by the TagSpaces application and extensions based on Milkdown editor",
-  "version": "4.5.18",
+  "version": "4.5.52",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "type": "module",
@@ -30,11 +30,11 @@
     "access": "public"
   },
   "peerDependencies": {
+    "@emotion/react": "*",
+    "@emotion/styled": "*",
     "@milkdown/core": "*",
     "@milkdown/prose": "*",
     "@milkdown/react": "*",
-    "@emotion/react": "*",
-    "@emotion/styled": "*",
     "@mui/icons-material": "*",
     "@mui/material": "*",
     "@prosemirror-adapter/react": "*",
@@ -46,6 +46,7 @@
     "@types/node": "^22.13.5",
     "@typescript-eslint/eslint-plugin": "^8.24.1",
     "@typescript-eslint/parser": "^8.24.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.20.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
@@ -53,7 +54,6 @@
     "prettier": "^3.5.1",
     "tsup": "^8.0.2",
     "typescript": "^5.3.3",
-    "vite": "^6.2.1",
-    "@vitejs/plugin-react": "^4.3.4"
+    "vite": "^6.2.1"
   }
 }
