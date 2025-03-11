@@ -12,13 +12,19 @@ export default defineConfig({
     '@milkdown/core',
     '@milkdown/prose',
     '@milkdown/react',
+    '@milkdown/ctx',
+    '@milkdown/transformer',
+    '@milkdown/utils',
+    '@milkdown/kit',
+    '@milkdown/preset-commonmark',
+    '@prosemirror-adapter/react',
     '@emotion/react',
     '@emotion/styled',
     '@mui/icons-material',
     '@mui/material',
-    '@prosemirror-adapter/react',
     'react',
-    'react-dom'
+    'react-dom',
+    'remark-directive'
   ],
   treeshake: true
 });

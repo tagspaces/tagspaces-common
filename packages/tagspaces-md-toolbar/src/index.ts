@@ -1,4 +1,4 @@
 import { useMenuBarPlugin } from './hooks/useMenuBarPlugin';
-import { useGfmPlugin } from './hooks/useGfmPlugin';
+//import { useGfmPlugin } from './hooks/useGfmPlugin';
 
-export { useMenuBarPlugin, useGfmPlugin };
+export { useMenuBarPlugin };

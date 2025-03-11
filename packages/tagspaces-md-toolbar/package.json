@@ -13,17 +13,18 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "vite dev",
     "build": "tsup --config tsup.config.ts",
     "tsc": "tsc --noEmit",
     "lint": "npm lint:eslint && npm lint:prettier",
-    "lint:eslint": "eslint .",
+    "lint:eslint": "npm run clean && eslint .",
     "lint:prettier": "prettier . --check",
     "lintfix": "npm run clean && eslint . --fix && prettier --write --list-different .",
     "clean": "rm -rf dist",
     "oxlint-check": "npx --yes oxlint@latest",
     "typescript-clean": "tsc --build --clean",
-    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-toolbar-4.5.18.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md-toolbar && rimraf package",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-toolbar-4.5.52.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md-toolbar && rimraf package",
+    "npmpack-ext": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-toolbar-4.5.52.tgz && npx shx cp -rL package/** ../../../tagspaces/extensions/md-editor-crepe/node_modules/@tagspaces/tagspaces-md-toolbar && rimraf package",
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "publishConfig": {
@@ -32,7 +33,7 @@
   "peerDependencies": {
     "@emotion/react": "*",
     "@emotion/styled": "*",
-    "@milkdown/core": "*",
+    "@milkdown/kit": "*",
     "@milkdown/prose": "*",
     "@milkdown/react": "*",
     "@mui/icons-material": "*",
