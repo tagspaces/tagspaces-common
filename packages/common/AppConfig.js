@@ -169,53 +169,6 @@ const darkThemeLightColor =
   typeof window !== "undefined" && (window.ExtDarkThemeLightColor || "#56454e");
 const darkThemeMainColor =
   typeof window !== "undefined" && (window.ExtDarkThemeMainColor || "#ff9abe");
-const FileTypeGroups = {
-  any: [""],
-  images: [
-    "jpg",
-    "jpeg",
-    "jif",
-    "jiff",
-    "png",
-    "gif",
-    "svg",
-    "webp",
-    "bmp",
-    "tga",
-    "tif",
-    "tiff",
-    "nef",
-    "cr2",
-    "dng",
-    "psd",
-    "avif",
-    "nef",
-  ],
-  notes: ["md", "mdown", "txt", "html"],
-  documents: [
-    "pdf",
-    "doc",
-    "docx",
-    "xls",
-    "xlsx",
-    "odt",
-    "ods",
-    "odp",
-    "pptx",
-    "numbers",
-    "potx",
-    "sldx",
-    "dotx",
-  ],
-  audio: ["ogg", "mp3", "wav", "wave", "flac", "acc"],
-  video: ["ogv", "mp4", "webm", "m4v", "mkv", "avi", "3gp", "3g2"],
-  archives: ["zip", "rar", "gz", "tgz", "arc", "7z"],
-  bookmarks: ["url", "lnk", "sym", "desktop", "website"],
-  ebooks: ["epub", "mobi", "azw", "prc", "azw1", "azw3", "azw4", "azw8", "azk"],
-  folders: ["folders"],
-  files: ["files"],
-  untagged: ["untagged"],
-};
 const ThumbGenSupportedFileTypes = {
   image: [
     "jpg",
@@ -343,6 +296,5 @@ module.exports = {
   darkThemeMainColor,
   tsProtocol,
   mediaProtocol,
-  FileTypeGroups,
   ThumbGenSupportedFileTypes,
 };
