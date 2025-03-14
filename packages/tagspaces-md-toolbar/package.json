@@ -1,0 +1,60 @@
+{
+  "name": "@tagspaces/tagspaces-md-toolbar",
+  "description": "MD toolbar plugin used by the TagSpaces application and extensions based on Milkdown editor",
+  "version": "4.5.52",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite dev",
+    "build": "tsup --config tsup.config.ts",
+    "tsc": "tsc --noEmit",
+    "lint": "npm lint:eslint && npm lint:prettier",
+    "lint:eslint": "npm run clean && eslint .",
+    "lint:prettier": "prettier . --check",
+    "lintfix": "npm run clean && eslint . --fix && prettier --write --list-different .",
+    "clean": "rm -rf dist",
+    "oxlint-check": "npx --yes oxlint@latest",
+    "typescript-clean": "tsc --build --clean",
+    "npmpack": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-toolbar-4.5.52.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-md-toolbar && rimraf package",
+    "npmpack-ext": "npm run build && npm pack && tar -xvf tagspaces-tagspaces-md-toolbar-4.5.52.tgz && npx shx cp -rL package/** ../../../tagspaces/extensions/md-editor-crepe/node_modules/@tagspaces/tagspaces-md-toolbar && rimraf package",
+    "pkg-publish": "npm run build && npm publish --access public"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@emotion/react": "*",
+    "@emotion/styled": "*",
+    "@milkdown/kit": "*",
+    "@milkdown/prose": "*",
+    "@milkdown/react": "*",
+    "@mui/icons-material": "*",
+    "@mui/material": "*",
+    "@prosemirror-adapter/react": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "devDependencies": {
+    "@milkdown/crepe": "^7.6.3",
+    "@types/node": "^22.13.5",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.20.1",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "prettier": "^3.5.1",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3",
+    "vite": "^6.2.1"
+  }
+}
