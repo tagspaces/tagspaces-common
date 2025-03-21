@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-pdf-extraction",
   "description": "TagSpaces pdf extraction module",
-  "version": "4.5.52",
+  "version": "4.5.53",
   "main": "./src/index.js",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
