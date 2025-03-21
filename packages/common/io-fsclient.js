@@ -819,7 +819,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             fs.copy(sourceFilePath, targetFilePath, (error) => {
               // TODO https://github.com/jprichardson/node-fs-extra/blob/master/lib/copy/copy.js
               if (error) {
-                reject("Copying: " + sourceFilePath + " failed.");
+                reject(error); //"Copying: " + sourceFilePath + " failed.",
                 return;
               }
               resolve([sourceFilePath, targetFilePath]);
