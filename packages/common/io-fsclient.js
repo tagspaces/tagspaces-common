@@ -901,9 +901,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   fs.move(filePath, newFilePath, { clobber: true }, (error) => {
                     // TODO webdav impl
                     if (error) {
-                      reject(
-                        "Renaming: " + filePath + " failed with: " + error
-                      );
+                      reject(error); //"Renaming: " + filePath + " failed with: " + error
                       return;
                     }
                     resolve([filePath, newFilePath]);
@@ -911,7 +909,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 } else {
                   fs.copy(filePath, newFilePath, (error) => {
                     if (error) {
-                      reject("Copying: " + filePath + " failed.");
+                      reject(error); //"Copying: " + filePath + " failed.");
                       return;
                     }
                     fs.unlink(filePath, (error) => {
