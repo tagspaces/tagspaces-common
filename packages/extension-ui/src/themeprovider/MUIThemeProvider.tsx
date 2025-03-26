@@ -1,29 +1,34 @@
 import { useState, useMemo, FC, ReactNode } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider, ThemeOptions } from '@mui/material/styles';
 import { ColorModeContext } from './ColorModeContext';
 //import { amber, deepOrange, grey } from "@mui/material/colors";
 
-const primaryBackgroundColor = window
-  .getComputedStyle(document.documentElement)
-  .getPropertyValue('--primary-color')
-  .trim();
-const primaryTextColor = window
-  .getComputedStyle(document.documentElement)
-  .getPropertyValue('--primary-text-color')
-  .trim();
+const getDesignTokens = (
+  mode: 'light' | 'dark',
+  pColor?: string,
+  pTextColor?: string
+): ThemeOptions => {
+  const primaryBackgroundColor = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue('--primary-color')
+    .trim();
+  const primaryTextColor = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue('--primary-text-color')
+    .trim();
 
-const getDesignTokens = mode => ({
-  palette: {
-    mode,
-    primary: {
-      main: primaryBackgroundColor || '#FFFFFF',
-      contrastText: primaryTextColor || '#000000'
-    },
-    secondary: {
-      main: '#11cb5f',
-      contrastText: '#ffffff'
-    }
-    /* ...(mode === "light"
+  return {
+    palette: {
+      mode,
+      primary: {
+        main: pColor || primaryBackgroundColor || '#FFFFFF',
+        contrastText: pTextColor || primaryTextColor || '#000000'
+      },
+      secondary: {
+        main: '#11cb5f',
+        contrastText: '#ffffff'
+      }
+      /* ...(mode === "light"
       ? {
           // palette values for light mode
           primary: amber,
@@ -46,9 +51,14 @@ const getDesignTokens = mode => ({
             secondary: grey[500],
           },
         }), */
-  }
-});
-const MUIThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
+    }
+  };
+};
+const MUIThemeProvider: FC<{
+  children: ReactNode;
+  primaryColor?: string;
+  primaryTextColor?: string;
+}> = ({ children, primaryColor, primaryTextColor }) => {
   const [mode, setMode] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') {
       // If window object is not available (like during server-side rendering)
@@ -73,7 +83,10 @@ const MUIThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
     []
   );
 
-  const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
+  const theme = useMemo(
+    () => createTheme(getDesignTokens(mode, primaryColor, primaryTextColor)),
+    [mode]
+  );
 
   return (
     <ColorModeContext.Provider value={colorMode}>
