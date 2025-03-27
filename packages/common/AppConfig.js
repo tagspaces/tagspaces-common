@@ -20,6 +20,7 @@ let thumbBgColor = "#FFFFFF";
 let indexerLimit = 200000;
 let mainToolbarHeight = 105;
 let maxIndexAge = 600000; // 10 minutes
+let maxThumbGenTime = 3000; // 3 sec
 let defaultFileColor = "#808080";
 let defaultFolderColor = "#582727"; // # 555 transparent #FDEEBD #ff791b #2c001e #880e4f
 let tsProtocol = "ts://";
@@ -261,6 +262,7 @@ module.exports = {
   indexerLimit,
   mainToolbarHeight,
   maxIndexAge,
+  maxThumbGenTime,
   defaultFileColor,
   defaultFolderColor,
   isElectron,

@@ -21,23 +21,52 @@ const {
 } = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
-module.exports.processAllThumbnails = async function (
-  entryPath,
-  generatePdf = false,
-  extractPDFcontent = undefined
-) {
-  if (
-    entryPath.endsWith(AppConfig.dirSeparator + AppConfig.metaFolder) ||
-    entryPath.endsWith(
-      AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator
-    )
-  ) {
-    return Promise.resolve(false); // dont generate thumbnails for .ts folder
-  }
+function getThumbFileLocation(filePath) {
+  const containingFolder = extractContainingDirectoryPath(filePath, path.sep);
+  const metaFolder = getMetaDirectoryPath(containingFolder, path.sep);
+  return (
+      metaFolder +
+      path.sep +
+      extractFileName(filePath, path.sep) +
+      AppConfig.thumbFileExt
+  );
+}
+
+const checkThumbUpToDate = (fsEntry) => {
+  const thumbFilePath = getThumbFileLocation(fsEntry.path);
+  return getPropertiesPromise(thumbFilePath).then((stats) => {
+    if (stats) {
+      // Thumbnail exists
+      return fsEntry.lmdt <= stats.lmdt;
+    } else {
+      // Thumbnail does not exists
+    }
+    return false;
+  });
+};
+
+function generateThumbnailTimeout(fsEntry, generatePdf) {
+  return Promise.race([
+    generateThumbnail(fsEntry, generatePdf),
+    new Promise((resolve) => setTimeout(() => resolve(undefined), AppConfig.maxThumbGenTime))
+  ]);
+}
+
+function generateThumbnail(fsEntry, generatePdf) {
+  const thumbGenResults = (success) => {
+    if (success) {
+      return {
+        filePath: fsEntry.path,
+        tmbPath: getThumbFileLocation(fsEntry.path),
+      };
+    }
+    return undefined;
+  };
+
   const upload = (imagePath, data, next) => {
     const pathParts = path.parse(imagePath);
     const dirName =
-      (pathParts.dir ? pathParts.dir + "/" : "") + AppConfig.metaFolder + "/";
+        (pathParts.dir ? pathParts.dir + "/" : "") + AppConfig.metaFolder + "/";
     if (!fs.existsSync(dirName)) {
       fs.mkdirSync(dirName, { recursive: true });
       if (AppConfig.isWin) {
@@ -63,59 +92,62 @@ module.exports.processAllThumbnails = async function (
     }
   };
 
-  const generateThumbnail = (fsEntry) => {
-    const thumbGenResults = (success) => {
-      if (success) {
-        return {
-          filePath: fsEntry.path,
-          tmbPath: getThumbFileLocation(fsEntry.path),
-        };
-      }
-      return undefined;
-    };
-
-    return checkThumbUpToDate(fsEntry).then((upToDate) => {
-      if (!upToDate) {
-        const fileType = tsThumb.getFileType(fsEntry.path);
-        console.log("Generating thumbnail for: " + fsEntry.path);
-        if (isThumbGenSupportedFileType(fileType, "image")) {
-          const image = fs.readFileSync(fsEntry.path);
-          return tsThumb
+  return checkThumbUpToDate(fsEntry).then((upToDate) => {
+    if (!upToDate) {
+      const fileType = tsThumb.getFileType(fsEntry.path);
+      console.log("Generating thumbnail for: " + fsEntry.path);
+      if (isThumbGenSupportedFileType(fileType, "image")) {
+        const image = fs.readFileSync(fsEntry.path);
+        return tsThumb
             .generateImageThumbnail(image, fileType, fsEntry.path, upload)
             .then(thumbGenResults)
             .catch((error) => {
               console.error(
-                "Generating thumbnail failed: " + fsEntry.path,
-                error
+                  "Generating thumbnail failed: " + fsEntry.path,
+                  error
               );
             });
-        } else if (fileType === "pdf" && generatePdf) {
-          console.info(
+      } else if (fileType === "pdf" && generatePdf) {
+        console.info(
             fsEntry.path + ": PDF thumbs generation not supported from WS!"
-          );
-          return Promise.resolve(true);
-          /*const pdf = fs.readFileSync(filePath);
-          return generatePDFThumbnail(pdf, 400).then((buffer) => {
-            if (buffer) {
-              upload(filePath, buffer);
-              return thumbGenResults(true);
-            }
-            return undefined;
-          });*/
-          /* const pdfFile = fs.readFileSync(filePath);
-          return tsThumb
-            .generatePDFThumbnail(pdfFile, filePath, "application/pdf", upload)
-            .then(thumbGenResults); */
-        } else {
-          console.info("unsupported thumb format:" + fileType);
-          return Promise.resolve(true);
-        }
+        );
+        return Promise.resolve(true);
+        /*const pdf = fs.readFileSync(filePath);
+        return generatePDFThumbnail(pdf, 400).then((buffer) => {
+          if (buffer) {
+            upload(filePath, buffer);
+            return thumbGenResults(true);
+          }
+          return undefined;
+        });*/
+        /* const pdfFile = fs.readFileSync(filePath);
+        return tsThumb
+          .generatePDFThumbnail(pdfFile, filePath, "application/pdf", upload)
+          .then(thumbGenResults); */
       } else {
-        console.log("Thumbnail is up to Date: " + fsEntry.path);
-        return Promise.resolve(thumbGenResults(true));
+        console.info("unsupported thumb format:" + fileType);
+        return Promise.resolve(true);
       }
-    });
-  };
+    } else {
+      console.log("Thumbnail is up to Date: " + fsEntry.path);
+      return Promise.resolve(thumbGenResults(true));
+    }
+  });
+}
+
+module.exports.processAllThumbnails = async function (
+  entryPath,
+  generatePdf = false,
+  extractPDFcontent = undefined
+) {
+  if (
+    entryPath.endsWith(AppConfig.dirSeparator + AppConfig.metaFolder) ||
+    entryPath.endsWith(
+      AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator
+    )
+  ) {
+    return Promise.resolve(false); // dont generate thumbnails for .ts folder
+  }
 
   let isDir = false;
   try {
@@ -134,7 +166,7 @@ module.exports.processAllThumbnails = async function (
         mode: extractPDFcontent ? ["extractTextContent"] : [],
         ...(extractPDFcontent && { extractText: extractPDFcontent }),
       },
-      (fileEntry) => generateThumbnail(fileEntry),
+      (fileEntry) => generateThumbnail(fileEntry, generatePdf),
 
       /*return fs.readFile(fileEntry.path, function (err, data) {
                         if (err) {
@@ -164,33 +196,9 @@ module.exports.processAllThumbnails = async function (
       if (extractPDFcontent) {
         extractAndSavePdf(fsEntry, extractPDFcontent);
       }
-      return generateThumbnail(fsEntry);
+      return generateThumbnailTimeout(fsEntry, generatePdf);
     });
   }
-};
-
-function getThumbFileLocation(filePath) {
-  const containingFolder = extractContainingDirectoryPath(filePath, path.sep);
-  const metaFolder = getMetaDirectoryPath(containingFolder, path.sep);
-  return (
-    metaFolder +
-    path.sep +
-    extractFileName(filePath, path.sep) +
-    AppConfig.thumbFileExt
-  );
-}
-
-const checkThumbUpToDate = (fsEntry) => {
-  const thumbFilePath = getThumbFileLocation(fsEntry.path);
-  return getPropertiesPromise(thumbFilePath).then((stats) => {
-    if (stats) {
-      // Thumbnail exists
-      return fsEntry.lmdt <= stats.lmdt;
-    } else {
-      // Thumbnail does not exists
-    }
-    return false;
-  });
 };
 
 module.exports.removeThumbnail = function (srcBucket, key) {
