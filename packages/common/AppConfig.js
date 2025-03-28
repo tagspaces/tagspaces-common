@@ -20,7 +20,7 @@ let thumbBgColor = "#FFFFFF";
 let indexerLimit = 200000;
 let mainToolbarHeight = 105;
 let maxIndexAge = 600000; // 10 minutes
-let maxThumbGenTime = 3000; // 3 sec
+let maxThumbGenTime = 6000; // 6 sec
 let defaultFileColor = "#808080";
 let defaultFolderColor = "#582727"; // # 555 transparent #FDEEBD #ff791b #2c001e #880e4f
 let tsProtocol = "ts://";
@@ -93,9 +93,6 @@ const isWin =
   (typeof process !== "undefined" &&
     (process.platform === "win32" ||
       /^(msys|cygwin)$/.test(process.env.OSTYPE)));
-if (isWin) {
-  maxThumbGenTime *= 3; //on Windows thumbs generations is 3x slower
-}
 const isLinux =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("linux");
