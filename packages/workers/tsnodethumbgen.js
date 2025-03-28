@@ -25,10 +25,10 @@ function getThumbFileLocation(filePath) {
   const containingFolder = extractContainingDirectoryPath(filePath, path.sep);
   const metaFolder = getMetaDirectoryPath(containingFolder, path.sep);
   return (
-      metaFolder +
-      path.sep +
-      extractFileName(filePath, path.sep) +
-      AppConfig.thumbFileExt
+    metaFolder +
+    path.sep +
+    extractFileName(filePath, path.sep) +
+    AppConfig.thumbFileExt
   );
 }
 
@@ -48,7 +48,9 @@ const checkThumbUpToDate = (fsEntry) => {
 function generateThumbnailTimeout(fsEntry, generatePdf) {
   return Promise.race([
     generateThumbnail(fsEntry, generatePdf),
-    new Promise((resolve) => setTimeout(() => resolve(undefined), AppConfig.maxThumbGenTime))
+    new Promise((resolve) =>
+      setTimeout(() => resolve(undefined), AppConfig.maxThumbGenTime)
+    ),
   ]);
 }
 
@@ -66,7 +68,7 @@ function generateThumbnail(fsEntry, generatePdf) {
   const upload = (imagePath, data, next) => {
     const pathParts = path.parse(imagePath);
     const dirName =
-        (pathParts.dir ? pathParts.dir + "/" : "") + AppConfig.metaFolder + "/";
+      (pathParts.dir ? pathParts.dir + "/" : "") + AppConfig.metaFolder + "/";
     if (!fs.existsSync(dirName)) {
       fs.mkdirSync(dirName, { recursive: true });
       if (AppConfig.isWin) {
@@ -99,17 +101,17 @@ function generateThumbnail(fsEntry, generatePdf) {
       if (isThumbGenSupportedFileType(fileType, "image")) {
         const image = fs.readFileSync(fsEntry.path);
         return tsThumb
-            .generateImageThumbnail(image, fileType, fsEntry.path, upload)
-            .then(thumbGenResults)
-            .catch((error) => {
-              console.error(
-                  "Generating thumbnail failed: " + fsEntry.path,
-                  error
-              );
-            });
+          .generateImageThumbnail(image, fileType, fsEntry.path, upload)
+          .then(thumbGenResults)
+          .catch((error) => {
+            console.error(
+              "Generating thumbnail failed: " + fsEntry.path,
+              error
+            );
+          });
       } else if (fileType === "pdf" && generatePdf) {
         console.info(
-            fsEntry.path + ": PDF thumbs generation not supported from WS!"
+          fsEntry.path + ": PDF thumbs generation not supported from WS!"
         );
         return Promise.resolve(true);
         /*const pdf = fs.readFileSync(filePath);

@@ -60,6 +60,8 @@ if (typeof process !== "undefined") {
   if (process.env.mainToolbarHeight)
     mainToolbarHeight = parseInt(process.env.mainToolbarHeight);
   if (process.env.maxIndexAge) maxIndexAge = parseInt(process.env.maxIndexAge);
+  if (process.env.maxThumbGenTime)
+    maxThumbGenTime = parseInt(process.env.maxThumbGenTime);
   if (process.env.defaultFileColor)
     defaultFileColor = process.env.defaultFileColor;
   if (process.env.defaultFolderColor)
@@ -91,6 +93,9 @@ const isWin =
   (typeof process !== "undefined" &&
     (process.platform === "win32" ||
       /^(msys|cygwin)$/.test(process.env.OSTYPE)));
+if (isWin) {
+  maxThumbGenTime *= 3; //on Windows thumbs generations is 3x slower
+}
 const isLinux =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("linux");
