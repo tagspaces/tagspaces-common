@@ -1,93 +1,99 @@
 "use strict";
 
-// dependencies
-const AWS = require("aws-sdk");
 const path = require("path");
 const tsThumbImage = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
 const tsThumbPdf = require("@tagspaces/tagspaces-thumbgen-pdf/tspdfthumbgen");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const tsUtils = require("@tagspaces/tagspaces-common/utils-io");
-
-// get reference to S3 client
-const s3 = new AWS.S3();
+const tsPaths = require("@tagspaces/tagspaces-common/paths");
+const aws3 = require("@tagspaces/tagspaces-common-aws3");
 
 module.exports.generateThumbnail = function (srcBucket, key) {
-  return new Promise((resolve) => {
+  const checkThumbUpToDate = (filePath) => {
+    return aws3.getPropertiesPromise(filePath).then((stats) => {
+      if (stats) {
+        // Thumbnail exists
+        return true;
+      } else {
+        // Thumbnail does not exists
+      }
+      return false;
+    });
+  };
+  return new Promise(async (resolve) => {
     // Object key may have spaces or unicode non-ASCII characters.
     const srcKey = decodeURIComponent(key.replace(/\+/g, " "));
     const dstBucket = srcBucket;
     const srcPath = path.parse(srcKey);
-    const dstKey =
-      (srcPath.dir ? srcPath.dir + "/" : "") +
+    const dstPath = tsPaths.getThumbFileLocationForFile(srcPath);
+    /*   (srcPath.dir ? srcPath.dir + "/" : "") +
       AppConfig.metaFolder +
       "/" +
       srcPath.base +
-      ".jpg";
+      ".jpg";*/
 
     //console.log('srcKey:', srcKey);
     if (srcKey.indexOf(AppConfig.metaFolder + "/") !== -1) {
-      console.info("generateThumbnail skip meta folder" + srcKey);
+      console.info("generateThumbnail skip meta folder:" + srcKey);
+      resolve(true);
+      return;
+    }
+    const uptoDate = await checkThumbUpToDate(dstPath);
+    if (uptoDate) {
+      console.info("generateThumbnail skip exist:" + dstPath);
       resolve(true);
       return;
     }
 
-    const upload = (contentType, data, next) => {
-      /*if (tsThumb.isReadableStream(data)) {
-              s3.upload(
-                {
-                  Bucket: dstBucket,
-                  Key: dstKey,
-                  Body: data,
-                },
-                next
-              );
-            } else {*/
-      s3.putObject(
-        {
-          Bucket: dstBucket,
-          Key: dstKey,
-          Body: data,
-          ContentType: contentType,
-        },
-        () => resolve(dstKey) // next
-      );
-      //}
-    };
-
     const fileType = tsThumbImage.getFileType(srcKey);
     console.info("generateThumbnail fileType:" + fileType);
 
-    if (tsUtils.isThumbGenSupportedFileType(fileType, "image")) {
-      s3.getObject({
-        Bucket: srcBucket,
-        Key: srcKey,
-      })
-        .promise()
-        .then((response) => {
-          tsThumbImage.generateImageThumbnail(
-            response.Body,
-            fileType,
-            "image/jpg",
-            upload
-          );
+    const upload = (contentType, data, next) => {
+      aws3
+        .saveBinaryFilePromise({ path: dstPath, bucketName: dstBucket }, data)
+        .then(() => {
+          if (next) {
+            next();
+          }
         });
+    };
+    const isImage = tsUtils.isThumbGenSupportedFileType(fileType, "image");
+    if (isImage) {
+      const fileContent = await aws3.getFileContentPromise(
+        { path: srcPath, bucketName: dstBucket },
+        "arraybuffer"
+      );
+      const success = await tsThumbImage.generateImageThumbnail(
+        fileContent,
+        fileType,
+        "image/jpg",
+        upload
+      );
+      if (success) {
+        resolve(dstPath);
+        return;
+      }
     } else if (fileType === "pdf") {
-      const source = s3
-        .getObject({
-          Bucket: srcBucket,
-          Key: srcKey,
-        })
-        .createReadStream();
-      tsThumbPdf.generatePDFThumbnail(
-        source,
+      const fileContent = await aws3.getFileContentPromise({
+        srcPath: dstPath,
+        bucketName: dstBucket,
+      });
+      const success = await tsThumbPdf.generatePDFThumbnail(
+        fileContent,
         fileType,
         "application/pdf",
         upload
       );
+      if (success) {
+        resolve(dstPath);
+        return;
+      }
     } else {
-      console.warn("unsupported file format:" + fileType);
-      resolve(true);
+      console.info(
+        "generateThumbnail skip file type not supported:" + fileType
+      );
     }
+    resolve(false);
   });
 };
 
@@ -95,39 +101,25 @@ module.exports.removeThumbnail = function (srcBucket, key) {
   const srcKey = decodeURIComponent(key.replace(/\+/g, " "));
 
   if (srcKey.indexOf(AppConfig.metaFolder + "/") !== -1) {
-    console.info("removeThumbnail from meta folder" + srcKey);
-
-    const params = {
-      Bucket: srcBucket,
-      Key: srcKey,
-    };
-    return s3.headObject(params, (err, data) => {
-      if (err) {
-        return true;
-      }
-      return s3.deleteObject(params).promise();
-    });
+    console.info("removeThumbnail skip meta folder:" + srcKey);
+    return Promise.resolve(false);
   }
 
   const srcPath = path.parse(srcKey);
-  const dstKey =
-    (srcPath.dir ? srcPath.dir + "/" : "") +
+  const dstPath = tsPaths.getThumbFileLocationForFile(srcPath);
+  /* (srcPath.dir ? srcPath.dir + "/" : "") +
     AppConfig.metaFolder +
     "/" +
     srcPath.base +
-    ".jpg";
+    ".jpg";*/
 
-  return s3
-    .deleteObject({
-      Bucket: srcBucket,
-      Key: dstKey,
-    })
-    .promise();
+  return aws3.deleteFilePromise({ path: dstPath, bucketName: srcBucket });
 };
 
 module.exports.processAllThumbnails = function (srcBucket) {
   console.log("srcBucket:", srcBucket);
-  const dstBucket = srcBucket;
+  // TODO impl
+  /* const dstBucket = srcBucket;
 
   return s3
     .listObjectsV2({ Bucket: srcBucket })
@@ -208,5 +200,5 @@ module.exports.processAllThumbnails = function (srcBucket) {
         return Promise.resolve(undefined);
       });
       return Promise.all(promises);
-    });
+    });*/
 };
