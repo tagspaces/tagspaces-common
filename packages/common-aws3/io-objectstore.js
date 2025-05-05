@@ -101,6 +101,9 @@ function s3(location) {
       locationsCache[location.uuid] = new S3Client(config);
     }
     return locationsCache[location.uuid];
+  } else {
+    //for aws
+    return new S3Client();
   }
 }
 
@@ -728,7 +731,7 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
         }
       })
       .catch((e) => {
-        console.log(e);
+        console.log("getFileContentPromise " + path, e);
         if (
           e.message &&
           (e.message.indexOf(
