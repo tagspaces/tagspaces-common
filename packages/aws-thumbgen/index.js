@@ -9,13 +9,13 @@ const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const aws3 = require("@tagspaces/tagspaces-common-aws3");
 
 module.exports.generateThumbnail = function (srcBucket, key) {
-  const checkThumbUpToDate = (filePath) => {
-    return aws3.getPropertiesPromise(filePath).then((stats) => {
+  const checkThumbUpToDate = (filePath, bucketName) => {
+    return aws3.getPropertiesPromise({ path: filePath, bucketName: bucketName }).then((stats) => {
       if (stats) {
-        // Thumbnail exists
+        console.log('Thumbnail exists');
         return true;
       } else {
-        // Thumbnail does not exists
+        console.log('Thumbnail does not exists');
       }
       return false;
     });
@@ -38,7 +38,7 @@ module.exports.generateThumbnail = function (srcBucket, key) {
       resolve(true);
       return;
     }
-    const uptoDate = await checkThumbUpToDate(dstPath);
+    const uptoDate = await checkThumbUpToDate(dstPath, dstBucket);
     if (uptoDate) {
       console.info("generateThumbnail skip exist:" + dstPath);
       resolve(true);
