@@ -360,7 +360,7 @@ function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
   return path;
 }
 
-function addToIndex(param, size, LastModified, thumbPath) {
+function addToIndex(param, size, lastModified, thumbPath) {
   if (!param.getFileContentPromise) {
     console.error("addToIndex param.getFileContentPromise is not set!");
     return Promise.resolve(false);
@@ -381,12 +381,23 @@ function addToIndex(param, size, LastModified, thumbPath) {
       " size:" +
       size +
       " LastModified:" +
-      LastModified +
+      lastModified +
       " thumbPath:" +
       thumbPath +
       " bucketName:" +
       param.bucketName
   );
+  const eentry = {
+    ...param,
+    name: extractFileName(param.path),
+    tags: [],
+    meta: { thumbPath },
+    isFile: true,
+    size: size,
+    lmdt: Date.parse(lastModified),
+  };
+  let tsi = [];
+
   return param
     .getFileContentPromise(
       {
@@ -397,7 +408,6 @@ function addToIndex(param, size, LastModified, thumbPath) {
     )
     .then((metaFileContent) => {
       console.info("addToIndex metaFileContent:" + metaFileContent);
-      let tsi = [];
       if (metaFileContent) {
         try {
           tsi = JSON.parse(metaFileContent.trim());
@@ -406,18 +416,20 @@ function addToIndex(param, size, LastModified, thumbPath) {
         }
       }
 
-      const eentry = {
-        ...param,
-        name: extractFileName(param.path),
-        tags: [],
-        meta: { thumbPath },
-        isFile: true,
-        size: size,
-        lmdt: Date.parse(LastModified),
-      };
-
       tsi.push(eentry);
 
+      return persistIndex(
+        {
+          ...param,
+          path: dirPath,
+          saveTextFilePromise: param.saveTextFilePromise,
+        },
+        tsi
+      );
+    })
+    .catch((err) => {
+      console.info("addToIndex:", err);
+      tsi.push(eentry);
       return persistIndex(
         {
           ...param,
@@ -475,6 +487,10 @@ function removeFromIndex(param) {
           );
         }
       }
+    })
+    .catch((err) => {
+      console.error("removeFromIndex:", err);
+      return false;
     });
 }
 
