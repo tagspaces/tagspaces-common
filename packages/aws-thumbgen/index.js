@@ -25,14 +25,14 @@ module.exports.generateThumbnail = function (srcBucket, key) {
     const srcKey = decodeURIComponent(key.replace(/\+/g, " "));
     const dstBucket = srcBucket;
     //const srcPath = path.parse(srcKey);
-    const dstPath = tsPaths.getThumbFileLocationForFile(srcKey);
+    const dstPath = tsPaths.getThumbFileLocationForFile(srcKey, "/", false);
     /*const dstPath = (srcPath.dir ? srcPath.dir + "/" : "") +
       AppConfig.metaFolder +
       "/" +
       srcPath.base +
       ".jpg";*/
 
-    //console.log('srcKey:', srcKey);
+    console.log("generateThumbnail srcKey:" + srcKey + " dstPath:" + dstPath);
     if (srcKey.indexOf(AppConfig.metaFolder + "/") !== -1) {
       console.info("generateThumbnail skip meta folder:" + srcKey);
       resolve(true);
@@ -106,7 +106,7 @@ module.exports.removeThumbnail = function (srcBucket, key) {
   }
 
   //const srcPath = path.parse(srcKey);
-  const dstPath = tsPaths.getThumbFileLocationForFile(srcKey);
+  const dstPath = tsPaths.getThumbFileLocationForFile(srcKey, "/", false);
   /* (srcPath.dir ? srcPath.dir + "/" : "") +
     AppConfig.metaFolder +
     "/" +
