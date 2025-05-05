@@ -1,6 +1,6 @@
 "use strict";
 
-const path = require("path");
+// const path = require("path");
 const tsThumbImage = require("@tagspaces/tagspaces-thumbgen-image/tsimagethumbgen");
 const tsThumbPdf = require("@tagspaces/tagspaces-thumbgen-pdf/tspdfthumbgen");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
@@ -24,9 +24,9 @@ module.exports.generateThumbnail = function (srcBucket, key) {
     // Object key may have spaces or unicode non-ASCII characters.
     const srcKey = decodeURIComponent(key.replace(/\+/g, " "));
     const dstBucket = srcBucket;
-    const srcPath = path.parse(srcKey);
-    const dstPath = tsPaths.getThumbFileLocationForFile(srcPath);
-    /*   (srcPath.dir ? srcPath.dir + "/" : "") +
+    //const srcPath = path.parse(srcKey);
+    const dstPath = tsPaths.getThumbFileLocationForFile(srcKey);
+    /*const dstPath = (srcPath.dir ? srcPath.dir + "/" : "") +
       AppConfig.metaFolder +
       "/" +
       srcPath.base +
@@ -60,7 +60,7 @@ module.exports.generateThumbnail = function (srcBucket, key) {
     const isImage = tsUtils.isThumbGenSupportedFileType(fileType, "image");
     if (isImage) {
       const fileContent = await aws3.getFileContentPromise(
-        { path: srcPath, bucketName: dstBucket },
+        { path: srcKey, bucketName: dstBucket },
         "arraybuffer"
       );
       const success = await tsThumbImage.generateImageThumbnail(
@@ -105,8 +105,8 @@ module.exports.removeThumbnail = function (srcBucket, key) {
     return Promise.resolve(false);
   }
 
-  const srcPath = path.parse(srcKey);
-  const dstPath = tsPaths.getThumbFileLocationForFile(srcPath);
+  //const srcPath = path.parse(srcKey);
+  const dstPath = tsPaths.getThumbFileLocationForFile(srcKey);
   /* (srcPath.dir ? srcPath.dir + "/" : "") +
     AppConfig.metaFolder +
     "/" +

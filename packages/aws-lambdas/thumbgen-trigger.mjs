@@ -13,14 +13,8 @@
   }]
 }
  */
-import { addToIndex, removeFromIndex } from "@tagspaces/tagspaces-indexer";
 
 import { generateThumbnail, removeThumbnail } from "@tagspaces/aws-thumbgen";
-
-import {
-  getFileContentPromise,
-  saveTextFilePromise,
-} from "@tagspaces/tagspaces-common-aws3";
 
 export const handler = async (event) => {
   console.log("Received event:", JSON.stringify(event, null, 2));
