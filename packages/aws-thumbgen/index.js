@@ -10,15 +10,17 @@ const aws3 = require("@tagspaces/tagspaces-common-aws3");
 
 module.exports.generateThumbnail = function (srcBucket, key) {
   const checkThumbUpToDate = (filePath, bucketName) => {
-    return aws3.getPropertiesPromise({ path: filePath, bucketName: bucketName }).then((stats) => {
-      if (stats) {
-        console.log('Thumbnail exists');
-        return true;
-      } else {
-        console.log('Thumbnail does not exists');
-      }
-      return false;
-    });
+    return aws3
+      .getPropertiesPromise({ path: filePath, bucketName: bucketName })
+      .then((stats) => {
+        if (stats) {
+          console.log("Thumbnail exists");
+          return true;
+        } else {
+          console.log("Thumbnail does not exists");
+        }
+        return false;
+      });
   };
   return new Promise(async (resolve) => {
     // Object key may have spaces or unicode non-ASCII characters.

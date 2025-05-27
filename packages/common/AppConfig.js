@@ -158,8 +158,8 @@ const showWelcomePanel =
     : true);
 const locationsReadOnly =
   typeof window !== "undefined" &&
-  (window.ExtLocationsReadOnly !== undefined
-    ? window.ExtLocationsReadOnly
+  (window.ExtLocations !== undefined && window.ExtLocations instanceof Array
+    ? window.ExtLocations.length > 0
     : false);
 const mapTileServers =
   typeof window !== "undefined" && (window.ExtMapTileServers || false);
