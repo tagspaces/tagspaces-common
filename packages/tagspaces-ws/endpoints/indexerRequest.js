@@ -21,12 +21,15 @@ function handleIndexer(req, res) {
                 } else {*/
         //  const params = JSON.parse(body);
         //  directoryPath = params.directoryPath;
-        const { directoryPath, extractText, ignorePatterns } = JSON.parse(body);
+        const { directoryPath, extractText, extractLinks, ignorePatterns } =
+          JSON.parse(body);
 
         const mode = ["extractThumbPath"];
         if (extractText) {
           mode.push("extractTextContent");
-          mode.push("extractLinks");
+          if (extractLinks) {
+            mode.push("extractLinks");
+          }
         }
         const param = {
           path: directoryPath,
