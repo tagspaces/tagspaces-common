@@ -159,6 +159,16 @@ function createIndex(
             path,
             AppConfig.dirSeparator
           ),
+          meta: {
+            ...directoryEntry.meta,
+            ...(directoryEntry.meta?.thumbPath && {
+              thumbPath: cleanRootPath(
+                  directoryEntry.meta.thumbPath,
+                  directoryEntry.path,
+                  AppConfig.dirSeparator
+              ),
+            })
+          }
         };
         directoryIndex.push(enhanceEntry(entry));
       }
