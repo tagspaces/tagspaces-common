@@ -118,8 +118,10 @@ function createIndex(
           },
           getFileContentPromise
         );
+
+        const { thumbPath, ...metaWithoutThumbPath } = fileEntry.meta || {};
         meta = {
-          ...fileEntry.meta,
+          ...metaWithoutThumbPath,
           /*...(fileEntry.meta?.thumbPath && {
             thumbPath: cleanRootPath(
               fileEntry.meta.thumbPath,
@@ -152,6 +154,8 @@ function createIndex(
           );
         }
         */
+        const { thumbPath, ...metaWithoutThumbPath } =
+          directoryEntry.meta || {};
         const entry = {
           ...directoryEntry,
           path: cleanRootPath(
@@ -159,16 +163,7 @@ function createIndex(
             path,
             AppConfig.dirSeparator
           ),
-          meta: {
-            ...directoryEntry.meta,
-            ...(directoryEntry.meta?.thumbPath && {
-              thumbPath: cleanRootPath(
-                  directoryEntry.meta.thumbPath,
-                  directoryEntry.path,
-                  AppConfig.dirSeparator
-              ),
-            })
-          }
+          meta: metaWithoutThumbPath,
         };
         directoryIndex.push(enhanceEntry(entry));
       }
@@ -399,7 +394,7 @@ function addToIndex(param, size, lastModified) {
     ...param,
     name: extractFileName(param.path),
     tags: [],
-   // meta: { thumbPath },
+    // meta: { thumbPath },
     isFile: true,
     size: size,
     lmdt: Date.parse(lastModified),
