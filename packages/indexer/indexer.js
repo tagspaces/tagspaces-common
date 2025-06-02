@@ -62,7 +62,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 }*/
 /**
  * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
- * @param mode  ['extractTextContent', 'extractLinks']
+ * @param mode  ['extractTextContent', 'extractLinks', 'extractThumbURL', 'extractThumbPath']
  * @param ignorePatterns: Array<string>
  * @param isWalking
  * @returns {Promise<*>}
@@ -159,6 +159,16 @@ function createIndex(
             path,
             AppConfig.dirSeparator
           ),
+          meta: {
+            ...directoryEntry.meta,
+            ...(directoryEntry.meta?.thumbPath && {
+              thumbPath: cleanRootPath(
+                  directoryEntry.meta.thumbPath,
+                  directoryEntry.path,
+                  AppConfig.dirSeparator
+              ),
+            })
+          }
         };
         directoryIndex.push(enhanceEntry(entry));
       }
