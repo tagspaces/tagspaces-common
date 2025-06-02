@@ -64,7 +64,7 @@ test("createIndex", async () => {
   };
   const index = await createIndex(
     param,
-    ["extractThumbPath"], //, "extractThumbURL"],
+    [], //, "extractThumbURL"],
     []
   );
   expect(index.some(({ name }) => name === "image.png")).toBe(true);
@@ -75,7 +75,7 @@ test("createIndex", async () => {
 
   const indexIgnore = await createIndex(
     param,
-    ["extractThumbPath"], //, "extractThumbURL"],
+    [], //, "extractThumbURL"],
     ["image.png"]
   );
   expect(indexIgnore.some(({ name }) => name === "image.png")).toBe(false);

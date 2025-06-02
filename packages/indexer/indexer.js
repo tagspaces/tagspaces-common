@@ -62,14 +62,14 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 }*/
 /**
  * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
- * @param mode  ['extractTextContent', 'extractThumbURL', 'extractThumbPath']
+ * @param mode  ['extractTextContent', 'extractLinks']
  * @param ignorePatterns: Array<string>
  * @param isWalking
  * @returns {Promise<*>}
  */
 function createIndex(
   param,
-  mode = ["extractThumbPath"],
+  mode = [], //"extractThumbPath"],
   ignorePatterns = [],
   isWalking = () => true
 ) {
@@ -120,13 +120,13 @@ function createIndex(
         );
         meta = {
           ...fileEntry.meta,
-          ...(fileEntry.meta?.thumbPath && {
+          /*...(fileEntry.meta?.thumbPath && {
             thumbPath: cleanRootPath(
               fileEntry.meta.thumbPath,
               path,
               AppConfig.dirSeparator
             ),
-          }),
+          }),*/
           ...meta,
         };
       }
@@ -319,7 +319,7 @@ function enhanceDirectoryIndex(
     directoryPath = cleanTrailingDirSeparator(directoryPath);
   }
   return directoryIndex.map((entry) => {
-    if (entry.meta && entry.meta.thumbPath) {
+    /*if (entry.meta && entry.meta.thumbPath) {
       let thumbPath;
       if (param.bucketName) {
         thumbPath = entry.meta.thumbPath;
@@ -343,7 +343,7 @@ function enhanceDirectoryIndex(
           thumbPath: thumbPath,
         },
       };
-    }
+    }*/
     return {
       ...entry,
       locationID,
@@ -360,7 +360,7 @@ function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
   return path;
 }
 
-function addToIndex(param, size, lastModified, thumbPath) {
+function addToIndex(param, size, lastModified) {
   if (!param.getFileContentPromise) {
     console.error("addToIndex param.getFileContentPromise is not set!");
     return Promise.resolve(false);
@@ -382,8 +382,6 @@ function addToIndex(param, size, lastModified, thumbPath) {
       size +
       " LastModified:" +
       lastModified +
-      " thumbPath:" +
-      thumbPath +
       " bucketName:" +
       param.bucketName
   );
@@ -391,7 +389,7 @@ function addToIndex(param, size, lastModified, thumbPath) {
     ...param,
     name: extractFileName(param.path),
     tags: [],
-    meta: { thumbPath },
+   // meta: { thumbPath },
     isFile: true,
     size: size,
     lmdt: Date.parse(lastModified),
