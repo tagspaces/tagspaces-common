@@ -69,7 +69,7 @@ const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
  */
 function createIndex(
   param,
-  mode = [], //"extractThumbPath"],
+  mode = ["loadMeta"], //"extractThumbPath"],
   ignorePatterns = [],
   isWalking = () => true
 ) {
@@ -119,18 +119,13 @@ function createIndex(
           getFileContentPromise
         );
 
-        const { thumbPath, ...metaWithoutThumbPath } = fileEntry.meta || {};
-        meta = {
-          ...metaWithoutThumbPath,
-          /*...(fileEntry.meta?.thumbPath && {
-            thumbPath: cleanRootPath(
-              fileEntry.meta.thumbPath,
-              path,
-              AppConfig.dirSeparator
-            ),
-          }),*/
-          ...meta,
-        };
+        // const { thumbPath, ...metaWithoutThumbPath } = fileEntry.meta || {};
+        if (meta) {
+          meta = {
+            ...(meta.tags && { tags: meta.tags }),
+            ...(meta.color && { color: meta.color }),
+          };
+        }
       }
       const entry = {
         ...fileEntry,
@@ -142,20 +137,6 @@ function createIndex(
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        /*
-        let meta;
-        if (getFileContentPromise) {
-          meta = await loadJSONFile(
-            {
-              ...restParam,
-              path: getMetaFileLocationForDir(directoryEntry.path),
-            },
-            getFileContentPromise
-          );
-        }
-        */
-        const { thumbPath, ...metaWithoutThumbPath } =
-          directoryEntry.meta || {};
         const entry = {
           ...directoryEntry,
           path: cleanRootPath(
@@ -163,7 +144,14 @@ function createIndex(
             path,
             AppConfig.dirSeparator
           ),
-          meta: metaWithoutThumbPath,
+          meta: {
+            ...(directoryEntry.meta?.tags && {
+              tags: directoryEntry.meta.tags,
+            }),
+            ...(directoryEntry.meta?.color && {
+              color: directoryEntry.meta.color,
+            }),
+          },
         };
         directoryIndex.push(enhanceEntry(entry));
       }

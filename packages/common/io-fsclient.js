@@ -518,7 +518,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   /**
    * @param param      param.extractPDFcontent need to exist
-   * @param mode = ['extractTextContent','extractLinks','extractThumbPath']
+   * @param mode = ['extractTextContent','extractLinks','loadMeta','extractThumbPath']
    * @param ignorePatterns
    * @returns {Promise<FileSystemEntry[]>}
    */
@@ -528,7 +528,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     ignorePatterns = []
   ) {
     const path = getPath(param);
-    const loadMeta = mode.includes("extractThumbPath");
+    const loadMeta =
+      mode.includes("loadMeta") || mode.includes("extractThumbPath");
 
     return new Promise(async (resolve, reject) => {
       try {
