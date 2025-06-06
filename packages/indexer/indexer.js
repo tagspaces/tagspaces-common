@@ -2,8 +2,7 @@ const {
   normalizePath,
   extractContainingDirectoryPath,
   extractFileName,
-  getMetaFileLocationForFile,
-  getMetaFileLocationForDir,
+  extractFileExtension,
   joinPaths,
   cleanRootPath,
   cleanTrailingDirSeparator,
@@ -11,7 +10,7 @@ const {
 const {
   loadJSONString,
   walkDirectory,
-  enhanceEntry,
+  getUuid,
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
@@ -106,39 +105,26 @@ function createIndex(
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      let meta;
-      if (getFileContentPromise) {
-        meta = await loadJSONFile(
-          {
-            ...restParam,
-            path: getMetaFileLocationForFile(
-              fileEntry.path,
-              AppConfig.dirSeparator
-            ),
-          },
-          getFileContentPromise
-        );
-
-        // const { thumbPath, ...metaWithoutThumbPath } = fileEntry.meta || {};
-        if (meta) {
-          meta = {
-            ...(meta.tags && { tags: meta.tags }),
-            ...(meta.color && { color: meta.color }),
-          };
-        }
-      }
+      const { tags, ...fileEntryWithoutTags } = fileEntry || {};
       const entry = {
-        ...fileEntry,
+        ...fileEntryWithoutTags,
+        uuid: fileEntry?.meta?.id || getUuid(),
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
-        ...(meta && { meta: meta }),
+        extension: extractFileExtension(fileEntry.name, AppConfig.dirSeparator),
+        meta: {
+          ...(fileEntry?.meta.tags && { tags: fileEntry.meta.tags }),
+          ...(fileEntry?.meta.color && { color: fileEntry.meta.color }),
+        },
       };
-      directoryIndex.push(enhanceEntry(entry));
+      directoryIndex.push(entry); //enhanceEntry(entry));
     },
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
+        const { tags, ...dirEntryWithoutTags } = directoryEntry || {};
         const entry = {
-          ...directoryEntry,
+          ...dirEntryWithoutTags,
+          uuid: directoryEntry?.meta?.id || getUuid(),
           path: cleanRootPath(
             directoryEntry.path,
             path,
@@ -153,7 +139,7 @@ function createIndex(
             }),
           },
         };
-        directoryIndex.push(enhanceEntry(entry));
+        directoryIndex.push(entry); //enhanceEntry(entry));
       }
     },
     ignorePatterns,
