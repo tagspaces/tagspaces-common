@@ -114,6 +114,7 @@ function createIndex(
         meta: {
           ...(fileEntry?.meta.tags && { tags: fileEntry.meta.tags }),
           ...(fileEntry?.meta.color && { color: fileEntry.meta.color }),
+          ...(fileEntry?.meta.description && { description: fileEntry.meta.description }),
         },
       };
       directoryIndex.push(entry); //enhanceEntry(entry));
@@ -137,6 +138,7 @@ function createIndex(
             ...(directoryEntry.meta?.color && {
               color: directoryEntry.meta.color,
             }),
+            ...(directoryEntry?.meta.description && { description: directoryEntry.meta.description }),
           },
         };
         directoryIndex.push(entry); //enhanceEntry(entry));

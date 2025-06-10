@@ -227,7 +227,7 @@ const listDirectoryPromise = (
     let eentry;
 
     const loadMeta = mode.some(
-      (el) => el === "extractThumbURL" || el === "extractThumbPath"
+      (el) => el === "loadMeta" || el === "extractThumbURL" || el === "extractThumbPath"
     );
 
     let metaContent;
@@ -314,7 +314,7 @@ const listDirectoryPromise = (
         }
         if (!ignored) {
           let thumbPath;
-          if (loadMeta) {
+          if (loadMeta) {  //todo rethink to remove this (duplicate) -> look for loadMeta next
             thumbPath = tsPaths.getThumbFileLocationForFile(
               file.Key,
               "/",
