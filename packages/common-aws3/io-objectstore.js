@@ -25,6 +25,9 @@ const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const picomatch = require("picomatch/posix");
 const {
+  extractTxtContentAndLinks,
+} = require("@tagspaces/tagspaces-common/misc");
+const {
   runPromisesSynchronously,
 } = require("@tagspaces/tagspaces-common/utils-io");
 
@@ -206,7 +209,7 @@ const listMetaDirectoryPromise = async (param) => {
 
 /**
  * @param param
- * @param mode = ['extractTextContent', 'extractThumbPath', 'extractThumbURL']
+ * @param mode = ['extractTextContent', 'extractLinks', 'extractThumbPath', 'extractThumbURL']
  * @param ignorePatterns
  * @param resultsLimit = {maxLoops: number, IsTruncated: boolean}
  * @returns {Promise<>}
@@ -240,40 +243,128 @@ const listDirectoryPromise = (
       // MaxKeys: 10000, // It returns actually up to 1000
       Bucket: bucketName,
     };
-    listDirectoryAll(params, param.location, resultsLimit.maxLoops)
-      .then(async (data) => {
-        const metaPromises = [];
+    try {
+      const data = await listDirectoryAll(params, param.location, resultsLimit.maxLoops);
 
-        if (data.IsTruncated) {
-          resultsLimit.IsTruncated = data.IsTruncated;
+      const metaPromises = [];
+
+      if (data.IsTruncated) {
+        resultsLimit.IsTruncated = data.IsTruncated;
+      }
+
+      const commonPrefixes = data.CommonPrefixes || [];
+      // Handling "directories"
+      commonPrefixes.forEach((dir) => {
+        // console.warn(JSON.stringify(dir));
+        const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
+        eentry = {};
+        const prefixArray = prefix.replace(/\/$/, "").split("/");
+        eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
+        eentry.path = prefix;
+        eentry.bucketName = bucketName;
+        eentry.tags = [];
+        eentry.meta = {};
+        eentry.isFile = false;
+        eentry.size = 0;
+        eentry.lmdt = 0;
+
+        if (eentry.path !== params.Prefix) {
+          // skipping the current directory
+          let ignored = false;
+          if (ignorePatterns.length > 0) {
+            const isMatch = picomatch(ignorePatterns);
+            ignored = isMatch(eentry.path) || isMatch(eentry.name);
+          }
+          if (!ignored) {
+            enhancedEntries.push(eentry);
+            if (loadMeta) {
+              metaPromises.push(
+                getEntryMeta(
+                  eentry,
+                  param.location,
+                  param.location.encryptionKey
+                )
+              );
+            }
+          }
         }
 
-        const commonPrefixes = data.CommonPrefixes || [];
-        // Handling "directories"
-        commonPrefixes.forEach((dir) => {
-          // console.warn(JSON.stringify(dir));
-          const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
-          eentry = {};
-          const prefixArray = prefix.replace(/\/$/, "").split("/");
-          eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
-          eentry.path = prefix;
-          eentry.bucketName = bucketName;
-          eentry.tags = [];
-          eentry.meta = {};
-          eentry.isFile = false;
-          eentry.size = 0;
-          eentry.lmdt = 0;
+        // if (window.walkCanceled) {
+        //     resolve(enhancedEntries);
+        // }
+      });
 
-          if (eentry.path !== params.Prefix) {
-            // skipping the current directory
-            let ignored = false;
-            if (ignorePatterns.length > 0) {
-              const isMatch = picomatch(ignorePatterns);
-              ignored = isMatch(eentry.path) || isMatch(eentry.name);
+      const contents = data.Contents || [];
+      // Handling files
+      for (const file of contents) {
+        eentry = {};
+        eentry.name = tsPaths.extractFileName(file.Key);
+        eentry.path = file.Key;
+        eentry.bucketName = bucketName;
+        eentry.tags = [];
+
+        let ignored = false;
+        if (ignorePatterns.length > 0) {
+          const isMatch = picomatch(ignorePatterns);
+          ignored = isMatch(eentry.path) || isMatch(eentry.name);
+        }
+        if (!ignored) {
+          let thumbPath;
+          if (loadMeta) {
+            thumbPath = tsPaths.getThumbFileLocationForFile(
+              file.Key,
+              "/",
+              false
+            );
+            if (thumbPath && thumbPath.startsWith("/")) {
+              thumbPath = thumbPath.substring(1);
             }
-            if (!ignored) {
-              enhancedEntries.push(eentry);
-              if (loadMeta) {
+            const thumbAvailable = metaContent.find(
+              (obj) => obj.path === thumbPath
+            );
+            if (thumbAvailable) {
+              if (mode.includes("extractThumbURL")) {
+                thumbPath = await getURLforPath(
+                  {
+                    path: thumbPath,
+                    bucketName: bucketName,
+                    location: param.location,
+                  },
+                  604800
+                ); // 60 * 60 * 24 * 7 = 1 week
+              }
+            } else {
+              thumbPath = undefined;
+            }
+          }
+
+          eentry.meta = thumbPath ? { thumbPath } : {};
+          eentry.isFile = true;
+          eentry.size = file.Size;
+          eentry.lmdt = Date.parse(file.LastModified);
+          if (mode.includes("extractTextContent")) {
+            const textContent = await getFileContentPromise(
+              { path: eentry.path },
+              "text"
+            );
+            await extractTxtContentAndLinks(
+              eentry,
+              textContent,
+              mode.includes("extractLinks")
+            );
+          }
+          if (file.Key !== params.Prefix) {
+            // skipping the current folder
+            enhancedEntries.push(eentry);
+            if (loadMeta) {
+              let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+              if (metaFilePath.startsWith("/")) {
+                metaFilePath = metaFilePath.substring(1);
+              }
+              const metaFileAvailable = metaContent.find(
+                (obj) => obj.path === metaFilePath
+              );
+              if (metaFileAvailable) {
                 metaPromises.push(
                   getEntryMeta(
                     eentry,
@@ -284,103 +375,27 @@ const listDirectoryPromise = (
               }
             }
           }
-
-          // if (window.walkCanceled) {
-          //     resolve(enhancedEntries);
-          // }
-        });
-
-        const contents = data.Contents || [];
-        // Handling files
-        for (const file of contents) {
-          eentry = {};
-          eentry.name = tsPaths.extractFileName(file.Key);
-          eentry.path = file.Key;
-          eentry.bucketName = bucketName;
-          eentry.tags = [];
-
-          let ignored = false;
-          if (ignorePatterns.length > 0) {
-            const isMatch = picomatch(ignorePatterns);
-            ignored = isMatch(eentry.path) || isMatch(eentry.name);
-          }
-          if (!ignored) {
-            let thumbPath;
-            if (loadMeta) {
-              thumbPath = tsPaths.getThumbFileLocationForFile(
-                file.Key,
-                "/",
-                false
-              );
-              if (thumbPath && thumbPath.startsWith("/")) {
-                thumbPath = thumbPath.substring(1);
-              }
-              const thumbAvailable = metaContent.find(
-                (obj) => obj.path === thumbPath
-              );
-              if (thumbAvailable) {
-                if (mode.includes("extractThumbURL")) {
-                  thumbPath = await getURLforPath(
-                    {
-                      path: thumbPath,
-                      bucketName: bucketName,
-                      location: param.location,
-                    },
-                    604800
-                  ); // 60 * 60 * 24 * 7 = 1 week
-                }
-              } else {
-                thumbPath = undefined;
-              }
-            }
-
-            eentry.meta = thumbPath ? { thumbPath } : {};
-            eentry.isFile = true;
-            eentry.size = file.Size;
-            eentry.lmdt = Date.parse(file.LastModified);
-            if (file.Key !== params.Prefix) {
-              // skipping the current folder
-              enhancedEntries.push(eentry);
-              if (loadMeta) {
-                let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
-                if (metaFilePath.startsWith("/")) {
-                  metaFilePath = metaFilePath.substring(1);
-                }
-                const metaFileAvailable = metaContent.find(
-                  (obj) => obj.path === metaFilePath
-                );
-                if (metaFileAvailable) {
-                  metaPromises.push(
-                    getEntryMeta(
-                      eentry,
-                      param.location,
-                      param.location.encryptionKey
-                    )
-                  );
-                }
-              }
-            }
-          }
         }
+      }
 
-        if (metaPromises.length > 0) {
-          Promise.all(metaPromises)
-            .then((entriesMeta) => {
-              const entriesMetaMap = new Map(
-                entriesMeta.map((e) => [e.path, e.meta])
-              );
+      if (metaPromises.length > 0) {
+        Promise.all(metaPromises)
+          .then((entriesMeta) => {
+            const entriesMetaMap = new Map(
+              entriesMeta.map((e) => [e.path, e.meta])
+            );
 
-              const updatedEntries = enhancedEntries.map((enhancedEntry) => {
-                const entryMeta = entriesMetaMap.get(enhancedEntry.path);
-                if (entryMeta) {
-                  return {
-                    ...enhancedEntry,
-                    meta: { ...enhancedEntry.meta, ...entryMeta },
-                  };
-                }
-                return enhancedEntry;
-              });
-              /*entriesMeta.forEach((entryMeta) => {
+            const updatedEntries = enhancedEntries.map((enhancedEntry) => {
+              const entryMeta = entriesMetaMap.get(enhancedEntry.path);
+              if (entryMeta) {
+                return {
+                  ...enhancedEntry,
+                  meta: { ...enhancedEntry.meta, ...entryMeta },
+                };
+              }
+              return enhancedEntry;
+            });
+            /*entriesMeta.forEach((entryMeta) => {
                 enhancedEntries.some((enhancedEntry) => {
                   if (enhancedEntry.path === entryMeta.path) {
                     enhancedEntry.meta = {...enhancedEntry.meta,...entryMeta.meta};
@@ -389,27 +404,26 @@ const listDirectoryPromise = (
                   return false;
                 });
               });*/
-              resolve(updatedEntries);
-              return true;
-            })
-            .catch(() => {
-              resolve(enhancedEntries);
-            });
-        } else {
-          resolve(enhancedEntries);
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "Error listing directory " +
-            params.Prefix +
-            " bucketName:" +
-            bucketName,
-          error
-        );
-        // resolve(enhancedEntries);
-        reject(error);
-      });
+            resolve(updatedEntries);
+            return true;
+          })
+          .catch(() => {
+            resolve(enhancedEntries);
+          });
+      } else {
+        resolve(enhancedEntries);
+      }
+    } catch (ex) {
+      console.error(
+        "Error listing directory " +
+          params.Prefix +
+          " bucketName:" +
+          bucketName,
+        ex
+      );
+      // resolve(enhancedEntries);
+      reject(ex);
+    }
   });
 
 /**

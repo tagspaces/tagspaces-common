@@ -105,9 +105,9 @@ function createIndex(
       //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
       //     window.walkCanceled = true;
       // }
-      const { tags, ...fileEntryWithoutTags } = fileEntry || {};
+      const { tags, bucketName, ...cleanFileEntry } = fileEntry || {};
       const entry = {
-        ...fileEntryWithoutTags,
+        ...cleanFileEntry,
         uuid: fileEntry?.meta?.id || getUuid(),
         path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
         extension: extractFileExtension(fileEntry.name, AppConfig.dirSeparator),
@@ -121,9 +121,9 @@ function createIndex(
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        const { tags, ...dirEntryWithoutTags } = directoryEntry || {};
+        const { tags, bucketName, ...cleanDirEntry } = directoryEntry || {};
         const entry = {
-          ...dirEntryWithoutTags,
+          ...cleanDirEntry,
           uuid: directoryEntry?.meta?.id || getUuid(),
           path: cleanRootPath(
             directoryEntry.path,

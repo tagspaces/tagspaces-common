@@ -5,6 +5,7 @@ const {
   arrayBufferToBuffer,
   streamToBuffer,
   setEntryLinks,
+  extractTxtContentAndLinks,
 } = require("./misc");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
@@ -620,91 +621,28 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     extractPDFcontent = false,
     extractLinks = false
   ) {
-    const fileName = eentry.name.toLowerCase();
-    // Ignoring files starting with ._ e.g. on macOS
-    if (fileName.startsWith("._")) {
-      return;
-    }
-    if (!eentry.isFile && eentry.meta?.description && extractLinks) {
-      setEntryLinks(eentry, eentry.meta?.description);
-      return;
-    } else if (
-      fileName.endsWith(".txt") ||
-      fileName.endsWith(".md") ||
-      fileName.endsWith(".htm") ||
-      fileName.endsWith(".html") ||
-      // fileName.endsWith(".mhtml") || // mhtml extraction disable due to heavy parsing
-      fileName.endsWith(".website") ||
-      fileName.endsWith(".url")
-    ) {
-      try {
-        let textContent = await fs.readFile(eentry.path, "utf8");
-        if (textContent) {
-          // console.log("Extracting content from: " + eentry.path);
-          try {
-            // remove all dataurls
-            textContent = textContent.replace(/data:[^ \t\r\n]+/g, "");
-          } catch (e) {
-            console.error(
-              "Error removing data urls: " + fileName + " with: " + e
-            );
-          }
-          if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
-            // Extracting the body tag
-            // const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m;
-            const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
-            try {
-              textContent = textContent.match(bodyRegex)[0].trim();
-            } catch (e) {
-              console.error(
-                "Error parsing the body of the HTML document: " +
-                  fileName +
-                  " with: " +
-                  e
-              );
-            }
-          } else if (fileName.endsWith(".mhtml")) {
-            //TODO handling of = at line end unclear
-            const sourceURLRegex =
-              /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
-            const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
-            try {
-              const sourceUrl = textContent.match(sourceURLRegex)[0].trim();
-              // const bodyContent = textContent.match(bodyRegex)[0];
-              // console.log("Body: " + bodyContent);
-              // const oneLineContent = bodyContent
-              //   .split("\n")
-              //   .map((line) => (line.endsWith("=") ? line.slice(0, -1) : line))
-              //   .join("");
-              // console.log("One line: " + oneLineContent);
-              // textContent =
-              //   sourceUrl + "\n" + oneLineContent.split("=3D").join("=");
-              textContent = sourceUrl;
-            } catch (e) {
-              console.error(
-                "Error parsing the body of the MHTML document: " +
-                  fileName +
-                  " with: " +
-                  e
-              );
-            }
-          }
-          eentry.textContent = extractTextContent(fileName, textContent);
-          if (extractLinks) {
-            setEntryLinks(eentry, textContent);
-          }
+    try {
+      const fileName = eentry.name.toLowerCase();
+      // Ignoring files starting with ._ e.g. on macOS
+      if (fileName.startsWith("._")) {
+        return;
+      }
+
+      if (fileName.endsWith(".pdf")) {
+        const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
+        eentry.textContent = createTextIndex(textContent);
+        if (textContent && extractLinks) {
+          setEntryLinks(eentry, textContent);
         }
-      } catch (error) {
-        console.error(`Error reading file at ${eentry.path}:`, error);
+      } else {
+        const textContent = await getFileContentPromise(
+          { path: eentry.path },
+          "text"
+        );
+        extractTxtContentAndLinks(eentry, textContent, extractLinks);
       }
-      return;
-    } else if (fileName.endsWith(".pdf")) {
-      const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
-      eentry.textContent = createTextIndex(textContent);
-      if (textContent && extractLinks) {
-        setEntryLinks(eentry, textContent);
-      }
-      return;
+    } catch (error) {
+      console.error(`Error reading file at ${eentry.path}:`, error);
     }
   }
 
