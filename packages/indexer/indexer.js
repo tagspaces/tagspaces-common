@@ -101,47 +101,12 @@ function createIndex(
     },
     async (fileEntry) => {
       counter += 1;
-      // if (counter > AppConfig.indexerLimit) { TODO set index limit
-      //     console.warn('Walk canceled by ' + AppConfig.indexerLimit);
-      //     window.walkCanceled = true;
-      // }
-      const { tags, bucketName, ...cleanFileEntry } = fileEntry || {};
-      const entry = {
-        ...cleanFileEntry,
-        uuid: fileEntry?.meta?.id || getUuid(),
-        path: cleanRootPath(fileEntry.path, path, AppConfig.dirSeparator),
-        extension: extractFileExtension(fileEntry.name, AppConfig.dirSeparator),
-        meta: {
-          ...(fileEntry?.meta.tags && { tags: fileEntry.meta.tags }),
-          ...(fileEntry?.meta.color && { color: fileEntry.meta.color }),
-          ...(fileEntry?.meta.description && { description: fileEntry.meta.description }),
-        },
-      };
-      directoryIndex.push(entry); //enhanceEntry(entry));
+      directoryIndex.push(getIndexedEntry(fileEntry, path));
     },
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
-        const { tags, bucketName, ...cleanDirEntry } = directoryEntry || {};
-        const entry = {
-          ...cleanDirEntry,
-          uuid: directoryEntry?.meta?.id || getUuid(),
-          path: cleanRootPath(
-            directoryEntry.path,
-            path,
-            AppConfig.dirSeparator
-          ),
-          meta: {
-            ...(directoryEntry.meta?.tags && {
-              tags: directoryEntry.meta.tags,
-            }),
-            ...(directoryEntry.meta?.color && {
-              color: directoryEntry.meta.color,
-            }),
-            ...(directoryEntry?.meta.description && { description: directoryEntry.meta.description }),
-          },
-        };
-        directoryIndex.push(entry); //enhanceEntry(entry));
+        directoryIndex.push(getIndexedEntry(directoryEntry, path));
       }
     },
     ignorePatterns,
@@ -167,6 +132,26 @@ function createIndex(
     });
 }
 
+function getIndexedEntry(entry, dirPath) {
+  const { tags, bucketName, ...cleanEntry } = entry || {};
+  const cleanedDescription = entry?.meta?.description
+    ?.replace(/[\r\n]+/g, " ") // collapse any newline sequences into a single space
+    .trim(); // trim leading/trailing whitespace (including any stray \r or \n)
+  return {
+    ...cleanEntry,
+    uuid: entry?.meta?.id || getUuid(),
+    path: cleanRootPath(entry.path, dirPath, AppConfig.dirSeparator),
+    meta: {
+      ...(entry.meta?.tags && {
+        tags: entry.meta.tags,
+      }),
+      ...(entry.meta?.color && {
+        color: entry.meta.color,
+      }),
+      ...(cleanedDescription && { description: cleanedDescription }),
+    },
+  };
+}
 /**
  * use it for native platform only (saveTextFilePromise cannot switch -location can be S3).
  * look at utils-io -> persistIndex with PlatformIO.saveTextFilePromise instead

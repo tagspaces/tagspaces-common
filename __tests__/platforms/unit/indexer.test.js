@@ -55,7 +55,10 @@ test("createIndex", async () => {
   const subdirThumbnail = "subdir/.ts/tst.jpg";
   await uploadImage("../../img.jpg", subdirThumbnail);
   await createTxtFile("file.txt", "test content");
-  await createTxtFile(".ts/file.txt.json", "{\"id\":\"dc02b9e9397849f69495179251e28fee\",\"description\":\"test descr\"}");
+  await createTxtFile(
+    ".ts/file.txt.json",
+    '{"id":"dc02b9e9397849f69495179251e28fee","description":"test descr\\n"}'
+  );
 
   const param = {
     path: "",
@@ -94,7 +97,10 @@ test("createIndex", async () => {
   expect(indexPersisted.name.endsWith("tsi.json")).toBe(true);
 
   //fulltext index
-  const indexFullText = await createIndex(param, ["loadMeta","extractTextContent"]);
+  const indexFullText = await createIndex(param, [
+    "loadMeta",
+    "extractTextContent",
+  ]);
   expect(
     indexFullText.some(({ textContent }) => textContent === "test content")
   ).toBe(true);
