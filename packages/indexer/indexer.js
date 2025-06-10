@@ -140,6 +140,9 @@ function getIndexedEntry(entry, dirPath) {
   return {
     ...cleanEntry,
     uuid: entry?.meta?.id || getUuid(),
+    ...(entry.isFile && {
+      extension: extractFileExtension(entry.name, AppConfig.dirSeparator),
+    }),
     path: cleanRootPath(entry.path, dirPath, AppConfig.dirSeparator),
     meta: {
       ...(entry.meta?.tags && {
