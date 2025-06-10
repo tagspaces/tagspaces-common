@@ -54,6 +54,7 @@ test("createIndex", async () => {
   await createDirectory("subdir");
   const subdirThumbnail = "subdir/.ts/tst.jpg";
   await uploadImage("../../img.jpg", subdirThumbnail);
+  await createTxtFile("file.txt", "test content");
 
   const param = {
     path: "",
@@ -90,6 +91,12 @@ test("createIndex", async () => {
     index
   );
   expect(indexPersisted.name.endsWith("tsi.json")).toBe(true);
+
+  //fulltext index
+  const indexFullText = await createIndex(param, ["extractTextContent"]);
+  expect(
+    indexFullText.some(({ textContent }) => textContent === "test content")
+  ).toBe(true);
 }, 20000);
 
 function createDirectory(path) {
@@ -107,6 +114,16 @@ function uploadImage(pathFrom, pathTo) {
     param,
     fs.createReadStream(pathJs.resolve(__dirname, pathFrom))
   );
+}
+
+function createTxtFile(pathTo, content) {
+  const param = {
+    path: pathTo,
+    bucketName: "bucket1",
+    location,
+  };
+
+  return saveTextFilePromise(param, content, true);
 }
 
 function persistIndex(param, directoryIndex) {

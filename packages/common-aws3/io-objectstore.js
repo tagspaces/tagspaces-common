@@ -244,7 +244,11 @@ const listDirectoryPromise = (
       Bucket: bucketName,
     };
     try {
-      const data = await listDirectoryAll(params, param.location, resultsLimit.maxLoops);
+      const data = await listDirectoryAll(
+        params,
+        param.location,
+        resultsLimit.maxLoops
+      );
 
       const metaPromises = [];
 
@@ -344,7 +348,7 @@ const listDirectoryPromise = (
           eentry.lmdt = Date.parse(file.LastModified);
           if (mode.includes("extractTextContent")) {
             const textContent = await getFileContentPromise(
-              { path: eentry.path },
+              { ...param, path: eentry.path },
               "text"
             );
             await extractTxtContentAndLinks(
