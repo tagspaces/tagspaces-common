@@ -13,9 +13,6 @@ const {
   AbortMultipartUploadCommand,
 } = require("@aws-sdk/client-s3");
 const { Upload } = require("@aws-sdk/lib-storage");
-//const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-/*const { formatUrl } = require("@aws-sdk/util-format-url");
-const { createRequest } = require("@aws-sdk/util-create-request");*/
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 //import { NodeHttpHandler } from "@smithy/node-http-handler";
 const CryptoJS = require("crypto-js");
@@ -319,16 +316,11 @@ const listDirectoryPromise = (
           let thumbPath;
           if (loadMeta) {
             //check and set thumbnail only. Meta will be merged next from json file
-            thumbPath = tsPaths.getThumbFileLocationForFile(
-              file.Key,
-              "/",
-              false
+            thumbPath = tsPaths.cleanFrontDirSeparator(
+              tsPaths.getThumbFileLocationForFile(file.Key, "/", false)
             );
-            if (thumbPath && thumbPath.startsWith("/")) {
-              thumbPath = thumbPath.substring(1);
-            }
-            const thumbAvailable = metaContent.find(
-              (obj) => obj.path === thumbPath
+            const thumbAvailable = metaContent.find((obj) =>
+              tsPaths.isPathEquals(obj.path, thumbPath)
             );
             if (thumbAvailable) {
               if (mode.includes("extractThumbURL")) {
@@ -346,7 +338,7 @@ const listDirectoryPromise = (
             }
           }
 
-          eentry.meta = {}; //thumbPath ? { thumbPath } : {};
+          eentry.meta = thumbPath ? { thumbPath } : {};
           eentry.isFile = true;
           eentry.size = file.Size;
           eentry.lmdt = Date.parse(file.LastModified);
@@ -366,11 +358,9 @@ const listDirectoryPromise = (
             enhancedEntries.push(eentry);
             if (loadMeta) {
               let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
-              if (metaFilePath.startsWith("/")) {
-                metaFilePath = metaFilePath.substring(1);
-              }
-              const metaFileAvailable = metaContent.find(
-                (obj) => obj.path === metaFilePath
+
+              const metaFileAvailable = metaContent.find((obj) =>
+                tsPaths.isPathEquals(obj.path, metaFilePath)
               );
               if (metaFileAvailable) {
                 metaPromises.push(

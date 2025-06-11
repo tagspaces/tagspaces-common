@@ -252,9 +252,13 @@ function getFileLocationFromMetaFile(
 
 function getThumbFileLocationForFile(
   entryPath,
-  dirSeparator = AppConfig.dirSeparator,
+  dirSeparator = undefined,
   encoded = true
 ) {
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(entryPath);
+  }
+
   if (entryPath.indexOf(dirSeparator + AppConfig.metaFolder) > -1) {
     // entryPath is in .ts folder - no thumb file location exist
     return undefined;
@@ -453,10 +457,11 @@ function extractFileNameWithoutExt(
   return fileName;
 }
 
-function extractContainingDirectoryPath(
-  filePath,
-  dirSeparator = AppConfig.dirSeparator
-) {
+function extractContainingDirectoryPath(filePath, dirSeparator = undefined) {
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(filePath);
+  }
+
   const cleanedPath = cleanTrailingDirSeparator(filePath);
   const lastIndex = cleanedPath.lastIndexOf(dirSeparator);
   return lastIndex === -1 ? dirSeparator : cleanedPath.substring(0, lastIndex);
@@ -819,6 +824,23 @@ function cleanRootPath(filePath, rootPath, dirSeparator = undefined) {
   return cleanPath.join(dirSeparator);
 }
 
+function isPathEquals(path1, path2) {
+  if (path1 === path2) {
+    return true;
+  }
+  if (!path1 || !path2) {
+    return false;
+  }
+  const path1Arr = path1
+    .split(getDirSeparator(path1))
+    .filter((pathPart) => pathPart);
+  const path2Arr = path2
+    .split(getDirSeparator(path2))
+    .filter((pathPart) => pathPart);
+
+  return JSON.stringify(path1Arr) === JSON.stringify(path2Arr);
+}
+
 module.exports = {
   baseName,
   extractFileExtension,
@@ -854,4 +876,5 @@ module.exports = {
   joinPaths,
   generateSharingLink,
   cleanRootPath,
+  isPathEquals,
 };

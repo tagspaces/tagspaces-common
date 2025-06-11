@@ -54,19 +54,12 @@ describe("Common Paths unit tests", () => {
       "video:///Users/sytolk/Movies/file_example_AVI_480_750kB.avi";
     const thumbPath = paths.getThumbFileLocationForFile(
       filePath,
-      AppConfig.dirSeparator,
+      undefined,
       false
     );
-    const containingFolder = paths.extractContainingDirectoryPath(
-      filePath,
-      AppConfig.dirSeparator
-    );
+    const containingFolder = paths.extractContainingDirectoryPath(filePath);
     expect(thumbPath).toBe(
-      containingFolder +
-        AppConfig.dirSeparator +
-        ".ts" +
-        AppConfig.dirSeparator +
-        "file_example_AVI_480_750kB.avi.jpg"
+      containingFolder + "/.ts/file_example_AVI_480_750kB.avi.jpg"
     );
   });
 
