@@ -318,7 +318,7 @@ const listDirectoryPromise = (
         if (!ignored) {
           let thumbPath;
           if (loadMeta) {
-            //todo rethink to remove this (duplicate) -> look for loadMeta next
+            //check and set thumbnail only. Meta will be merged next from json file
             thumbPath = tsPaths.getThumbFileLocationForFile(
               file.Key,
               "/",
@@ -346,7 +346,7 @@ const listDirectoryPromise = (
             }
           }
 
-          eentry.meta = thumbPath ? { thumbPath } : {};
+          eentry.meta = {}; //thumbPath ? { thumbPath } : {};
           eentry.isFile = true;
           eentry.size = file.Size;
           eentry.lmdt = Date.parse(file.LastModified);
