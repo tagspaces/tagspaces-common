@@ -801,13 +801,12 @@ function generateSharingLink(locationID, entryPath, directoryPath, entryID) {
  * @param dirSeparator
  * @returns {string} Path without root with dirSeparators subFolder/Select-Dion[20210901].jpeg
  */
-function cleanRootPath(
-  filePath,
-  rootPath,
-  dirSeparator // = AppConfig.dirSeparator
-) {
+function cleanRootPath(filePath, rootPath, dirSeparator = undefined) {
   if (!filePath || !rootPath) {
     return cleanTrailingDirSeparator(cleanFrontDirSeparator(filePath));
+  }
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(filePath);
   }
   const filePathArr = filePath
     .split(dirSeparator)

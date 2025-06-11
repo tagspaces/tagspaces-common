@@ -143,7 +143,7 @@ function getIndexedEntry(entry, dirPath) {
     ...(entry.isFile && {
       extension: extractFileExtension(entry.name, AppConfig.dirSeparator),
     }),
-    path: cleanRootPath(entry.path, dirPath, AppConfig.dirSeparator),
+    path: cleanRootPath(entry.path, dirPath),
     meta: {
       ...(entry.meta?.tags && {
         tags: entry.meta.tags,

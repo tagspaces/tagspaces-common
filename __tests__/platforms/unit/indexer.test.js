@@ -42,8 +42,8 @@ const location = {
 test("cleanRootPath", async () => {
   const path = await cleanRootPath(
     "/sdcard/Downloads/////DSCN1.jpg",
-    "sdcard/Downloads",
-    "/"
+    "sdcard/Downloads"
+    //"/"
   );
   expect(path).toEqual("DSCN1.jpg");
 });
