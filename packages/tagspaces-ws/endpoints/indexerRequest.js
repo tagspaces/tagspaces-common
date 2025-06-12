@@ -24,7 +24,7 @@ function handleIndexer(req, res) {
         const { directoryPath, extractText, extractLinks, ignorePatterns } =
           JSON.parse(body);
 
-        const mode = [];
+        const mode = ['loadMeta'];
         if (extractText) {
           mode.push("extractTextContent");
           if (extractLinks) {
