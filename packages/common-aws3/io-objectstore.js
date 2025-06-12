@@ -507,12 +507,10 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
       !entryPath.includes(AppConfig.metaFolder + "/")
     ) {
       // skipping meta folder
-      const folderTmbPath =
-        entryPath +
-        "/" +
-        AppConfig.metaFolder +
-        "/" +
-        AppConfig.folderThumbFile;
+      const folderTmbPath = tsPaths.getThumbFileLocationForDirectory(
+        entryPath,
+        "/"
+      );
       const folderThumbProps = await getPropertiesPromise({
         path: folderTmbPath,
         bucketName: eentry.bucketName,
@@ -531,10 +529,8 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
 
         meta = { thumbPath: thumb };
       }
-      // }
       // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
-      const folderMetaPath =
-        entryPath + "/" + AppConfig.metaFolder + "/" + AppConfig.metaFolderFile;
+      const folderMetaPath = tsPaths.getMetaFileLocationForDir(entryPath, "/");
       const folderProps = await getPropertiesPromise({
         path: folderMetaPath,
         bucketName: eentry.bucketName,

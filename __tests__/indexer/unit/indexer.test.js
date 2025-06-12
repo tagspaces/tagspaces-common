@@ -59,6 +59,10 @@ test("createIndex", async () => {
     ".ts/file.txt.json",
     '{"id":"dc02b9e9397849f69495179251e28fee","description":"test descr\\n"}'
   );
+  await createTxtFile(
+    "subdir/.ts/tsm.json",
+    '{"id":"38179c2452474f8592c5ed7965c0cf73","perspective":"grid","description":"test subdir folder descr\\n"}'
+  );
 
   const param = {
     path: "",
@@ -106,6 +110,11 @@ test("createIndex", async () => {
   ).toBe(true);
   expect(
     indexFullText.some(({ meta }) => meta?.description === "test descr")
+  ).toBe(true);
+  expect(
+    indexFullText.some(
+      ({ meta }) => meta?.description === "test subdir folder descr"
+    )
   ).toBe(true);
 }, 200000);
 
