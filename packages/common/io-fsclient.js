@@ -480,7 +480,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
         const baseName = metaEntry.path.slice(0, -AppConfig.metaFileExt.length);
         const originalEntry = enhancedEntries.find(
-          (entry) => entry.name === baseName
+          (entry) => entry.name === baseName && entry.isFile
         );
 
         if (originalEntry) {
