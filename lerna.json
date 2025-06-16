@@ -2,7 +2,7 @@
   "packages": ["packages/*"],
   "useNx": false,
   "useWorkspaces": true,
-  "version": "4.5.81",
+  "version": "4.5.82",
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "command": {
     "publish": {
