@@ -89,7 +89,21 @@ describe("Web Server Endpoints", () => {
   test("POST /indexer", async () => {
     fs.writeFileSync(
       pathLib.join(testDir, ".ts", "sample.pdf.json"),
-      '{"id":"54dc1af0f43c4670b7138ee133a97396"}'
+      '{"id":"54dc1af0f43c4670b7138ee133a97396","description":"test descr\\n"}'
+    );
+    const tsmPath = pathLib.join(
+        testDir,
+        'empty_folder',
+        '.ts',
+        'tsm.json'
+    );
+
+// Ensure parent directory exists
+    fs.mkdirSync(pathLib.dirname(tsmPath), { recursive: true });
+
+    fs.writeFileSync(
+        tsmPath,
+        '{"id":"38179c2452474f8592c5ed7965c0cf73","perspective":"grid","description":"test subdir folder descr\\n"}'
     );
     const response = await request
       .post("/indexer")
@@ -101,6 +115,19 @@ describe("Web Server Endpoints", () => {
     const filePath = pathLib.join(testDir, ".ts", "tsi.json");
     const fileExists = fs.existsSync(filePath);
     expect(fileExists).toBe(true);
+
+    const indexFullText = JSON.parse(fs.readFileSync(pathLib.join(testDir, ".ts", "tsi.json"), "utf8").trim());
+
+    expect(
+        indexFullText.some(
+            ({ meta }) => meta?.description === "test descr"
+        )
+    ).toBe(true);
+    expect(
+        indexFullText.some(
+            ({ meta }) => meta?.description === "test subdir folder descr"
+        )
+    ).toBe(true);
     //fs.unlinkSync(filePath);
     //expect(fs.existsSync(filePath)).toBe(false);
   });
