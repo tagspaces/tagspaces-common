@@ -357,7 +357,10 @@ const listDirectoryPromise = (
             // skipping the current folder
             enhancedEntries.push(eentry);
             if (loadMeta) {
-              let metaFilePath = tsPaths.getMetaFileLocationForFile(file.Key);
+              let metaFilePath = tsPaths.getMetaFileLocationForFile(
+                file.Key,
+                "/"
+              );
 
               const metaFileAvailable = metaContent.find((obj) =>
                 tsPaths.isPathEquals(obj.path, metaFilePath)
