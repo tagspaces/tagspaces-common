@@ -546,6 +546,16 @@ function getDirSeparator(path) {
   // failed to getDirSeparator return unix
   return "/";
 }
+
+function isMeta(path){
+  if(path) {
+    const pathParts = path.split(
+        getDirSeparator(path)
+    );
+    return pathParts.includes(AppConfig.metaFolder);
+  }
+  return false;
+}
 /**
  * @param filePath: string
  * @param dirSeparator: string
@@ -877,4 +887,6 @@ module.exports = {
   generateSharingLink,
   cleanRootPath,
   isPathEquals,
+  getDirSeparator,
+  isMeta
 };
