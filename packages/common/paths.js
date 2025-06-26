@@ -547,11 +547,9 @@ function getDirSeparator(path) {
   return "/";
 }
 
-function isMeta(path){
-  if(path) {
-    const pathParts = path.split(
-        getDirSeparator(path)
-    );
+function isMeta(path) {
+  if (path) {
+    const pathParts = path.split(getDirSeparator(path));
     return pathParts.includes(AppConfig.metaFolder);
   }
   return false;
@@ -888,5 +886,5 @@ module.exports = {
   cleanRootPath,
   isPathEquals,
   getDirSeparator,
-  isMeta
+  isMeta,
 };

@@ -861,6 +861,9 @@ function saveTextFilePromise(param, content, overWrite) {
 }
 
 function normalizeRootPath(filePath) {
+  if (!filePath) {
+    return filePath;
+  }
   filePath = filePath.replace(new RegExp("//+", "g"), "/");
   filePath = filePath.replace("\\", "/");
   /* if(filePath.indexOf(AppConfig.dirSeparator) === 0){
