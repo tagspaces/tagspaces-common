@@ -98,7 +98,7 @@ describe("Common Paths unit tests", () => {
       containingFolder.length - AppConfig.metaFolder.length
     );
     expect(fileLocationFromMetaFile).toBe(
-      rootContainingFolder + "image-thumb.jpg.jpg"
+      rootContainingFolder + "image-thumb.jpg"
     );
   });
   test("paths getMetaFileLocationForDir", async () => {

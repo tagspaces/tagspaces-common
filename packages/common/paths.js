@@ -244,12 +244,22 @@ function getFileLocationFromMetaFile(entryPath, dirSeparator = undefined) {
     dirSeparator + AppConfig.metaFolder,
     ""
   );
-  const exts = `${AppConfig.metaFileExt}|${AppConfig.thumbFileExt}`;
-  const fileName = extractFileName(entryPath, dirSeparator).replace(
-    new RegExp(`\\.(${exts})$`, "i"),
-    ""
-  );
-  return containingFolder + dirSeparator + fileName;
+  const fileName = extractFileName(entryPath, dirSeparator);
+  return containingFolder + dirSeparator + stripMetaOrThumbExt(fileName);
+}
+
+function stripMetaOrThumbExt(filename) {
+  const meta = AppConfig.metaFileExt.toLowerCase();
+  const thumb = AppConfig.thumbFileExt.toLowerCase();
+  const low = filename.toLowerCase();
+
+  if (low.endsWith(meta)) {
+    return filename.slice(0, -meta.length);
+  }
+  if (low.endsWith(thumb)) {
+    return filename.slice(0, -thumb.length);
+  }
+  return filename;
 }
 
 function getThumbFileLocationForFile(
