@@ -231,10 +231,11 @@ function getMetaContentFileLocation(
   );
 }
 
-function getFileLocationFromMetaFile(
-  entryPath,
-  dirSeparator // = AppConfig.dirSeparator
-) {
+function getFileLocationFromMetaFile(entryPath, dirSeparator = undefined) {
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(entryPath);
+  }
+
   let containingFolder = extractContainingDirectoryPath(
     entryPath,
     dirSeparator
@@ -243,8 +244,9 @@ function getFileLocationFromMetaFile(
     dirSeparator + AppConfig.metaFolder,
     ""
   );
+  const exts = `${AppConfig.metaFileExt}|${AppConfig.thumbFileExt}`;
   const fileName = extractFileName(entryPath, dirSeparator).replace(
-    AppConfig.metaFileExt,
+    new RegExp(`\\.(${exts})$`, "i"),
     ""
   );
   return containingFolder + dirSeparator + fileName;
