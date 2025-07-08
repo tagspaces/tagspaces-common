@@ -1155,7 +1155,8 @@ function createDirectoryPromise(param) {
   return s3(param.location)
     .send(command)
     .then((result) => {
-      if (dirPath.endsWith(AppConfig.metaFolder + "/")) {
+      if (dirPath.endsWith(AppConfig.metaFolder + "/") || param.skipMeta) {
+        // skip creating meta in copyDirectoryInternal to not override
         return dirPath;
       }
       const metaFilePath = tsPaths.getMetaFileLocationForDir(dirPath, "/");
@@ -1342,6 +1343,7 @@ function copyDirectoryInternal(
               tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
               tsPaths.cleanFrontDirSeparator(newDirPath)
             ),
+            skipMeta: true,
           }).then(() => {
             handleProgress(Key);
           })
