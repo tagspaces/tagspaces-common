@@ -254,6 +254,18 @@ describe("Common Paths unit tests", () => {
       "img.jpg"
     );
     expect(path).toBe(pathLib.join(__dirname, "..", "..", "img.jpg"));
+
+    const path1 = paths.joinPaths(
+      AppConfig.dirSeparator,
+      "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\",
+      "new_dir"
+    );
+    expect(path1).toBe(
+      pathLib.join(
+        "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\",
+        "new_dir"
+      )
+    );
   });
 
   test("paths generateSharingLink", async () => {

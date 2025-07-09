@@ -19,6 +19,7 @@ const {
 const { extractTextContent } = require("@tagspaces/tagspaces-common/utils-io");
 const pathLib = require("path");
 const fs = require("fs");
+const { AppConfig } = require("@tagspaces/tagspaces-common");
 const { clean } = require("../../../scripts/webdav/webdavserver-v2");
 
 describe("io-node unit tests", () => {
@@ -272,12 +273,13 @@ describe("io-node unit tests", () => {
     });
     //testing dir with extra /
     const dirPath =
-      pathLib.resolve(__dirname, "../../../scripts/testContents") + "/";
+      pathLib.resolve(__dirname, "../../../scripts/testContents") +
+      AppConfig.dirSeparator;
     const dir = await getPropertiesPromise({ path: dirPath });
     expect(dir).toEqual({
       name: "testContents",
       isFile: false,
-      size: 2464,
+      size: AppConfig.isWin ? 0 : 2464,
       lmdt: dir.lmdt,
       path: dirPath,
     });

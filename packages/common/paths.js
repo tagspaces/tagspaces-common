@@ -756,7 +756,11 @@ function joinPaths(...paths) {
   } else {
     throw new Error("Wrong dirSeparator:" + dirSeparator);
   }
-  if (AppConfig.isWin && result.startsWith(dirSeparator)) {
+  if (
+    AppConfig.isWin &&
+    result.startsWith(dirSeparator) &&
+    !result.startsWith(dirSeparator + dirSeparator) // network shared paths like \\Desktop
+  ) {
     // trim dirSeparator in windows paths like \C:\
     return result.substr(dirSeparator.length);
   }
