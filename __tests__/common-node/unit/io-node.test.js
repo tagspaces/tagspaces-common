@@ -270,6 +270,18 @@ describe("io-node unit tests", () => {
       lmdt: file.lmdt,
       path: filePath,
     });
+    const dirPath = pathLib.resolve(
+        __dirname,
+        "../../../scripts/testContents/"
+    );
+    const dir = await getPropertiesPromise({ path: dirPath });
+    expect(dir).toEqual({
+      name: "testContents",
+      isFile: false,
+      size: 2464,
+      lmdt: dir.lmdt,
+      path: dirPath,
+    });
   });
   test("io-node.loadTextFilePromise", async () => {
     const filePath = pathLib.resolve(
