@@ -171,10 +171,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
         if (stats) {
           const fsEntry = {
-            name: path.substring(
-              path.lastIndexOf(dirSeparator) + 1,
-              path.length
-            ),
+            name: stats.isFile()
+              ? tsPaths.extractFileName(path)
+              : tsPaths.extractDirectoryName(path),
             isFile: stats.isFile(),
             size: stats.size,
             lmdt: stats.mtime.getTime ? stats.mtime.getTime() : stats.mtime,

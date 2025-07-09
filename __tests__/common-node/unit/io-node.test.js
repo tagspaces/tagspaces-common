@@ -270,10 +270,9 @@ describe("io-node unit tests", () => {
       lmdt: file.lmdt,
       path: filePath,
     });
-    const dirPath = pathLib.resolve(
-        __dirname,
-        "../../../scripts/testContents/"
-    );
+    //testing dir with extra /
+    const dirPath =
+      pathLib.resolve(__dirname, "../../../scripts/testContents") + "/";
     const dir = await getPropertiesPromise({ path: dirPath });
     expect(dir).toEqual({
       name: "testContents",
