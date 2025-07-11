@@ -431,13 +431,41 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function arrayBufferToBuffer(content) {
-  const buffer = Buffer.alloc(content.byteLength);
-  const view = new Uint8Array(content);
+/**
+ * Convert ArrayBuffer or TypedArray to Node Buffer safely
+ * @param {ArrayBuffer|TypedArray} data
+ * @returns {Buffer}
+ */
+function arrayBufferToBuffer(data) {
+  if (!data) {
+    throw new TypeError(
+      "Expected ArrayBuffer, TypedArray, or Buffer, but got " + data
+    );
+  }
+
+  // If it’s already a Buffer, just return it
+  if (Buffer.isBuffer(data)) {
+    return data;
+  }
+
+  // If it’s a TypedArray (Uint8Array, etc.), use its underlying buffer & offsets
+  if (ArrayBuffer.isView(data)) {
+    return Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+  }
+
+  // If it’s a raw ArrayBuffer
+  if (data instanceof ArrayBuffer) {
+    return Buffer.from(data);
+  }
+  throw new TypeError(
+    `Unsupported data type: ${Object.prototype.toString.call(data)}`
+  );
+  /* const buffer = Buffer.alloc(data.byteLength);
+  const view = new Uint8Array(data);
   for (let i = 0; i < buffer.length; ++i) {
     buffer[i] = view[i];
-  }
-  return buffer;
+  }*/
+  //return buffer;
 }
 
 function streamToBuffer(stream) {
