@@ -205,16 +205,22 @@ describe("io-node unit tests", () => {
       __dirname,
       "../../../scripts/testContents"
     );
+    //const filePath = 'C:\\Users\\Stanimir\\OneDrive\\Картини\\Saved Pictures';
+
     const ignorePatterns = [".DS_Store"];
     const list = await listDirectoryPromise(
       { path: filePath },
-      [],
+      ["loadMeta", "extractThumbURL", "extractThumbPath"],
       ignorePatterns
     );
+    // console.log(JSON.stringify(list));
     expect(list.length).toBeGreaterThan(30);
     expect(list.some((entry) => !ignorePatterns.includes(entry.name))).toBe(
       true
     );
+    /*expect(list.some((entry) => entry.meta.thumbPath !== undefined)).toBe(
+      true
+    );*/
   });
 
   test("io-node.saveTextFilePromise", async () => {

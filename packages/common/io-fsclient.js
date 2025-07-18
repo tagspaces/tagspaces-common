@@ -478,18 +478,18 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       // Process metadata JSON files
       if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
         const baseName = metaEntry.path.slice(0, -AppConfig.metaFileExt.length);
-        const originalEntry = enhancedEntries.find(
+        const enhancedEntry = enhancedEntries.find(
           (entry) => entry.name === baseName && entry.isFile
         );
 
-        if (originalEntry) {
+        if (enhancedEntry) {
           try {
             const metaFilePath = metaFolderPath + dirSeparator + metaEntry.path;
             const metaFileObj = await fs.readJson(metaFilePath);
-            originalEntry.meta = metaFileObj;
+            enhancedEntry.meta = { ...enhancedEntry.meta, ...metaFileObj };
 
             if (mode.includes("extractLinks") && metaFileObj?.description) {
-              setEntryLinks(originalEntry, metaFileObj.description);
+              setEntryLinks(enhancedEntry, metaFileObj.description);
             }
           } catch (err) {
             console.warn(`Error reading metadata file: ${metaEntry.path}`, err);
