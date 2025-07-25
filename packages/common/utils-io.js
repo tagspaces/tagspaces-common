@@ -11,6 +11,7 @@ const AppConfig = require("./AppConfig");
  * @param dirCallback: () => {}
  * @param ignorePatterns: Array<string>
  * @param isWalking
+ * @param limit limitConcurrency
  * @returns {*}
  */
 function walkDirectory(
@@ -20,13 +21,14 @@ function walkDirectory(
   fileCallback,
   dirCallback,
   ignorePatterns = [],
-  isWalking = () => true
+  isWalking = () => true,
+  limit = 0
 ) {
   const path = param.path;
   if (ignorePatterns.length > 0) {
     const isMatch = picomatch(ignorePatterns);
     if (isMatch(path)) {
-      return;
+      return [];
     }
   }
   const mergedOptions = {
@@ -48,75 +50,144 @@ function walkDirectory(
   return listDirectoryPromise(listParams, mergedOptions.mode, ignorePatterns)
     .then((entries) => {
       if (!isWalking() || entries === undefined) {
-        return false;
+        return [];
       }
-
-      return Promise.all(
-        entries.map(async (entry) => {
-          if (!isWalking()) return false;
-          if (ignorePatterns.length > 0) {
-            const isMatch = picomatch(ignorePatterns);
-            if (isMatch(entry.path) || isMatch(entry.name)) {
-              return false;
-            }
-          }
-
-          if (entry.isFile) {
-            if (
-              fileCallback &&
-              (!mergedOptions.skipDotHiddenFiles || !entry.name.startsWith("."))
-            ) {
-              await fileCallback(entry);
-            }
-            return entry;
-          }
-
-          if (
-            dirCallback &&
-            (!mergedOptions.skipDotHiddenFolder ||
-              !entry.name.startsWith(".")) &&
-            (!mergedOptions.skipMetaFolder ||
-              entry.name !== AppConfig.metaFolder)
-          ) {
-            await dirCallback(entry);
-          }
-
-          if (mergedOptions.recursive) {
-            if (
-              mergedOptions.skipDotHiddenFolder &&
-              entry.name.startsWith(".") &&
-              entry.name !== AppConfig.metaFolder
-            ) {
-              return entry;
-            }
-            if (
-              mergedOptions.skipMetaFolder &&
-              entry.name === AppConfig.metaFolder
-            ) {
-              return entry;
-            }
-            const subPath =
-              typeof path === "object" && path !== null
-                ? { ...path, path: entry.path }
-                : entry.path;
-            return walkDirectory(
-              { ...listParams, path: subPath },
-              listDirectoryPromise,
-              mergedOptions,
-              fileCallback,
-              dirCallback,
-              ignorePatterns,
-              isWalking
-            );
-          }
-          return entry;
-        })
+      const entriesPromises = processEntries(
+        entries,
+        listDirectoryPromise,
+        listParams,
+        mergedOptions,
+        fileCallback,
+        dirCallback,
+        ignorePatterns,
+        isWalking
       );
+      if (limit > 0) {
+        return limitConcurrency(limit, entriesPromises);
+      } else {
+        return Promise.all(entriesPromises.map(fn => fn()));
+      }
     })
     .catch((err) => {
       console.warn("Error walking directory ", err);
       return err;
     });
+}
+
+/**
+ * limitConcurrency<T>
+ * @param limit: number
+ * @param tasks: (() => Promise<T>)[]
+ * @returns {Promise<T[]>}
+ */
+function limitConcurrency(limit, tasks) {
+  return new Promise((resolve, reject) => {
+    let i = 0;
+    let active = 0;
+    const results = [];
+    let rejected = false;
+
+    const next = () => {
+      if (rejected) return;
+      if (i === tasks.length && active === 0) {
+        return resolve(results);
+      }
+
+      while (active < limit && i < tasks.length) {
+        const index = i++;
+        active++;
+        tasks[index]()
+          .then((result) => {
+            results[index] = result;
+            active--;
+            next();
+          })
+          .catch((err) => {
+            rejected = true;
+            reject(err);
+          });
+      }
+    };
+
+    next();
+  });
+}
+
+/**
+ * @param entries
+ * @param listDirectoryPromise
+ * @param listParams
+ * @param mergedOptions
+ * @param fileCallback
+ * @param dirCallback
+ * @param ignorePatterns
+ * @param isWalking
+ * @returns functions []
+ */
+function processEntries(
+  entries,
+  listDirectoryPromise,
+  listParams,
+  mergedOptions,
+  fileCallback,
+  dirCallback,
+  ignorePatterns,
+  isWalking
+) {
+  return entries.map((entry) => async () => {
+    if (!isWalking()) return false;
+    if (ignorePatterns.length > 0) {
+      const isMatch = picomatch(ignorePatterns);
+      if (isMatch(entry.path) || isMatch(entry.name)) {
+        return false;
+      }
+    }
+
+    if (entry.isFile) {
+      if (
+        fileCallback &&
+        (!mergedOptions.skipDotHiddenFiles || !entry.name.startsWith("."))
+      ) {
+        await fileCallback(entry);
+      }
+      return entry;
+    }
+
+    if (
+      dirCallback &&
+      (!mergedOptions.skipDotHiddenFolder || !entry.name.startsWith(".")) &&
+      (!mergedOptions.skipMetaFolder || entry.name !== AppConfig.metaFolder)
+    ) {
+      await dirCallback(entry);
+    }
+
+    if (mergedOptions.recursive) {
+      if (
+        mergedOptions.skipDotHiddenFolder &&
+        entry.name.startsWith(".") &&
+        entry.name !== AppConfig.metaFolder
+      ) {
+        return entry;
+      }
+      if (mergedOptions.skipMetaFolder && entry.name === AppConfig.metaFolder) {
+        return entry;
+      }
+      const subPath =
+        typeof path === "object" && path !== null
+          ? { ...path, path: entry.path }
+          : entry.path;
+      return walkDirectory(
+        { ...listParams, path: subPath },
+        listDirectoryPromise,
+        mergedOptions,
+        fileCallback,
+        dirCallback,
+        ignorePatterns,
+        isWalking
+      );
+    }
+    return entry;
+  });
 }
 
 function getUuid(version = 4) {
