@@ -65,7 +65,7 @@ function walkDirectory(
       if (limit > 0) {
         return limitConcurrency(limit, entriesPromises);
       } else {
-        return Promise.all(entriesPromises.map(fn => fn()));
+        return Promise.all(entriesPromises.map((fn) => fn()));
       }
     })
     .catch((err) => {
@@ -183,7 +183,8 @@ function processEntries(
         fileCallback,
         dirCallback,
         ignorePatterns,
-        isWalking
+        isWalking,
+        1
       );
     }
     return entry;
