@@ -260,7 +260,7 @@ const listDirectoryPromise = (
       // Handling "directories"
       commonPrefixes.forEach((dir) => {
         // console.warn(JSON.stringify(dir));
-        const prefix = dir.Prefix; // normalizePath(normalizeRootPath(dir.Prefix));
+        const prefix = dir.Prefix.replace(/\\/g, "/"); // normalizePath(normalizeRootPath(dir.Prefix));
         eentry = {};
         const prefixArray = prefix.replace(/\/$/, "").split("/");
         eentry.name = prefixArray[prefixArray.length - 1]; // dir.Prefix.substring(0, dir.Prefix.length - 1);
@@ -577,13 +577,7 @@ function isFileExist(param) {
 
       s3Client.send(command).then(
         () => resolve(true),
-        (err) => {
-          if (err.name === "NotFound") {
-            resolve(false);
-          } else {
-            reject(err);
-          }
-        }
+        () => resolve(false)
       );
     } catch (error) {
       resolve(false);
