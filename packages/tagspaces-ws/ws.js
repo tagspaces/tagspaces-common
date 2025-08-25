@@ -15,36 +15,80 @@ const { extractPdf } = require("./endpoints/extractPdfContentRequest");
 module.exports.createWS = function (port, key) {
   const hostname = "127.0.0.1";
 
-  const requestHandler = (req, res) => {
-    const baseURL = "http://" + req.headers.host + "/";
-    const reqUrl = new URL(req.url, baseURL);
-    if (reqUrl.pathname === "/thumb-gen") {
-      if (!verifyAuth(req.headers.authorization, res, key)) {
+  function attachAbortToRequest(req, res) {
+    const controller = new AbortController();
+
+    // client aborted connection (e.g. closed tab, electron aborted the request)
+    const onAbort = () => {
+      controller.abort();
+    };
+
+    req.on("aborted", onAbort); // emitted if the request is aborted
+    req.on("close", onAbort);
+
+    // Also attach to res finish/close to ensure cleanup when response completes
+    const onResDone = () => {
+      controller.abort();
+    };
+    res.on("finish", onResDone); // normal end
+    res.on("close", onResDone); // client closed socket
+    // cleanup function to remove listeners (call in finally)
+    const cleanup = () => {
+      req.removeListener("aborted", onAbort);
+      req.removeListener("close", onAbort);
+      res.removeListener("finish", onResDone);
+      res.removeListener("close", onResDone);
+    };
+
+    return { controller, cleanup };
+  }
+
+  // Note: Node's http.createServer accepts async handlers; returning a Promise is fine.
+  const requestHandler = async (req, res) => {
+    const { controller, cleanup } = attachAbortToRequest(req, res);
+    const signal = controller.signal;
+    try {
+      const baseURL = "http://" + req.headers.host + "/";
+      const reqUrl = new URL(req.url, baseURL);
+      if (reqUrl.pathname === "/thumb-gen") {
+        if (!verifyAuth(req.headers.authorization, res, key)) {
+          return;
+        }
+        await handleThumbGen(req, res);
+      } else if (reqUrl.pathname === "/extract-pdf") {
+        if (!verifyAuth(req.headers.authorization, res, key)) {
+          return;
+        }
+        await extractPdf(req, res);
+      } else if (reqUrl.pathname === "/indexer") {
+        if (!verifyAuth(req.headers.authorization, res, key)) return;
+        // pass signal down so indexing can abort
+        await handleIndexer(req, res, signal);
+      } else if (reqUrl.pathname === "/watch-folder") {
+        if (!verifyAuth(req.headers.authorization, res, key)) return;
+        await watchFolder(req, res);
+      } else if (reqUrl.pathname === "/hide-folder") {
+        if (!verifyAuth(req.headers.authorization, res, key)) return;
+        await hideFolder(req, res);
+      } else {
+        await defaultRequest(req, res);
+      }
+    } catch (err) {
+      // if aborted, don't attempt to write to the response
+      if (signal.aborted || res.writableEnded) {
+        // nothing to do — client disconnected
         return;
       }
-      handleThumbGen(req, res);
-    } else if (reqUrl.pathname === "/extract-pdf") {
-      if (!verifyAuth(req.headers.authorization, res, key)) {
-        return;
+      console.error("Request handler error:", err);
+      if (!res.writableEnded) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({ ok: false, error: err.message || "Internal error" })
+        );
       }
-      extractPdf(req, res);
-    } else if (reqUrl.pathname === "/indexer") {
-      if (!verifyAuth(req.headers.authorization, res, key)) {
-        return;
-      }
-      handleIndexer(req, res);
-    } else if (reqUrl.pathname === "/watch-folder") {
-      if (!verifyAuth(req.headers.authorization, res, key)) {
-        return;
-      }
-      watchFolder(req, res);
-    } else if (reqUrl.pathname === "/hide-folder") {
-      if (!verifyAuth(req.headers.authorization, res, key)) {
-        return;
-      }
-      hideFolder(req, res);
-    } else {
-      defaultRequest(req, res);
+    } finally {
+      // ALWAYS clean up listeners
+      cleanup();
     }
   };
 
