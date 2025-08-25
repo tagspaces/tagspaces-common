@@ -34,6 +34,17 @@ function baseName(dirPath, dirSeparator = undefined) {
   return fileName || dirPath;
 }
 
+const COMPOUND_EXTENSIONS = [
+  ".tar.gz",
+  ".tar.xz",
+  ".tar.bz2",
+  ".tar.zst",
+  ".tar.lz",
+  ".tar.lzma",
+  ".tar.lz4",
+  ".tar.lzo",
+  ".cpio.gz",
+];
 /**
  * @param filePath
  * @param dirSeparator
@@ -46,32 +57,56 @@ function extractFileExtension(filePath, dirSeparator = undefined) {
   if (dirSeparator === undefined) {
     dirSeparator = getDirSeparator(filePath);
   }
+
   const lastindexDirSeparator = filePath.lastIndexOf(dirSeparator);
   const lastIndexEndTagContainer = filePath.lastIndexOf(
     AppConfig.endTagContainer
   );
-  const lastindexDot = filePath.lastIndexOf(".");
-  if (lastindexDot < 0) {
+
+  // Determine the end of the "filename part" (exclude tag container and query params)
+  let endIndex = filePath.length;
+  if (lastIndexEndTagContainer > lastindexDirSeparator) {
+    endIndex = Math.min(endIndex, lastIndexEndTagContainer);
+  }
+  const questionMarkPos = filePath.indexOf("?", lastindexDirSeparator + 1);
+  if (questionMarkPos > -1 && questionMarkPos < endIndex) {
+    endIndex = questionMarkPos;
+  }
+
+  // Find the last dot that is within the filename part
+  const lastDotIndex = filePath.lastIndexOf(".", endIndex - 1);
+  if (lastDotIndex < 0) {
     return "";
   }
-  if (lastindexDot < lastindexDirSeparator) {
+  if (lastDotIndex < lastindexDirSeparator) {
     // case: "../remote.php/webdav/somefilename"
     return "";
   }
-  if (lastindexDot < lastIndexEndTagContainer) {
-    // case: "[20120125 89.4kg 19.5% 60.5% 39.8% 2.6kg]"
+  if (lastDotIndex < lastIndexEndTagContainer) {
+    // case: "[20120125 89.4kg ...]" (dot inside tag container)
     return "";
   }
-  let extension = filePath
-    .substring(lastindexDot + 1, filePath.length)
-    .toLowerCase()
+
+  // Extract only the filename portion (after last dir separator, before endIndex)
+  let filenamePart = filePath
+    .substring(lastindexDirSeparator + 1, endIndex)
     .trim();
-  const lastindexQuestionMark = extension.lastIndexOf("?");
-  if (lastindexQuestionMark > 0) {
-    // Removing everything after ? in URLs .png?queryParam1=2342
-    extension = extension.substring(0, lastindexQuestionMark);
+  const lowerFilenamePart = filenamePart.toLowerCase();
+
+  // Check compound extensions (longest match first by array order)
+  for (const comp of COMPOUND_EXTENSIONS) {
+    if (lowerFilenamePart.endsWith(comp)) {
+      // return without the leading dot, in lower-case (matches original behavior)
+      return comp.slice(1);
+    }
   }
-  return extension;
+
+  // Fallback: return simple extension (everything after the last dot in filenamePart)
+  const localDot = lowerFilenamePart.lastIndexOf(".");
+  if (localDot < 0) {
+    return "";
+  }
+  return lowerFilenamePart.substring(localDot + 1).trim();
 }
 
 /**
