@@ -248,6 +248,7 @@ describe("Common Paths unit tests", () => {
   });
 
   test("paths joinPaths", async () => {
+
     const path = paths.joinPaths(
       AppConfig.dirSeparator,
       pathLib.join(__dirname, "..", ".."),
@@ -255,14 +256,15 @@ describe("Common Paths unit tests", () => {
     );
     expect(path).toBe(pathLib.join(__dirname, "..", "..", "img.jpg"));
 
+    const rootPath = AppConfig.isWin ? "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\" : "/Users/sytolk/Downloads/Yarndings_20/"
     const path1 = paths.joinPaths(
       AppConfig.dirSeparator,
-      "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\",
+      rootPath,
       "new_dir"
     );
     expect(path1).toBe(
       pathLib.join(
-        "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\",
+        rootPath,
         "new_dir"
       )
     );
