@@ -15,38 +15,71 @@ const { extractPdf } = require("./endpoints/extractPdfContentRequest");
 module.exports.createWS = function (port, key) {
   const hostname = "127.0.0.1";
 
-  function attachAbortToRequest(req, res) {
+  function attachAbortToRequest(req, res, server) {
     const controller = new AbortController();
+    const signal = controller.signal;
 
-    // client aborted connection (e.g. closed tab, electron aborted the request)
+    // client aborted connection (e.g. electron aborted the request)
     const onAbort = () => {
-      controller.abort();
+      if (!signal.aborted) {
+        controller.abort();
+      }
     };
 
-    req.on("aborted", onAbort); // emitted if the request is aborted
-    req.on("close", onAbort);
+    // req-level events (normal cases)
+    req.on("aborted", onAbort); // client sent an abort
+    req.on("close", onAbort); // request stream closed
+
+    // underlying socket — catches ECONNRESET and other socket-level errors
+    const sock = req.socket || req.connection;
+    const onSocketError = (err) => {
+      // abort for any socket error — you can filter by err.code === 'ECONNRESET' if desired
+      onAbort();
+    };
+    const onSocketClose = () => {
+      onAbort();
+    };
+
+    if (sock) {
+      sock.on("error", onSocketError);
+      sock.on("close", onSocketClose);
+    }
 
     // Also attach to res finish/close to ensure cleanup when response completes
-    const onResDone = () => {
-      controller.abort();
+    const onResDone = () => onAbort();
+    res.on("finish", onResDone);
+    res.on("close", onResDone);
+
+    // server-level clientError (optional but useful)
+    const onClientError = (err, clientSocket) => {
+      // If the error is associated with this request's socket, abort.
+      if (clientSocket === sock) onAbort();
     };
-    res.on("finish", onResDone); // normal end
-    res.on("close", onResDone); // client closed socket
-    // cleanup function to remove listeners (call in finally)
+    if (server && typeof server.on === "function") {
+      server.on("clientError", onClientError);
+    }
+
+    // cleanup: remove all listeners (call in finally)
     const cleanup = () => {
       req.removeListener("aborted", onAbort);
       req.removeListener("close", onAbort);
       res.removeListener("finish", onResDone);
       res.removeListener("close", onResDone);
+      if (sock) {
+        sock.removeListener("error", onSocketError);
+        sock.removeListener("close", onSocketClose);
+      }
+      if (server && typeof server.removeListener === "function") {
+        server.removeListener("clientError", onClientError);
+      }
     };
 
-    return { controller, cleanup };
+    return { controller, cleanup, signal };
   }
 
   // Note: Node's http.createServer accepts async handlers; returning a Promise is fine.
-  const requestHandler = async (req, res) => {
-    const { controller, cleanup } = attachAbortToRequest(req, res);
-    const signal = controller.signal;
+  const requestHandler = async (req, res, server) => {
+    const { controller, cleanup, signal } = attachAbortToRequest(req, res, server);
     try {
       const baseURL = "http://" + req.headers.host + "/";
       const reqUrl = new URL(req.url, baseURL);
@@ -92,7 +125,7 @@ module.exports.createWS = function (port, key) {
     }
   };
 
-  const server = ws.createServer(requestHandler);
+  const server = ws.createServer((req, res) => requestHandler(req, res, server));
 
   const errorHandler = (error) => {
     if (error.syscall !== "listen") {
