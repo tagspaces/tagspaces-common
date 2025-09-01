@@ -10,7 +10,7 @@ describe("Common Paths unit tests", () => {
   });
 
   test("paths extractFileExtension", async () => {
-    const filePath = pathLib.join(__dirname, "..", "..", "img.jpg");
+    const filePath = pathLib.join(__dirname, "..", "..", "img[1star].jpg");
     const fileExtension = paths.extractFileExtension(
       filePath,
       AppConfig.dirSeparator
@@ -23,6 +23,15 @@ describe("Common Paths unit tests", () => {
       AppConfig.dirSeparator
     );
     expect(tarGzExtension).toBe("tar.gz");
+  });
+
+  test("paths generateFileName", async () => {
+    const fileName = paths.generateFileName(
+      "archive.tar.gz",
+      ["1star"],
+      AppConfig.tagDelimiter
+    );
+    expect(fileName).toBe("archive[1star].tar.gz");
   });
 
   test("paths getMetaDirectoryPath", async () => {

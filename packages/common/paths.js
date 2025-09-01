@@ -63,18 +63,8 @@ function extractFileExtension(filePath, dirSeparator = undefined) {
     AppConfig.endTagContainer
   );
 
-  // Determine the end of the "filename part" (exclude tag container and query params)
-  let endIndex = filePath.length;
-  if (lastIndexEndTagContainer > lastindexDirSeparator) {
-    endIndex = Math.min(endIndex, lastIndexEndTagContainer);
-  }
-  const questionMarkPos = filePath.indexOf("?", lastindexDirSeparator + 1);
-  if (questionMarkPos > -1 && questionMarkPos < endIndex) {
-    endIndex = questionMarkPos;
-  }
-
   // Find the last dot that is within the filename part
-  const lastDotIndex = filePath.lastIndexOf(".", endIndex - 1);
+  const lastDotIndex = filePath.lastIndexOf(".");
   if (lastDotIndex < 0) {
     return "";
   }
@@ -87,11 +77,10 @@ function extractFileExtension(filePath, dirSeparator = undefined) {
     return "";
   }
 
-  // Extract only the filename portion (after last dir separator, before endIndex)
-  let filenamePart = filePath
-    .substring(lastindexDirSeparator + 1, endIndex)
-    .trim();
-  const lowerFilenamePart = filenamePart.toLowerCase();
+  const lowerFilenamePart = extractFileName(
+    filePath,
+    dirSeparator
+  ).toLowerCase();
 
   // Check compound extensions (longest match first by array order)
   for (const comp of COMPOUND_EXTENSIONS) {
@@ -151,14 +140,13 @@ function generateFileName(
   let newFileName = "";
   const beginTagContainer = fileName.indexOf(AppConfig.beginTagContainer);
   const endTagContainer = fileName.indexOf(AppConfig.endTagContainer);
-  const lastDotPosition = fileName.lastIndexOf(".");
   if (
     beginTagContainer < 0 ||
     endTagContainer < 0 ||
     beginTagContainer >= endTagContainer
   ) {
     // Filename does not contains tags.
-    if (lastDotPosition < 0) {
+    if (!fileExt) {
       // File does not have an extension
       newFileName = filenameTagPlacedAtEnd
         ? fileName.trim() + tagsString
@@ -168,7 +156,7 @@ function generateFileName(
       if (filenameTagPlacedAtEnd) {
         newFileName =
           cleanFileName(
-            fileName.substring(0, lastDotPosition),
+            fileName.slice(0, -(fileExt.length + 1)),
             prefixTagContainer
           ) +
           (tagsString ? prefixTagContainer + tagsString : "") +
@@ -178,7 +166,7 @@ function generateFileName(
         newFileName =
           (tagsString ? tagsString + prefixTagContainer : "") +
           cleanFileName(
-            fileName.substring(0, lastDotPosition),
+            fileName.slice(0, -(fileExt.length + 1)),
             prefixTagContainer
           ) +
           "." +
@@ -186,7 +174,7 @@ function generateFileName(
       }
     }
   } else {
-    // File does not have an extension
+    // File contain tags
     if (filenameTagPlacedAtEnd) {
       newFileName =
         cleanFileName(
@@ -486,7 +474,7 @@ function normalizePath(path) {
  */
 function extractFileNameWithoutExt(filePath, dirSeparator = undefined) {
   const fileName = extractFileName(filePath, dirSeparator);
-  const indexOfDot = fileName.lastIndexOf(".");
+  const extension = extractFileExtension(fileName); //.lastIndexOf(".");
   const lastIndexBeginTagContainer = fileName.lastIndexOf(
     AppConfig.beginTagContainer
   );
@@ -500,15 +488,13 @@ function extractFileNameWithoutExt(filePath, dirSeparator = undefined) {
     // case: "[tag1 tag.2]"
     return "";
   }
-  if (indexOfDot > 0) {
+  if (extension) {
     // case: regular
-    return fileName.substring(0, indexOfDot);
+    return fileName.slice(0, -(extension.length + 1));
   }
-  if (indexOfDot === 0) {
-    // case ".txt"
-    return "";
-  }
-  return fileName;
+
+  // Special case: filenames like ".txt" or ".bashrc"
+  return fileName.startsWith(".") ? fileName : "";
 }
 
 function extractContainingDirectoryPath(filePath, dirSeparator = undefined) {
