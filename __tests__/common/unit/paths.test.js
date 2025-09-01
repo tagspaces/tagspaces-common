@@ -16,6 +16,13 @@ describe("Common Paths unit tests", () => {
       AppConfig.dirSeparator
     );
     expect(fileExtension).toBe("jpg");
+
+    const archivePath = pathLib.join(__dirname, "..", "..", "archive.tar.gz");
+    const tarGzExtension = paths.extractFileExtension(
+      archivePath,
+      AppConfig.dirSeparator
+    );
+    expect(tarGzExtension).toBe("tar.gz");
   });
 
   test("paths getMetaDirectoryPath", async () => {
@@ -255,17 +262,12 @@ describe("Common Paths unit tests", () => {
     );
     expect(path).toBe(pathLib.join(__dirname, "..", "..", "img.jpg"));
 
-    const path1 = paths.joinPaths(
-      AppConfig.dirSeparator,
-      "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\",
-      "new_dir"
-    );
-    expect(path1).toBe(
-      pathLib.join(
-        "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\",
-        "new_dir"
-      )
-    );
+    const testPath = AppConfig.isWin
+      ? "\\\\DESKTOP-07OE903\\Users\\smari\\OneDrive\\Картини\\test\\"
+      : "/Users/sytolk/Music";
+
+    const path1 = paths.joinPaths(AppConfig.dirSeparator, testPath, "new_dir");
+    expect(path1).toBe(pathLib.join(testPath, "new_dir"));
   });
 
   test("paths generateSharingLink", async () => {
