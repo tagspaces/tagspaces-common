@@ -10,12 +10,28 @@ describe("Common Paths unit tests", () => {
   });
 
   test("paths extractFileExtension", async () => {
-    const filePath = pathLib.join(__dirname, "..", "..", "img.jpg");
+    const filePath = pathLib.join(__dirname, "..", "..", "img[1star].jpg");
     const fileExtension = paths.extractFileExtension(
       filePath,
       AppConfig.dirSeparator
     );
     expect(fileExtension).toBe("jpg");
+
+    const archivePath = pathLib.join(__dirname, "..", "..", "archive.tar.gz");
+    const tarGzExtension = paths.extractFileExtension(
+      archivePath,
+      AppConfig.dirSeparator
+    );
+    expect(tarGzExtension).toBe("tar.gz");
+  });
+
+  test("paths generateFileName", async () => {
+    const fileName = paths.generateFileName(
+      "archive.tar.gz",
+      ["1star"],
+      AppConfig.tagDelimiter
+    );
+    expect(fileName).toBe("archive[1star].tar.gz");
   });
 
   test("paths getMetaDirectoryPath", async () => {
