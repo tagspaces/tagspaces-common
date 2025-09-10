@@ -9,6 +9,7 @@ module.exports = function (_env, argv) {
   const isDevelopment = !isProduction;
 
   return {
+    context: resolve(__dirname),
     // Tells webpack what kind of source maps to produce.
     // There are a lot of options, but I chose the standalone file option.
     devtool: isDevelopment && 'cheap-module-source-map', //'source-map',
@@ -19,7 +20,7 @@ module.exports = function (_env, argv) {
     },
 
     // When the env is "development", this tells webpack to provide debuggable information in the source maps and turns off some optimizations.
-    mode: process.env.NODE_ENV,
+    mode: isProduction ? 'production' : 'development',
 
     // Tells webpack how to run file transformation pipeline of webpack.
     // Awesome-typescript-loader will run on all typescript files.
@@ -41,7 +42,8 @@ module.exports = function (_env, argv) {
               loader: 'ts-loader',
               options: {
                 transpileOnly: true,
-                experimentalWatchApi: true
+                experimentalWatchApi: true,
+                configFile: resolve(__dirname, 'tsconfig.esm.json')
               }
             }
           ]

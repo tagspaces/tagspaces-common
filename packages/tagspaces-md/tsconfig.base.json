@@ -2,11 +2,9 @@
   "compilerOptions": {
     "allowJs": true,
     "jsx": "react-jsx",
-    "module": "ESNext",
     "target": "ES2015",
     "sourceMap": true,
     "inlineSources": true,
-    "outDir": "lib",
     "declaration": true,
     "importHelpers": true,
     "moduleResolution": "node",
@@ -16,8 +14,10 @@
     "skipLibCheck": true,
     "lib": ["esnext", "dom"],
     "noEmitOnError": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "lib", "lib-esm"]
+  "exclude": ["node_modules", "lib", "esm", "lib-esm"]
 }
