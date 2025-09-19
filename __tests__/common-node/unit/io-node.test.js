@@ -230,6 +230,7 @@ describe("io-node unit tests", () => {
     );
     const file = await saveTextFilePromise({ path: filePath }, "test", true);
     expect(file).toEqual({
+      cdt: file.cdt,
       extension: "txt",
       isFile: true,
       isNewFile: true,
@@ -254,6 +255,7 @@ describe("io-node unit tests", () => {
       fs.createReadStream(sourcePath)
     );
     expect(file).toEqual({
+      cdt: file.cdt,
       extension: "bmp",
       isFile: true,
       isNewFile: true,
@@ -271,6 +273,7 @@ describe("io-node unit tests", () => {
     );
     const file = await getPropertiesPromise({ path: filePath });
     expect(file).toEqual({
+      cdt: file.cdt,
       name: "sample.bmp",
       isFile: true,
       size: 62262,
@@ -283,6 +286,7 @@ describe("io-node unit tests", () => {
       AppConfig.dirSeparator;
     const dir = await getPropertiesPromise({ path: dirPath });
     expect(dir).toEqual({
+      cdt: dir.cdt,
       name: "testContents",
       isFile: false,
       size: AppConfig.isWin ? 0 : 2464,
