@@ -294,6 +294,14 @@ describe("io-node unit tests", () => {
       path: dirPath,
     });
   });
+  test("io-node.created.date", async () => {
+    const filePath = pathLib.resolve(
+        __dirname,
+        "../../../scripts/testContents/sample.txt"
+    );
+    const file = await getPropertiesPromise({ path: filePath });
+    expect(file.lmdt).toBeGreaterThan(file.cdt);
+  });
   test("io-node.loadTextFilePromise", async () => {
     const filePath = pathLib.resolve(
       __dirname,
