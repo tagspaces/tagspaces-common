@@ -186,7 +186,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               ? stats.birthtime.getTime()
               : stats.ctime && typeof stats.ctime.getTime === "function"
               ? stats.ctime.getTime()
-              : lmdt;
+              : undefined;
           const fsEntry = {
             name: stats.isFile()
               ? tsPaths.extractFileName(path)
