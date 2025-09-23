@@ -170,13 +170,31 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
 
         if (stats) {
+          const lmdt =
+            typeof stats.mtimeMs === "number"
+              ? stats.mtimeMs
+              : stats.mtime && typeof stats.mtime.getTime === "function"
+              ? stats.mtime.getTime()
+              : stats.mtime;
+          // created time: prefer birthtimeMs -> ctimeMs -> fall back to Date objects -> finally lmdt
+          const cdt =
+            typeof stats.birthtimeMs === "number"
+              ? stats.birthtimeMs
+              : typeof stats.ctimeMs === "number"
+              ? stats.ctimeMs
+              : stats.birthtime && typeof stats.birthtime.getTime === "function"
+              ? stats.birthtime.getTime()
+              : stats.ctime && typeof stats.ctime.getTime === "function"
+              ? stats.ctime.getTime()
+              : undefined;
           const fsEntry = {
             name: stats.isFile()
               ? tsPaths.extractFileName(path)
               : tsPaths.extractDirectoryName(path),
             isFile: stats.isFile(),
             size: stats.size,
-            lmdt: stats.mtime.getTime ? stats.mtime.getTime() : stats.mtime,
+            lmdt,
+            cdt,
             path,
           };
           if (param.extractLinks) {
@@ -573,9 +591,27 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 if (stats) {
                   eentry.isFile = stats.isFile();
                   eentry.size = stats.size;
-                  eentry.lmdt = stats.mtime.getTime
-                    ? stats.mtime.getTime()
-                    : stats.mtime;
+
+                  // last modified time (mtime)
+                  eentry.lmdt =
+                    typeof stats.mtimeMs === "number"
+                      ? stats.mtimeMs
+                      : stats.mtime && typeof stats.mtime.getTime === "function"
+                      ? stats.mtime.getTime()
+                      : stats.mtime;
+
+                  // created time: prefer birthtimeMs -> ctimeMs -> fall back to Date objects -> finally lmdt
+                  eentry.cdt =
+                    typeof stats.birthtimeMs === "number"
+                      ? stats.birthtimeMs
+                      : typeof stats.ctimeMs === "number"
+                      ? stats.ctimeMs
+                      : stats.birthtime &&
+                        typeof stats.birthtime.getTime === "function"
+                      ? stats.birthtime.getTime()
+                      : stats.ctime && typeof stats.ctime.getTime === "function"
+                      ? stats.ctime.getTime()
+                      : eentry.lmdt;
                 }
 
                 // Handle directory meta
