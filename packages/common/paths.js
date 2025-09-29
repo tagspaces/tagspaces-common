@@ -343,18 +343,37 @@ function getBgndFileLocationForDirectory(entryPath, dirSeparator = undefined) {
   );
 }
 
-function getBackupFileLocation(entryPath, uuid, dirSeparator = undefined) {
-  if (dirSeparator === undefined) {
-    dirSeparator = getDirSeparator(entryPath);
-  }
-  const extension = extractFileExtension(entryPath, dirSeparator);
+function getBackupFileDir(entryPath, uuid, dirSeparator = undefined) {
   const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
+  return getBackupFolderDir(dirPath, uuid, dirSeparator);
+}
+
+function getBackupFolderDir(dirPath, uuid, dirSeparator = undefined) {
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(dirPath);
+  }
   return (
     dirPath +
     (dirPath.endsWith(dirSeparator) ? "" : dirSeparator) +
     AppConfig.metaFolder +
     dirSeparator +
-    uuid +
+    uuid
+  );
+}
+
+function getBackupDir(entry, dirSeparator = undefined) {
+  return entry.isFile
+    ? getBackupFileDir(entry.path, entry.uuid, dirSeparator)
+    : getBackupFolderDir(entry.path, entry.meta?.id, dirSeparator);
+}
+
+function getBackupFileLocation(entryPath, uuid, dirSeparator = undefined) {
+  if (dirSeparator === undefined) {
+    dirSeparator = getDirSeparator(entryPath);
+  }
+  const extension = extractFileExtension(entryPath, dirSeparator);
+  return (
+    getBackupFileDir(entryPath, uuid, dirSeparator) +
     dirSeparator +
     new Date().getTime() +
     "." +
@@ -362,17 +381,15 @@ function getBackupFileLocation(entryPath, uuid, dirSeparator = undefined) {
   );
 }
 
-function getBackupFileDir(entryPath, uuid, dirSeparator = undefined) {
+function getBackupFolderLocation(entryPath, uuid, dirSeparator = undefined) {
   if (dirSeparator === undefined) {
     dirSeparator = getDirSeparator(entryPath);
   }
-  const dirPath = extractContainingDirectoryPath(entryPath, dirSeparator);
   return (
-    dirPath +
-    (entryPath.endsWith(dirSeparator) ? "" : dirSeparator) +
-    AppConfig.metaFolder +
+    getBackupFolderDir(entryPath, uuid, dirSeparator) +
     dirSeparator +
-    uuid
+    new Date().getTime() +
+    ".tsm.json"
   );
 }
 
@@ -898,7 +915,10 @@ module.exports = {
   getThumbFileLocationForDirectory,
   getBgndFileLocationForDirectory,
   getBackupFileLocation,
+  getBackupFolderLocation,
+  getBackupDir,
   getBackupFileDir,
+  getBackupFolderDir,
   getFileLocationFromMetaFile,
   getMetaFileLocationForFile,
   getMetaContentFileLocation,
