@@ -10,19 +10,21 @@ describe("Common Paths unit tests", () => {
   });
 
   test("paths extractFileExtension", async () => {
-    const filePath = pathLib.join(__dirname, "..", "..", "img[1star].jpg");
-    const fileExtension = paths.extractFileExtension(
-      filePath,
-      AppConfig.dirSeparator
-    );
-    expect(fileExtension).toBe("jpg");
+    let filePath = pathLib.join(__dirname, "..", "..", "img[1star].jpg");
+    let fileExt = paths.extractFileExtension(filePath, AppConfig.dirSeparator);
+    expect(fileExt).toBe("jpg");
 
-    const archivePath = pathLib.join(__dirname, "..", "..", "archive.tar.gz");
-    const tarGzExtension = paths.extractFileExtension(
-      archivePath,
-      AppConfig.dirSeparator
-    );
-    expect(tarGzExtension).toBe("tar.gz");
+    filePath = pathLib.join(__dirname, "..", "..", "archive.tar.gz");
+    fileExt = paths.extractFileExtension(filePath, AppConfig.dirSeparator);
+    expect(fileExt).toBe("tar.gz");
+
+    filePath = pathLib.join(__dirname, "..", "..", ".filename.zip");
+    fileExt = paths.extractFileExtension(filePath, AppConfig.dirSeparator);
+    expect(fileExt).toBe("zip");
+
+    filePath = pathLib.join(__dirname, "..", "..", ".gitignore");
+    fileExt = paths.extractFileExtension(filePath, AppConfig.dirSeparator);
+    expect(fileExt).toBe("");
   });
 
   test("paths generateFileName", async () => {
@@ -161,13 +163,48 @@ describe("Common Paths unit tests", () => {
     expect(clenPath).toBe(dirPath);
   });
 
-  test("paths extractFileNameWithoutExt", async () => {
-    const dirPath = pathLib.join(__dirname, "..", "..", "img.jpg");
+  test("paths extractFileNameWithoutExt - regular case", async () => {
+    const dirPath = pathLib.join(__dirname, "..", "..", "image.jpg");
     const fileName = paths.extractFileNameWithoutExt(
       dirPath,
       AppConfig.dirSeparator
     );
-    expect(fileName).toBe("img");
+    expect(fileName).toBe("image");
+  });
+
+  test("paths extractFileNameWithoutExt - unix hidden files", async () => {
+    const dirPath = pathLib.join(__dirname, "..", "..", ".bashrc");
+    const fileName = paths.extractFileNameWithoutExt(
+      dirPath,
+      AppConfig.dirSeparator
+    );
+    expect(fileName).toBe(".bashrc");
+  });
+
+  test("paths extractFileNameWithoutExt - without extension", async () => {
+    const dirPath = pathLib.join(__dirname, "..", "..", "LICENSE");
+    const fileName = paths.extractFileNameWithoutExt(
+      dirPath,
+      AppConfig.dirSeparator
+    );
+    expect(fileName).toBe("LICENSE");
+  });
+
+  test("paths extractFileNameWithoutExt - containing only tags", async () => {
+    let dirPath = pathLib.join(__dirname, "..", "..", "[tag1 tag3].jpg");
+    let fileName = paths.extractFileNameWithoutExt(
+      dirPath,
+      AppConfig.dirSeparator
+    );
+    expect(fileName).toBe("[tag1 tag3]");
+
+    dirPath = pathLib.join(__dirname, "..", "..", "[tag1 tag.4].jpg");
+    fileName = paths.extractFileNameWithoutExt(dirPath, AppConfig.dirSeparator);
+    expect(fileName).toBe("[tag1 tag.4]");
+
+    dirPath = pathLib.join(__dirname, "..", "..", "[tag1 tag2]");
+    fileName = paths.extractFileNameWithoutExt(dirPath, AppConfig.dirSeparator);
+    expect(fileName).toBe("[tag1 tag2]");
   });
 
   test("paths extractContainingDirectoryPath", async () => {
@@ -245,8 +282,17 @@ describe("Common Paths unit tests", () => {
   });
 
   test("paths extractTags", async () => {
-    const tags = paths.extractTags("img[tag1].jpg");
-    expect(tags).toEqual(["tag1"]);
+    let tags = paths.extractTags("img[Tag1].jpg");
+    expect(tags).toEqual(["Tag1"]);
+
+    tags = paths.extractTags("img[tag1 tag2].jpg", " ");
+    expect(tags).toEqual(["tag1", "tag2"]);
+
+    tags = paths.extractTags("img[tag1 tag2.4].jpg", " ");
+    expect(tags).toEqual(["tag1", "tag2.4"]);
+
+    tags = paths.extractTags("img[tag1 tag5]", " ");
+    expect(tags).toEqual(["tag1", "tag5"]);
   });
 
   test("paths tagsAsObjects", async () => {

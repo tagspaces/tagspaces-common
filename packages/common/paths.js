@@ -1,19 +1,12 @@
 /**
- * TagSpaces - universal file and folder organizer
- * Copyright (C) 2017-present TagSpaces UG (haftungsbeschraenkt)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License (version 3) as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
+The MIT License (MIT)
+Copyright (c) 2021-present TagSpaces Authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 const AppConfig = require("./AppConfig");
@@ -66,8 +59,23 @@ function extractFileExtension(filePath, dirSeparator = undefined) {
   // Find the last dot that is within the filename part
   const lastDotIndex = filePath.lastIndexOf(".");
   if (lastDotIndex < 0) {
-    return "";
+    return ""; // no dot -> no extension
   }
+
+  // cases unix hidden files
+  if (
+    lastindexDirSeparator < filePath.length &&
+    filePath[lastindexDirSeparator + 1] === "."
+  ) {
+    // case path/.gitignore -> extension
+    if (lastDotIndex === lastindexDirSeparator + 1) {
+      return "";
+      // case path/.filename.ext
+    } else if (lastDotIndex > lastindexDirSeparator + 1) {
+      return filePath.substring(lastDotIndex + 1).trim();
+    }
+  }
+
   if (lastDotIndex < lastindexDirSeparator) {
     // case: "../remote.php/webdav/somefilename"
     return "";
@@ -491,7 +499,7 @@ function normalizePath(path) {
  */
 function extractFileNameWithoutExt(filePath, dirSeparator = undefined) {
   const fileName = extractFileName(filePath, dirSeparator);
-  const extension = extractFileExtension(fileName); //.lastIndexOf(".");
+  const extension = extractFileExtension(fileName);
   const lastIndexBeginTagContainer = fileName.lastIndexOf(
     AppConfig.beginTagContainer
   );
@@ -503,7 +511,7 @@ function extractFileNameWithoutExt(filePath, dirSeparator = undefined) {
     lastIndexEndTagContainer + 1 === fileName.length
   ) {
     // case: "[tag1 tag.2]"
-    return "";
+    return fileName;
   }
   if (extension) {
     // case: regular
@@ -511,7 +519,10 @@ function extractFileNameWithoutExt(filePath, dirSeparator = undefined) {
   }
 
   // Special case: filenames like ".txt" or ".bashrc"
-  return fileName.startsWith(".") ? fileName : "";
+  // return fileName.startsWith(".") ? fileName : "";
+
+  // Cases such .bashrc or LICENSE
+  return fileName;
 }
 
 function extractContainingDirectoryPath(filePath, dirSeparator = undefined) {
