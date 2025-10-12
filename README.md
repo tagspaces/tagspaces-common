@@ -2,7 +2,7 @@
 
     npm install
 
-> Note: this is npm project don't use yarn to install packages)
+> Note: this is npm project don't use yarn to install packages
 
 ### Publishing new version
 
