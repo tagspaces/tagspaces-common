@@ -19,7 +19,7 @@ const {
 } = require("./misc");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
-const fsWin = require("fswin");
+const { execFile } = require("child_process");
 
 /**
  * this is common module with io-node
@@ -422,7 +422,9 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             );
             fs.ensureDirSync(metaPath);
             if (AppConfig.isWin) {
-              fsWin.setAttributesSync(metaPath, { IS_HIDDEN: true });
+              execFile("attrib", ["+h", metaPath], (err, stdout) => {
+                if (err) console.error(err);
+              });
             }
           } catch (e) {
             console.warn("Error creating: " + metaPath);
