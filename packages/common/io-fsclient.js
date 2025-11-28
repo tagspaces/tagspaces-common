@@ -19,6 +19,7 @@ const {
 } = require("./misc");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
+const fsWin = require("fswin");
 
 /**
  * this is common module with io-node
@@ -415,7 +416,17 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return new Promise((resolve) => {
       fs.readdir(metaPath, (error, entries) => {
         if (error) {
-          console.warn("Error listing meta directory " + metaPath);
+          try {
+            console.warn(
+              "Error listing meta directory, trying to create: " + metaPath
+            );
+            fs.ensureDirSync(metaPath);
+            if (AppConfig.isWin) {
+              fsWin.setAttributesSync(metaPath, { IS_HIDDEN: true });
+            }
+          } catch (e) {
+            console.warn("Error creating: " + metaPath);
+          }
           resolve([]); // returning results even if any promise fails
           return;
         }

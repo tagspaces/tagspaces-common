@@ -289,7 +289,7 @@ describe("io-node unit tests", () => {
       cdt: dir.cdt,
       name: "testContents",
       isFile: false,
-      size: AppConfig.isWin ? 0 : 2464,
+      size: AppConfig.isWin ? 0 : 2496,
       lmdt: dir.lmdt,
       path: dirPath,
     });
