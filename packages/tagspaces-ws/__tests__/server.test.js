@@ -3,8 +3,26 @@ const pathLib = require("path");
 const jwt = require("jsonwebtoken");
 const supertest = require("supertest");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const fswin = require("fswin");
 const { createWS } = require("../ws");
+const { execFileSync } = require("child_process");
+
+function isHiddenSync(filePath) {
+  try {
+    const output = execFileSync("attrib", [filePath], {
+      encoding: "utf8", // return string instead of Buffer
+      windowsHide: true,
+    });
+
+    // attrib output example:
+    // "  H    C:\\path\\to\\file"
+    const attrs = output.trim().split(/\s+/)[0];
+
+    return attrs.includes("H");
+  } catch (err) {
+    // file not found, permission denied, etc.
+    throw err;
+  }
+}
 
 describe("Web Server Endpoints", () => {
   let server;
@@ -153,8 +171,7 @@ describe("Web Server Endpoints", () => {
       .send({ path: metaFolder });
     if (AppConfig.isWin) {
       expect(response.status).toBe(200);
-      const attrs = fswin.getAttributesSync(metaFolder);
-      expect(attrs.IS_HIDDEN).toBe(true);
+      expect(isHiddenSync(metaFolder)).toBe(true);
     } else {
       expect(response.status).toBe(200);
     }

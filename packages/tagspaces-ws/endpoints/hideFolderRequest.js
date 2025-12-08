@@ -1,4 +1,4 @@
-const fsWin = require("fswin");
+const { AppConfig } = require("@tagspaces/tagspaces-common");
 
 function hideFolder(req, res) {
   if (req.method === "POST") {
@@ -19,14 +19,14 @@ function hideFolder(req, res) {
         const data = JSON.parse(body);
         const dirPath = data.path;
 
-        if (fsWin) {
-          fsWin.setAttributes(
-            dirPath,
-            { IS_HIDDEN: true },
-            function (succeeded) {
-              resSuccess(succeeded);
+        if (AppConfig.isWin) {
+          execFile("attrib", ["+h", dirPath], (err, stdout) => {
+            if (err) {
+              console.error(err);
+              return resSuccess(false);
             }
-          );
+            resSuccess(true);
+          });
         } else {
           resSuccess(true);
         }

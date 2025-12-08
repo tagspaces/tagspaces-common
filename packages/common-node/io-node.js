@@ -215,13 +215,6 @@ function extractAndSavePdf(entry, extractPDFcontent) {
 
 function createDirectoryPromise(dirPath) {
   return fsClient.createDirectoryPromise(dirPath);
-  /*.then((result) => {
-    if (AppConfig.isWin && dirPath.endsWith("\\" + AppConfig.metaFolder)) {
-      // hide .ts folder on Windows
-      fsWin.setAttributesSync(dirPath, {IS_HIDDEN: true})
-    }
-    return result;
-  });*/
 }
 
 function copyFilePromise(sourceFilePath, targetFilePath) {
