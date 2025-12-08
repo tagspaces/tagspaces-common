@@ -237,7 +237,7 @@ describe("io-node unit tests", () => {
       lmdt: file.lmdt,
       name: "test.txt",
       path: filePath,
-      size: 7,
+      size: 4,
       tags: [],
     });
   });

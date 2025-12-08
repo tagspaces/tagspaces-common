@@ -230,16 +230,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     console.log("Saving file: " + filePath);
 
     // Handling the UTF8 support for text files
-    const UTF8_BOM = "\ufeff";
-    let textContent = content;
+    // const UTF8_BOM = "\ufeff";
+    // let textContent = content;
 
-    if (content.indexOf(UTF8_BOM) === 0) {
-      console.log("Content begins with a UTF8 bom");
-    } else {
-      textContent = UTF8_BOM + content;
-    }
+    // if (content.indexOf(UTF8_BOM) === 0) {
+    //   console.log("Content begins with a UTF8 bom");
+    // } else {
+    //   textContent = UTF8_BOM + content;
+    // }
 
-    return saveFilePromise(param, textContent, overwrite);
+    return saveFilePromise(param, content, overwrite);
   }
 
   /**
