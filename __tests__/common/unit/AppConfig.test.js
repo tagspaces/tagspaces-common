@@ -1,9 +1,3 @@
-/* const path = require("path");
-require("dotenv").config({
-  path: path.resolve(__dirname, "../../../common/default.env"),
-  override: false,
-  debug: true,
-}); */
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
 test("AppConfig", async () => {

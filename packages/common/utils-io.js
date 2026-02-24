@@ -318,7 +318,6 @@ function extractTextContent(fileName, textContent) {
     const lexer = new marked.Lexer({});
     const tokens = lexer.inlineTokens(fileContent);
     const contentArray = tokens.map((token) => {
-      // console.log(JSON.stringify(token));
       if (token.type === "text" && token.text) {
         let cleanedText = token.text.replace(
           /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
@@ -344,11 +343,6 @@ function extractTextContent(fileName, textContent) {
 
     const cleanedHTML = preprocessHTML(fileContent);
 
-    /*const tokens = marked.lexer(cleanedHTML);
-    const contentArray = tokens
-        .filter(token => token.type === "text" && token.text)
-        .map(token => token.text);*/
-
     const lexer = new marked.Lexer({});
     const tokens = lexer.inlineTokens(cleanedHTML);
     joinedTokens = tokens
@@ -360,33 +354,10 @@ function extractTextContent(fileName, textContent) {
   }
 
   return createTextIndex(joinedTokens);
-
-  /*if (fileName.endsWith(".html")) {
-    // Use only the content in the body
-    const pattern = /<body[^>]*>((.|[\n\r])*)<\/body>/im;
-    const matches = pattern.exec(fileContent);
-    if (matches && matches.length > 0) {
-      fileContent = matches[1];
-    }
-
-    const span = document.createElement("span");
-    span.innerHTML = fileContent;
-    fileContent = span.textContent || span.innerText;
-  }*/
-
-  // Todo remove very long word e.g. dataUrls or other binary data which could be in the text
-
-  // replace unnecessary chars. leave only chars, numbers and space
-  // fileContent = fileContent.replace(/[^\w\d ]/g, ''); // leaves only latin chars
-  // fileContent = fileContent.replace(/[^a-zA-Za-åa-ö-w-я0-9\d ]/g, '');
 }
 
 function createTextIndex(textContent) {
   if (textContent) {
-    // Removing BOM
-    // if (textContent.charCodeAt(0) === 0xFEFF) {
-    //   textContent = textContent.substr(1);
-    // }
     // clear duplicate string, remove spaces and empty string
     const trimmedTokens = textContent.replace(/\s+/g, " ");
     const noDuplicatesArray = [...new Set(trimmedTokens.split(" "))];
