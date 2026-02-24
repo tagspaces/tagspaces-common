@@ -5,7 +5,8 @@
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "command": {
     "publish": {
-      "ignoreChanges": ["**/md-sample/**"]
+      "ignoreChanges": ["**/md-sample/**"],
+      "access": "public"
     }
   }
 }
