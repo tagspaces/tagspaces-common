@@ -93,74 +93,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   /**
-   * TODO not used now implement it in DirectoryTreeView.tsx
-   */
-  /*function createDirectoryTree(dirPath) {
-    return new Promise(async (resolve) => {
-      const tree = {};
-      /!*fs.lstat(dirPath, (err, dstats) => {
-            if (err !== null) {
-              console.error("Generating tree for " + dirPath + " failed " + ex);
-            }*!/
-      tree.name = pathLib.basename(dirPath);
-      tree.isFile = false;
-      // tree.lmdt = dstats.mtime;
-      tree.path = dirPath;
-      tree.children = await getTreeChildren(dirPath);
-      //})
-      resolve(tree);
-    });
-  }*/
-
-  /*function getTreeChildren(dirPath) {
-    const children = [];
-    return new Promise((resolve) => {
-      fs.readdir(dirPath, async (error, dirList) => {
-        if (error) {
-          console.warn("Error listing directory " + dirPath);
-          resolve(children); // returning results even if any promise fails
-        } else {
-          for (let i = 0; i < dirList.length; i += 1) {
-            const path = dirPath + AppConfig.dirSeparator + dirList[i];
-            try {
-              const isDir = await isDirectory(path);
-              if (!isDir) {
-                children.push({
-                  name: pathLib.basename(path),
-                  isFile: true,
-                  // size: stats.size,
-                  // lmdt: stats.mtime,
-                  path,
-                });
-              } else {
-                children.push(createDirectoryTree(path));
-              }
-            } catch (ex) {
-              console.error(
-                "Error listing directory " + path + " not exist:" + ex
-              );
-            }
-          }
-          resolve(children);
-        }
-      });
-    });
-  }*/
-
-  /**
-   * Create a promise that rejects in <ms> milliseconds
-   * @param ms: number
-   */
-  /*function timeout(ms) {
-    return new Promise((resolve, reject) => {
-      const id = setTimeout(() => {
-        clearTimeout(id);
-        reject(new Error("Timed out in " + ms + "ms."));
-      }, ms);
-    });
-  }*/
-
-  /**
    * @param param (path - deprecated or Object)
    * return on success: resolve Promise<TS.FileSystemEntry>
    *        on error:   resolve Promise<false> (file not exist) TODO rethink this to reject error too
@@ -220,25 +152,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
       });
     });
-
-    // Returns a race between our timeout and the passed in promise
-    // return Promise.race([promise, timeout(2000)]);
   }
 
   function saveTextFilePromise(param, content, overwrite) {
     const filePath = getPath(param);
     console.log("Saving file: " + filePath);
-
-    // Handling the UTF8 support for text files
-    // const UTF8_BOM = "\ufeff";
-    // let textContent = content;
-
-    // if (content.indexOf(UTF8_BOM) === 0) {
-    //   console.log("Content begins with a UTF8 bom");
-    // } else {
-    //   textContent = UTF8_BOM + content;
-    // }
-
     return saveFilePromise(param, content, overwrite);
   }
 
@@ -259,9 +177,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             reject(error);
             return;
           }
-          /*if (entry.lmdt) {
-            resolve(entry);
-          } else {*/
           getPropertiesPromise(param).then((entryProps) => {
             resolve({ ...entry, ...entryProps });
           });
@@ -275,7 +190,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           path: filePath,
           extension: tsPaths.extractFileExtension(filePath, dirSeparator),
           size: content.length,
-          // lmdt: new Date().getTime(),
           isNewFile: true,
           tags: [],
         };
@@ -356,10 +270,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       }
     }
 
-    // console.log("Saving binary file: " + filePath);
     let buff;
     if (isReadableStream(content)) {
-      //content.readable) {
       buff = await streamToBuffer(content);
     } else if (content instanceof ReadableStream) {
       // it is ReadableStream from web streams API
@@ -389,17 +301,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * deprecated useTrash -> use moveToTrash from electron-io
    */
   function deleteDirectoryPromise(path) {
-    /*if (useTrash) {
-      return new Promise((resolve, reject) => {
-        if (this.moveToTrash([path])) {
-          resolve(path);
-        } else {
-          // console.error('deleteDirectoryPromise '+path+' failed');
-          reject(new Error("deleteDirectoryPromise " + path + " failed"));
-        }
-      });
-    }*/
-
     return new Promise((resolve, reject) => {
       fs.rm(path, { recursive: true, force: true }, (error) => {
         if (error) {
@@ -711,10 +612,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    */
   function loadTextFilePromise(param, isPreview = false) {
     const filePath = getPath(param);
-    /*if (filePath.startsWith("./") || filePath.startsWith("../")) {
-      // relative paths
-      filePath = pathLib.resolve(filePath);
-    }*/
     return new Promise((resolve, reject) => {
       if (isPreview) {
         const stream = fs.createReadStream(filePath, {
@@ -756,10 +653,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    */
   function getFileContentPromise(param, type = "arraybuffer") {
     let filePath = getPath(param);
-    /*if (filePath.startsWith("./") || filePath.startsWith("../")) {
-      // relative paths
-      filePath = pathLib.resolve(filePath);
-    }*/
     return new Promise((resolve, reject) => {
       if (type === "text") {
         fs.readFile(filePath, "utf8", (error, content) => {
@@ -861,9 +754,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             newFilePath,
             onProgress
           ).then(() => resolve([filePath, newFilePath]));
-          /*console.debug(
-                    "move a directory:" + filePath + " to:" + newFilePath
-                );*/
         } else {
           stat({ path: newFilePath }).then(async (destStat) => {
             if (destStat) {
@@ -967,13 +857,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
       });
     });
-
-    /* return moveDirectoryPromise(
-      { path: dirPath, rename: true },
-      newDirPath,
-      onProgress,
-      onAbort
-    );*/
   }
 
   /**
@@ -1002,19 +885,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           console.debug("copyDirectoryPromise", error);
           resolve(newDirPath);
         });
-      // newDirPath not exist -> Rename directory
-      /*const dirProp = await getPropertiesPromise(dirPath);
-      if (!dirProp.isFile) {
-        fs.rename(dirPath, newDirPath, (error) => {
-          if (error) {
-            reject('Renaming "' + dirPath + '" failed with: ' + error);
-            return;
-          }
-          resolve(newDirPath);
-        });
-      } else {
-        reject("Path is not a directory. Renaming of " + dirPath + " failed.");
-      }*/
     });
   }
 
@@ -1035,10 +905,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return;
       }
       fs.ensureDir(newDirPath, (err) => {
-        // if (await exist(newDirPath)) {
         let part = 0;
         let running = true;
-        // let processedSize = 0;
         fs.copy(
           dirPath,
           newDirPath,
@@ -1046,11 +914,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             clobber: true, // todo clobber is deprecated in copy replace with overwrite
             filter: async (src, dest) => {
               if (onProgress && running) {
-                /*const processedFile = await getPropertiesPromise({
-                  path: src,
-                });
-                if (processedFile && processedFile.isFile) {
-                processedSize += processedFile.size; */
                 part += 1;
                 const progress = {
                   loaded: part, //processedSize,
@@ -1066,8 +929,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   src
                 );
               }
-              /*const progress = (processedSize / totalSize) * 100;
-                console.log(`Progress: ${progress.toFixed(2)}%`);*/
 
               return running;
             },
@@ -1087,20 +948,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       });
     });
   }
-
-  // Experimental functionality
-  /*function watchDirectory(dirPath, listener) {
-    // stopWatchingDirectories();
-    fsWatcher = fs.watch(
-      dirPath,
-      { persistent: true, recursive: false },
-      listener
-    );
-  }*/
-
-  /*function resolveFilePath(filePath) {
-    pathLib.resolve(filePath);
-  }*/
 
   return {
     isDirectory,
