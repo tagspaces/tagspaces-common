@@ -14,51 +14,6 @@ const {
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
-/*function cleanPath(filePath, rootPathLength) {
-  const cleanPath = filePath
-    .substr(rootPathLength) // remove root location path from index
-    .replace(/\/\/+/g, "/");
-  // .replace(new RegExp("\\" + pathJS.sep, "g"), "/");
-
-  if (cleanPath.startsWith("/")) {
-    return cleanPath.substr(1);
-  }
-  return cleanPath;
-}*/
-
-/*function getRelativeIndexPath(
-  basePath,
-  absolutePath,
-  dirSeparator = AppConfig.dirSeparator
-) {
-  // Split paths into segments
-  const baseSegments = basePath
-    .split(dirSeparator)
-    .filter((segment) => segment.length > 0);
-  const absoluteSegments = absolutePath
-    .split(dirSeparator)
-    .filter((segment) => segment.length > 0);
-
-  // Find the index where paths diverge
-  let divergeIndex = 0;
-  while (
-    divergeIndex < baseSegments.length &&
-    divergeIndex < absoluteSegments.length &&
-    baseSegments[divergeIndex] === absoluteSegments[divergeIndex]
-  ) {
-    divergeIndex++;
-  }
-
-  // Calculate the number of levels to go up from the base path
-  const upLevels = baseSegments.length - divergeIndex;
-  const upPath = new Array(upLevels).fill("..");
-
-  // Calculate the remaining path to reach the absolute path
-  const remainingPath = absoluteSegments.slice(divergeIndex);
-
-  // Combine up levels and remaining path
-  return [...upPath, ...remainingPath].join(dirSeparator);
-}*/
 /**
  * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
  * @param mode  ['extractTextContent', 'extractLinks', 'extractThumbURL', 'extractThumbPath']
@@ -70,7 +25,7 @@ function createIndex(
   param,
   mode = ["loadMeta"], //"extractThumbPath"],
   ignorePatterns = [],
-  isWalking = () => true
+  isWalking = () => true,
 ) {
   const {
     listDirectoryPromise,
@@ -80,7 +35,7 @@ function createIndex(
   } = param;
   if (!listDirectoryPromise) {
     return Promise.reject(
-      new Error("Error creating index: no listDirectoryPromise in params!")
+      new Error("Error creating index: no listDirectoryPromise in params!"),
     );
   }
   const path = restParam.path;
@@ -110,7 +65,7 @@ function createIndex(
       }
     },
     ignorePatterns,
-    isWalking
+    isWalking,
   )
     .then(() => {
       // entries - can be used for further processing
@@ -119,7 +74,7 @@ function createIndex(
         "Directory index created " +
           path +
           " containing " +
-          directoryIndex.length
+          directoryIndex.length,
       );
       // console.timeEnd("createDirectoryIndex");
       return directoryIndex;
@@ -177,12 +132,12 @@ function persistIndex(param, directoryIndex) {
     .saveTextFilePromise(
       { ...param, path: folderIndexPath },
       JSON.stringify(directoryIndex), // relativeIndex),
-      true
+      true,
     )
     .then((result) => {
       if (result) {
         console.log(
-          "Index persisted for: " + directoryPath + " to " + folderIndexPath
+          "Index persisted for: " + directoryPath + " to " + folderIndexPath,
         );
       }
       return result;
@@ -222,7 +177,7 @@ function hasIndex(param, getPropertiesPromise) {
 function loadIndex(
   param,
   dirSeparator = AppConfig.dirSeparator,
-  getFileContentPromise
+  getFileContentPromise,
 ) {
   let directoryPath, locationID;
   if (typeof param === "object" && param !== null) {
@@ -234,14 +189,14 @@ function loadIndex(
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   return loadJSONFile(
     { ...param, path: folderIndexPath },
-    getFileContentPromise
+    getFileContentPromise,
   )
     .then((directoryIndex) => {
       return enhanceDirectoryIndex(
         param,
         directoryIndex,
         locationID,
-        dirSeparator
+        dirSeparator,
       );
     })
     .catch((err) => {
@@ -250,25 +205,11 @@ function loadIndex(
     });
 }
 
-/*function loadJsonContent(
-  directoryPath,
-  jsonContent,
-  dirSeparator = AppConfig.dirSeparator
-) {
-  const directoryIndex = loadJSONString(jsonContent);
-  return enhanceDirectoryIndex(
-    directoryPath,
-    directoryIndex,
-    undefined,
-    dirSeparator
-  );
-}*/
-
 function enhanceDirectoryIndex(
   param,
   directoryIndex,
   locationID,
-  dirSeparator = AppConfig.dirSeparator
+  dirSeparator = AppConfig.dirSeparator,
 ) {
   if (!directoryIndex) {
     return undefined;
@@ -288,31 +229,6 @@ function enhanceDirectoryIndex(
     directoryPath = cleanTrailingDirSeparator(directoryPath);
   }
   return directoryIndex.map((entry) => {
-    /*if (entry.meta && entry.meta.thumbPath) {
-      let thumbPath;
-      if (param.bucketName) {
-        thumbPath = entry.meta.thumbPath;
-      } else {
-        thumbPath = joinPaths(
-          dirSeparator,
-          directoryPath,
-          toPlatformPath(entry.meta.thumbPath)
-        );
-      }
-
-      return {
-        ...entry,
-        locationID,
-        path: joinPaths(
-          dirSeparator,
-          directoryPath,
-          toPlatformPath(entry.path)
-        ),
-        meta: {
-          thumbPath: thumbPath,
-        },
-      };
-    }*/
     return {
       ...entry,
       locationID,
@@ -352,13 +268,12 @@ function addToIndex(param, size, lastModified) {
       " LastModified:" +
       lastModified +
       " bucketName:" +
-      param.bucketName
+      param.bucketName,
   );
   const eentry = {
     ...param,
     name: extractFileName(param.path),
     tags: [],
-    // meta: { thumbPath },
     isFile: true,
     size: size,
     lmdt: Date.parse(lastModified),
@@ -371,7 +286,7 @@ function addToIndex(param, size, lastModified) {
         path: metaFilePath,
         bucketName: param.bucketName,
       },
-      "text"
+      "text",
     )
     .then((metaFileContent) => {
       console.info("addToIndex metaFileContent:" + metaFileContent);
@@ -391,7 +306,7 @@ function addToIndex(param, size, lastModified) {
           path: dirPath,
           saveTextFilePromise: param.saveTextFilePromise,
         },
-        tsi
+        tsi,
       );
     })
     .catch((err) => {
@@ -403,7 +318,7 @@ function addToIndex(param, size, lastModified) {
           path: dirPath,
           saveTextFilePromise: param.saveTextFilePromise,
         },
-        tsi
+        tsi,
       );
     });
 }
@@ -418,7 +333,7 @@ function removeFromIndex(param) {
     return Promise.resolve(false);
   }
   console.info(
-    "removeFromIndex path:" + param.path + " bucket:" + param.bucketName
+    "removeFromIndex path:" + param.path + " bucket:" + param.bucketName,
   );
   if (param.path.indexOf(AppConfig.metaFolder + "/") !== -1) {
     console.info("removeFromIndex skip meta folder" + param.path);
@@ -432,7 +347,7 @@ function removeFromIndex(param) {
         ...param,
         path: metaFilePath,
       },
-      "text"
+      "text",
     )
     .then((metaFileContent) => {
       if (metaFileContent) {
@@ -450,7 +365,7 @@ function removeFromIndex(param) {
               path: dirPath,
               saveTextFilePromise: param.saveTextFilePromise,
             },
-            newTsi
+            newTsi,
           );
         }
       }
@@ -463,7 +378,7 @@ function removeFromIndex(param) {
 
 function getMetaIndexFilePath(
   directoryPath,
-  dirSeparator = AppConfig.dirSeparator
+  dirSeparator = AppConfig.dirSeparator,
 ) {
   return directoryPath.length > 0 && directoryPath !== dirSeparator
     ? normalizePath(
@@ -471,10 +386,10 @@ function getMetaIndexFilePath(
           dirSeparator +
           AppConfig.metaFolder +
           dirSeparator +
-          AppConfig.folderIndexFile
+          AppConfig.folderIndexFile,
       )
     : normalizePath(
-        AppConfig.metaFolder + dirSeparator + AppConfig.folderIndexFile
+        AppConfig.metaFolder + dirSeparator + AppConfig.folderIndexFile,
       );
 }
 
@@ -502,7 +417,6 @@ module.exports = {
   hasIndex,
   loadIndex,
   enhanceDirectoryIndex,
-  // loadJsonContent,
   getMetaIndexFilePath,
   loadJSONFile,
   addToIndex,
