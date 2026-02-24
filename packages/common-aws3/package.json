@@ -11,11 +11,12 @@
     "npmpack": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-aws3-4.5.95.tgz && npx shx cp -rL package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common-aws3 && rimraf package",
     "pkg-publish": "npm run clean-install && npm publish --access public"
   },
+  "type": "module",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.665.0",
-    "@aws-sdk/lib-storage": "^3.665.0",
-    "@aws-sdk/s3-request-presigner": "^3.665.0",
-    "@tagspaces/tagspaces-common": "^4.5.105",
-    "crypto-js": "^4.2.0"
+    "@aws-sdk/client-s3": "3.699.0",
+    "@aws-sdk/lib-storage": "3.699.0",
+    "@aws-sdk/s3-request-presigner": "3.699.0",
+    "@tagspaces/tagspaces-common": "4.5.105",
+    "crypto-js": "4.2.0"
   }
 }

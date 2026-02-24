@@ -14,6 +14,9 @@ module.exports = async () => {
      * https://jestjs.io/docs/en/configuration#globalteardown-string
      */
     globalTeardown: "../scripts/S3rverStop.js",
+    transform: {
+      "^.+\\.js$": "babel-jest",
+    },
     moduleNameMapper: {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$":
         "<rootDir>/internals/mocks/fileMock.js",

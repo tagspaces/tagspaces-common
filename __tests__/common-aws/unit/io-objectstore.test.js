@@ -15,7 +15,7 @@ const {
   copyDirectoryPromise,
   deleteFilePromise,
   deleteDirectoryPromise,
-} = require("@tagspaces/tagspaces-common-aws3/io-objectstore");
+} = require("@tagspaces/tagspaces-common-aws3");
 const {
   createFile,
   createDir,

@@ -1,4 +1,4 @@
-const {
+import {
   S3Client,
   GetObjectCommand,
   ListObjectsV2Command,
@@ -11,22 +11,16 @@ const {
   UploadPartCommand,
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
-} = require("@aws-sdk/client-s3");
-const { Upload } = require("@aws-sdk/lib-storage");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-//import { NodeHttpHandler } from "@smithy/node-http-handler";
-const CryptoJS = require("crypto-js");
-// const pathJS = require("path"); DONT use it add for windows platform delimiter \
-const { v1: uuidv1 } = require("uuid");
-const tsPaths = require("@tagspaces/tagspaces-common/paths");
-const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
-const picomatch = require("picomatch/posix");
-const {
-  extractTxtContentAndLinks,
-} = require("@tagspaces/tagspaces-common/misc");
-const {
-  runPromisesSynchronously,
-} = require("@tagspaces/tagspaces-common/utils-io");
+} from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import CryptoJS from "crypto-js";
+import { v1 as uuidv1 } from "uuid";
+import tsPaths from "@tagspaces/tagspaces-common/paths";
+import AppConfig from "@tagspaces/tagspaces-common/AppConfig";
+import picomatch from "picomatch/posix";
+import { extractTxtContentAndLinks } from "@tagspaces/tagspaces-common/misc";
+import { runPromisesSynchronously } from "@tagspaces/tagspaces-common/utils-io";
 
 const locationsCache = [];
 const awsRegions = [
@@ -67,7 +61,6 @@ function s3(location) {
     const commonConfig = {
       //followRegionRedirects: true, // https://github.com/aws/aws-sdk-js-v3/blob/main/supplemental-docs/CLIENTS.md#s3
       signatureVersion: "v4", // needed for signed url of encrypted file
-      //...(AppConfig.isNode && {requestHandler:NodeHttpHandler})
     };
     const advancedMode =
       location.endpointURL && location.endpointURL.length > 7;
@@ -140,17 +133,9 @@ const getURLforPath = (param, expirationInSeconds = 900) => {
   const params = {
     Bucket: bucketName,
     Key: path,
-    //...(param.isEncrypted && {SSECustomerAlgorithm: "AES256"}),
   };
   try {
     const s3Client = s3(param.location);
-    /*const signer = new S3RequestPresigner({ ...s3Client.config });
-    return createRequest(s3Client, new GetObjectCommand(params))
-      .then((request) =>
-        signer.presign(request, { expiresIn: expirationInSeconds })
-      )
-      .then((url) => formatUrl(url));*/
-
     const command = new GetObjectCommand(params);
     return getSignedUrl(s3Client, command, {
       expiresIn: expirationInSeconds,
@@ -234,7 +219,6 @@ const listDirectoryPromise = (
     if (loadMeta) {
       metaContent = await listMetaDirectoryPromise(param);
     }
-    // console.log('Meta folder content: ' + JSON.stringify(metaContent));
 
     const params = {
       Delimiter: "/",
@@ -259,7 +243,6 @@ const listDirectoryPromise = (
       const commonPrefixes = data.CommonPrefixes || [];
       // Handling "directories"
       commonPrefixes.forEach((dir) => {
-        // console.warn(JSON.stringify(dir));
         const prefix = dir.Prefix.replace(/\\/g, "/"); // normalizePath(normalizeRootPath(dir.Prefix));
         eentry = {};
         const prefixArray = prefix.replace(/\/$/, "").split("/");
@@ -292,10 +275,6 @@ const listDirectoryPromise = (
             }
           }
         }
-
-        // if (window.walkCanceled) {
-        //     resolve(enhancedEntries);
-        // }
       });
 
       const contents = data.Contents || [];
@@ -396,15 +375,6 @@ const listDirectoryPromise = (
               }
               return enhancedEntry;
             });
-            /*entriesMeta.forEach((entryMeta) => {
-                enhancedEntries.some((enhancedEntry) => {
-                  if (enhancedEntry.path === entryMeta.path) {
-                    enhancedEntry.meta = {...enhancedEntry.meta,...entryMeta.meta};
-                    return true;
-                  }
-                  return false;
-                });
-              });*/
             resolve(updatedEntries);
             return true;
           })
@@ -422,7 +392,6 @@ const listDirectoryPromise = (
           bucketName,
         ex
       );
-      // resolve(enhancedEntries);
       reject(ex);
     }
   });
@@ -532,7 +501,6 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
 
         meta = { thumbPath: thumb };
       }
-      // if (!eentry.path.endsWith(AppConfig.metaFolder + '/')) { // Skip the /.ts folder
       const folderMetaPath = tsPaths.getMetaFileLocationForDir(entryPath, "/");
       const folderProps = await getPropertiesPromise({
         path: folderMetaPath,
@@ -554,7 +522,6 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
         } catch (ex) {
           console.warn("Error getEntryMeta for " + folderMetaPath, ex);
         }
-        // console.log('Folder meta for ' + eentry.path + ' - ' + JSON.stringify(eentry.meta));
       }
     }
   }
@@ -860,9 +827,6 @@ function normalizeRootPath(filePath) {
   }
   filePath = filePath.replace(new RegExp("//+", "g"), "/");
   filePath = filePath.replace("\\", "/");
-  /* if(filePath.indexOf(AppConfig.dirSeparator) === 0){
-    filePath = filePath.substr(AppConfig.dirSeparator.length);
-  } */
   if (filePath.indexOf("/") === 0) {
     filePath = filePath.substr(1);
   }
@@ -943,10 +907,6 @@ async function saveBinaryFilePromise(
     // console.error("Error upload " + filePath, err);
     throw new Error("saveBinaryFilePromise " + filePath, err);
   }
-  /*const putObjectCommand = new PutObjectCommand(params);
-    return s3(param.location).send(
-      putObjectCommand
-    )*/
 }
 
 /**
@@ -1285,8 +1245,6 @@ function renameDirectoryPromise(param, newDirName, onProgress) {
  * @returns {Promise<*[]>}
  */
 function moveDirectoryPromise(param, newDirPath, onProgress) {
-  // const dirName = tsPaths.extractDirectoryName(param.path, "/");
-  // const newDirPath = tsPaths.cleanTrailingDirSeparator(newDirectoryPath) + "/" + dirName;
   console.log("Move directory: " + param.path + " to " + newDirPath);
   return getDirectoryPrefixes(param).then((prefixes) =>
     copyDirectoryInternal(param, newDirPath, prefixes, onProgress).then(() =>
@@ -1478,19 +1436,13 @@ function openUrl(url) {
   document.body.appendChild(tmpLink);
   tmpLink.click();
   tmpLink.parentNode.removeChild(tmpLink);
-  // window.open(url, '_blank').opener = null;
-  // Object.assign(anchor, {
-  //   target: '_blank',
-  //   href: url,
-  //   rel: 'noopener noreferrer'
-  // }).click();
 }
 
 function openFile(filePath) {
   openUrl(filePath);
 }
 
-module.exports = {
+export {
   s3,
   listDirectoryPromise,
   listMetaDirectoryPromise,

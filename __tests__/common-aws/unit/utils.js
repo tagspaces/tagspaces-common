@@ -3,7 +3,7 @@ const pathJs = require("path");
 const {
   saveFilePromise,
   createDirectoryPromise,
-} = require("@tagspaces/tagspaces-common-aws3/io-objectstore");
+} = require("@tagspaces/tagspaces-common-aws3");
 
 const minioSuffix = "._S3rver_object";
 
