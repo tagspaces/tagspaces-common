@@ -162,13 +162,6 @@ function platformWatchFolder(locationPath, options) {
   return undefined;
 }
 
-/*function platformTiffJs() {
-  if (tiffJs) {
-    return tiffJs();
-  }
-  return undefined;
-}*/
-
 function platformShowMainWindow() {
   showMainWindow();
 }
@@ -240,14 +233,14 @@ function platformCreateDirectoryIndexInWorker(
   directoryPath,
   extractText,
   ignorePatterns,
-  wsPort
+  wsPort,
 ) {
   return createDirectoryIndexInWorker(
     token,
     directoryPath,
     extractText,
     ignorePatterns,
-    wsPort
+    wsPort,
   );
 }
 
@@ -262,7 +255,7 @@ function platformListDirectoryPromise(
   path,
   mode = ["extractThumbPath"],
   ignorePatterns,
-  resultsLimit
+  resultsLimit,
 ) {
   if (objectStoreAPI) {
     const param = {
@@ -273,7 +266,7 @@ function platformListDirectoryPromise(
       param,
       mode,
       ignorePatterns,
-      resultsLimit
+      resultsLimit,
     );
   } else if (webDavAPI) {
     return webDavAPI.listDirectoryPromise(path, mode, ignorePatterns);
@@ -303,13 +296,13 @@ function platformListMetaDirectoryPromise(path) {
 function platformListObjectStoreDir(
   param,
   mode = ["extractThumbPath"],
-  ignorePatterns = []
+  ignorePatterns = [],
 ) {
   if (objectStoreAPI) {
     return objectStoreAPI.listDirectoryPromise(param, mode, ignorePatterns);
   } else {
     return Promise.reject(
-      new Error("platformListObjectStoreDir: no objectStoreAPI")
+      new Error("platformListObjectStoreDir: no objectStoreAPI"),
     );
   }
 }
@@ -390,7 +383,7 @@ function copyFilePromiseOverwrite(sourceFilePath, targetFilePath) {
 function platformRenameFilePromise(
   filePath,
   newFilePath,
-  onProgress = undefined
+  onProgress = undefined,
 ) {
   if (objectStoreAPI) {
     const param = {
@@ -443,7 +436,7 @@ function platformMoveDirectoryPromise(param, newDirName, onProgress) {
         bucketName: objectStoreAPI.config().bucketName,
       },
       newDirName,
-      onProgress
+      onProgress,
     );
   } else if (webDavAPI) {
     return webDavAPI.moveDirectoryPromise(param, newDirName, onProgress);
@@ -491,7 +484,7 @@ function platformSaveFilePromise(param, content, overwrite) {
         bucketName: objectStoreAPI.config().bucketName,
       },
       content,
-      overwrite
+      overwrite,
     );
   } else if (webDavAPI) {
     return webDavAPI.saveFilePromise(param, content, overwrite);
@@ -517,7 +510,7 @@ function platformSaveTextFilePromise(param, content, overwrite) {
         bucketName: objectStoreAPI.config().bucketName,
       },
       content,
-      overwrite
+      overwrite,
     );
   } else if (webDavAPI) {
     return webDavAPI.saveTextFilePromise(param, content, overwrite);
@@ -530,7 +523,7 @@ function platformSaveBinaryFilePromise(
   param,
   content,
   overwrite,
-  onUploadProgress
+  onUploadProgress,
 ) {
   if (objectStoreAPI) {
     return objectStoreAPI.saveBinaryFilePromise(
@@ -540,14 +533,14 @@ function platformSaveBinaryFilePromise(
       },
       content,
       overwrite,
-      onUploadProgress
+      onUploadProgress,
     );
   } else if (webDavAPI) {
     return webDavAPI.saveBinaryFilePromise(
       param,
       content,
       overwrite,
-      onUploadProgress
+      onUploadProgress,
     );
   }
 
@@ -563,7 +556,7 @@ function platformUploadFileByMultiPart(
   filePath,
   file,
   overwrite,
-  onUploadProgress
+  onUploadProgress,
 ) {
   if (objectStoreAPI) {
     const param = {
@@ -574,7 +567,7 @@ function platformUploadFileByMultiPart(
       param,
       file,
       overwrite,
-      onUploadProgress
+      onUploadProgress,
     );
   }
 }
@@ -686,7 +679,9 @@ function platformDirProperties(filePath) {
     return getDirProperties(filePath);
   } else {
     return Promise.reject(
-      new Error("platformDirProperties is supported on Electron local storage.")
+      new Error(
+        "platformDirProperties is supported on Electron local storage.",
+      ),
     );
   }
 }

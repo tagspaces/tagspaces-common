@@ -167,7 +167,7 @@ function createDirectoryIndexInWorker(
   directoryPath,
   extractText,
   ignorePatterns,
-  wsPort
+  wsPort,
 ) {
   const payload = JSON.stringify({
     directoryPath,
@@ -242,10 +242,6 @@ function watchFolder(locationPath, options) {
   return chokidar.watch(locationPath, options);
 }
 
-function tiffJs() {
-  return require("tiff.js");
-}
-
 module.exports = {
   getDevicePaths,
   setLanguage,
@@ -265,7 +261,6 @@ module.exports = {
   createNewInstance,
   readMacOSTags,
   watchFolder,
-  tiffJs,
   loadExtensions,
   removeExtension,
   getUserDataDir,

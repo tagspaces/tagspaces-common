@@ -11,8 +11,7 @@
   },
   "dependencies": {
     "chokidar": "^3.5.2",
-    "sync-fetch": "^0.3.1",
-    "tiff.js": "^1.0.0"
+    "sync-fetch": "^0.3.1"
   },
   "peerDependencies": {
     "electron": ">=15"
