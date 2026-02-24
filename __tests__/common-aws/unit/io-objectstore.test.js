@@ -1,29 +1,32 @@
 const fs = require("fs");
 const pathJs = require("path");
-const {
-  listDirectoryPromise,
-  getURLforPath,
-  saveFilePromise,
-  getPropertiesPromise,
-  getFileContentPromise,
-  saveBinaryFilePromise,
-  createDirectoryPromise,
-  copyFilePromise,
-  renameFilePromise,
-  renameDirectoryPromise,
-  moveDirectoryPromise,
-  copyDirectoryPromise,
-  deleteFilePromise,
-  deleteDirectoryPromise,
-} = require("@tagspaces/tagspaces-common-aws3");
-const {
-  createFile,
-  createDir,
-  expectFileExist,
-  expectDirExist,
-} = require("./utils");
+
+let listDirectoryPromise, getURLforPath, saveFilePromise, getPropertiesPromise, getFileContentPromise, saveBinaryFilePromise, createDirectoryPromise, copyFilePromise, renameFilePromise, renameDirectoryPromise, moveDirectoryPromise, copyDirectoryPromise, deleteFilePromise, deleteDirectoryPromise;
+let createFile, createDir, expectFileExist, expectDirExist;
 
 beforeAll(async () => {
+  const aws3Module = require("@tagspaces/tagspaces-common-aws3");
+  listDirectoryPromise = aws3Module.listDirectoryPromise;
+  getURLforPath = aws3Module.getURLforPath;
+  saveFilePromise = aws3Module.saveFilePromise;
+  getPropertiesPromise = aws3Module.getPropertiesPromise;
+  getFileContentPromise = aws3Module.getFileContentPromise;
+  saveBinaryFilePromise = aws3Module.saveBinaryFilePromise;
+  createDirectoryPromise = aws3Module.createDirectoryPromise;
+  copyFilePromise = aws3Module.copyFilePromise;
+  renameFilePromise = aws3Module.renameFilePromise;
+  renameDirectoryPromise = aws3Module.renameDirectoryPromise;
+  moveDirectoryPromise = aws3Module.moveDirectoryPromise;
+  copyDirectoryPromise = aws3Module.copyDirectoryPromise;
+  deleteFilePromise = aws3Module.deleteFilePromise;
+  deleteDirectoryPromise = aws3Module.deleteDirectoryPromise;
+
+  const utilsModule = require("./utils.js");
+  createFile = utilsModule.createFile;
+  createDir = utilsModule.createDir;
+  expectFileExist = utilsModule.expectFileExist;
+  expectDirExist = utilsModule.expectDirExist;
+
   const dirPath = pathJs.join(__dirname, "..", "buckets", "bucket1", "dir");
   try {
     fs.rmSync(dirPath, { recursive: true, force: true });

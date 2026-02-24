@@ -1,1 +1,1 @@
-export * from "./io-objectstore.js";
+module.exports = require("./io-objectstore.js");

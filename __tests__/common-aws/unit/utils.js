@@ -1,9 +1,9 @@
 const fs = require("fs");
 const pathJs = require("path");
-const {
-  saveFilePromise,
-  createDirectoryPromise,
-} = require("@tagspaces/tagspaces-common-aws3");
+
+const aws3Module = require("@tagspaces/tagspaces-common-aws3");
+const saveFilePromise = aws3Module.saveFilePromise;
+const createDirectoryPromise = aws3Module.createDirectoryPromise;
 
 const minioSuffix = "._S3rver_object";
 

@@ -1,4 +1,4 @@
-import {
+const {
   S3Client,
   GetObjectCommand,
   ListObjectsV2Command,
@@ -11,16 +11,16 @@ import {
   UploadPartCommand,
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
-} from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import CryptoJS from "crypto-js";
-import { v1 as uuidv1 } from "uuid";
-import tsPaths from "@tagspaces/tagspaces-common/paths";
-import AppConfig from "@tagspaces/tagspaces-common/AppConfig";
-import picomatch from "picomatch/posix";
-import { extractTxtContentAndLinks } from "@tagspaces/tagspaces-common/misc";
-import { runPromisesSynchronously } from "@tagspaces/tagspaces-common/utils-io";
+} = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const CryptoJS = require("crypto-js");
+const { v1: uuidv1 } = require("uuid");
+const tsPaths = require("@tagspaces/tagspaces-common/paths");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+const picomatch = require("picomatch/posix");
+const { extractTxtContentAndLinks } = require("@tagspaces/tagspaces-common/misc");
+const { runPromisesSynchronously } = require("@tagspaces/tagspaces-common/utils-io");
 
 const locationsCache = [];
 const awsRegions = [
@@ -1442,7 +1442,7 @@ function openFile(filePath) {
   openUrl(filePath);
 }
 
-export {
+module.exports = {
   s3,
   listDirectoryPromise,
   listMetaDirectoryPromise,
