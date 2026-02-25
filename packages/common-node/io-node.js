@@ -1,9 +1,7 @@
 const pathLib = require("path");
-const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const fs = require("fs-extra");
 const klaw = require("klaw");
 const AdmZip = require("adm-zip");
-const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const { createFsClient } = require("@tagspaces/tagspaces-common/io-fsclient");
 const fsClient = createFsClient(fs);
 
@@ -32,15 +30,6 @@ function getLocationPath(location) {
 
   return locationPath;
 }
-
-/*function mkdirpSync(dir) {
-  /!*if (fs.existsSync(dir)) {
-    return;
-  }*!/
-  // mkdirpSync(pathLib.dirname(dir));
-  fs.ensureDirSync(dir);
-  //fs.mkdirSync(dir);
-}*/
 
 async function getDirProperties(directoryPath) {
   let totalSize = 0;
@@ -90,77 +79,6 @@ function unZip(filePath, targetPath) {
   });
 }
 
-/*function unZip(filePath, targetPath) {
-  return new Promise((resolve, reject) => {
-    try {
-      const readStream = fs.createReadStream(filePath);
-      const writeStream = fs.createWriteStream(targetPath);
-      const unzip = zlib.createGunzip();
-
-      readStream.pipe(unzip).pipe(writeStream);
-
-      writeStream.on("finish", () => {
-        resolve(filePath);
-      });
-
-      writeStream.on("error", (err) => {
-        reject("Error unzipping file: " + err.message);
-      });
-    } catch (ex) {
-      reject("Error unzipping file: ", ex);
-    }
-  });
-}*/
-/*
-function unZip(filePath, targetPath) {
-  return new Promise((resolve, reject) => {
-    try {
-      JSZipUtils.getBinaryContent(filePath, (err, data) => {
-        if (err) {
-          throw err; // or handle err
-        }
-        // Load the zipped data
-        JSZip.loadAsync(data).then((zip) => {
-          // Iterate through the files and extract them
-          const promises = Object.keys(zip.files).map((filename) => {
-            // if (!filename.startsWith("__MACOSX")) {
-            const dirName = tsPaths
-              .extractFileName(filePath)
-              .split(".")
-              .slice(0, -1)
-              .join(".");
-            const targetFile = pathLib.join(targetPath, dirName, filename);
-            // Check if the file is a directory
-            if (zip.files[filename].dir) {
-              // Create the directory if it doesn't exist
-              mkdirpSync(targetFile);
-              return true;
-            } else {
-              const dir = pathLib.dirname(targetFile);
-              if (dir) {
-                mkdirpSync(dir);
-              }
-              // Extract the file
-              return zip
-                .file(filename)
-                .async("nodebuffer")
-                .then((content) => {
-                  // Save the file to disk
-                  fs.writeFileSync(targetFile, content);
-                  return true;
-                });
-            }
-          });
-          Promise.all(promises).then(() => resolve(filePath));
-        });
-      });
-    } catch (err) {
-      console.error(err);
-      reject(err);
-    }
-  });
-} */
-
 function resolveFilePath(filePath) {
   pathLib.resolve(filePath);
 }
@@ -209,10 +127,6 @@ function extractAndSavePdf(entry, extractPDFcontent) {
   return fsClient.extractAndSavePdf(entry, extractPDFcontent);
 }
 
-/*function extractTextContent(fileName, textContent) {
-  return fsClient.extractTextContent(fileName, textContent);
-}*/
-
 function createDirectoryPromise(dirPath) {
   return fsClient.createDirectoryPromise(dirPath);
 }
@@ -250,151 +164,6 @@ function moveDirectoryPromise(param, newDirName, onProgress) {
   );
 }
 
-/**
- * @param srcDir
- * @param targetDir
- * @param onProgress
- * @param onAbort
- * @returns {Promise<string>} targetDir
- */
-/*function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
-  return new Promise((resolve, reject) => {
-    const files = [];
-    const dirs = [];
-    let totalSize = {};
-    klaw(srcDir)
-      .on("data", (item) => {
-        if (item.stats.isFile()) {
-          totalSize[item.path] = item.stats.size;
-          files.push(item.path);
-        } else {
-          dirs.push(item.path);
-        }
-      })
-      .on("end", () => {
-        // fs.ensureDir(targetDir, (err) => {
-        dirs.forEach((dir) => {
-          const relativePath = pathLib.relative(srcDir, dir);
-          const targetPath = pathLib.join(targetDir, relativePath);
-          mkdirpSync(targetPath);
-        });
-        const promises = files.map((item) => {
-          const relativePath = pathLib.relative(srcDir, item);
-          const targetPath = pathLib.join(targetDir, relativePath);
-          // const targetDirname = pathLib.dirname(targetPath);
-
-          return new Promise((resolve, reject) => {
-            let completedSize = 0;
-            // fs.ensureDir(targetDirname, (err) => {
-            const readStream = fs.createReadStream(item);
-            const writeStream = fs.createWriteStream(targetPath);
-
-            readStream.on("error", reject);
-            writeStream.on("error", reject);
-
-            readStream.on("data", (chunk) => {
-              if (onProgress) {
-                completedSize += chunk.length;
-
-                const progress = {
-                  loaded: completedSize,
-                  total: totalSize[item],
-                  //part: part,
-                  key: item,
-                };
-                onProgress(progress);
-              }
-              if (onAbort) {
-                onAbort = () => {
-                  throw new Error(
-                    "Aborted: move " + item + " to " + targetPath
-                  );
-                };
-              }
-            });
-
-            readStream
-              .pipe(writeStream) //, { end: false });
-              .on("finish", () => {
-                fs.unlink(item, (err) => {
-                  if (err) {
-                    reject(err);
-                  } else {
-                    resolve();
-                  }
-                });
-              });
-          });
-        });
-
-        // divide the promises into sub-arrays of 10
-        const promisesChunks = [];
-        for (let i = 0; i < promises.length; i += 10) {
-          const chunk = promises.slice(i, i + 10);
-          promisesChunks.push(chunk);
-        }
-
-        // call Promise.all() on each sub-array
-        (async () => {
-          for (const chunk of promisesChunks) {
-            const results = await Promise.allSettled(chunk);
-            console.log(results);
-          }
-          resolve();
-        })();
-        /!*Promise.allSettled(promises).then(() => {
-          resolve();
-        });*!/
-        /!*.catch((err) => {
-              console.debug('error:',err);
-              resolve();
-              //reject(err);
-            });*!/
-        // });
-      });
-  }).then(() => deleteDirectoryPromise(srcDir).then(() => targetDir));
-}*/
-
-/*function moveDirectoryPromise(srcDir, targetDir, onProgress, onAbort) {
-  return new Promise((resolve, reject) => {
-    const items = [];
-
-    klaw(srcDir)
-      .on("data", (item) => {
-        items.push(item.path);
-      })
-      .on("end", () => {
-        const promises = [];
-        let count = 0;
-
-        items.forEach((item) => {
-          const relativePath = path.relative(srcDir, item);
-          const targetPath = path.join(targetDir, relativePath);
-
-          promises.push(
-            fs
-              .move(item, targetPath, { overwrite: true })
-              .on("progress", (progress) => {
-                count++;
-                const progress_percent = Math.round(
-                  (count / items.length) * 100
-                );
-                console.log(progress_percent);
-              })
-          );
-        });
-
-        Promise.all(promises)
-          .then(() => {
-            resolve();
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      });
-  });
-}*/
-
 function deleteFilePromise(path) {
   return fsClient.deleteFilePromise(path);
 }
@@ -402,10 +171,6 @@ function deleteFilePromise(path) {
 function deleteDirectoryPromise(path) {
   return fsClient.deleteDirectoryPromise(path);
 }
-
-/*function watchDirectory(dirPath, listener) {
-  return fsClient.watchDirectory(dirPath, listener);
-}*/
 
 module.exports = {
   getLocationPath,
