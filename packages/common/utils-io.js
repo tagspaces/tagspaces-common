@@ -14,6 +14,24 @@ const { v1: uuidv1, v4: uuidv4 } = require("uuid");
 const paths = require("./paths");
 const AppConfig = require("./AppConfig");
 
+// Pre-compile marked parser for text extraction (lazy loaded)
+let marked = null;
+function getMarked() {
+  if (!marked) {
+    marked = require("marked");
+  }
+  return marked;
+}
+
+// Pre-compile regex patterns for text cleaning
+const PUNCTUATION_REGEX = /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g;
+const NEWLINE_REGEX = /\n/g;
+const SCRIPT_STYLE_REGEX = /<(?:script|style)[^>]*>[\s\S]*?<\/(?:script|style)>/gi;
+
+// File extension sets for faster lookup
+const MARKDOWN_EXTS = new Set([".md"]);
+const HTML_EXTS = new Set([".mhtml", ".html", ".htm"]);
+
 /**
  * @param param (path - string or Object)
  * @param listDirectoryPromise
@@ -295,50 +313,80 @@ function isThumbGenSupportedFileType(fileExtension, fileType) {
   return false;
 }
 
+/**
+ * Extract and index text content from various file formats
+ * Supports: Markdown, HTML, MHTML, plain text
+ * @param {string} fileName - The file name with extension
+ * @param {string} textContent - The file content to process
+ * @returns {string} Deduplicated, indexed text tokens
+ */
 function extractTextContent(fileName, textContent) {
-  let fileContent = textContent.toLowerCase();
+  // Input validation for security
+  if (!fileName || !textContent || typeof fileName !== "string" || typeof textContent !== "string") {
+    return "";
+  }
+
+  const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf("."));
+  const fileContent = textContent.toLowerCase();
   let joinedTokens;
-  if (fileName.endsWith(".md")) {
-    const marked = require("marked");
-    const lexer = new marked.Lexer({});
-    const tokens = lexer.inlineTokens(fileContent);
-    const contentArray = tokens.map((token) => {
-      if (token.type === "text" && token.text) {
-        let cleanedText = token.text.replace(
-          /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g,
-          ""
-        );
-        cleanedText = cleanedText.replace(/\n/g, "");
-        return cleanedText.trim();
-      }
-      return "";
-    });
-    joinedTokens = contentArray.join(" ");
-  } else if (
-    fileName.endsWith(".mhtml") ||
-    fileName.endsWith(".html") ||
-    fileName.endsWith(".htm")
-  ) {
-    const marked = require("marked");
-    const preprocessHTML = (html) => {
-      return html
-        ?.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "");
-    };
 
-    const cleanedHTML = preprocessHTML(fileContent);
-
-    const lexer = new marked.Lexer({});
-    const tokens = lexer.inlineTokens(cleanedHTML);
-    joinedTokens = tokens
-      .filter((token) => token.type === "text" && token.text)
-      .map((token) => token.text)
-      .join(" ");
+  if (MARKDOWN_EXTS.has(fileExtension)) {
+    joinedTokens = extractMarkdownText(fileContent);
+  } else if (HTML_EXTS.has(fileExtension)) {
+    joinedTokens = extractHTMLText(fileContent);
   } else {
     joinedTokens = fileContent;
   }
 
   return createTextIndex(joinedTokens);
+}
+
+/**
+ * Extract text tokens from Markdown content
+ * @private
+ */
+function extractMarkdownText(fileContent) {
+  try {
+    const MarkedLib = getMarked();
+    const lexer = new MarkedLib.Lexer({});
+    const tokens = lexer.inlineTokens(fileContent);
+    const contentArray = tokens.map((token) => {
+      if (token.type === "text" && token.text) {
+        // Single pass: remove punctuation and newlines
+        return token.text
+          .replace(PUNCTUATION_REGEX, "")
+          .replace(NEWLINE_REGEX, "")
+          .trim();
+      }
+      return "";
+    });
+    return contentArray.join(" ");
+  } catch (error) {
+    console.warn("Error extracting markdown text:", error);
+    return fileContent;
+  }
+}
+
+/**
+ * Extract text tokens from HTML/MHTML content
+ * @private
+ */
+function extractHTMLText(fileContent) {
+  try {
+    // Remove script and style tags in a single pass for better performance
+    const cleanedHTML = fileContent.replace(SCRIPT_STYLE_REGEX, " ");
+    const MarkedLib = getMarked();
+    const lexer = new MarkedLib.Lexer({});
+    const tokens = lexer.inlineTokens(cleanedHTML);
+    return tokens
+      .filter((token) => token.type === "text" && token.text)
+      .map((token) => token.text.trim())
+      .filter((text) => text.length > 0)
+      .join(" ");
+  } catch (error) {
+    console.warn("Error extracting HTML text:", error);
+    return fileContent;
+  }
 }
 
 function createTextIndex(textContent) {

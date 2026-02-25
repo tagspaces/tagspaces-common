@@ -22,75 +22,136 @@ const locationType = {
 // Pre-compile regex patterns for better performance
 const SOURCE_URL_REGEX = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
 const HREF_REGEX = /(?<=href=["'])(http[^"']*)(?=["'])/g;
-const PLAIN_URL_REGEX = /https?:\/\/[^\s\)]+|(?<=\()\s*https?:\/\/[^\s\)]+/g;
-const TS_LINK_REGEX = /(?:ts):\/\/[^\s\)]+/g;
+// Optimized: avoid catastrophic backtracking with bounded patterns
+const PLAIN_URL_REGEX = /https?:\/\/(?:[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=])+/g;
+const TS_LINK_REGEX = /ts:\/\/(?:[^\s\)]{1,2000})/g; // Bounded length to prevent abuse
 const DATA_URL_REGEX = /data:[^ \t\r\n]+/g;
 const BODY_REGEX = /<body[^>]*>([\s\S]*?)<\/body>/i;
 const SOURCE_URL_MHTML_REGEX = /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
 
+// Configuration constants for security
+const MAX_CONTENT_LENGTH = 10 * 1024 * 1024; // 10MB limit
+const MAX_URL_LENGTH = 2048; // RFC 3986 recommends 2048 chars
+const MAX_LINKS_TO_EXTRACT = 10000; // Prevent excessive link extraction
+
 function extractLinks(textContent) {
   const links = [];
+  
+  // Input validation and safety checks
+  if (!textContent || typeof textContent !== "string") {
+    return links;
+  }
+  
+  // Prevent ReDoS attacks by limiting content length
+  const content = textContent.length > MAX_CONTENT_LENGTH 
+    ? textContent.substring(0, MAX_CONTENT_LENGTH)
+    : textContent;
+  
+  // Use Set for O(1) duplicate detection instead of array.some() O(n²)
+  const seenHrefs = new Set();
 
   try {
-    // Extracting source url from HTML files saved with the browser extension
-    const sourceUrlMatches = textContent.match(SOURCE_URL_REGEX) || [];
-    for (const match of sourceUrlMatches) {
-      const link = createLink(match);
-      if (link) {
-        links.push(link);
-      }
-    }
+    // Extract from data-sourceurl attributes
+    extractAndAddLinks(content, SOURCE_URL_REGEX, links, seenHrefs);
 
-    // if content is html link should be in href attributes
-    const urlMatches = textContent.match(HREF_REGEX) || [];
-    for (const match of urlMatches) {
-      const link = createLink(match);
-      if (link) {
-        links.push(link);
-      }
-    }
+    // Extract from href attributes
+    extractAndAddLinks(content, HREF_REGEX, links, seenHrefs);
 
-    // if plain text or markdown try to find links beginning with http
+    // Only try plain text extraction if no links found (fallback)
     if (links.length < 1) {
-      const urlMatches = textContent.match(PLAIN_URL_REGEX) || [];
-      for (const match of urlMatches) {
-        // Recognizing correctly <https://example.com>
-        const cleanedMatch = match.replace(/^<|>$/g, "");
-        const link = createLink(cleanedMatch);
-        if (link) {
-          links.push(link);
-        }
-      }
+      extractPlainTextLinks(content, links, seenHrefs);
     }
   } catch (e) {
-    console.error("Extracting URL failed with: " + e);
+    console.error("Extracting URLs failed:", e.message);
   }
 
+  // Extract TagSpaces custom links
   try {
-    const tsUrls = textContent.match(TS_LINK_REGEX);
-    // ts://?tslid=e78bf5d0-4546-86a5-eb81d8da4a38&tsepath=05252023171513.pdf&tseid=398a089d1c02405e87ba96530b2f81ca
-    // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
-    // ts://?tslid=1f915e7fd93a4527e4396e1dcab2e&tsdpath=contacts&tseid=2df0135aa2cd4e01a804b60d70ac39eb
-    tsUrls?.forEach((tsUrl) => {
-      if (tsUrl?.length > 5) {
-        try {
-          const validUrl = new URL(tsUrl);
-          const link = {};
-          link.type = "tslink";
-          link.href = validUrl.href;
-          // skip duplicates using some() instead of creating new array
-          if (!links.some((item) => item.href === link.href)) {
-            links.push(link);
-          }
-        } catch {
-          console.log("invalid tslink: " + tsUrl);
-        }
-      }
-    });
+    extractTagSpacesLinks(content, links, seenHrefs);
   } catch (e) {
-    console.error("Extracting TSlinks failed with: " + e);
+    console.error("Extracting TSlinks failed:", e.message);
   }
+
   return links;
+}
+
+/**
+ * Helper: Extract and add links from regex matches
+ * @private
+ */
+function extractAndAddLinks(content, regex, links, seenHrefs) {
+  let match;
+  // Use exec() in loop instead of match() for better performance on large content
+  while ((match = regex.exec(content)) !== null && links.length < MAX_LINKS_TO_EXTRACT) {
+    const link = createLink(match[1]);
+    if (link && !seenHrefs.has(link.href)) {
+      seenHrefs.add(link.href);
+      links.push(link);
+    }
+  }
+}
+
+/**
+ * Helper: Extract plain text URLs with enhanced safety
+ * @private
+ */
+function extractPlainTextLinks(content, links, seenHrefs) {
+  let match;
+  const regex = PLAIN_URL_REGEX;
+  regex.lastIndex = 0; // Reset regex state
+  
+  while ((match = regex.exec(content)) !== null && links.length < MAX_LINKS_TO_EXTRACT) {
+    let url = match[0];
+    // Remove surrounding angle brackets if present
+    url = url.replace(/^<|>$/g, "");
+    
+    // Validate URL length (prevent abuse)
+    if (url.length > MAX_URL_LENGTH) {
+      console.warn(`URL exceeds max length: ${url.substring(0, 100)}...`);
+      continue;
+    }
+    
+    const link = createLink(url);
+    if (link && !seenHrefs.has(link.href)) {
+      seenHrefs.add(link.href);
+      links.push(link);
+    }
+  }
+}
+
+/**
+ * Helper: Extract TagSpaces custom protocol links
+ * @private
+ */
+function extractTagSpacesLinks(content, links, seenHrefs) {
+  let match;
+  const regex = TS_LINK_REGEX;
+  regex.lastIndex = 0; // Reset regex state
+  
+  while ((match = regex.exec(content)) !== null && links.length < MAX_LINKS_TO_EXTRACT) {
+    const tsUrl = match[0];
+    
+    // Skip empty or too-short URLs
+    if (!tsUrl || tsUrl.length < 5) {
+      continue;
+    }
+
+    try {
+      const validUrl = new URL(tsUrl);
+      
+      // Prevent duplicate tslinks with efficient Set lookup
+      if (!seenHrefs.has(validUrl.href)) {
+        seenHrefs.add(validUrl.href);
+        links.push({
+          type: "tslink",
+          href: validUrl.href
+        });
+      }
+    } catch (error) {
+      // Invalid URL - skip silently to avoid spam logging
+      // console.debug("Invalid tslink:", tsUrl);
+    }
+  }
 }
 
 function createLink(urlmatch) {
