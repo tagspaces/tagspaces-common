@@ -12,11 +12,6 @@ const {
 
 const appSettingFile = "settings.json";
 const appSettingTagsFile = "settingsTags.json";
-// let anotatedTree;
-// let pendingCallbacks = 0;
-
-// declare let cordova;
-// declare let navigator;
 
 // Redefining the back button
 document.addEventListener("backbutton", onDeviceBackButton, false);
@@ -85,44 +80,18 @@ function onDeviceReady() {
       protocol +
       host +
       path +
-      // query +
-      // (query ? '&' : '?') +
       "?cmdopen=" +
       intent.data.replace("file:///storage/emulated/0", "file:///sdcard");
     // encodeURIComponent(intent.data);
 
-    // window.history.pushState({ path: newUrl }, '', newUrl);
     // TODO use event
     window.location.replace(newUrl);
   });
-
-  /* if (window.plugins.webintent) {
-      window.plugins.webintent.getUri(
-        url => {
-          if (url) {
-            if (url === 'createTXTFile' || url.indexOf('TagSpaces') > 0) {
-              widgetAction = url;
-            } else {
-              urlFromIntent = url;
-            }
-          }
-        }
-      );
-      window.plugins.webintent.onNewIntent(url => {
-        widgetAction = url;
-        widgetActionHandler();
-      });
-    } */
 
   if (AppConfig.isCordovaiOS) {
     setTimeout(() => {
       navigator.splashscreen.hide();
     }, 1000);
-
-    // Enable TestFairy if available
-    /* if (PRODUCTION != 'true' && TestFairy) {
-        TestFairy.begin('ef5d3fd8bfa17164b8068e71ccb32e1beea25f2f');
-      } */
   }
 }
 
@@ -183,21 +152,6 @@ function onApplicationLoad() {
 }
 
 function getDirSystemPromise(dirPath) {
-  console.log("getDirSystemPromise: " + dirPath);
-  /*if (
-    dirPath &&
-    (dirPath.indexOf(cordova.file.applicationDirectory) === 0 ||
-      dirPath.startsWith("file:///"))
-  ) {
-  } else if (AppConfig.isCordovaiOS) {
-    dirPath = (cordova.file.documentsDirectory + "/" + dirPath).replace(
-      ":/",
-      ":///"
-    );
-  } else {
-    dirPath = (dirPath.startsWith("/") ? "file://" : "file:///") + dirPath;
-  }
-  dirPath = encodeURI(dirPath) + (dirPath.endsWith("/") ? "" : "/");*/
   return new Promise((resolve, reject) => {
     fsRoot.getDirectory(
       dirPath,
@@ -207,15 +161,6 @@ function getDirSystemPromise(dirPath) {
       },
       (dirEntry) => {
         resolve(dirEntry);
-        /*window.resolveLocalFileSystemURL(dirPath, resolve, (error) => {
-            console.error(
-                "Error getting FileSystem " +
-                dirPath +
-                ": " +
-                cordovaFileError[error.code]
-            ); //JSON.stringify(error));
-            resolve(false); // reject(error);
-          });*/
       },
       (error) => {
         reject(
@@ -258,26 +203,7 @@ function getAppStorageFileSystem(fileName, fileCallback, fail) {
   );
 }
 
-/*function onFileSystemSuccess(fileSystem) {
-  // Get a reference to the root directory
-  fsRoot = fileSystem.root;
-
-  handleStartParameters();
-
-  loadSettingsFile(appSettingFile, (settings) => {
-    loadedSettings = settings;
-    loadSettingsFile(appSettingTagsFile, (settingsTags) => {
-      loadedSettingsTags = settingsTags;
-    });
-  });
-}*/
-
 function getFileSystem() {
-  // Request access to the file system
-  /*window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemSuccess, (error) => {
-    console.log("Failed to access file system: " + error.code);
-  });*/
-
   // on android cordova.file.externalRootDirectory points to sdcard0
   const fsURL = AppConfig.isCordovaiOS
     ? cordova.file.documentsDirectory
@@ -286,7 +212,6 @@ function getFileSystem() {
     fsURL,
     (fileSystem) => {
       fsRoot = fileSystem;
-      // console.log("Filesystem Details: " + JSON.stringify(fsRoot));
       handleStartParameters();
 
       loadSettingsFile(appSettingFile, (settings) => {
@@ -303,39 +228,6 @@ function getFileSystem() {
     }
   );
 }
-
-/**
- * Creates recursively a tree structure for a given directory path
- */
-/* function generateDirectoryTree(entries) {
-    var tree = {};
-    var i;
-    for (i = 0; i < entries.length; i++) {
-      if (entries[i].isFile) {
-        console.log("File: " + entries[i].name);
-        tree.children.push({
-          "name": entries[i].name,
-          "isFile": entries[i].isFile,
-          "size": "", // TODO size and lmtd
-          "lmdt": "", //
-          "path": entries[i].fullPath
-        });
-      } else {
-        var directoryReader = entries[i].createReader();
-        pendingCallbacks++;
-        directoryReader.readEntries(
-          generateDirectoryTree,
-          function(error) {
-            console.error("Error reading dir entries: " + error.code);
-          }); // jshint ignore:line
-      }
-    }
-    pendingCallbacks--;
-    console.log("Pending recursions: " + pendingCallbacks);
-    if (pendingCallbacks <= 0) {
-      // .createDirectoryTree(anotatedTree);
-    }
-  } */
 
 function saveSettingsFile(fileName, data) {
   getAppStorageFileSystem(
@@ -397,23 +289,6 @@ function loadSettings() {
   return loadedSettings;
 }
 
-// saveSettingsTags = (tagGroups: Object) => {
-//   // TODO use js objects
-//   const jsonFormat =
-//     '{ "appName": "' +
-//     Config.DefaultSettings.appName +
-//     '", "appVersion": "' +
-//     Config.DefaultSettings.appVersion +
-//     '", "appBuild": "' +
-//     Config.DefaultSettings.appBuild +
-//     '", "settingsVersion": ' +
-//     Config.DefaultSettings.settingsVersion +
-//     ', "tagGroups": ' +
-//     tagGroups +
-//     ' }';
-//   saveSettingsFile(appSettingTagsFile, jsonFormat);
-// };
-
 function loadSettingsTags() {
   return loadedSettingsTags;
 }
@@ -449,13 +324,6 @@ function getDevicePaths() {
   return Promise.resolve(paths);
 }
 
-/* getUserHomePath = (): string => '/';
-
-  getAppDataPath = () => {
-    // const appDataPath = ipcRenderer.sendSync('app-data-path-request', 'notNeededArgument');
-    // return appDataPath;
-  }; */
-
 function handleStartParameters() {
   if (urlFromIntent !== undefined && urlFromIntent.length > 0) {
     console.log("Intent URL: " + urlFromIntent);
@@ -467,13 +335,6 @@ function handleStartParameters() {
 function quitApp() {
   navigator.app.exitApp();
 }
-
-/**
- * Creates recursively a tree structure for a given directory path
- */
-/*function createDirectoryTree(dirPath) {
-  console.warn("Creating directory tree is not supported in Cordova yet.");
-}*/
 
 function listMetaDirectoryPromise(path) {
   const entries = [];
@@ -616,52 +477,6 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                 }
 
                 enhancedEntries.push(eentry);
-
-                /* if (entry.isDirectory) {
-                      anotatedDirList.push({
-                        name: entry.name,
-                        path: entry.fullPath,
-                        isFile: false,
-                        size: '',
-                        lmdt: ''
-                      });
-                    } else if (entry.isFile) {
-                      if (lite) {
-                        anotatedDirList.push({
-                          name: entry.name,
-                          path: entry.fullPath,
-                          isFile: true,
-                          size: '',
-                          lmdt: ''
-                        });
-                      } else {
-                        const filePromise = Promise.resolve({
-                          then: (onFulfill, onReject) => {
-                            entry.file(
-                              fileEntry => {
-                                if (!fileEntry.fullPath) {
-                                  fileEntry.fullPath = resolveFullPath(
-                                    fileEntry.localURL
-                                  );
-                                }
-                                anotatedDirList.push();
-                                onFulfill({
-                                  name: fileEntry.name,
-                                  isFile: true,
-                                  size: fileEntry.size,
-                                  lmdt: fileEntry.lastModifiedDate,
-                                  path: fileEntry.fullPath
-                                });
-                              },
-                              err => {
-                                onReject('Error reading entry ' + path);
-                              }
-                            );
-                          }
-                        }); // jshint ignore:line
-                        fileWorkers.push(filePromise);
-                      }
-                    } */
               }
 
               Promise.all(metaPromises)
@@ -672,25 +487,6 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                 .catch(() => {
                   resolve(enhancedEntries);
                 });
-              /* Promise.all(fileWorkers).then(
-                    entries => {
-                      entries.forEach(entry => {
-                        anotatedDirList.push(entry);
-                      });
-                      console.timeEnd('listDirectoryPromise');
-                      resolve(anotatedDirList);
-                    },
-                    err => {
-                      console.warn(
-                        'At least one file worker failed for ' +
-                            path +
-                            'err ' +
-                            JSON.stringify(err)
-                      );
-                      console.timeEnd('listDirectoryPromise');
-                      resolve(anotatedDirList); // returning results even if any promise fails
-                    }
-                  ); */
             },
             (err) => {
               console.warn(
