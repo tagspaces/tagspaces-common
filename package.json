@@ -9,7 +9,7 @@
     "npm-install": "npx cross-env PD_PLATFORM=node npm install",
     "lerna-clean": "npx lerna clean -y",
     "lerna-version": "npx lerna version",
-    "lerna-publish": "npm run lerna-build && lerna publish from-package",
+    "lerna-publish": "npm login && npm run lerna-build && lerna publish from-package",
     "lerna-build": "npx lerna run build",
     "lerna-link": "lerna link --force-local",
     "update-dynamic-libs-version": "echo 'Run this script before and after lerna-version' && node scripts/updateLocalVersions.js",
