@@ -14,6 +14,45 @@ const {
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
+// Pre-compile regex pattern for newline replacement to avoid recreating it on every call
+const NEWLINE_REGEX = /[\r\n]+/g;
+
+/**
+ * Helper function to extract directory path from param object
+ * Handles both string and object param types
+ */
+function extractDirectoryPath(param) {
+  return typeof param === "object" && param !== null ? param.path : param;
+}
+
+/**
+ * Helper function to clean and process description metadata
+ */
+function cleanDescription(description) {
+  if (!description) return undefined;
+  return description.replace(NEWLINE_REGEX, " ").trim();
+}
+
+/**
+ * Helper function to safely parse JSON with error handling
+ */
+function safeJSONParse(jsonString, filePath) {
+  if (!jsonString) return [];
+  try {
+    return JSON.parse(jsonString.trim()) || [];
+  } catch (ex) {
+    console.warn(`Error JSON.parse for ${filePath}:`, ex);
+    return [];
+  }
+}
+
+/**
+ * Helper function to check if path is in meta folder
+ */
+function isMetaFolderPath(path) {
+  return path.indexOf(AppConfig.metaFolder + "/") !== -1;
+}
+
 /**
  * @param param param.listDirectoryPromise function is required, add getFileContentPromise function to get meta in index
  * @param mode  ['extractTextContent', 'extractLinks', 'extractThumbURL', 'extractThumbPath']
@@ -88,27 +127,39 @@ function createIndex(
 }
 
 function getIndexedEntry(entry, dirPath) {
-  const { tags, bucketName, ...cleanEntry } = entry || {};
-  const cleanedDescription = entry?.meta?.description
-    ?.replace(/[\r\n]+/g, " ") // collapse any newline sequences into a single space
-    .trim(); // trim leading/trailing whitespace (including any stray \r or \n)
-  return {
+  if (!entry) return null;
+  const { tags, bucketName, ...cleanEntry } = entry;
+  const cleanedDescription = cleanDescription(entry.meta?.description);
+  const meta = {};
+  
+  // Build meta object only with non-empty values
+  if (entry.meta?.tags) {
+    meta.tags = entry.meta.tags;
+  }
+  if (entry.meta?.color) {
+    meta.color = entry.meta.color;
+  }
+  if (cleanedDescription) {
+    meta.description = cleanedDescription;
+  }
+  
+  const indexedEntry = {
     ...cleanEntry,
-    uuid: entry?.meta?.id || getUuid(),
-    ...(entry.isFile && {
-      extension: extractFileExtension(entry.name, AppConfig.dirSeparator),
-    }),
+    uuid: entry.meta?.id || getUuid(),
     path: cleanRootPath(entry.path, dirPath),
-    meta: {
-      ...(entry.meta?.tags && {
-        tags: entry.meta.tags,
-      }),
-      ...(entry.meta?.color && {
-        color: entry.meta.color,
-      }),
-      ...(cleanedDescription && { description: cleanedDescription }),
-    },
   };
+  
+  // Only add extension for files
+  if (entry.isFile) {
+    indexedEntry.extension = extractFileExtension(entry.name, AppConfig.dirSeparator);
+  }
+  
+  // Only add meta if it has content
+  if (Object.keys(meta).length > 0) {
+    indexedEntry.meta = meta;
+  }
+  
+  return indexedEntry;
 }
 /**
  * use it for native platform only (saveTextFilePromise cannot switch -location can be S3).
@@ -121,29 +172,26 @@ function persistIndex(param, directoryIndex) {
     console.error("persistIndex param.saveTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-  let directoryPath;
-  if (typeof param === "object" && param !== null) {
-    directoryPath = param.path;
-  } else {
-    directoryPath = param;
-  }
+  const directoryPath = extractDirectoryPath(param);
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
+  const indexJson = JSON.stringify(directoryIndex);
+  
   return param
     .saveTextFilePromise(
       { ...param, path: folderIndexPath },
-      JSON.stringify(directoryIndex), // relativeIndex),
+      indexJson,
       true,
     )
     .then((result) => {
       if (result) {
         console.log(
-          "Index persisted for: " + directoryPath + " to " + folderIndexPath,
+          `Index persisted for: ${directoryPath} to ${folderIndexPath}`,
         );
       }
       return result;
     })
     .catch((err) => {
-      console.error("Error saving the index for " + folderIndexPath, err);
+      console.error(`Error saving the index for ${folderIndexPath}`, err);
     });
 }
 
@@ -153,18 +201,14 @@ function persistIndex(param, directoryIndex) {
  * @returns {Promise<boolean>}
  */
 function hasIndex(param, getPropertiesPromise) {
-  let directoryPath;
-  if (typeof param === "object" && param !== null) {
-    directoryPath = param.path;
-  } else {
-    directoryPath = param;
-  }
+  const directoryPath = extractDirectoryPath(param);
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
+  
   return getPropertiesPromise({ ...param, path: folderIndexPath })
-    .then((lstat) => lstat && lstat.isFile)
+    .then((lstat) => !!(lstat && lstat.isFile))
     .catch((err) => {
       console.log("Error hasIndex", err);
-      return Promise.resolve(false);
+      return false;
     });
 }
 
@@ -179,29 +223,23 @@ function loadIndex(
   dirSeparator = AppConfig.dirSeparator,
   getFileContentPromise,
 ) {
-  let directoryPath, locationID;
-  if (typeof param === "object" && param !== null) {
-    directoryPath = param.path;
-    locationID = param.locationID;
-  } else {
-    directoryPath = param;
-  }
+  const directoryPath = extractDirectoryPath(param);
+  const locationID = typeof param === "object" ? param.locationID : undefined;
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
+  
   return loadJSONFile(
     { ...param, path: folderIndexPath },
     getFileContentPromise,
   )
-    .then((directoryIndex) => {
-      return enhanceDirectoryIndex(
-        param,
-        directoryIndex,
-        locationID,
-        dirSeparator,
-      );
-    })
+    .then((directoryIndex) => enhanceDirectoryIndex(
+      param,
+      directoryIndex,
+      locationID,
+      dirSeparator,
+    ))
     .catch((err) => {
       console.log("Error loadIndex", err);
-      return Promise.resolve([]);
+      return [];
     });
 }
 
@@ -214,35 +252,34 @@ function enhanceDirectoryIndex(
   if (!directoryIndex) {
     return undefined;
   }
-  let directoryPath;
-  if (typeof param === "object" && param !== null) {
-    directoryPath = param.path;
-  } else {
-    directoryPath = param;
-  }
-
+  let directoryPath = extractDirectoryPath(param);
+  
+  // Optimize path normalization for Cordova platform
   if (AppConfig.isCordova) {
     if (!directoryPath.startsWith(dirSeparator)) {
-      // in cordova search results needs to start with dirSeparator
       directoryPath = dirSeparator + directoryPath;
     }
     directoryPath = cleanTrailingDirSeparator(directoryPath);
   }
-  return directoryIndex.map((entry) => {
-    return {
-      ...entry,
-      locationID,
-      path: joinPaths(dirSeparator, directoryPath, toPlatformPath(entry.path)),
-    };
-  });
+  
+  // Cache the platform path conversion function result
+  const convertPath = (entryPath) => joinPaths(
+    dirSeparator,
+    directoryPath,
+    toPlatformPath(entryPath),
+  );
+  
+  return directoryIndex.map((entry) => ({
+    ...entry,
+    locationID,
+    path: convertPath(entry.path),
+  }));
 }
 
 function toPlatformPath(path, dirSeparator = AppConfig.dirSeparator) {
-  if (AppConfig.isWin) {
-    // index is created with Unix dir separator /
-    return path.replaceAll("/", dirSeparator);
-  }
-  return path;
+  // index is created with Unix dir separator /
+  // only convert on Windows platform
+  return AppConfig.isWin ? path.replaceAll("/", dirSeparator) : path;
 }
 
 function addToIndex(param, size, lastModified) {
@@ -254,72 +291,49 @@ function addToIndex(param, size, lastModified) {
     console.error("addToIndex param.saveTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-  if (param.path.indexOf(AppConfig.metaFolder + "/") !== -1) {
-    console.info("addToIndex skip meta folder" + param.path);
+  
+  if (isMetaFolderPath(param.path)) {
+    console.info(`addToIndex skip meta folder ${param.path}`);
     return Promise.resolve(true);
   }
+  
   const dirPath = extractContainingDirectoryPath(param.path, "/");
   const metaFilePath = getMetaIndexFilePath(dirPath);
+  
   console.info(
-    "addToIndex path:" +
-      param.path +
-      " size:" +
-      size +
-      " LastModified:" +
-      lastModified +
-      " bucketName:" +
-      param.bucketName,
+    `addToIndex path:${param.path} size:${size} LastModified:${lastModified} bucketName:${param.bucketName}`,
   );
-  const eentry = {
+  
+  const newEntry = {
     ...param,
     name: extractFileName(param.path),
     tags: [],
     isFile: true,
-    size: size,
+    size,
     lmdt: Date.parse(lastModified),
   };
-  let tsi = [];
-
+  
+  const persistIndexParam = {
+    ...param,
+    path: dirPath,
+    saveTextFilePromise: param.saveTextFilePromise,
+  };
+  
   return param
     .getFileContentPromise(
-      {
-        path: metaFilePath,
-        bucketName: param.bucketName,
-      },
+      { path: metaFilePath, bucketName: param.bucketName },
       "text",
     )
     .then((metaFileContent) => {
-      console.info("addToIndex metaFileContent:" + metaFileContent);
-      if (metaFileContent) {
-        try {
-          tsi = JSON.parse(metaFileContent.trim());
-        } catch (ex) {
-          console.warn("Error JSON.parse for " + metaFilePath, ex);
-        }
-      }
-
-      tsi.push(eentry);
-
-      return persistIndex(
-        {
-          ...param,
-          path: dirPath,
-          saveTextFilePromise: param.saveTextFilePromise,
-        },
-        tsi,
-      );
+      console.info(`addToIndex metaFileContent:${metaFileContent}`);
+      const tsi = safeJSONParse(metaFileContent, metaFilePath);
+      tsi.push(newEntry);
+      return persistIndex(persistIndexParam, tsi);
     })
     .catch((err) => {
       console.info("addToIndex:", err);
-      tsi.push(eentry);
-      return persistIndex(
-        {
-          ...param,
-          path: dirPath,
-          saveTextFilePromise: param.saveTextFilePromise,
-        },
-        tsi,
-      );
+      const tsi = [newEntry];
+      return persistIndex(persistIndexParam, tsi);
     });
 }
 
@@ -329,46 +343,40 @@ function removeFromIndex(param) {
     return Promise.resolve(false);
   }
   if (!param.saveTextFilePromise) {
-    console.error("addToIndex param.saveTextFilePromise is not set!");
+    console.error("removeFromIndex param.saveTextFilePromise is not set!");
     return Promise.resolve(false);
   }
-  console.info(
-    "removeFromIndex path:" + param.path + " bucket:" + param.bucketName,
-  );
-  if (param.path.indexOf(AppConfig.metaFolder + "/") !== -1) {
-    console.info("removeFromIndex skip meta folder" + param.path);
+  
+  console.info(`removeFromIndex path:${param.path} bucket:${param.bucketName}`);
+  
+  if (isMetaFolderPath(param.path)) {
+    console.info(`removeFromIndex skip meta folder ${param.path}`);
     return Promise.resolve(true);
   }
+  
   const dirPath = extractContainingDirectoryPath(param.path, "/");
   const metaFilePath = getMetaIndexFilePath(dirPath);
+  
+  const persistIndexParam = {
+    ...param,
+    path: dirPath,
+    saveTextFilePromise: param.saveTextFilePromise,
+  };
+  
   return param
     .getFileContentPromise(
-      {
-        ...param,
-        path: metaFilePath,
-      },
+      { ...param, path: metaFilePath },
       "text",
     )
     .then((metaFileContent) => {
-      if (metaFileContent) {
-        let tsi = [];
-        try {
-          tsi = JSON.parse(metaFileContent.trim());
-        } catch (ex) {
-          console.warn("Error JSON.parse for " + metaFilePath, ex);
-        }
-        const newTsi = tsi.filter((item) => item.path !== param.path);
-        if (tsi.size !== newTsi.size) {
-          return persistIndex(
-            {
-              ...param,
-              path: dirPath,
-              saveTextFilePromise: param.saveTextFilePromise,
-            },
-            newTsi,
-          );
-        }
+      const tsi = safeJSONParse(metaFileContent, metaFilePath);
+      const newTsi = tsi.filter((item) => item.path !== param.path);
+      
+      // Only persist if entries were actually removed
+      if (tsi.length !== newTsi.length) {
+        return persistIndex(persistIndexParam, newTsi);
       }
+      return undefined;
     })
     .catch((err) => {
       console.error("removeFromIndex:", err);
@@ -380,17 +388,14 @@ function getMetaIndexFilePath(
   directoryPath,
   dirSeparator = AppConfig.dirSeparator,
 ) {
-  return directoryPath.length > 0 && directoryPath !== dirSeparator
-    ? normalizePath(
-        directoryPath +
-          dirSeparator +
-          AppConfig.metaFolder +
-          dirSeparator +
-          AppConfig.folderIndexFile,
-      )
-    : normalizePath(
-        AppConfig.metaFolder + dirSeparator + AppConfig.folderIndexFile,
-      );
+  // Build path more efficiently with conditional logic
+  const basePath = directoryPath && directoryPath.length > 0 && directoryPath !== dirSeparator
+    ? `${directoryPath}${dirSeparator}`
+    : "";
+  
+  return normalizePath(
+    `${basePath}${AppConfig.metaFolder}${dirSeparator}${AppConfig.folderIndexFile}`,
+  );
 }
 
 /**
@@ -406,7 +411,7 @@ function loadJSONFile(param, getFileContentPromise) {
   return getFileContentPromise(param, "text")
     .then((jsonContent) => loadJSONString(jsonContent))
     .catch((e) => {
-      console.log("File not exist: " + param.path, e);
+      console.log(`File not exist: ${param.path}`, e);
       return undefined;
     });
 }

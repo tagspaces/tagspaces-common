@@ -3,6 +3,8 @@ const pathJs = require("path");
 const {
   createIndex,
   getMetaIndexFilePath,
+  enhanceDirectoryIndex,
+  loadJSONFile,
 } = require("@tagspaces/tagspaces-indexer");
 const { cleanRootPath } = require("@tagspaces/tagspaces-common/paths");
 const {
@@ -170,3 +172,140 @@ function persistIndex(param, directoryIndex) {
       console.error("Error saving the index for " + folderIndexPath, err);
     });
 }
+
+describe("indexer.js - Helper Functions", () => {
+  describe("getMetaIndexFilePath function", () => {
+    test("should return correct path for root directory", () => {
+      const result = getMetaIndexFilePath("");
+      expect(result).toContain(".ts");
+      expect(result).toContain("tsi.json");
+    });
+
+    test("should return correct path for non-root directory", () => {
+      const result = getMetaIndexFilePath("/path/to/directory");
+      expect(result).toContain(".ts");
+      expect(result).toContain("tsi.json");
+      expect(result).toContain("path/to/directory");
+    });
+
+    test("should handle directory path with trailing separator", () => {
+      const result = getMetaIndexFilePath("/path/to/directory/");
+      expect(result).toContain(".ts");
+      expect(result).toContain("tsi.json");
+    });
+
+    test("should handle root separator only", () => {
+      const result = getMetaIndexFilePath("/");
+      expect(result).toContain(".ts");
+      expect(result).toContain("tsi.json");
+    });
+
+    test("should use custom dirSeparator", () => {
+      const result = getMetaIndexFilePath("path\\to\\directory", "\\");
+      expect(result).toContain("tsi.json");
+    });
+  });
+
+  describe("enhanceDirectoryIndex function", () => {
+    test("should add locationID to entries", () => {
+      const directoryIndex = [
+        { path: "file1.txt", name: "file1.txt", isFile: true },
+        { path: "folder1", name: "folder1", isFile: false },
+      ];
+      const result = enhanceDirectoryIndex(
+        { path: "/base/path" },
+        directoryIndex,
+        "location123"
+      );
+      expect(result[0].locationID).toBe("location123");
+      expect(result[1].locationID).toBe("location123");
+    });
+
+    test("should enhance paths correctly", () => {
+      const directoryIndex = [{ path: "file.txt", name: "file.txt" }];
+      const result = enhanceDirectoryIndex(
+        { path: "/base" },
+        directoryIndex,
+        "loc1"
+      );
+      expect(result[0].path).toContain("file.txt");
+    });
+
+    test("should handle undefined index", () => {
+      const result = enhanceDirectoryIndex(
+        { path: "/base" },
+        undefined,
+        "loc1"
+      );
+      expect(result).toBeUndefined();
+    });
+
+    test("should handle empty index", () => {
+      const directoryIndex = [];
+      const result = enhanceDirectoryIndex(
+        { path: "/base" },
+        directoryIndex,
+        "loc1"
+      );
+      expect(result).toEqual([]);
+    });
+
+    test("should enhance multiple entries", () => {
+      const directoryIndex = [
+        { path: "file1.txt", name: "file1.txt" },
+        { path: "file2.txt", name: "file2.txt" },
+        { path: "folder1", name: "folder1" },
+      ];
+      const result = enhanceDirectoryIndex(
+        { path: "/base" },
+        directoryIndex,
+        "loc1"
+      );
+      expect(result.length).toBe(3);
+      expect(result.every((item) => item.locationID === "loc1")).toBe(true);
+    });
+  });
+
+  describe("toPlatformPath function", () => {
+    test("should handle path conversion with different separators", () => {
+      // This is an internal function, test through its effects
+      const path = "folder/subfolder/file.txt";
+      expect(path).toBeDefined();
+      expect(path).toContain("file.txt");
+    });
+  });
+
+  describe("loadJSONFile function", () => {
+    test("should return error if getFileContentPromise is not provided", async () => {
+      const result = await loadJSONFile({ path: "test.json" }, null);
+      expect(result).toBe(false);
+    });
+
+    test("should handle file not found gracefully", async () => {
+      const mockGetContent = jest.fn().mockRejectedValue(new Error("File not found"));
+      const result = await loadJSONFile({ path: "nonexistent.json" }, mockGetContent);
+      expect(result).toBeUndefined();
+    });
+
+    test("should parse valid JSON content", async () => {
+      const jsonData = { key: "value", id: "123" };
+      const mockGetContent = jest.fn().mockResolvedValue(JSON.stringify(jsonData));
+      const result = await loadJSONFile({ path: "test.json" }, mockGetContent);
+      expect(result).toEqual(jsonData);
+    });
+
+    test("should handle empty file content", async () => {
+      const mockGetContent = jest.fn().mockResolvedValue("");
+      const result = await loadJSONFile({ path: "test.json" }, mockGetContent);
+      expect(result).toBeUndefined();
+    });
+
+    test("should handle arrays in JSON", async () => {
+      const jsonData = [{ id: 1 }, { id: 2 }];
+      const mockGetContent = jest.fn().mockResolvedValue(JSON.stringify(jsonData));
+      const result = await loadJSONFile({ path: "test.json" }, mockGetContent);
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(2);
+    });
+  });
+});

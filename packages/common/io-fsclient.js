@@ -113,23 +113,17 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         }
 
         if (stats) {
-          const lmdt =
-            typeof stats.mtimeMs === "number"
-              ? stats.mtimeMs
-              : stats.mtime && typeof stats.mtime.getTime === "function"
-              ? stats.mtime.getTime()
-              : stats.mtime;
-          // created time: prefer birthtimeMs -> ctimeMs -> fall back to Date objects -> finally lmdt
-          const cdt =
-            typeof stats.birthtimeMs === "number"
-              ? stats.birthtimeMs
-              : typeof stats.ctimeMs === "number"
-              ? stats.ctimeMs
-              : stats.birthtime && typeof stats.birthtime.getTime === "function"
-              ? stats.birthtime.getTime()
-              : stats.ctime && typeof stats.ctime.getTime === "function"
-              ? stats.ctime.getTime()
-              : undefined;
+          // Helper function to extract timestamp from various formats
+          const getTimestamp = (msValue, dateValue) => {
+            return typeof msValue === "number" ? msValue : 
+                   dateValue && typeof dateValue.getTime === "function" ? dateValue.getTime() : 
+                   dateValue;
+          };
+
+          const lmdt = getTimestamp(stats.mtimeMs, stats.mtime);
+          const cdt = getTimestamp(stats.birthtimeMs, stats.birthtime) ||
+                      getTimestamp(stats.ctimeMs, stats.ctime);
+
           const fsEntry = {
             name: stats.isFile()
               ? tsPaths.extractFileName(path)
@@ -415,18 +409,22 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   async function processMetaContent(path, enhancedEntries, metaContent, mode) {
     const metaFolderPath = tsPaths.getMetaDirectoryPath(path, dirSeparator);
+    const metaExtLen = AppConfig.metaFileExt.length;
+    const thumbExtLen = AppConfig.thumbFileExt.length;
 
     for (const metaEntry of metaContent) {
+      const { path: metaPath } = metaEntry;
+      
       // Process metadata JSON files
-      if (metaEntry.path.endsWith(AppConfig.metaFileExt)) {
-        const baseName = metaEntry.path.slice(0, -AppConfig.metaFileExt.length);
+      if (metaPath.endsWith(AppConfig.metaFileExt)) {
+        const baseName = metaPath.slice(0, -metaExtLen);
         const enhancedEntry = enhancedEntries.find(
           (entry) => entry.name === baseName && entry.isFile
         );
 
         if (enhancedEntry) {
           try {
-            const metaFilePath = metaFolderPath + dirSeparator + metaEntry.path;
+            const metaFilePath = metaFolderPath + dirSeparator + metaPath;
             const metaFileObj = await fs.readJson(metaFilePath);
             enhancedEntry.meta = { ...enhancedEntry.meta, ...metaFileObj };
 
@@ -434,19 +432,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               setEntryLinks(enhancedEntry, metaFileObj.description);
             }
           } catch (err) {
-            console.warn(`Error reading metadata file: ${metaEntry.path}`, err);
+            console.warn(`Error reading metadata file: ${metaPath}`, err);
           }
         }
       }
 
       // Process thumbnails
-      if (metaEntry.path.endsWith(AppConfig.thumbFileExt)) {
-        const baseName = metaEntry.path.slice(
-          0,
-          -AppConfig.thumbFileExt.length
-        );
+      if (metaPath.endsWith(AppConfig.thumbFileExt)) {
+        const baseName = metaPath.slice(0, -thumbExtLen);
         const thumbPath =
-          metaFolderPath + dirSeparator + encodeURIComponent(metaEntry.path);
+          metaFolderPath + dirSeparator + encodeURIComponent(metaPath);
         const enhancedEntry = enhancedEntries.find(
           (entry) => entry.name === baseName
         );
@@ -482,6 +477,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         const enhancedEntries = [];
         const isMatch =
           ignorePatterns.length > 0 ? picomatch(ignorePatterns) : null;
+        const separator = path.endsWith(dirSeparator) ? "" : dirSeparator;
         let entryPath;
 
         fs.readdir(path, async (error, entries) => {
@@ -493,10 +489,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
           if (entries) {
             for (const entry of entries) {
-              entryPath =
-                path +
-                (path.endsWith(dirSeparator) ? "" : dirSeparator) +
-                entry;
+              entryPath = path + separator + entry;
 
               // Skip ignored patterns
               if (isMatch && (isMatch(entryPath) || isMatch(entry))) {
@@ -516,26 +509,20 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   eentry.isFile = stats.isFile();
                   eentry.size = stats.size;
 
+                  // Helper function to extract timestamp from various formats
+                  const getTimestamp = (msValue, dateValue) => {
+                    return typeof msValue === "number" ? msValue : 
+                           dateValue && typeof dateValue.getTime === "function" ? dateValue.getTime() : 
+                           dateValue;
+                  };
+
                   // last modified time (mtime)
-                  eentry.lmdt =
-                    typeof stats.mtimeMs === "number"
-                      ? stats.mtimeMs
-                      : stats.mtime && typeof stats.mtime.getTime === "function"
-                      ? stats.mtime.getTime()
-                      : stats.mtime;
+                  eentry.lmdt = getTimestamp(stats.mtimeMs, stats.mtime);
 
                   // created time: prefer birthtimeMs -> ctimeMs -> fall back to Date objects -> finally lmdt
-                  eentry.cdt =
-                    typeof stats.birthtimeMs === "number"
-                      ? stats.birthtimeMs
-                      : typeof stats.ctimeMs === "number"
-                      ? stats.ctimeMs
-                      : stats.birthtime &&
-                        typeof stats.birthtime.getTime === "function"
-                      ? stats.birthtime.getTime()
-                      : stats.ctime && typeof stats.ctime.getTime === "function"
-                      ? stats.ctime.getTime()
-                      : eentry.lmdt;
+                  eentry.cdt = getTimestamp(stats.birthtimeMs, stats.birthtime) ||
+                               getTimestamp(stats.ctimeMs, stats.ctime) ||
+                               eentry.lmdt;
                 }
 
                 // Handle directory meta
@@ -652,25 +639,16 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
    * @returns {Promise<ArrayBuffer>}
    */
   function getFileContentPromise(param, type = "arraybuffer") {
-    let filePath = getPath(param);
+    const filePath = getPath(param);
     return new Promise((resolve, reject) => {
-      if (type === "text") {
-        fs.readFile(filePath, "utf8", (error, content) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(content);
-          }
-        });
-      } else {
-        fs.readFile(filePath, (error, content) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(content);
-          }
-        });
-      }
+      const encoding = type === "text" ? "utf8" : null;
+      fs.readFile(filePath, encoding, (error, content) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(content);
+        }
+      });
     });
   }
 

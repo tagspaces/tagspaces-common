@@ -10,7 +10,7 @@ The above copyright notice and this permission notice shall be included in all c
  */
 
 const paths = require("./paths");
-const { createTextIndex, extractTextContent } = require("./utils-io");
+const { extractTextContent } = require("./utils-io");
 
 const locationType = {
   TYPE_LOCAL: "0",
@@ -19,14 +19,21 @@ const locationType = {
   TYPE_WEBDAV: "3",
 };
 
+// Pre-compile regex patterns for better performance
+const SOURCE_URL_REGEX = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
+const HREF_REGEX = /(?<=href=["'])(http[^"']*)(?=["'])/g;
+const PLAIN_URL_REGEX = /https?:\/\/[^\s\)]+|(?<=\()\s*https?:\/\/[^\s\)]+/g;
+const TS_LINK_REGEX = /(?:ts):\/\/[^\s\)]+/g;
+const DATA_URL_REGEX = /data:[^ \t\r\n]+/g;
+const BODY_REGEX = /<body[^>]*>([\s\S]*?)<\/body>/i;
+const SOURCE_URL_MHTML_REGEX = /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
+
 function extractLinks(textContent) {
   const links = [];
 
   try {
     // Extracting source url from HTML files saved with the browser extension
-    // const sourceUrlRegex = /data-sourceurl=["'](http[^"']*)["']/g;
-    const sourceUrlRegex = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
-    const sourceUrlMatches = textContent.match(sourceUrlRegex) || [];
+    const sourceUrlMatches = textContent.match(SOURCE_URL_REGEX) || [];
     for (const match of sourceUrlMatches) {
       const link = createLink(match);
       if (link) {
@@ -35,8 +42,7 @@ function extractLinks(textContent) {
     }
 
     // if content is html link should be in href attributes
-    const urlRegex = /(?<=href=["'])(http[^"']*)(?=["'])/g;
-    const urlMatches = textContent.match(urlRegex) || [];
+    const urlMatches = textContent.match(HREF_REGEX) || [];
     for (const match of urlMatches) {
       const link = createLink(match);
       if (link) {
@@ -46,10 +52,7 @@ function extractLinks(textContent) {
 
     // if plain text or markdown try to find links beginning with http
     if (links.length < 1) {
-      // const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const urlRegex = /https?:\/\/[^\s\)]+|(?<=\()\s*https?:\/\/[^\s\)]+/g;
-      // const urlRegex = /https?:\/\/[^\s<>]+|<https?:\/\/[^\s<>]+>/g;
-      const urlMatches = textContent.match(urlRegex) || [];
+      const urlMatches = textContent.match(PLAIN_URL_REGEX) || [];
       for (const match of urlMatches) {
         // Recognizing correctly <https://example.com>
         const cleanedMatch = match.replace(/^<|>$/g, "");
@@ -64,9 +67,7 @@ function extractLinks(textContent) {
   }
 
   try {
-    // const tsUrlRegex = /ts?:\/\/\?([-a-zA-Z0-9@:%_\+.~#?&\\//=]*)/g;
-    const tsUrlRegex = /(?:ts):\/\/[^\s\)]+/g;
-    const tsUrls = textContent.match(tsUrlRegex);
+    const tsUrls = textContent.match(TS_LINK_REGEX);
     // ts://?tslid=e78bf5d0-4546-86a5-eb81d8da4a38&tsepath=05252023171513.pdf&tseid=398a089d1c02405e87ba96530b2f81ca
     // ts://?tslid=9ea06d80-a904-8161-112c2266c152&tsepath=20231122190210_%5Balteleipziger%5D%20copy%202.pdf&tseid=ff013ed261dc433ca0b83d69f462d765
     // ts://?tslid=1f915e7fd93a4527e4396e1dcab2e&tsdpath=contacts&tseid=2df0135aa2cd4e01a804b60d70ac39eb
@@ -77,11 +78,7 @@ function extractLinks(textContent) {
           const link = {};
           link.type = "tslink";
           link.href = validUrl.href;
-          // const tseid = validUrl.searchParams.get("tseid");
-          // if (tseid) {
-          //   link.tseid = tseid;
-          // }
-          // skip duplicates
+          // skip duplicates using some() instead of creating new array
           if (!links.some((item) => item.href === link.href)) {
             links.push(link);
           }
@@ -116,97 +113,74 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
 
   if (!eentry.isFile && eentry.meta?.description && extractLinks) {
     setEntryLinks(eentry, eentry.meta?.description);
-  } else if (
-    fileName.endsWith(".txt") ||
-    fileName.endsWith(".md") ||
-    fileName.endsWith(".htm") ||
-    fileName.endsWith(".html") ||
-    // fileName.endsWith(".mhtml") || // mhtml extraction disable due to heavy parsing
-    fileName.endsWith(".website") ||
-    fileName.endsWith(".url")
-  ) {
-    try {
-      //let textContent = await fs.readFile(eentry.path, "utf8");
-      let textContent = "";
-      if (fileContent) {
-        // console.log("Extracting content from: " + eentry.path);
-        try {
-          // remove all dataurls
-          textContent = fileContent.replace(/data:[^ \t\r\n]+/g, "");
-        } catch (e) {
-          console.error(
-            "Error removing data urls: " + fileName + " with: " + e
-          );
-        }
-        if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
-          // Extracting the body tag
-          // const bodyRegex = /\<body[^>]*\>([^]*)\<\/body/m;
-          const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
-          try {
-            textContent = fileContent.match(bodyRegex)[0].trim();
-          } catch (e) {
-            console.error(
-              "Error parsing the body of the HTML document: " +
-                fileName +
-                " with: " +
-                e
-            );
-          }
-        } else if (fileName.endsWith(".mhtml")) {
-          //TODO handling of = at line end unclear
-          const sourceURLRegex =
-            /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
-          const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
-          try {
-            const sourceUrl = fileContent.match(sourceURLRegex)[0].trim();
-            // const bodyContent = textContent.match(bodyRegex)[0];
-            // console.log("Body: " + bodyContent);
-            // const oneLineContent = bodyContent
-            //   .split("\n")
-            //   .map((line) => (line.endsWith("=") ? line.slice(0, -1) : line))
-            //   .join("");
-            // console.log("One line: " + oneLineContent);
-            // textContent =
-            //   sourceUrl + "\n" + oneLineContent.split("=3D").join("=");
-            textContent = sourceUrl;
-          } catch (e) {
-            console.error(
-              "Error parsing the body of the MHTML document: " +
-                fileName +
-                " with: " +
-                e
-            );
-          }
-        }
-        eentry.textContent = extractTextContent(fileName, textContent);
-        if (extractLinks) {
-          setEntryLinks(eentry, textContent);
-        }
-      }
-    } catch (error) {
-      console.error(`Error reading file at ${eentry.path}:`, error);
+    return;
+  }
+
+  // Check if file type is supported for content extraction
+  const supportedExtensions = [".txt", ".md", ".htm", ".html", ".website", ".url"];
+  const fileExt = "." + fileName.split(".").pop();
+  
+  if (!supportedExtensions.includes(fileExt)) {
+    return;
+  }
+
+  try {
+    if (!fileContent) {
+      return;
     }
+
+    // remove all dataurls
+    let textContent = fileContent.replace(DATA_URL_REGEX, "");
+
+    if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
+      // Extracting the body tag
+      try {
+        textContent = fileContent.match(BODY_REGEX)[0].trim();
+      } catch (e) {
+        console.error(
+          "Error parsing the body of the HTML document: " +
+            fileName +
+            " with: " +
+            e
+        );
+      }
+    } else if (fileName.endsWith(".mhtml")) {
+      try {
+        const sourceUrl = fileContent.match(SOURCE_URL_MHTML_REGEX)[0].trim();
+        textContent = sourceUrl;
+      } catch (e) {
+        console.error(
+          "Error parsing the body of the MHTML document: " +
+            fileName +
+            " with: " +
+            e
+        );
+      }
+    }
+
+    eentry.textContent = extractTextContent(fileName, textContent);
+    if (extractLinks) {
+      setEntryLinks(eentry, textContent);
+    }
+  } catch (error) {
+    console.error(`Error reading file at ${eentry.path}:`, error);
   }
 }
 
 function setEntryLinks(entry, textContent) {
-  // console.log(
-  //   "Ext. links for " + entry.path + " content: " + textContent.substr(0, 200)
-  // );
   const links = extractLinks(textContent);
-  // console.log("Extracted links: " + JSON.stringify(links));
-  if (links && links.length > 0) {
-    if (entry.links && entry.links.length > 0) {
-      // console.log("Entry links already avail");
-      const newLinks = links.filter(
-        (link) => !entry.links.some((item) => item.href === link.href)
-      );
-      entry.links = [...entry.links, ...newLinks];
-    } else {
-      // console.log("Entry links not avail");
-      entry.links = links;
-    }
+  if (!links || links.length === 0) {
+    return;
   }
+
+  // Use Set for efficient deduplication
+  const existingHrefs = entry.links ? new Set(entry.links.map(link => link.href)) : new Set();
+  const newLinks = links.filter(link => !existingHrefs.has(link.href));
+
+  if (newLinks.length > 0) {
+    entry.links = entry.links ? [...entry.links, ...newLinks] : newLinks;
+  }
+
   console.log(
     "Entry links for " + entry.path + "\n" + JSON.stringify(entry.links)
   );
@@ -544,6 +518,15 @@ function formatFileSize2(sizeInBytes, siSystem) {
 }
 
 /**
+ * Helper function to pad numbers with leading zero
+ * @param {number} num
+ * @returns {string}
+ */
+function padZero(num) {
+  return (num < 10 ? "0" : "") + num;
+}
+
+/**
  * @param date: string | number
  * @param includeTime: boolean
  * @returns {string}
@@ -553,37 +536,19 @@ function formatDateTime(date, includeTime) {
     return "";
   }
   const d = new Date(date);
-  let cDate = "" + d.getDate();
-  cDate += "";
-  if (cDate.length === 1) {
-    cDate = "0" + cDate;
+  const cDate = padZero(d.getDate());
+  const cMonth = padZero(d.getMonth() + 1);
+  const cYear = d.getFullYear();
+  
+  if (!includeTime) {
+    return cYear + "-" + cMonth + "-" + cDate;
   }
-  let cMonth = "" + (d.getMonth() + 1);
-  cMonth += "";
-  if (cMonth.length === 1) {
-    cMonth = "0" + cMonth;
-  }
-  const cYear = "" + d.getFullYear();
-  let cHour = "" + d.getHours();
-  cHour += "";
-  if (cHour.length === 1) {
-    cHour = "0" + cHour;
-  }
-  let cMinute = "" + d.getMinutes();
-  cMinute += "";
-  if (cMinute.length === 1) {
-    cMinute = "0" + cMinute;
-  }
-  let cSecond = "" + d.getSeconds();
-  cSecond += "";
-  if (cSecond.length === 1) {
-    cSecond = "0" + cSecond;
-  }
-  let time = "";
-  if (includeTime) {
-    time = " - " + cHour + ":" + cMinute + ":" + cSecond;
-  }
-  return cYear + "-" + cMonth + "-" + cDate + time;
+
+  const cHour = padZero(d.getHours());
+  const cMinute = padZero(d.getMinutes());
+  const cSecond = padZero(d.getSeconds());
+  
+  return cYear + "-" + cMonth + "-" + cDate + " - " + cHour + ":" + cMinute + ":" + cSecond;
 }
 
 /**
@@ -604,40 +569,20 @@ function formatDateTime4Tag(date, includeTime, includeMS) {
     return "";
   }
   const d = new Date(date);
-  let cDate = "" + d.getDate();
-  cDate += "";
-  if (cDate.length === 1) {
-    cDate = "0" + cDate;
-  }
-  let cMonth = "" + (d.getMonth() + 1);
-  cMonth += "";
-  if (cMonth.length === 1) {
-    cMonth = "0" + cMonth;
-  }
+  const cDate = padZero(d.getDate());
+  const cMonth = padZero(d.getMonth() + 1);
   const cYear = d.getFullYear();
-  let time = "";
-  if (includeTime) {
-    let cHour = "" + d.getHours();
-    cHour += "";
-    if (cHour.length === 1) {
-      cHour = "0" + cHour;
-    }
-    let cMinute = "" + d.getMinutes();
-    cMinute += "";
-    if (cMinute.length === 1) {
-      cMinute = "0" + cMinute;
-    }
-    let cSecond = "" + d.getSeconds();
-    cSecond += "";
-    if (cSecond.length === 1) {
-      cSecond = "0" + cSecond;
-    }
-    time = "T" + cHour + "" + cMinute + "" + cSecond;
+  
+  if (!includeTime) {
+    return cYear + "" + cMonth + "" + cDate;
   }
-  let milliseconds = "";
-  if (includeMS) {
-    milliseconds = "." + d.getMilliseconds();
-  }
+
+  const cHour = padZero(d.getHours());
+  const cMinute = padZero(d.getMinutes());
+  const cSecond = padZero(d.getSeconds());
+  const time = "T" + cHour + cMinute + cSecond;
+  
+  const milliseconds = includeMS ? "." + d.getMilliseconds() : "";
   return cYear + "" + cMonth + "" + cDate + time + milliseconds;
 }
 
@@ -815,38 +760,34 @@ function shuffleArray(array) {
  */
 function sortByCriteria(data, criteria, order) {
   const copyData = [...data];
-  switch (criteria) {
-    case "byName":
+  
+  // Create a map of sort functions for better performance than switch
+  const sortFunctionMap = {
+    byName: () => {
       copyData.sort(sortByName);
-      if (!order) {
-        copyData.reverse();
-      }
-      return copyData; //data.sort((a, b) => -1 * sortByName(a, b));
-    case "byFileSize":
-      if (order) {
-        return copyData.sort(sortBySize);
-      }
-      return copyData.sort((a, b) => -1 * sortBySize(a, b));
-    case "byDateModified":
-      if (order) {
-        return copyData.sort(sortByDateModified);
-      }
-      return copyData.sort((a, b) => -1 * sortByDateModified(a, b));
-    case "byExtension":
-      if (order) {
-        return copyData.sort(sortByExtension);
-      }
-      return copyData.sort((a, b) => -1 * sortByExtension(a, b));
-    case "byFirstTag":
-      if (order) {
-        return copyData.sort(sortByFirstTag);
-      }
-      return copyData.sort((a, b) => -1 * sortByFirstTag(a, b));
-    case "random":
-      return shuffleArray(copyData);
-    default:
-      return copyData.sort(sortByName);
-  }
+      return !order ? copyData.reverse() : copyData;
+    },
+    byFileSize: () => {
+      copyData.sort(order ? sortBySize : (a, b) => -1 * sortBySize(a, b));
+      return copyData;
+    },
+    byDateModified: () => {
+      copyData.sort(order ? sortByDateModified : (a, b) => -1 * sortByDateModified(a, b));
+      return copyData;
+    },
+    byExtension: () => {
+      copyData.sort(order ? sortByExtension : (a, b) => -1 * sortByExtension(a, b));
+      return copyData;
+    },
+    byFirstTag: () => {
+      copyData.sort(order ? sortByFirstTag : (a, b) => -1 * sortByFirstTag(a, b));
+      return copyData;
+    },
+    random: () => shuffleArray(copyData),
+  };
+
+  const sortFn = sortFunctionMap[criteria];
+  return sortFn ? sortFn() : copyData.sort(sortByName);
 }
 
 /**
@@ -1207,23 +1148,18 @@ const shape = (items) => {
  * @param key
  * @returns {*}
  */
-const filterByUnique = (items, key) =>
-  items.reduce((accumulator, item) => {
+const filterByUnique = (items, key) => {
+  const seenValues = new Set();
+  return items.reduce((accumulator, item) => {
     const itemProp = extractNestedProp(item, key);
-    const isDuplicate =
-      accumulator.filter((filteredItem) => {
-        const prop = extractNestedProp(filteredItem, key);
-        return prop === itemProp;
-      }).length > 0;
-
-    if (isDuplicate) {
+    if (seenValues.has(itemProp)) {
       return accumulator;
     }
-
-    const modifiedItem = extend({}, item);
-    accumulator.push(modifiedItem);
+    seenValues.add(itemProp);
+    accumulator.push(extend({}, item));
     return accumulator;
   }, []);
+};
 
 /**
  * @description Filter by duplicate
@@ -1232,17 +1168,21 @@ const filterByUnique = (items, key) =>
  * @param duplicateLength
  * @returns {*}
  */
-const filterByDuplicate = (items, key, duplicateLength = 2) =>
-  items.filter((item) => {
+const filterByDuplicate = (items, key, duplicateLength = 2) => {
+  const itemPropCounts = new Map();
+  
+  // Count occurrences
+  items.forEach((item) => {
     const itemProp = extractNestedProp(item, key);
-    const duplicatesCount = duplicateLength - 1;
-    return (
-      items.filter((innerItem) => {
-        const prop = extractNestedProp(innerItem, key);
-        return prop === itemProp;
-      }).length > duplicatesCount
-    );
+    itemPropCounts.set(itemProp, (itemPropCounts.get(itemProp) || 0) + 1);
   });
+
+  // Filter items with count >= duplicateLength
+  return items.filter((item) => {
+    const itemProp = extractNestedProp(item, key);
+    return itemPropCounts.get(itemProp) >= duplicateLength;
+  });
+};
 
 module.exports = {
   locationType,

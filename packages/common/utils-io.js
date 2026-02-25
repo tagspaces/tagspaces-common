@@ -145,13 +145,11 @@ function processEntries(
   ignorePatterns,
   isWalking
 ) {
+  const isMatch = ignorePatterns.length > 0 ? picomatch(ignorePatterns) : null;
   return entries.map((entry) => async () => {
     if (!isWalking()) return false;
-    if (ignorePatterns.length > 0) {
-      const isMatch = picomatch(ignorePatterns);
-      if (isMatch(entry.path) || isMatch(entry.name)) {
-        return false;
-      }
+    if (isMatch && (isMatch(entry.path) || isMatch(entry.name))) {
+      return false;
     }
 
     if (entry.isFile) {
@@ -264,22 +262,14 @@ function loadJSONString(jsonContent) {
   if (!jsonContent) {
     return undefined;
   }
-  let jsonObject;
-  let json;
   const UTF8_BOM = "\ufeff";
-  if (jsonContent.indexOf(UTF8_BOM) === 0) {
-    json = jsonContent.substring(1, jsonContent.length);
-  } else {
-    json = jsonContent;
+  const json = jsonContent.charCodeAt(0) === 0xfeff ? jsonContent.slice(1) : jsonContent;
+  try {
+    return JSON.parse(json);
+  } catch (err) {
+    console.error("Error parsing meta json file: " + json, err);
+    return undefined;
   }
-  if (json) {
-    try {
-      jsonObject = JSON.parse(json);
-    } catch (err) {
-      console.error("Error parsing meta json file: " + json, err);
-    }
-  }
-  return jsonObject;
 }
 
 async function runPromisesSynchronously(resolvables) {
@@ -293,18 +283,13 @@ async function runPromisesSynchronously(resolvables) {
 function isThumbGenSupportedFileType(fileExtension, fileType) {
   if (fileType) {
     const fileTypes = AppConfig.ThumbGenSupportedFileTypes[fileType];
-    if (fileTypes) {
-      return fileTypes.includes(fileExtension);
-    }
-  } else {
-    const fileTypes = Object.keys(AppConfig.ThumbGenSupportedFileTypes);
-    for (let type in fileTypes) {
-      const fileTypes = AppConfig.ThumbGenSupportedFileTypes[fileType];
-      if (fileTypes) {
-        if (fileTypes.includes(fileExtension)) {
-          return true;
-        }
-      }
+    return fileTypes ? fileTypes.includes(fileExtension) : false;
+  }
+  // Check all file types if no specific type provided
+  for (const type in AppConfig.ThumbGenSupportedFileTypes) {
+    const fileTypes = AppConfig.ThumbGenSupportedFileTypes[type];
+    if (fileTypes && fileTypes.includes(fileExtension)) {
+      return true;
     }
   }
   return false;
@@ -357,13 +342,12 @@ function extractTextContent(fileName, textContent) {
 }
 
 function createTextIndex(textContent) {
-  if (textContent) {
-    // clear duplicate string, remove spaces and empty string
-    const trimmedTokens = textContent.replace(/\s+/g, " ");
-    const noDuplicatesArray = [...new Set(trimmedTokens.split(" "))];
-    return noDuplicatesArray.join(" ").replace(/\n/g, "").trim();
+  if (!textContent) {
+    return "";
   }
-  return "";
+  // Normalize whitespace, split once, deduplicate, and rejoin
+  const tokens = textContent.replace(/\s+/g, " ").trim().split(" ");
+  return [...new Set(tokens)].join(" ");
 }
 
 module.exports = {
