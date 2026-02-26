@@ -15,14 +15,11 @@ function handleThumbGen(req, res) {
     : false;
 
   if (req.method === "POST") {
-    // console.log('POST');
     let body = "";
     req.on("data", function (data) {
       body += data;
-      // console.log("Partial body: " + body);
     });
     req.on("end", async () => {
-      // console.log('Body: ' + parse(body));
       try {
         let arrayPaths;
         // handle html form data
@@ -47,10 +44,9 @@ function handleThumbGen(req, res) {
             const success = await processAllThumbnails(
               path,
               generatePdf,
-              extractPDFfunction
+              extractPDFfunction,
             );
             if (success) {
-              // console.log("Thumbnails generated");
               if (typeof success === "object") {
                 thumbs.push(success);
               }
@@ -64,7 +60,6 @@ function handleThumbGen(req, res) {
         res.statusCode = statusCode;
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-store, must-revalidate");
-        // res.write(JSON.stringify(thumbs));
         res.end(JSON.stringify(thumbs));
       } catch (e) {
         console.log(e);

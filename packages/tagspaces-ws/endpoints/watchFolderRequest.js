@@ -17,7 +17,7 @@ function stopWatching() {
 function startWatching(folderPath, depth) {
   watcher = chokidar.watch(folderPath, {
     ignored: (
-      path //, stats) =>
+      path, //, stats) =>
     ) =>
       (/(^|[\/\\])\../.test(path) && !path.includes(".ts")) || // ignoring .dotfiles but not dirs like .ts
       (path.includes(".ts") && path.includes("tsi.json")), // ignoring .ts/tsi.json folder
@@ -40,14 +40,11 @@ function startWatching(folderPath, depth) {
 function watchFolder(req, res) {
   if (req.method === "POST") {
     stopWatching();
-    // console.log('POST');
     let body = "";
     req.on("data", function (data) {
       body += data;
-      // console.log("Partial body: " + body);
     });
     req.on("end", async () => {
-      // console.log('Body: ' + parse(body));
       try {
         const data = JSON.parse(body);
 

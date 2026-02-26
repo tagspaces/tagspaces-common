@@ -15,12 +15,6 @@ function handleIndexer(req, res, signal) {
     });
     req.on("end", () => {
       try {
-        // let directoryPath;
-        /*if (body.startsWith("directoryPath=")) {
-                  directoryPath = decodeURIComponent(body.substr(14));
-                } else {*/
-        //  const params = JSON.parse(body);
-        //  directoryPath = params.directoryPath;
         const { directoryPath, extractText, extractLinks, ignorePatterns } =
           JSON.parse(body);
 
@@ -41,12 +35,12 @@ function handleIndexer(req, res, signal) {
           param,
           mode,
           ignorePatterns ? ignorePatterns : [],
-          () => !signal.aborted
+          () => !signal.aborted,
         )
           .then((directoryIndex) => {
             return persistIndex(
               { path: directoryPath, saveTextFilePromise },
-              directoryIndex
+              directoryIndex,
             )
               .then((success) => {
                 if (success) {
@@ -54,7 +48,6 @@ function handleIndexer(req, res, signal) {
                   res.statusCode = 200;
                   res.setHeader("Content-Type", "application/json");
                   res.setHeader("Cache-Control", "no-store, must-revalidate");
-                  // res.write(JSON.stringify(thumbs));
                   res.end(JSON.stringify({ success }));
                 }
               })
@@ -80,7 +73,7 @@ function handleError(res, err) {
     JSON.stringify({
       success: false,
       error: err && err.message ? err.message : err,
-    })
+    }),
   );
 }
 
