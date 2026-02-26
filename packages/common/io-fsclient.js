@@ -418,12 +418,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     for (const metaEntry of metaContent) {
       const { path: metaPath } = metaEntry;
 
-      const entryName = tsPaths.extractFileName(metaPath);
-      if (
-        AppConfig.isElectron &&
-        AppConfig.isMac &&
-        entryName?.startsWith("._")
-      ) {
+      const metaFileName = tsPaths.extractFileName(metaPath);
+      if (metaFileName?.startsWith("._")) {
         // skip loading meta for hidden system files on mac starting with ._
         continue;
       }
