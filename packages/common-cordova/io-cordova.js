@@ -42,7 +42,7 @@ const cordovaFileError = {
 
 function onDeviceReady() {
   console.log(
-    "Device Ready: " + window.device.platform + " - " + window.device.version
+    "Device Ready: " + window.device.platform + " - " + window.device.version,
   );
 
   // attachFastClick(document.body);
@@ -167,9 +167,9 @@ function getDirSystemPromise(dirPath) {
           "getDirectory failed: " +
             dirPath +
             " failed with error code: " +
-            error.code
+            error.code,
         );
-      }
+      },
     );
   });
 }
@@ -199,7 +199,7 @@ function getAppStorageFileSystem(fileName, fileCallback, fail) {
     },
     (error) => {
       console.error("Error getSettingsFileSystem: " + JSON.stringify(error));
-    }
+    },
   );
 }
 
@@ -223,9 +223,9 @@ function getFileSystem() {
     },
     (err) => {
       console.error(
-        "Error resolving local file system url: " + JSON.stringify(err)
+        "Error resolving local file system url: " + JSON.stringify(err),
       );
-    }
+    },
   );
 }
 
@@ -239,14 +239,14 @@ function saveSettingsFile(fileName, data) {
         },
         (error) => {
           console.error("Error creating writter: " + JSON.stringify(error));
-        }
+        },
       );
     },
     (error) => {
       console.error(
-        "Error getting app storage file system: " + JSON.stringify(error)
+        "Error getting app storage file system: " + JSON.stringify(error),
       );
-    }
+    },
   );
 }
 
@@ -268,14 +268,14 @@ function loadSettingsFile(fileName, ready) {
         },
         (error) => {
           console.error("Error reading file: " + JSON.stringify(error));
-        }
+        },
       );
     },
     (error) => {
       console.log(
-        "Error getting app storage file system: " + JSON.stringify(error)
+        "Error getting app storage file system: " + JSON.stringify(error),
       );
-    }
+    },
   );
 }
 
@@ -368,7 +368,7 @@ function listMetaDirectoryPromise(path) {
             (err) => {
               console.log(err);
               resolve(entries);
-            }
+            },
           );
         });
       } else {
@@ -425,20 +425,16 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                   } catch (error) {
                     console.log(
                       "Failed to get metadata for file: " + entry.name,
-                      error
+                      error,
                     );
                   }
-                  /*entry.file((fileEntry) => {
-                    eentry.size = fileEntry.size;
-                    eentry.lmdt = fileEntry.lastModifiedDate;
-                  });*/
                 } else {
-                  eentry.meta = {
-                    thumbPath: getThumbFileLocationForDirectory(
-                      eentry.path,
-                      AppConfig.dirSeparator
-                    ),
-                  };
+                  // eentry.meta = {
+                  //   thumbPath: getThumbFileLocationForDirectory(
+                  //     eentry.path,
+                  //     AppConfig.dirSeparator
+                  //   ),
+                  // };
                 }
 
                 if (mode.includes("extractThumbPath")) {
@@ -446,32 +442,32 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                     // Read tsm.json from subfolders
                     if (
                       !eentry.path.includes(
-                        AppConfig.dirSeparator + AppConfig.metaFolder
+                        AppConfig.dirSeparator + AppConfig.metaFolder,
                       )
                     ) {
                       const folderMetaPath = getMetaFileLocationForDir(
                         eentry.path,
-                        AppConfig.dirSeparator
+                        AppConfig.dirSeparator,
                       );
                       metaPromises.push(getEntryMeta(eentry, folderMetaPath));
                     }
                   } else {
                     const metaFileAvailable = metaContent.find(
-                      (obj) => obj.name === entry.name + AppConfig.metaFileExt
+                      (obj) => obj.name === entry.name + AppConfig.metaFileExt,
                     );
                     if (metaFileAvailable && metaFileAvailable.path) {
                       metaPromises.push(
-                        getEntryMeta(eentry, metaFileAvailable.path)
+                        getEntryMeta(eentry, metaFileAvailable.path),
                       );
                     }
 
                     // Finding if thumbnail available
                     const metaThumbAvailable = metaContent.find(
-                      (obj) => obj.name === entry.name + AppConfig.thumbFileExt
+                      (obj) => obj.name === entry.name + AppConfig.thumbFileExt,
                     );
                     if (metaThumbAvailable && metaThumbAvailable.path) {
                       eentry.meta = eentry.meta || {};
-                      eentry.meta.thumbPath = metaThumbAvailable.path;
+                      // eentry.meta.thumbPath = metaThumbAvailable.path;
                     }
                   }
                 }
@@ -493,17 +489,17 @@ function listDirectoryPromise(param, mode = ["extractThumbPath"]) {
                 "Error reading entries promise from " +
                   path +
                   "err " +
-                  JSON.stringify(err)
+                  JSON.stringify(err),
               );
               resolve(enhancedEntries); // returning results even if any promise fails
-            }
+            },
           );
           return true;
         },
         () => {
           console.warn("Error getting file system promise");
           resolve(enhancedEntries); // returning results even if any promise fails
-        }
+        },
       )
       .catch((err) => {
         console.error("Error getting listDirectoryPromise:", err);
@@ -526,7 +522,7 @@ function getEntryMeta(eentry, metaPath) {
       return eentry;
     });
   }
-  // const folderMetaPath = normalizePath(eentry.path) + AppConfig.dirSeparator + AppConfig.metaFolderFile; // getMetaFileLocationForDir(eentry.path);
+
   if (!eentry.path.endsWith(AppConfig.metaFolder + "/")) {
     // Skip the /.ts folder
     return loadTextFilePromise(metaPath).then((result) => {
@@ -580,16 +576,16 @@ function getPropertiesPromise(param) {
             () => {
               console.log(
                 "getPropertiesPromise: Error retrieving file properties of " +
-                  entryPath
+                  entryPath,
               );
               resolve(false);
-            }
+            },
           );
         } else {
           console.log(
             "getPropertiesPromise: Error getting file properties. " +
               entryPath +
-              " is directory"
+              " is directory",
           );
           resolve(false);
         }
@@ -603,7 +599,7 @@ function getPropertiesPromise(param) {
             }
             console.log(
               "getPropertiesPromise: It's not file " + entryPath,
-              err
+              err,
             );
             resolve({
               path: dirEntry.fullPath,
@@ -615,7 +611,7 @@ function getPropertiesPromise(param) {
             console.log("getPropertiesPromise: not exist " + entryPath, err);
             resolve(false);
           });
-      }
+      },
     );
   });
 }
@@ -632,7 +628,7 @@ function loadTextFilePromise(param, isPreview = false) {
 function getFileContentPromise(
   param,
   type,
-  isPreview
+  isPreview,
   // resolvePath?: string
 ) {
   let filePath;
@@ -654,7 +650,7 @@ function getFileContentPromise(
             result(file);
           }, fail);
         },
-        fail
+        fail,
       );
     };
 
@@ -668,7 +664,7 @@ function getFileContentPromise(
               (fileEntry) => {
                 fileEntry.file(resolve, reject);
               },
-              reject
+              reject,
             );
           })
           .catch(reject);
@@ -680,7 +676,7 @@ function getFileContentPromise(
 
   if (isPreview) {
     return new Promise((resolve) =>
-      resolve("Previewing files is not supported on this platform")
+      resolve("Previewing files is not supported on this platform"),
     );
   }
 
@@ -723,12 +719,12 @@ function createDirIfNotExists(dirPath, successCallback, failureCallback) {
           },
           (error) => {
             failureCallback(error);
-          }
+          },
         );
       } else {
         failureCallback(error);
       }
-    }
+    },
   );
 }
 /**
@@ -769,7 +765,7 @@ function saveFilePromise(param, content, overWrite, isRaw) {
                         path: filePath,
                         extension: extractFileExtension(
                           filePath,
-                          AppConfig.dirSeparator
+                          AppConfig.dirSeparator,
                         ),
                         size: 0, // TODO debug evt and set size
                         lmdt: new Date().getTime(),
@@ -800,7 +796,7 @@ function saveFilePromise(param, content, overWrite, isRaw) {
                   },
                   (err) => {
                     reject("Error creating file: " + filePath + " " + err);
-                  }
+                  },
                 );
               },
               (error) => {
@@ -808,12 +804,12 @@ function saveFilePromise(param, content, overWrite, isRaw) {
                   error,
                   message: "Error getting file entry: " + filePath,
                 });
-              }
+              },
             );
           },
           (err) => {
             reject({ error: err, message: "Error create dir: " + parentDir });
-          }
+          },
         );
       } else {
         const errMsg = "File already exists: " + filePath; // i18n.t('ns.common:fileExists', { fileName: filePath });
@@ -882,9 +878,9 @@ function createDirectoryPromise(param) {
             "Creating directory failed: " +
               dirPath +
               " failed with error code: " +
-              error.code
+              error.code,
           );
-        }
+        },
       );
     });
   });
@@ -912,7 +908,7 @@ function copyFilePromise(param, newFilePath, override = true) {
     filePath = normalizePath(filePath);
     const newFileName = newFilePath.substring(newFilePath.lastIndexOf("/") + 1);
     const newFileParentPath = normalizePath(
-      newFilePath.substring(0, newFilePath.lastIndexOf("/"))
+      newFilePath.substring(0, newFilePath.lastIndexOf("/")),
     );
     fsRoot.getDirectory(
       newFileParentPath,
@@ -936,18 +932,18 @@ function copyFilePromise(param, newFilePath, override = true) {
                   "File copy: target: " +
                     newFilePath +
                     " source: " +
-                    entry.fullPath
+                    entry.fullPath,
                 );
                 resolve(newFilePath);
               },
               () => {
                 reject("error copying: " + filePath);
-              }
+              },
             );
           },
           () => {
             reject("Error getting file: " + filePath);
-          }
+          },
         );
       },
       (error) => {
@@ -955,9 +951,9 @@ function copyFilePromise(param, newFilePath, override = true) {
           "Getting dir: " +
             newFileParentPath +
             " failed with error code: " +
-            error.code
+            error.code,
         );
-      }
+      },
     );
   });
 }
@@ -981,13 +977,13 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
       // eslint-disable-next-line no-param-reassign
       filePath = normalizePath(filePath);
       const newFileName = newFilePath.substring(
-        newFilePath.lastIndexOf("/") + 1
+        newFilePath.lastIndexOf("/") + 1,
       );
       const newFileParentPath = normalizePath(
-        newFilePath.substring(0, newFilePath.lastIndexOf("/") + 1)
+        newFilePath.substring(0, newFilePath.lastIndexOf("/") + 1),
       );
       console.log(
-        "renameFile: " + newFileName + " newFilePath: " + newFilePath
+        "renameFile: " + newFileName + " newFilePath: " + newFilePath,
       );
       fsRoot.getDirectory(
         newFileParentPath,
@@ -1011,18 +1007,18 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
                     "File renamed to: " +
                       newFilePath +
                       " Old name: " +
-                      entry.fullPath
+                      entry.fullPath,
                   );
                   resolve([filePath, newFilePath]);
                 },
                 (err) => {
                   reject("error renaming: " + filePath + " " + err);
-                }
+                },
               );
             },
             (error) => {
               reject("Error getting file: " + filePath + " " + error);
-            }
+            },
           );
         },
         (error) => {
@@ -1030,10 +1026,10 @@ function renameFilePromise(param, newFilePath, onProgress = undefined) {
             "Getting dir: " +
               newFileParentPath +
               " failed with error code: " +
-              error.code
+              error.code,
           );
           reject(error);
-        }
+        },
       );
     });
   });
@@ -1052,7 +1048,7 @@ function checkFileExist(filePath) {
       },
       () => {
         resolve(false);
-      }
+      },
     );
   });
 }
@@ -1068,7 +1064,7 @@ function checkDirExist(dirPath) {
       },
       () => {
         resolve(false);
-      }
+      },
     );
   });
 }
@@ -1102,7 +1098,7 @@ function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
   // eslint-disable-next-line no-param-reassign
   const dirPath = normalizePath(path);
   const newDirParentPath = normalizePath(
-    newDirPath.substring(0, newDirPath.lastIndexOf("/"))
+    newDirPath.substring(0, newDirPath.lastIndexOf("/")),
   );
   return new Promise((resolve, reject) => {
     checkDirExist(newDirPath).then((exist) => {
@@ -1134,7 +1130,7 @@ function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
                     "Directory renamed to: " +
                       newDirPath +
                       " from: " +
-                      entry.fullPath
+                      entry.fullPath,
                   );
                   if (onProgress) {
                     const progress = {
@@ -1148,12 +1144,12 @@ function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
                 },
                 (err) => {
                   reject("error renaming directory: " + dirPath + " " + err);
-                }
+                },
               );
             },
             (error) => {
               reject("Error getting directory: " + dirPath + " " + error);
-            }
+            },
           );
         },
         (error) => {
@@ -1161,10 +1157,10 @@ function moveDirectoryPromise(param, newDirPath, onProgress = undefined) {
             "Getting dir: " +
               newDirParentPath +
               " failed with error code: " +
-              error.code
+              error.code,
           );
           reject(error);
-        }
+        },
       );
     });
   });
@@ -1196,12 +1192,12 @@ function copyDirectoryPromise(param, targetDir, onProgress = undefined) {
                   if (entry.isDirectory) {
                     await copyDirectoryPromise(
                       entry.fullPath,
-                      newDirPath + AppConfig.dirSeparator + entry.name
+                      newDirPath + AppConfig.dirSeparator + entry.name,
                     );
                   } else {
                     await copyFilePromise(
                       entry.fullPath,
-                      newDirPath + AppConfig.dirSeparator + entry.name
+                      newDirPath + AppConfig.dirSeparator + entry.name,
                     );
                   }
                   part += 1;
@@ -1216,7 +1212,7 @@ function copyDirectoryPromise(param, targetDir, onProgress = undefined) {
                       () => {
                         running = false;
                       },
-                      entry.fullPath
+                      entry.fullPath,
                     );
                   }
                 }
@@ -1225,7 +1221,7 @@ function copyDirectoryPromise(param, targetDir, onProgress = undefined) {
             },
             function (error) {
               reject(error);
-            }
+            },
           );
         });
       })
@@ -1260,12 +1256,12 @@ function deleteFilePromise(param) {
           },
           (err) => {
             reject("error deleting: " + filePath + " " + err);
-          }
+          },
         );
       },
       (error) => {
         reject("error getting file" + path + " " + error);
-      }
+      },
     );
   });
 }
@@ -1298,12 +1294,12 @@ function deleteDirectoryPromise(param) {
           },
           (err) => {
             reject("error deleting dir: " + dirPath + " " + err);
-          }
+          },
         );
       },
       (error) => {
         reject("error getting directory " + dirPath + " " + error);
-      }
+      },
     );
   });
 }
@@ -1341,7 +1337,7 @@ function selectDirectoryDialog() {
           // fix https://trello.com/c/vV7D0kGf/500-tsn500-fix-folder-selector-in-create-edit-location-on-android-or-use-native-dialog
           data[0] = data[0].replace(
             "file:///storage/emulated/0", // 'content://org.tagspaces.mobileapp.provider/root/storage/emulated/0', 'file:///storage/emulated/0',
-            "sdcard"
+            "sdcard",
           );
           resolve(data);
         },
@@ -1371,7 +1367,7 @@ function openFile(filePath, fileMIMEType) {
     cordova.plugins.fileOpener2.open(filePath, fileMIMEType, {
       error: function (e) {
         console.log(
-          "Error status: " + e.status + " - Error message: " + e.message
+          "Error status: " + e.status + " - Error message: " + e.message,
         );
       },
       success: function () {
@@ -1382,7 +1378,7 @@ function openFile(filePath, fileMIMEType) {
     cordova.plugins.fileOpener2.open("file://" + filePath, fileMIMEType, {
       error: function (e) {
         console.log(
-          "Error status: " + e.status + " - Error message: " + e.message
+          "Error status: " + e.status + " - Error message: " + e.message,
         );
       },
       success: function () {

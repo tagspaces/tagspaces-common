@@ -19,8 +19,12 @@ const { v1: uuidv1 } = require("uuid");
 const tsPaths = require("@tagspaces/tagspaces-common/paths");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const picomatch = require("picomatch/posix");
-const { extractTxtContentAndLinks } = require("@tagspaces/tagspaces-common/misc");
-const { runPromisesSynchronously } = require("@tagspaces/tagspaces-common/utils-io");
+const {
+  extractTxtContentAndLinks,
+} = require("@tagspaces/tagspaces-common/misc");
+const {
+  runPromisesSynchronously,
+} = require("@tagspaces/tagspaces-common/utils-io");
 
 const locationsCache = [];
 const awsRegions = [
@@ -109,7 +113,7 @@ function getEncryptionHeaders(ENCRYPTION_KEY) {
   const ENCRYPTION_KEY_UINT8ARRAY = encoder.encode(ENCRYPTION_KEY);
 
   const ENCRYPTION_KEY_MD5 = CryptoJS.MD5(ENCRYPTION_KEY).toString(
-    CryptoJS.enc.Base64
+    CryptoJS.enc.Base64,
   );
   return {
     SSECustomerAlgorithm: "AES256",
@@ -200,7 +204,7 @@ const listDirectoryPromise = (
   param,
   mode = ["extractThumbPath"],
   ignorePatterns = [],
-  resultsLimit = {}
+  resultsLimit = {},
 ) =>
   new Promise(async (resolve, reject) => {
     const path = param.path;
@@ -212,7 +216,7 @@ const listDirectoryPromise = (
       (el) =>
         el === "loadMeta" ||
         el === "extractThumbURL" ||
-        el === "extractThumbPath"
+        el === "extractThumbPath",
     );
 
     let metaContent;
@@ -231,7 +235,7 @@ const listDirectoryPromise = (
       const data = await listDirectoryAll(
         params,
         param.location,
-        resultsLimit.maxLoops
+        resultsLimit.maxLoops,
       );
 
       const metaPromises = [];
@@ -269,8 +273,8 @@ const listDirectoryPromise = (
                 getEntryMeta(
                   eentry,
                   param.location,
-                  param.location.encryptionKey
-                )
+                  param.location.encryptionKey,
+                ),
               );
             }
           }
@@ -292,44 +296,44 @@ const listDirectoryPromise = (
           ignored = isMatch(eentry.path) || isMatch(eentry.name);
         }
         if (!ignored) {
-          let thumbPath;
-          if (loadMeta) {
-            //check and set thumbnail only. Meta will be merged next from json file
-            thumbPath = tsPaths.cleanFrontDirSeparator(
-              tsPaths.getThumbFileLocationForFile(file.Key, "/", false)
-            );
-            const thumbAvailable = metaContent.find((obj) =>
-              tsPaths.isPathEquals(obj.path, thumbPath)
-            );
-            if (thumbAvailable) {
-              if (mode.includes("extractThumbURL")) {
-                thumbPath = await getURLforPath(
-                  {
-                    path: thumbPath,
-                    bucketName: bucketName,
-                    location: param.location,
-                  },
-                  604800
-                ); // 60 * 60 * 24 * 7 = 1 week
-              }
-            } else {
-              thumbPath = undefined;
-            }
-          }
+          // let thumbPath;
+          // if (loadMeta) {
+          //   //check and set thumbnail only. Meta will be merged next from json file
+          //   thumbPath = tsPaths.cleanFrontDirSeparator(
+          //     tsPaths.getThumbFileLocationForFile(file.Key, "/", false)
+          //   );
+          //   const thumbAvailable = metaContent.find((obj) =>
+          //     tsPaths.isPathEquals(obj.path, thumbPath)
+          //   );
+          //   if (thumbAvailable) {
+          //     if (mode.includes("extractThumbURL")) {
+          //       thumbPath = await getURLforPath(
+          //         {
+          //           path: thumbPath,
+          //           bucketName: bucketName,
+          //           location: param.location,
+          //         },
+          //         604800
+          //       ); // 60 * 60 * 24 * 7 = 1 week
+          //     }
+          //   } else {
+          //     thumbPath = undefined;
+          //   }
+          // }
 
-          eentry.meta = thumbPath ? { thumbPath } : {};
+          // eentry.meta = thumbPath ? { thumbPath } : {};
           eentry.isFile = true;
           eentry.size = file.Size;
           eentry.lmdt = Date.parse(file.LastModified);
           if (mode.includes("extractTextContent")) {
             const textContent = await getFileContentPromise(
               { ...param, path: eentry.path },
-              "text"
+              "text",
             );
             await extractTxtContentAndLinks(
               eentry,
               textContent,
-              mode.includes("extractLinks")
+              mode.includes("extractLinks"),
             );
           }
           if (file.Key !== params.Prefix) {
@@ -338,19 +342,19 @@ const listDirectoryPromise = (
             if (loadMeta) {
               let metaFilePath = tsPaths.getMetaFileLocationForFile(
                 file.Key,
-                "/"
+                "/",
               );
 
               const metaFileAvailable = metaContent.find((obj) =>
-                tsPaths.isPathEquals(obj.path, metaFilePath)
+                tsPaths.isPathEquals(obj.path, metaFilePath),
               );
               if (metaFileAvailable) {
                 metaPromises.push(
                   getEntryMeta(
                     eentry,
                     param.location,
-                    param.location.encryptionKey
-                  )
+                    param.location.encryptionKey,
+                  ),
                 );
               }
             }
@@ -362,7 +366,7 @@ const listDirectoryPromise = (
         Promise.all(metaPromises)
           .then((entriesMeta) => {
             const entriesMetaMap = new Map(
-              entriesMeta.map((e) => [e.path, e.meta])
+              entriesMeta.map((e) => [e.path, e.meta]),
             );
 
             const updatedEntries = enhancedEntries.map((enhancedEntry) => {
@@ -390,7 +394,7 @@ const listDirectoryPromise = (
           params.Prefix +
           " bucketName:" +
           bucketName,
-        ex
+        ex,
       );
       reject(ex);
     }
@@ -481,7 +485,7 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
       // skipping meta folder
       const folderTmbPath = tsPaths.getThumbFileLocationForDirectory(
         entryPath,
-        "/"
+        "/",
       );
       const folderThumbProps = await getPropertiesPromise({
         path: folderTmbPath,
@@ -489,18 +493,18 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
         location,
         encryptionKey,
       });
-      if (folderThumbProps && folderThumbProps.isFile) {
-        const thumb = await getURLforPath(
-          {
-            path: folderTmbPath,
-            bucketName: eentry.bucketName,
-            location,
-          },
-          604800
-        ); // 60 * 60 * 24 * 7 = 1 week ;
+      // if (folderThumbProps && folderThumbProps.isFile) {
+      //   const thumb = await getURLforPath(
+      //     {
+      //       path: folderTmbPath,
+      //       bucketName: eentry.bucketName,
+      //       location,
+      //     },
+      //     604800,
+      //   ); // 60 * 60 * 24 * 7 = 1 week ;
 
-        meta = { thumbPath: thumb };
-      }
+      //   meta = { thumbPath: thumb };
+      // }
       const folderMetaPath = tsPaths.getMetaFileLocationForDir(entryPath, "/");
       const folderProps = await getPropertiesPromise({
         path: folderMetaPath,
@@ -544,7 +548,7 @@ function isFileExist(param) {
 
       s3Client.send(command).then(
         () => resolve(true),
-        () => resolve(false)
+        () => resolve(false),
       );
     } catch (error) {
       resolve(false);
@@ -707,10 +711,10 @@ function getFileContentPromise(param, type = "text", isPreview = false) {
         if (
           e.message &&
           (e.message.indexOf(
-            "The object was stored using a form of Server Side Encryption"
+            "The object was stored using a form of Server Side Encryption",
           ) !== -1 ||
             e.message.indexOf(
-              "The encryption parameters are not applicable to this object"
+              "The encryption parameters are not applicable to this object",
             ) !== -1)
         ) {
           resolve(undefined);
@@ -847,7 +851,7 @@ async function saveBinaryFilePromise(
   content,
   overWrite,
   onUploadProgress,
-  onAbort
+  onAbort,
 ) {
   if (content === undefined) {
     throw new Error("content is undefined");
@@ -882,7 +886,7 @@ async function saveBinaryFilePromise(
       if (onUploadProgress) {
         onUploadProgress(
           { key: progress.Key, loaded: progress.loaded, total: progress.total },
-          () => parallelUploads.abort()
+          () => parallelUploads.abort(),
         );
       }
     });
@@ -922,7 +926,7 @@ function uploadFileByMultiPart(
   file,
   overWrite,
   onUploadProgress,
-  onAbort
+  onAbort,
 ) {
   return new Promise((resolve, reject) => {
     isFileExist(param)
@@ -933,7 +937,7 @@ function uploadFileByMultiPart(
             .then((uploadId) => {
               onUploadProgress(
                 { key: param.path, loaded: 0, total: file.size },
-                () => abortMultipartUpload(param, uploadId)
+                () => abortMultipartUpload(param, uploadId),
               );
 
               let partNumber = 0;
@@ -953,7 +957,7 @@ function uploadFileByMultiPart(
                           offset = file.size;
                           abortMultipartUpload(param, uploadId);
                           reject(new Error("stopped:" + file.name));
-                        }
+                        },
                       );
 
                       partNumber++;
@@ -961,7 +965,7 @@ function uploadFileByMultiPart(
                         param,
                         new Uint8Array(chunk),
                         partNumber,
-                        uploadId
+                        uploadId,
                       )
                         .then((part) => {
                           completedParts.push(part);
@@ -980,7 +984,7 @@ function uploadFileByMultiPart(
                           loaded: file.size,
                           total: file.size,
                         },
-                        () => abortMultipartUpload(param, uploadId)
+                        () => abortMultipartUpload(param, uploadId),
                       );
                       resolve({ ...fsEntry, size: file.size, isNewFile });
                     })
@@ -1120,7 +1124,7 @@ function createDirectoryPromise(param) {
       return saveTextFilePromise(
         { ...param, path: metaFilePath },
         metaContent,
-        false
+        false,
       ).then(() => dirPath);
     })
     .catch((err) => {
@@ -1228,7 +1232,7 @@ function renameDirectoryPromise(param, newDirName, onProgress) {
   const newDirPath = normalizeRootPath(parenDirPath + "/" + newDirName);
   if (param.path === newDirPath) {
     return Promise.reject(
-      "Renaming directory failed, directories have the same path"
+      "Renaming directory failed, directories have the same path",
     );
   }
   /**
@@ -1248,14 +1252,14 @@ function moveDirectoryPromise(param, newDirPath, onProgress) {
   console.log("Move directory: " + param.path + " to " + newDirPath);
   return getDirectoryPrefixes(param).then((prefixes) =>
     copyDirectoryInternal(param, newDirPath, prefixes, onProgress).then(() =>
-      deleteDirectoryInternal(param, prefixes).then(() => newDirPath)
-    )
+      deleteDirectoryInternal(param, prefixes).then(() => newDirPath),
+    ),
   );
 }
 
 function copyDirectoryPromise(param, newDirPath, onProgress = undefined) {
   return getDirectoryPrefixes(param).then((prefixes) =>
-    copyDirectoryInternal(param, newDirPath, prefixes, onProgress)
+    copyDirectoryInternal(param, newDirPath, prefixes, onProgress),
   );
 }
 
@@ -1263,7 +1267,7 @@ function copyDirectoryInternal(
   param,
   newDirPath,
   prefixes,
-  onProgress = undefined
+  onProgress = undefined,
 ) {
   let part = 0;
   let running = true;
@@ -1280,7 +1284,7 @@ function copyDirectoryInternal(
         () => {
           running = false;
         },
-        Key
+        Key,
       );
     }
   }
@@ -1293,12 +1297,12 @@ function copyDirectoryInternal(
             ...param,
             path: Key.replace(
               tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
-              tsPaths.cleanFrontDirSeparator(newDirPath)
+              tsPaths.cleanFrontDirSeparator(newDirPath),
             ),
             skipMeta: true,
           }).then(() => {
             handleProgress(Key);
-          })
+          }),
         );
       } else {
         promises.push(
@@ -1306,11 +1310,11 @@ function copyDirectoryInternal(
             { ...param, path: Key },
             Key.replace(
               tsPaths.cleanFrontDirSeparator(tsPaths.normalizePath(param.path)),
-              tsPaths.cleanFrontDirSeparator(newDirPath)
-            )
+              tsPaths.cleanFrontDirSeparator(newDirPath),
+            ),
           ).then(() => {
             handleProgress(Key);
-          })
+          }),
         );
       }
     }
@@ -1345,7 +1349,7 @@ function deleteFilePromise(param) {
  */
 function deleteDirectoryPromise(param) {
   return getDirectoryPrefixes(param).then((prefixes) =>
-    deleteDirectoryInternal(param, prefixes)
+    deleteDirectoryInternal(param, prefixes),
   );
 }
 
@@ -1409,7 +1413,7 @@ async function getDirectoryPrefixes(param) {
         getDirectoryPrefixes({
           ...param,
           ContinuationToken: listedObjects.NextContinuationToken,
-        })
+        }),
       );
     }
   }

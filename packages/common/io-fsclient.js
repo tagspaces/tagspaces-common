@@ -115,14 +115,17 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         if (stats) {
           // Helper function to extract timestamp from various formats
           const getTimestamp = (msValue, dateValue) => {
-            return typeof msValue === "number" ? msValue : 
-                   dateValue && typeof dateValue.getTime === "function" ? dateValue.getTime() : 
-                   dateValue;
+            return typeof msValue === "number"
+              ? msValue
+              : dateValue && typeof dateValue.getTime === "function"
+              ? dateValue.getTime()
+              : dateValue;
           };
 
           const lmdt = getTimestamp(stats.mtimeMs, stats.mtime);
-          const cdt = getTimestamp(stats.birthtimeMs, stats.birthtime) ||
-                      getTimestamp(stats.ctimeMs, stats.ctime);
+          const cdt =
+            getTimestamp(stats.birthtimeMs, stats.birthtime) ||
+            getTimestamp(stats.ctimeMs, stats.ctime);
 
           const fsEntry = {
             name: stats.isFile()
@@ -136,7 +139,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           };
           if (param.extractLinks) {
             extractTextContentLinks(fsEntry, true, true).then(() =>
-              resolve(fsEntry)
+              resolve(fsEntry),
             );
           } else {
             resolve(fsEntry);
@@ -209,7 +212,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         .catch((error) => {
           // Trying to save as new file
           console.log(
-            "Getting properties for " + filePath + " failed with: " + error
+            "Getting properties for " + filePath + " failed with: " + error,
           );
           saveFile(getDefaultFile(), content);
         });
@@ -313,7 +316,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         if (error) {
           try {
             console.warn(
-              "Error listing meta directory, trying to create: " + metaPath
+              "Error listing meta directory, trying to create: " + metaPath,
             );
             fs.ensureDirSync(metaPath);
             if (AppConfig.isWin) {
@@ -330,7 +333,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         resolve(
           entries.map((entry) => ({
             path: entry,
-          }))
+          })),
         );
       });
     });
@@ -348,13 +351,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     ) {
       textContent = await getFileContentPromise(
         { path: pdfContentPath },
-        "text"
+        "text",
       );
     } else if (extractPDFcontent) {
       try {
         const buffer = await getFileContentPromise(
           { path: entry.path },
-          "arraybuffer"
+          "arraybuffer",
         );
         textContent = await extractPDFcontent(buffer);
         await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
@@ -371,17 +374,17 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     });
     const metaFolderPath = tsPaths.getMetaDirectoryPath(
       eentry.path,
-      dirSeparator
+      dirSeparator,
     );
 
     // Load folder metadata
     const folderMetaPath = tsPaths.getMetaFileLocationForDir(
       eentry.path,
-      dirSeparator
+      dirSeparator,
     );
     if (
       dirMetaContent.some(
-        (meta) => metaFolderPath + dirSeparator + meta.path === folderMetaPath
+        (meta) => metaFolderPath + dirSeparator + meta.path === folderMetaPath,
       )
     ) {
       try {
@@ -392,19 +395,19 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     }
 
     // Loading thumbs for folders tst.jpg
-    const folderThumbPath = tsPaths.getThumbFileLocationForDirectory(
-      eentry.path,
-      dirSeparator
-    );
-    if (
-      dirMetaContent.some(
-        (meta) => metaFolderPath + dirSeparator + meta.path === folderThumbPath
-      ) &&
-      // skipping meta folder
-      !eentry.path.includes("/" + AppConfig.metaFolder)
-    ) {
-      eentry.meta = { ...eentry.meta, thumbPath: folderThumbPath };
-    }
+    // const folderThumbPath = tsPaths.getThumbFileLocationForDirectory(
+    //   eentry.path,
+    //   dirSeparator,
+    // );
+    // if (
+    //   dirMetaContent.some(
+    //     (meta) => metaFolderPath + dirSeparator + meta.path === folderThumbPath,
+    //   ) &&
+    //   // skipping meta folder
+    //   !eentry.path.includes("/" + AppConfig.metaFolder)
+    // ) {
+    //   eentry.meta = { ...eentry.meta, thumbPath: folderThumbPath };
+    // }
   }
 
   async function processMetaContent(path, enhancedEntries, metaContent, mode) {
@@ -414,12 +417,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
     for (const metaEntry of metaContent) {
       const { path: metaPath } = metaEntry;
-      
+
       // Process metadata JSON files
       if (metaPath.endsWith(AppConfig.metaFileExt)) {
         const baseName = metaPath.slice(0, -metaExtLen);
         const enhancedEntry = enhancedEntries.find(
-          (entry) => entry.name === baseName && entry.isFile
+          (entry) => entry.name === baseName && entry.isFile,
         );
 
         if (enhancedEntry) {
@@ -438,18 +441,18 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       }
 
       // Process thumbnails
-      if (metaPath.endsWith(AppConfig.thumbFileExt)) {
-        const baseName = metaPath.slice(0, -thumbExtLen);
-        const thumbPath =
-          metaFolderPath + dirSeparator + encodeURIComponent(metaPath);
-        const enhancedEntry = enhancedEntries.find(
-          (entry) => entry.name === baseName
-        );
-
-        if (enhancedEntry) {
-          enhancedEntry.meta = { ...enhancedEntry.meta, thumbPath };
-        }
-      }
+      // if (metaPath.endsWith(AppConfig.thumbFileExt)) {
+      //   const baseName = metaPath.slice(0, -thumbExtLen);
+      //   const thumbPath =
+      //     metaFolderPath + dirSeparator + encodeURIComponent(metaPath);
+      //   const enhancedEntry = enhancedEntries.find(
+      //     (entry) => entry.name === baseName,
+      //   );
+      //   console.log("Not setting tmb");
+      //   if (enhancedEntry) {
+      //     enhancedEntry.meta = { ...enhancedEntry.meta, thumbPath };
+      //   }
+      // }
     }
   }
 
@@ -462,7 +465,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   function listDirectoryPromise(
     param,
     mode = ["extractThumbPath"],
-    ignorePatterns = []
+    ignorePatterns = [],
   ) {
     const path = getPath(param);
     const loadMeta =
@@ -511,18 +514,21 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
                   // Helper function to extract timestamp from various formats
                   const getTimestamp = (msValue, dateValue) => {
-                    return typeof msValue === "number" ? msValue : 
-                           dateValue && typeof dateValue.getTime === "function" ? dateValue.getTime() : 
-                           dateValue;
+                    return typeof msValue === "number"
+                      ? msValue
+                      : dateValue && typeof dateValue.getTime === "function"
+                      ? dateValue.getTime()
+                      : dateValue;
                   };
 
                   // last modified time (mtime)
                   eentry.lmdt = getTimestamp(stats.mtimeMs, stats.mtime);
 
                   // created time: prefer birthtimeMs -> ctimeMs -> fall back to Date objects -> finally lmdt
-                  eentry.cdt = getTimestamp(stats.birthtimeMs, stats.birthtime) ||
-                               getTimestamp(stats.ctimeMs, stats.ctime) ||
-                               eentry.lmdt;
+                  eentry.cdt =
+                    getTimestamp(stats.birthtimeMs, stats.birthtime) ||
+                    getTimestamp(stats.ctimeMs, stats.ctime) ||
+                    eentry.lmdt;
                 }
 
                 // Handle directory meta
@@ -534,7 +540,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   await extractTextContentLinks(
                     eentry,
                     param.extractPDFcontent,
-                    mode.includes("extractLinks")
+                    mode.includes("extractLinks"),
                   );
                 }
               } catch (e) {
@@ -549,7 +555,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 path,
                 enhancedEntries,
                 metaContent,
-                mode
+                mode,
               );
             }
             resolve(enhancedEntries);
@@ -565,7 +571,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   async function extractTextContentLinks(
     eentry,
     extractPDFcontent = false,
-    extractLinks = false
+    extractLinks = false,
   ) {
     try {
       const fileName = eentry.name.toLowerCase();
@@ -583,7 +589,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       } else {
         const textContent = await getFileContentPromise(
           { path: eentry.path },
-          "text"
+          "text",
         );
         extractTxtContentAndLinks(eentry, textContent, extractLinks);
       }
@@ -658,7 +664,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       fs.mkdirp(dirPath, (error) => {
         if (error) {
           reject(
-            new Error("Error creating folder: " + dirPath + " with " + error)
+            new Error("Error creating folder: " + dirPath + " with " + error),
           );
           return;
         }
@@ -674,14 +680,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         reject(
           'Trying to copy over the same file. Copying "' +
             sourceFilePath +
-            '" failed'
+            '" failed',
         );
       }
       isDirectory(sourceFilePath)
         .then((isDir) => {
           if (isDir) {
             reject(
-              "Trying to copy a file: " + sourceFilePath + ". Copying failed"
+              "Trying to copy a file: " + sourceFilePath + ". Copying failed",
             );
           } else {
             fs.copy(sourceFilePath, targetFilePath, (error) => {
@@ -698,7 +704,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           reject(
             'Source file does not exist. Copying file "' +
               sourceFilePath +
-              '" failed'
+              '" failed',
           );
         });
     });
@@ -708,7 +714,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     filePath,
     newFilePath,
     onProgress = undefined,
-    force = false
+    force = false,
   ) {
     console.log("Renaming file: " + filePath + " to " + newFilePath);
     // stopWatchingDirectories();
@@ -717,20 +723,20 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         reject(
           'Source and target file paths are the same. Renaming of "' +
             filePath +
-            '" failed'
+            '" failed',
         );
         return;
       }
       stat({ path: filePath }).then((sourceStat) => {
         if (!sourceStat) {
           reject(
-            'Source file does not exist. Renaming of "' + filePath + '" failed'
+            'Source file does not exist. Renaming of "' + filePath + '" failed',
           );
         } else if (sourceStat.isDirectory()) {
           moveDirectoryPromise(
             { path: filePath },
             newFilePath,
-            onProgress
+            onProgress,
           ).then(() => resolve([filePath, newFilePath]));
         } else {
           stat({ path: newFilePath }).then(async (destStat) => {
@@ -743,14 +749,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                     newFilePath +
                     '" exists. Renaming of "' +
                     filePath +
-                    '" failed'
+                    '" failed',
                 );
                 return;
               }
             }
             const destDirPath = tsPaths.extractParentDirectoryPath(
               newFilePath,
-              AppConfig.dirSeparator
+              AppConfig.dirSeparator,
             );
             fs.mkdirp(destDirPath, (error) => {
               stat({ path: destDirPath }).then((destDirStat) => {
@@ -760,7 +766,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       destDirPath +
                       '" not exists. Renaming of "' +
                       filePath +
-                      '" failed'
+                      '" failed',
                   );
                 } else if (sourceStat.dev === destDirStat.dev) {
                   fs.move(filePath, newFilePath, { clobber: true }, (error) => {
@@ -781,7 +787,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                       if (error) {
                         console.log(
                           "renameFilePromise delete " + filePath + " file:",
-                          error
+                          error,
                         );
                       }
                       resolve([filePath, newFilePath]);
@@ -809,7 +815,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               newDirPath +
               '" exists. Renaming of "' +
               dirPath +
-              '" failed'
+              '" failed',
           );
         } else {
           if (!dirProp.isFile) {
@@ -825,11 +831,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   return;
                 }
                 resolve(newDirPath);
-              }
+              },
             );
           } else {
             reject(
-              "Path is not a directory. Renaming of " + dirPath + " failed."
+              "Path is not a directory. Renaming of " + dirPath + " failed.",
             );
           }
         }
@@ -904,7 +910,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   () => {
                     running = false;
                   },
-                  src
+                  src,
                 );
               }
 
@@ -921,7 +927,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
             } else {
               reject(new Error("Aborted"));
             }
-          }
+          },
         );
       });
     });
