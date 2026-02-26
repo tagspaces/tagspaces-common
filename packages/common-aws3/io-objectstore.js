@@ -24,6 +24,7 @@ const {
 } = require("@tagspaces/tagspaces-common/misc");
 const {
   runPromisesSynchronously,
+  loadJSONString,
 } = require("@tagspaces/tagspaces-common/utils-io");
 
 const locationsCache = [];
@@ -473,7 +474,7 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
         location,
         encryptionKey,
       });
-      meta = JSON.parse(metaFileContent.trim());
+      meta = loadJSONString(metaFileContent.trim());
     } catch (ex) {
       console.warn("Error getEntryMeta for " + entryPath, ex);
     }
@@ -521,7 +522,7 @@ const getEntryMeta = async (eentry, location, encryptionKey) => {
             encryptionKey,
           });
           if (metaFileContent) {
-            meta = { ...meta, ...JSON.parse(metaFileContent.trim()) };
+            meta = { ...meta, ...loadJSONString(metaFileContent.trim()) };
           }
         } catch (ex) {
           console.warn("Error getEntryMeta for " + folderMetaPath, ex);

@@ -26,7 +26,8 @@ function getMarked() {
 // Pre-compile regex patterns for text cleaning
 const PUNCTUATION_REGEX = /[~!@#$%^&*()_+=\-[\]{};:"\\\/<>?.,]/g;
 const NEWLINE_REGEX = /\n/g;
-const SCRIPT_STYLE_REGEX = /<(?:script|style)[^>]*>[\s\S]*?<\/(?:script|style)>/gi;
+const SCRIPT_STYLE_REGEX =
+  /<(?:script|style)[^>]*>[\s\S]*?<\/(?:script|style)>/gi;
 
 // File extension sets for faster lookup
 const MARKDOWN_EXTS = new Set([".md"]);
@@ -51,7 +52,7 @@ function walkDirectory(
   dirCallback,
   ignorePatterns = [],
   isWalking = () => true,
-  limit = 0
+  limit = 0,
 ) {
   const path = param.path;
   if (ignorePatterns.length > 0) {
@@ -89,7 +90,7 @@ function walkDirectory(
         fileCallback,
         dirCallback,
         ignorePatterns,
-        isWalking
+        isWalking,
       );
       if (limit > 0) {
         return limitConcurrency(limit, entriesPromises);
@@ -161,7 +162,7 @@ function processEntries(
   fileCallback,
   dirCallback,
   ignorePatterns,
-  isWalking
+  isWalking,
 ) {
   const isMatch = ignorePatterns.length > 0 ? picomatch(ignorePatterns) : null;
   return entries.map((entry) => async () => {
@@ -211,7 +212,7 @@ function processEntries(
         dirCallback,
         ignorePatterns,
         isWalking,
-        1
+        1,
       );
     }
     return entry;
@@ -232,14 +233,14 @@ function getUuid(version = 4) {
 function enhanceEntry(
   entry,
   tagDelimiter = AppConfig.tagDelimiter,
-  dirSeparator = AppConfig.dirSeparator
+  dirSeparator = AppConfig.dirSeparator,
 ) {
   let fileNameTags = [];
   if (entry.isFile) {
     fileNameTags = paths.extractTagsAsObjects(
       entry.name,
       tagDelimiter,
-      dirSeparator
+      dirSeparator,
     );
   }
   let sidecarTags = [];
@@ -277,17 +278,75 @@ function enhanceEntry(
  * @returns {*}
  */
 function loadJSONString(jsonContent) {
-  if (!jsonContent) {
+  // Type validation - must be a string
+  if (typeof jsonContent !== "string") {
     return undefined;
   }
+
+  // Input size validation to prevent DoS attacks
+  if (jsonContent.length === 0) {
+    return undefined;
+  }
+
+  const MAX_JSON_SIZE = 50 * 1024 * 1024; // 50MB limit
+  if (jsonContent.length > MAX_JSON_SIZE) {
+    console.error(
+      `Error parsing JSON: input exceeds maximum allowed size of ${MAX_JSON_SIZE} bytes`,
+    );
+    return undefined;
+  }
+
+  // Handle UTF-8 BOM
   const UTF8_BOM = "\ufeff";
-  const json = jsonContent.charCodeAt(0) === 0xfeff ? jsonContent.slice(1) : jsonContent;
+  let json = jsonContent;
+  if (jsonContent.charCodeAt(0) === 0xfeff) {
+    json = jsonContent.slice(1);
+  }
+
   try {
-    return JSON.parse(json);
+    const parsed = JSON.parse(json);
+
+    // Prototype Pollution Detection - check for dangerous property keys
+    // if (hasPrototypePollutionRisk(parsed)) {
+    //   console.error("Error parsing JSON: potential prototype pollution detected");
+    //   return undefined;
+    // }
+
+    return parsed;
   } catch (err) {
-    console.error("Error parsing meta json file: " + json, err);
+    console.error("Error parsing JSON: " + (err.message || err));
     return undefined;
   }
+}
+
+/**
+ * Detect potential prototype pollution risks in parsed objects
+ * @param {*} obj - The object to validate
+ * @returns {boolean} - True if prototype pollution risk is detected
+ * @private
+ */
+function hasPrototypePollutionRisk(obj) {
+  const dangerousKeys = ["__proto__", "constructor", "prototype"];
+
+  if (obj !== null && typeof obj === "object") {
+    // Check current object's own properties
+    for (const key of dangerousKeys) {
+      if (key in obj) {
+        return true;
+      }
+    }
+
+    // Recursively check nested objects and arrays
+    for (const value of Object.values(obj)) {
+      if (value !== null && typeof value === "object") {
+        if (hasPrototypePollutionRisk(value)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 async function runPromisesSynchronously(resolvables) {
@@ -322,11 +381,18 @@ function isThumbGenSupportedFileType(fileExtension, fileType) {
  */
 function extractTextContent(fileName, textContent) {
   // Input validation for security
-  if (!fileName || !textContent || typeof fileName !== "string" || typeof textContent !== "string") {
+  if (
+    !fileName ||
+    !textContent ||
+    typeof fileName !== "string" ||
+    typeof textContent !== "string"
+  ) {
     return "";
   }
 
-  const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf("."));
+  const fileExtension = fileName
+    .toLowerCase()
+    .substring(fileName.lastIndexOf("."));
   const fileContent = textContent.toLowerCase();
   let joinedTokens;
 

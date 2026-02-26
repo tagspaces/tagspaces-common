@@ -27,7 +27,8 @@ const PLAIN_URL_REGEX = /https?:\/\/(?:[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=])+/g;
 const TS_LINK_REGEX = /ts:\/\/(?:[^\s\)]{1,2000})/g; // Bounded length to prevent abuse
 const DATA_URL_REGEX = /data:[^ \t\r\n]+/g;
 const BODY_REGEX = /<body[^>]*>([\s\S]*?)<\/body>/i;
-const SOURCE_URL_MHTML_REGEX = /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
+const SOURCE_URL_MHTML_REGEX =
+  /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
 
 // Configuration constants for security
 const MAX_CONTENT_LENGTH = 10 * 1024 * 1024; // 10MB limit
@@ -36,17 +37,18 @@ const MAX_LINKS_TO_EXTRACT = 10000; // Prevent excessive link extraction
 
 function extractLinks(textContent) {
   const links = [];
-  
+
   // Input validation and safety checks
   if (!textContent || typeof textContent !== "string") {
     return links;
   }
-  
+
   // Prevent ReDoS attacks by limiting content length
-  const content = textContent.length > MAX_CONTENT_LENGTH 
-    ? textContent.substring(0, MAX_CONTENT_LENGTH)
-    : textContent;
-  
+  const content =
+    textContent.length > MAX_CONTENT_LENGTH
+      ? textContent.substring(0, MAX_CONTENT_LENGTH)
+      : textContent;
+
   // Use Set for O(1) duplicate detection instead of array.some() O(n²)
   const seenHrefs = new Set();
 
@@ -82,7 +84,10 @@ function extractLinks(textContent) {
 function extractAndAddLinks(content, regex, links, seenHrefs) {
   let match;
   // Use exec() in loop instead of match() for better performance on large content
-  while ((match = regex.exec(content)) !== null && links.length < MAX_LINKS_TO_EXTRACT) {
+  while (
+    (match = regex.exec(content)) !== null &&
+    links.length < MAX_LINKS_TO_EXTRACT
+  ) {
     const link = createLink(match[1]);
     if (link && !seenHrefs.has(link.href)) {
       seenHrefs.add(link.href);
@@ -99,18 +104,21 @@ function extractPlainTextLinks(content, links, seenHrefs) {
   let match;
   const regex = PLAIN_URL_REGEX;
   regex.lastIndex = 0; // Reset regex state
-  
-  while ((match = regex.exec(content)) !== null && links.length < MAX_LINKS_TO_EXTRACT) {
+
+  while (
+    (match = regex.exec(content)) !== null &&
+    links.length < MAX_LINKS_TO_EXTRACT
+  ) {
     let url = match[0];
     // Remove surrounding angle brackets if present
     url = url.replace(/^<|>$/g, "");
-    
+
     // Validate URL length (prevent abuse)
     if (url.length > MAX_URL_LENGTH) {
       console.warn(`URL exceeds max length: ${url.substring(0, 100)}...`);
       continue;
     }
-    
+
     const link = createLink(url);
     if (link && !seenHrefs.has(link.href)) {
       seenHrefs.add(link.href);
@@ -127,10 +135,13 @@ function extractTagSpacesLinks(content, links, seenHrefs) {
   let match;
   const regex = TS_LINK_REGEX;
   regex.lastIndex = 0; // Reset regex state
-  
-  while ((match = regex.exec(content)) !== null && links.length < MAX_LINKS_TO_EXTRACT) {
+
+  while (
+    (match = regex.exec(content)) !== null &&
+    links.length < MAX_LINKS_TO_EXTRACT
+  ) {
     const tsUrl = match[0];
-    
+
     // Skip empty or too-short URLs
     if (!tsUrl || tsUrl.length < 5) {
       continue;
@@ -138,13 +149,13 @@ function extractTagSpacesLinks(content, links, seenHrefs) {
 
     try {
       const validUrl = new URL(tsUrl);
-      
+
       // Prevent duplicate tslinks with efficient Set lookup
       if (!seenHrefs.has(validUrl.href)) {
         seenHrefs.add(validUrl.href);
         links.push({
           type: "tslink",
-          href: validUrl.href
+          href: validUrl.href,
         });
       }
     } catch (error) {
@@ -178,9 +189,16 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
   }
 
   // Check if file type is supported for content extraction
-  const supportedExtensions = [".txt", ".md", ".htm", ".html", ".website", ".url"];
+  const supportedExtensions = [
+    ".txt",
+    ".md",
+    ".htm",
+    ".html",
+    ".website",
+    ".url",
+  ];
   const fileExt = "." + fileName.split(".").pop();
-  
+
   if (!supportedExtensions.includes(fileExt)) {
     return;
   }
@@ -202,7 +220,7 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
           "Error parsing the body of the HTML document: " +
             fileName +
             " with: " +
-            e
+            e,
         );
       }
     } else if (fileName.endsWith(".mhtml")) {
@@ -214,7 +232,7 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
           "Error parsing the body of the MHTML document: " +
             fileName +
             " with: " +
-            e
+            e,
         );
       }
     }
@@ -235,16 +253,18 @@ function setEntryLinks(entry, textContent) {
   }
 
   // Use Set for efficient deduplication
-  const existingHrefs = entry.links ? new Set(entry.links.map(link => link.href)) : new Set();
-  const newLinks = links.filter(link => !existingHrefs.has(link.href));
+  const existingHrefs = entry.links
+    ? new Set(entry.links.map((link) => link.href))
+    : new Set();
+  const newLinks = links.filter((link) => !existingHrefs.has(link.href));
 
   if (newLinks.length > 0) {
     entry.links = entry.links ? [...entry.links, ...newLinks] : newLinks;
   }
 
-  console.log(
-    "Entry links for " + entry.path + "\n" + JSON.stringify(entry.links)
-  );
+  // console.log(
+  //   "Entry links for " + entry.path + "\n" + JSON.stringify(entry.links)
+  // );
 }
 
 function getUrlParameterByName(url, paramName) {
@@ -351,7 +371,7 @@ function removeAllTagsFromSearchQuery(query) {
   // return query.replace(/([+-?]\S+)/g, '').trim();
   const queryArray = query.split(" ");
   const returnArray = queryArray.filter(
-    (q) => !q.startsWith("+") && !q.startsWith("-") && !q.startsWith("|")
+    (q) => !q.startsWith("+") && !q.startsWith("-") && !q.startsWith("|"),
   );
   return returnArray.join(" ").trim();
 }
@@ -468,7 +488,7 @@ function getRandomInt(min, max) {
 function arrayBufferToBuffer(data) {
   if (!data) {
     throw new TypeError(
-      "Expected ArrayBuffer, TypedArray, or Buffer, but got " + data
+      "Expected ArrayBuffer, TypedArray, or Buffer, but got " + data,
     );
   }
 
@@ -487,7 +507,7 @@ function arrayBufferToBuffer(data) {
     return Buffer.from(data);
   }
   throw new TypeError(
-    `Unsupported data type: ${Object.prototype.toString.call(data)}`
+    `Unsupported data type: ${Object.prototype.toString.call(data)}`,
   );
   /* const buffer = Buffer.alloc(data.byteLength);
   const view = new Uint8Array(data);
@@ -600,7 +620,7 @@ function formatDateTime(date, includeTime) {
   const cDate = padZero(d.getDate());
   const cMonth = padZero(d.getMonth() + 1);
   const cYear = d.getFullYear();
-  
+
   if (!includeTime) {
     return cYear + "-" + cMonth + "-" + cDate;
   }
@@ -608,8 +628,20 @@ function formatDateTime(date, includeTime) {
   const cHour = padZero(d.getHours());
   const cMinute = padZero(d.getMinutes());
   const cSecond = padZero(d.getSeconds());
-  
-  return cYear + "-" + cMonth + "-" + cDate + " - " + cHour + ":" + cMinute + ":" + cSecond;
+
+  return (
+    cYear +
+    "-" +
+    cMonth +
+    "-" +
+    cDate +
+    " - " +
+    cHour +
+    ":" +
+    cMinute +
+    ":" +
+    cSecond
+  );
 }
 
 /**
@@ -633,7 +665,7 @@ function formatDateTime4Tag(date, includeTime, includeMS) {
   const cDate = padZero(d.getDate());
   const cMonth = padZero(d.getMonth() + 1);
   const cYear = d.getFullYear();
-  
+
   if (!includeTime) {
     return cYear + "" + cMonth + "" + cDate;
   }
@@ -642,7 +674,7 @@ function formatDateTime4Tag(date, includeTime, includeMS) {
   const cMinute = padZero(d.getMinutes());
   const cSecond = padZero(d.getSeconds());
   const time = "T" + cHour + cMinute + cSecond;
-  
+
   const milliseconds = includeMS ? "." + d.getMilliseconds() : "";
   return cYear + "" + cMonth + "" + cDate + time + milliseconds;
 }
@@ -661,7 +693,7 @@ function convertStringToDate(dateString) {
         "-" +
         dateString.substring(4, 6) +
         "-" +
-        dateString.substring(6, 8)
+        dateString.substring(6, 8),
     );
   }
   return false;
@@ -821,7 +853,7 @@ function shuffleArray(array) {
  */
 function sortByCriteria(data, criteria, order) {
   const copyData = [...data];
-  
+
   // Create a map of sort functions for better performance than switch
   const sortFunctionMap = {
     byName: () => {
@@ -833,15 +865,21 @@ function sortByCriteria(data, criteria, order) {
       return copyData;
     },
     byDateModified: () => {
-      copyData.sort(order ? sortByDateModified : (a, b) => -1 * sortByDateModified(a, b));
+      copyData.sort(
+        order ? sortByDateModified : (a, b) => -1 * sortByDateModified(a, b),
+      );
       return copyData;
     },
     byExtension: () => {
-      copyData.sort(order ? sortByExtension : (a, b) => -1 * sortByExtension(a, b));
+      copyData.sort(
+        order ? sortByExtension : (a, b) => -1 * sortByExtension(a, b),
+      );
       return copyData;
     },
     byFirstTag: () => {
-      copyData.sort(order ? sortByFirstTag : (a, b) => -1 * sortByFirstTag(a, b));
+      copyData.sort(
+        order ? sortByFirstTag : (a, b) => -1 * sortByFirstTag(a, b),
+      );
       return copyData;
     },
     random: () => shuffleArray(copyData),
@@ -1231,7 +1269,7 @@ const filterByUnique = (items, key) => {
  */
 const filterByDuplicate = (items, key, duplicateLength = 2) => {
   const itemPropCounts = new Map();
-  
+
   // Count occurrences
   items.forEach((item) => {
     const itemProp = extractNestedProp(item, key);
