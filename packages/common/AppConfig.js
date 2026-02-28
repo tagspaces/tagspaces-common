@@ -127,61 +127,7 @@ const isAndroid =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("android");
 const isMobile = isCordovaiOS || isCordovaAndroid || isIOS || isAndroid;
-const isAmplify =
-  typeof window !== "undefined" && window.ExtIsAmplify !== undefined
-    ? window.ExtIsAmplify
-    : false;
-const saveLocationsInBrowser =
-  typeof window !== "undefined" &&
-  window.ExtSaveLocationsInBrowser !== undefined
-    ? window.ExtSaveLocationsInBrowser
-    : false;
 
-const useSidecarsForFileTagging =
-  typeof window !== "undefined" &&
-  (window.ExtUseSidecarsForFileTagging !== undefined
-    ? window.ExtUseSidecarsForFileTagging
-    : false);
-const useSidecarsForFileTaggingDisableSetting =
-  typeof window !== "undefined" &&
-  window.ExtUseSidecarsForFileTagging !== undefined;
-const useGenerateThumbnails =
-  typeof window !== "undefined" && window.ExtUseGenerateThumbnails;
-const geoTaggingFormat =
-  typeof window !== "undefined" &&
-  window.ExtGeoTaggingFormat &&
-  window.ExtGeoTaggingFormat.toLocaleLowerCase();
-const customLogo =
-  typeof window !== "undefined" && (window.ExtLogoURL || false);
-const showAdvancedSearch =
-  typeof window !== "undefined" &&
-  (window.ExtShowAdvancedSearch !== undefined
-    ? window.ExtShowAdvancedSearch
-    : true);
-const showSmartTags =
-  typeof window !== "undefined" &&
-  (window.ExtShowSmartTags !== undefined ? window.ExtShowSmartTags : true);
-const showWelcomePanel =
-  typeof window !== "undefined" &&
-  (window.ExtShowWelcomePanel !== undefined
-    ? window.ExtShowWelcomePanel
-    : true);
-const locationsReadOnly =
-  typeof window !== "undefined" &&
-  (window.ExtLocations !== undefined && window.ExtLocations instanceof Array
-    ? window.ExtLocations.length > 0
-    : false);
-const mapTileServers =
-  typeof window !== "undefined" && (window.ExtMapTileServers || false);
-const lightThemeLightColor =
-  typeof window !== "undefined" &&
-  (window.ExtLightThemeLightColor || "#dcf3ec");
-const lightThemeMainColor =
-  typeof window !== "undefined" && (window.ExtLightThemeMainColor || "#1dd19f");
-const darkThemeLightColor =
-  typeof window !== "undefined" && (window.ExtDarkThemeLightColor || "#56454e");
-const darkThemeMainColor =
-  typeof window !== "undefined" && (window.ExtDarkThemeMainColor || "#ff9abe");
 const ThumbGenSupportedFileTypes = {
   image: [
     "jpg",
@@ -292,22 +238,6 @@ module.exports = {
   isAndroid,
   isWeb,
   isMobile,
-  isAmplify,
-  saveLocationsInBrowser,
-  useSidecarsForFileTagging,
-  useSidecarsForFileTaggingDisableSetting,
-  useGenerateThumbnails,
-  geoTaggingFormat,
-  customLogo,
-  showAdvancedSearch,
-  showSmartTags,
-  showWelcomePanel,
-  locationsReadOnly,
-  mapTileServers,
-  lightThemeLightColor,
-  lightThemeMainColor,
-  darkThemeLightColor,
-  darkThemeMainColor,
   tsProtocol,
   mediaProtocol,
   ThumbGenSupportedFileTypes,
