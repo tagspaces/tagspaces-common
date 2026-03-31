@@ -1,44 +1,150 @@
-This is a set of command line tools which can create search index and thumbnails for folders used in the TagSpaces Desktop and Web apps.
+# @tagspaces/shell
+
+A command-line tool for managing files and folders compatible with the [TagSpaces](https://www.tagspaces.org) Desktop and Web applications. It can generate search indexes, create thumbnails, clean up obsolete metadata, add tags, and set descriptions.
 
 ## Installation
 
-    npm install -global @tagspaces/shell
+```bash
+npm install -g @tagspaces/shell
+```
 
-## Search index generation
+## Commands
 
-This tool will create a search index for a given folder with all its sub folders.
+### Search index generation
 
-Run node script:
+Creates a search index for a given folder and all of its subfolders.
 
-    tscmd -m indexer /some/folder/
+```bash
+tscmd indexer /some/folder
+```
 
-This command can be used for automation e.g. in CRON jobs.
+The generated index is stored in the `.ts/tsi.json` file inside the target folder. This command is well suited for automation, for example as a cron job.
 
-## Thumbnail generation
+### Thumbnail generation
 
-This script will recursively create thumbnails for a specified folder with all its sub folders.
+Recursively creates thumbnails for all supported files in a folder and its subfolders.
 
-You have to install [sharp](https://sharp.pixelplumbing.com/install) package globally with the following command:
+Before running this command, install the [sharp](https://sharp.pixelplumbing.com/install) image processing library globally:
 
-    npm i sharp -g
+```bash
+npm install -g sharp
+```
 
-Set NODE_PATH environment points to global npm folder:
+Then make sure `NODE_PATH` points to the global `node_modules` directory:
 
-    export NODE_PATH=$(npm root --quiet -g)
+```bash
+export NODE_PATH=$(npm root --quiet -g)
+```
 
-Run node script:
+Run the thumbnail generator:
 
-    tscmd -m thumbgen /some/folder/
+```bash
+tscmd thumbgen /some/folder
+```
 
-This command can be used for automation e.g. in CRON jobs.
-Don't forget to put the trailing slash after the folder name.
+To include PDF thumbnails, add the `--pdf` flag:
 
-## Cleaning obsolete thumbnails and sidecar files.
+```bash
+tscmd thumbgen --pdf /some/folder
+```
 
-Running this command will analyse the specified folder:
+### Metadata cleanup
 
-    tscmd -m metacleaner /some/folder
+Identifies and removes obsolete thumbnails and sidecar files that are no longer associated with any existing file.
 
-Where `-m` is for mode, which here is metacleaner. The metacleaner will analyse first the specified folder and deliver a list with files which are not needed or connected anymore. You can review the list and confirm the deletion by setting the `-a`, which is for analyse with `false` as parameter. So this command will finally perform the cleaning.
+First, run a dry-run to review which files would be deleted:
 
-    tscmd -m metacleaner -a false /some/folder
+```bash
+tscmd metacleaner /some/folder
+```
+
+Once you have reviewed the list, perform the actual cleanup by setting `--analyze` to `false`:
+
+```bash
+tscmd metacleaner --analyze false /some/folder
+```
+
+### Tagging files and folders
+
+Adds one or more tags to files or folders. Two methods are supported for files:
+
+**Rename method** (default) — embeds tags directly in the filename using the `[tag1 tag2]` convention:
+
+```bash
+tscmd tag /path/to/file.jpg -t photo summer
+```
+
+This renames the file to `file[photo summer].jpg`.
+
+**Sidecar method** — writes tags to a JSON metadata file in the `.ts/` directory, leaving the original filename unchanged:
+
+```bash
+tscmd tag /path/to/file.jpg -t photo summer --method sidecar
+```
+
+For folders, the sidecar method is always used regardless of the `--method` flag:
+
+```bash
+tscmd tag /path/to/folder -t project archive
+```
+
+Tags are merged with any existing tags. Duplicates are automatically skipped.
+
+### Setting descriptions
+
+Sets a text description on one or more files or folders. Descriptions are stored in the `.ts/` sidecar JSON file. Three input modes are supported:
+
+**Inline text** — use `\n` for newlines:
+
+```bash
+tscmd describe /path/to/file.jpg -d "# Title\n\nA paragraph with **bold** text."
+```
+
+**From a file** — read the description from a markdown or text file:
+
+```bash
+tscmd describe /path/to/file.jpg -f description.md
+```
+
+**From stdin** — pipe content using `-d -`:
+
+```bash
+cat description.md | tscmd describe /path/to/file.jpg -d -
+```
+
+Multiple paths can be provided to apply the same description to several files or folders at once:
+
+```bash
+tscmd describe file1.jpg file2.pdf ./my-folder -d "Shared description"
+```
+
+If a sidecar file already exists, the description is updated while preserving all other metadata (tags, ID, etc.).
+
+## Usage overview
+
+```
+tscmd <command> [options] <paths...>
+
+Commands:
+  tscmd thumbgen <dirs...>      Generate thumbnails for files
+  tscmd indexer <dirs...>       Create a search index
+  tscmd metacleaner <dirs...>   Remove obsolete sidecar files
+  tscmd tag <paths...>          Add tags to files or folders
+  tscmd describe <paths...>     Set description on files or folders
+
+Tag options:
+  -t, --tags     Tags to add (space-separated)              [array] [required]
+  -m, --method   Tagging method: "rename" or "sidecar"  [string] [default: "rename"]
+
+Describe options:
+  -d, --description  Description text (supports \n, use "-" for stdin) [string]
+  -f, --file         Read description from a file                      [string]
+
+Global options:
+  -h, --help     Show help
+  -v, --version  Show version number
+```
+
+## License
+
+MIT

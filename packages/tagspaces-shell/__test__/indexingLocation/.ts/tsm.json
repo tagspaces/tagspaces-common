@@ -1,1 +1,25 @@
-﻿{"id":"2b651738b7e4411faf1bf0a5f347ead2","perspectiveSettings":{"grid":{"testID":"gridPerspectiveContainer","settingsKey":"tsPerspectiveGrid","orderBy":true,"sortBy":"byName","layoutType":"grid","singleClickAction":"openInternal","entrySize":"small","thumbnailMode":"contain","showDirectories":true,"showDetails":true,"showDescription":false,"showEntriesDescription":true,"showTags":true,"gridPageLimit":100,"maxDescriptionPreviewLength":100}},"customOrder":{"folders":[]}}
+{
+  "id": "2b651738b7e4411faf1bf0a5f347ead2",
+  "perspectiveSettings": {
+    "grid": {
+      "testID": "gridPerspectiveContainer",
+      "settingsKey": "tsPerspectiveGrid",
+      "orderBy": true,
+      "sortBy": "byName",
+      "layoutType": "grid",
+      "singleClickAction": "openInternal",
+      "entrySize": "small",
+      "thumbnailMode": "contain",
+      "showDirectories": true,
+      "showDetails": true,
+      "showDescription": false,
+      "showEntriesDescription": true,
+      "showTags": true,
+      "gridPageLimit": 100,
+      "maxDescriptionPreviewLength": 100
+    }
+  },
+  "customOrder": {
+    "folders": []
+  }
+}
