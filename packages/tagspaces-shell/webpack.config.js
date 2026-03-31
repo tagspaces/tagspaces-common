@@ -66,6 +66,8 @@ module.exports = (env, argv) => {
 
     externals: {
       sharp: "commonjs sharp",
+      yargs: "commonjs yargs",
+      "yargs/yargs": "commonjs yargs/yargs",
     },
     // Tells webpack what file extesions it should look at.
     resolve: {
