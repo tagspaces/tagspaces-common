@@ -1,4 +1,3 @@
-/build
 .ts
 !__test__/indexingLocation/.ts
 !__test__/indexingLocation/testFolder/.ts

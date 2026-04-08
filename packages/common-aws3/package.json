@@ -16,6 +16,8 @@
     "@aws-sdk/lib-storage": "3.996.0",
     "@aws-sdk/s3-request-presigner": "3.996.0",
     "@tagspaces/tagspaces-common": "^4.5.111",
-    "crypto-js": "4.2.0"
+    "crypto-js": "4.2.0",
+    "picomatch": "^3.0.1",
+    "uuid": "^11.1.0"
   }
 }
