@@ -1,0 +1,26 @@
+{
+  "name": "@tagspaces/tagspaces-common-capacitor",
+  "description": "TagSpaces common Capacitor module",
+  "version": "4.5.111",
+  "author": "TagSpaces Authors <contact@tagspaces.org>",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
+    "pkg-publish": "npm run clean-install && npm publish --access public"
+  },
+  "dependencies": {
+    "@tagspaces/tagspaces-common": "^4.5.111",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/filesystem": "^6.0.0",
+    "@capacitor/device": "^6.0.0",
+    "@capacitor/camera": "^6.0.0",
+    "@capacitor/share": "^6.0.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/browser": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor-community/file-opener": "^6.0.0",
+    "@anuradev/capacitor-background-mode": "^3.0.0",
+    "@capawesome/capacitor-file-picker": "^6.0.0"
+  }
+}

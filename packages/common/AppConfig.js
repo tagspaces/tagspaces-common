@@ -119,6 +119,20 @@ const isCordovaAndroid =
   typeof document !== "undefined" &&
   document.URL.indexOf("file:///android_asset") === 0;
 const isCordova = isCordovaiOS || isCordovaAndroid;
+const isCapacitor =
+  typeof window !== "undefined" &&
+  window.Capacitor !== undefined &&
+  typeof window.Capacitor.isNativePlatform === "function" &&
+  window.Capacitor.isNativePlatform();
+const isCapacitorAndroid =
+  isCapacitor &&
+  typeof window !== "undefined" &&
+  window.Capacitor.getPlatform() === "android";
+const isCapacitoriOS =
+  isCapacitor &&
+  typeof window !== "undefined" &&
+  window.Capacitor.getPlatform() === "ios";
+const isNativeMobile = isCordova || isCapacitor;
 const iOSMatcher =
   typeof navigator !== "undefined" &&
   navigator.userAgent.match(/(iPad|iPhone|iPod)/i);
@@ -126,7 +140,7 @@ const isIOS = iOSMatcher && iOSMatcher.length > 0;
 const isAndroid =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("android");
-const isMobile = isCordovaiOS || isCordovaAndroid || isIOS || isAndroid;
+const isMobile = isCordovaiOS || isCordovaAndroid || isCapacitor || isIOS || isAndroid;
 
 const ThumbGenSupportedFileTypes = {
   image: [
@@ -234,6 +248,10 @@ module.exports = {
   isCordovaiOS,
   isCordovaAndroid,
   isCordova,
+  isCapacitor,
+  isCapacitorAndroid,
+  isCapacitoriOS,
+  isNativeMobile,
   isIOS,
   isAndroid,
   isWeb,
