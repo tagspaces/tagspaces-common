@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common",
   "description": "TagSpaces common module",
-  "version": "4.5.111",
+  "version": "4.6.0",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
