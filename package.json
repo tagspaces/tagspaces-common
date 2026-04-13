@@ -13,7 +13,7 @@
     "lerna-build": "npx lerna run build",
     "lerna-link": "lerna link --force-local",
     "update-dynamic-libs-version": "echo 'Run this script before and after lerna-version' && node scripts/updateLocalVersions.js",
-    "test": "npm run test-aws && npm run test-indexer && npm run test-node && npm run test-common && npm run test-ws && npm run test-shell",
+    "test": "npm run test-aws && npm run test-indexer && npm run test-node && npm run test-common && npm run test-ws && npm run test-shell && npm run test-capacitor",
     "test-aws": "npm install && jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=jest.config.unit.js ./__tests__/indexer/unit/indexer.test.js",
     "test-webdav": "npx cross-env PD_PLATFORM=web npm install && jest --config=jest.config.webdav.unit.js ./__tests__/common-webdav/unit/io-webdav.test.js",
@@ -22,6 +22,7 @@
     "test-common": "jest --colors --config=jest.config.node.unit.js ./__tests__/common/unit/",
     "test-ws": "npm --prefix ./packages/tagspaces-ws run test",
     "test-shell": "npm --prefix ./packages/tagspaces-shell run test",
+    "test-capacitor": "jest --colors ./packages/common-capacitor/io-capacitor.test.js",
     "code-format": "prettier --write .",
     "husky-install": "husky install"
   },
