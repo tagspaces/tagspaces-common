@@ -6,6 +6,8 @@
   "license": "MIT",
   "scripts": {
     "clean-install": "npx rimraf package-lock.json && npx rimraf node_modules && npm install",
+    "link-ts": "npm link && cd ../../../tagspaces && npm link @tagspaces/tagspaces-common && cd release/app && npm link @tagspaces/tagspaces-common",
+    "unlink-ts": "cd ../../../tagspaces && npm unlink @tagspaces/tagspaces-common && cd release/app && npm unlink @tagspaces/tagspaces-common && cd ../../../tagspaces-common/packages/common && npm unlink -g",
     "npmpack-ts-all": "npm run npmpack-ts && npm run npmpack-ts-main",
     "npmpack-ts": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-4.5.110.tgz && npx shx cp -rL ./package/** ../../../tagspaces/node_modules/@tagspaces/tagspaces-common && npx rimraf package",
     "npmpack-ts-main": "npm run clean-install && npm pack && tar -xvf tagspaces-tagspaces-common-4.5.110.tgz && npx shx cp -rL ./package/** ../../../tagspaces/release/app/node_modules/@tagspaces/tagspaces-common && npx rimraf package",
