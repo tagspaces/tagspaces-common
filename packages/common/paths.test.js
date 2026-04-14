@@ -314,6 +314,62 @@ describe("Common Paths unit tests", () => {
     expect(path1).toBe(pathLib.join(rootPath, "new_dir"));
   });
 
+  test("paths cleanRootPath - strips matching root prefix", () => {
+    const result = paths.cleanRootPath(
+      "/Users/na/folder/memory/MEMORY.md",
+      "/Users/na/folder/memory"
+    );
+    expect(result).toBe("MEMORY.md");
+  });
+
+  test("paths cleanRootPath - strips matching root with trailing slash", () => {
+    const result = paths.cleanRootPath(
+      "/Users/na/folder/memory/MEMORY.md",
+      "/Users/na/folder/memory/"
+    );
+    expect(result).toBe("MEMORY.md");
+  });
+
+  test("paths cleanRootPath - handles subdirectories", () => {
+    const result = paths.cleanRootPath(
+      "/Users/na/folder/memory/sub/file.txt",
+      "/Users/na/folder/memory"
+    );
+    expect(result).toBe("sub/file.txt");
+  });
+
+  test("paths cleanRootPath - returns full path when root does not match", () => {
+    const result = paths.cleanRootPath(
+      "/totally/different/path/file.txt",
+      "/Users/na/folder"
+    );
+    expect(result).toBe("totally/different/path/file.txt");
+  });
+
+  test("paths cleanRootPath - returns cleaned path when root is empty", () => {
+    const result = paths.cleanRootPath(
+      "/Users/na/folder/MEMORY.md",
+      ""
+    );
+    expect(result).toBe("Users/na/folder/MEMORY.md");
+  });
+
+  test("paths cleanRootPath - returns cleaned path when root is null", () => {
+    const result = paths.cleanRootPath(
+      "/Users/na/folder/MEMORY.md",
+      null
+    );
+    expect(result).toBe("Users/na/folder/MEMORY.md");
+  });
+
+  test("paths cleanRootPath - handles sdcard paths", () => {
+    const result = paths.cleanRootPath(
+      "/sdcard/Downloads/////DSCN1.jpg",
+      "sdcard/Downloads"
+    );
+    expect(result).toBe("DSCN1.jpg");
+  });
+
   test("paths generateSharingLink", async () => {
     const locationID = "locationID";
     const entryPath = pathLib.join(__dirname, "img.jpg");

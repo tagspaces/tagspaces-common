@@ -895,8 +895,16 @@ function cleanRootPath(filePath, rootPath, dirSeparator = undefined) {
   const rootPathArr = rootPath
     .split(dirSeparator)
     .filter((pathPart) => pathPart);
-  const cleanPath = filePathArr.slice(rootPathArr.length);
 
+  // Verify root is actually a prefix of filePath before stripping
+  for (let i = 0; i < rootPathArr.length; i++) {
+    if (i >= filePathArr.length || filePathArr[i] !== rootPathArr[i]) {
+      // Root path is not a prefix — return the original path cleaned
+      return cleanTrailingDirSeparator(cleanFrontDirSeparator(filePath));
+    }
+  }
+
+  const cleanPath = filePathArr.slice(rootPathArr.length);
   return cleanPath.join(dirSeparator);
 }
 
