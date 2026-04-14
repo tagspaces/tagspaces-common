@@ -22,6 +22,10 @@ const locationType = {
 // Pre-compile regex patterns for better performance
 const SOURCE_URL_REGEX = /(?<=data-sourceurl=["'])(http[^"']*)(?=["'])/g;
 const HREF_REGEX = /(?<=href=["'])(http[^"']*)(?=["'])/g;
+// Captures all href values (including relative paths) — excludes javascript:, mailto:, data:, #anchors
+const HREF_ALL_REGEX = /(?<=href=["'])([^"']+)(?=["'])/g;
+// Markdown link: [text](path) — bounded to prevent backtracking
+const MD_LINK_REGEX = /\[[^\]]{0,500}\]\(([^)]{1,2000})\)/g;
 // Optimized: avoid catastrophic backtracking with bounded patterns
 const PLAIN_URL_REGEX = /https?:\/\/(?:[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=])+/g;
 const TS_LINK_REGEX = /ts:\/\/(?:[^\s\)]{1,2000})/g; // Bounded length to prevent abuse
@@ -29,6 +33,8 @@ const DATA_URL_REGEX = /data:[^ \t\r\n]+/g;
 const BODY_REGEX = /<body[^>]*>([\s\S]*?)<\/body>/i;
 const SOURCE_URL_MHTML_REGEX =
   /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
+// Prefixes to skip when extracting relative links
+const SKIP_PREFIXES = ["javascript:", "mailto:", "data:", "file:", "#", "tel:", "blob:"];
 
 // Configuration constants for security
 const MAX_CONTENT_LENGTH = 10 * 1024 * 1024; // 10MB limit
@@ -56,8 +62,14 @@ function extractLinks(textContent) {
     // Extract from data-sourceurl attributes
     extractAndAddLinks(content, SOURCE_URL_REGEX, links, seenHrefs);
 
-    // Extract from href attributes
+    // Extract from href attributes (absolute URLs)
     extractAndAddLinks(content, HREF_REGEX, links, seenHrefs);
+
+    // Extract relative links from href attributes
+    extractRelativeLinks(content, HREF_ALL_REGEX, links, seenHrefs);
+
+    // Extract relative links from markdown [text](path) syntax
+    extractRelativeLinks(content, MD_LINK_REGEX, links, seenHrefs);
 
     // Only try plain text extraction if no links found (fallback)
     if (links.length < 1) {
@@ -123,6 +135,50 @@ function extractPlainTextLinks(content, links, seenHrefs) {
     if (link && !seenHrefs.has(link.href)) {
       seenHrefs.add(link.href);
       links.push(link);
+    }
+  }
+}
+
+/**
+ * Helper: Extract relative file/folder links from regex matches.
+ * Skips absolute URLs (already handled), anchors, javascript:, mailto:, data:, file:
+ * @private
+ */
+function extractRelativeLinks(content, regex, links, seenHrefs) {
+  let match;
+  regex.lastIndex = 0; // Reset regex state
+
+  while (
+    (match = regex.exec(content)) !== null &&
+    links.length < MAX_LINKS_TO_EXTRACT
+  ) {
+    const href = (match[1] || match[0]).trim();
+
+    if (!href || href.length === 0 || href.length > MAX_URL_LENGTH) {
+      continue;
+    }
+
+    // Skip absolute URLs (already extracted), special protocols, and anchors
+    if (SKIP_PREFIXES.some((prefix) => href.toLowerCase().startsWith(prefix))) {
+      continue;
+    }
+
+    // Skip absolute http(s) URLs — already handled by HREF_REGEX / PLAIN_URL_REGEX
+    if (/^https?:\/\//i.test(href)) {
+      continue;
+    }
+
+    // Skip ts:// links — handled separately
+    if (/^ts:\/\//i.test(href)) {
+      continue;
+    }
+
+    if (!seenHrefs.has(href)) {
+      seenHrefs.add(href);
+      links.push({
+        type: "relative",
+        href: href,
+      });
     }
   }
 }
