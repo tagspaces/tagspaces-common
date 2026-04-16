@@ -37,6 +37,27 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
+function createSpinner(message) {
+  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let i = 0;
+  let text = message;
+  const id = setInterval(() => {
+    process.stdout.write(
+      "\r" + chalk.cyan(frames[i++ % frames.length]) + " " + text,
+    );
+  }, 80);
+  return {
+    update(msg) {
+      text = msg;
+    },
+    stop(finalMsg) {
+      clearInterval(id);
+      process.stdout.write("\r" + " ".repeat(text.length + 4) + "\r");
+      if (finalMsg) console.log(finalMsg);
+    },
+  };
+}
+
 const DANGEROUS_KEYS = ["__proto__", "constructor", "prototype"];
 const MAX_DESCRIPTION_SIZE = 10 * 1024 * 1024; // 10 MB
 // eslint-disable-next-line no-control-regex
@@ -114,7 +135,20 @@ module.exports = function tscmd() {
     .command(
       "indexer <dirs...>",
       "Create a search index for one or more directories",
-      () => {},
+      (yargs) =>
+        yargs
+          .option("fulltext", {
+            alias: "f",
+            type: "boolean",
+            default: false,
+            description: "Extract full-text content from files (MD, HTML, TXT, PDF)",
+          })
+          .option("links", {
+            alias: "l",
+            type: "boolean",
+            default: false,
+            description: "Extract links from file content (requires --fulltext)",
+          }),
       async (argv) => {
         const {
           persistIndex,
@@ -128,20 +162,113 @@ module.exports = function tscmd() {
 
         for (const dir of argv.dirs) {
           try {
-            console.log(chalk.cyan("  Indexing: ") + dir);
-            const directoryIndex = await createIndex({
-              path: dir,
-              listDirectoryPromise,
-              getFileContentPromise,
-            });
+            const mode = ["loadMeta"];
+            if (argv.fulltext) {
+              mode.push("extractTextContent");
+              if (argv.links) {
+                mode.push("extractLinks");
+              }
+            }
+
+            const modeLabel = argv.fulltext
+              ? " [fulltext" + (argv.links ? "+links" : "") + "]"
+              : "";
+            const spinner = createSpinner(
+              "Indexing: " + dir + chalk.dim(modeLabel),
+            );
+
+            const startTime = Date.now();
+            let lastDir = "";
+            const directoryIndex = await createIndex(
+              {
+                path: dir,
+                listDirectoryPromise,
+                getFileContentPromise,
+                onProgress({ count, entry }) {
+                  const entryDir = entry.isFile
+                    ? entry.path.substring(
+                        0,
+                        entry.path.lastIndexOf("/"),
+                      )
+                    : entry.path;
+                  if (entryDir !== lastDir) {
+                    lastDir = entryDir;
+                    const shortDir =
+                      entryDir.length > 60
+                        ? "…" + entryDir.slice(-59)
+                        : entryDir;
+                    spinner.update(
+                      count + " entries  " + chalk.dim(shortDir),
+                    );
+                  }
+                },
+              },
+              mode,
+            );
+
+            spinner.update(
+              "Saving index (" + directoryIndex.length + " entries)...",
+            );
             const success = await persistIndex(
               { path: dir, saveTextFilePromise },
               directoryIndex,
             );
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
             if (success) {
-              console.log(chalk.green("✔ Index generated: ") + dir);
+              spinner.stop(
+                chalk.green("✔ Index generated: ") + dir,
+              );
+
+              // Statistics
+              let files = 0;
+              let folders = 0;
+              let totalSize = 0;
+              let totalTokens = 0;
+              let filesWithText = 0;
+              let totalLinks = 0;
+              for (const entry of directoryIndex) {
+                if (entry.isFile) {
+                  files++;
+                  totalSize += entry.size || 0;
+                } else {
+                  folders++;
+                }
+                if (entry.textContent) {
+                  filesWithText++;
+                  totalTokens += entry.textContent.split(" ").length;
+                }
+                if (entry.links) {
+                  totalLinks += entry.links.length;
+                }
+              }
+              console.log(
+                chalk.dim("  " + files + " files, " + folders + " folders"),
+              );
+              console.log(
+                chalk.dim("  " + formatBytes(totalSize) + " total size"),
+              );
+              if (filesWithText > 0) {
+                console.log(
+                  chalk.dim(
+                    "  " +
+                      filesWithText +
+                      " files with fulltext, " +
+                      totalTokens.toLocaleString() +
+                      " tokens",
+                  ),
+                );
+              }
+              if (totalLinks > 0) {
+                console.log(
+                  chalk.dim("  " + totalLinks + " links extracted"),
+                );
+              }
+              console.log(chalk.dim("  " + elapsed + "s elapsed"));
             } else {
-              console.warn(chalk.yellow("⚠ Index not persisted: ") + dir);
+              spinner.stop(
+                chalk.yellow("⚠ Index not persisted: ") + dir,
+              );
             }
           } catch (err) {
             console.error(chalk.red("✖ Error indexing: ") + dir);

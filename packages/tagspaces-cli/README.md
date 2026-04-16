@@ -1,11 +1,11 @@
-# @tagspaces/shell
+# @tagspaces/tagspaces-cli
 
-A command-line tool for managing files and folders compatible with the [TagSpaces](https://www.tagspaces.org) Desktop and Web applications. It can generate search indexes, create thumbnails, clean up obsolete metadata, add tags, and set descriptions.
+A command-line tool for managing files and folders compatible with the [TagSpaces](https://www.tagspaces.org) Desktop and Web applications. It can generate search indexes, create thumbnails, clean up obsolete metadata, add tags, set descriptions, and search indexed directories.
 
 ## Installation
 
 ```bash
-npm install -g @tagspaces/shell
+npm install -g @tagspaces/tagspaces-cli
 ```
 
 ## Commands
@@ -19,6 +19,20 @@ tscmd indexer /some/folder
 ```
 
 The generated index is stored in the `.ts/tsi.json` file inside the target folder. This command is well suited for automation, for example as a cron job.
+
+To also extract full-text content from supported files (Markdown, HTML, TXT, PDF), use the `--fulltext` flag:
+
+```bash
+tscmd indexer --fulltext /some/folder
+```
+
+Full-text content is stored separately in `.ts/tsft.jsonl`. To additionally extract links from file content, add `--links`:
+
+```bash
+tscmd indexer --fulltext --links /some/folder
+```
+
+The indexer displays a live progress spinner and prints statistics when finished (file/folder counts, total size, token counts, and elapsed time).
 
 ### Thumbnail generation
 
@@ -120,6 +134,46 @@ tscmd describe file1.jpg file2.pdf ./my-folder -d "Shared description"
 
 If a sidecar file already exists, the description is updated while preserving all other metadata (tags, ID, etc.).
 
+### Searching an index
+
+Searches a previously generated index for matching files and folders. Requires running `tscmd indexer` first.
+
+**Text query** (fuzzy by default):
+
+```bash
+tscmd search /some/folder -q "meeting notes"
+```
+
+**Filter by tags** (AND logic):
+
+```bash
+tscmd search /some/folder -t project important
+```
+
+**Filter by file type group** (images, documents, notes, audio, video, archives, bookmarks, ebooks, emails, folders, files, untagged):
+
+```bash
+tscmd search /some/folder --type images
+```
+
+**Search accuracy** — choose between `fuzzy` (default), `semistrict`, or `strict`:
+
+```bash
+tscmd search /some/folder -q "report" -s strict
+```
+
+**Limit results:**
+
+```bash
+tscmd search /some/folder -q "draft" -n 20
+```
+
+Options can be combined:
+
+```bash
+tscmd search /some/folder -q "budget" -t finance 2024 --type documents -s semistrict -n 50
+```
+
 ## Usage overview
 
 ```
@@ -131,6 +185,11 @@ Commands:
   tscmd metacleaner <dirs...>   Remove obsolete sidecar files
   tscmd tag <paths...>          Add tags to files or folders
   tscmd describe <paths...>     Set description on files or folders
+  tscmd search <dir>            Search an index for matching files
+
+Indexer options:
+  -f, --fulltext   Extract full-text content (MD, HTML, TXT, PDF) [boolean] [default: false]
+  -l, --links      Extract links from content (requires --fulltext) [boolean] [default: false]
 
 Tag options:
   -t, --tags     Tags to add (space-separated)              [array] [required]
@@ -139,6 +198,13 @@ Tag options:
 Describe options:
   -d, --description  Description text (supports \n, use "-" for stdin) [string]
   -f, --file         Read description from a file                      [string]
+
+Search options:
+  -q, --query        Text query (fuzzy search)                       [string]
+  -t, --tags         Tags to match (AND logic)                       [array]
+      --type         File type group (e.g. images, documents)        [string] [default: "any"]
+  -s, --search-type  Search accuracy: fuzzy, semistrict, or strict   [string] [default: "fuzzy"]
+  -n, --max-results  Maximum number of results                       [number] [default: 100]
 
 Global options:
   -h, --help     Show help
