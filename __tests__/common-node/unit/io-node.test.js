@@ -184,7 +184,7 @@ describe("io-node unit tests", () => {
         
     `;
     expectedContent =
-      "milkdown is a wysiwyg markdown editor framework here the right click to open link we only support commonmark gfm also supported features x 📝 write in an elegant way 🎨 theme can be shared and used with npm packages 🎮 your awesome idea by plugin";
+      "milkdown is wysiwyg markdown editor framework here the right click to open link we only support commonmark gfm also supported features 📝 write in an elegant way 🎨 theme can be shared and used with npm packages 🎮 your awesome idea by plugin";
     extractedContent = extractTextContent("test.md", complexMD);
     // console.log(expectedContent);
     // console.log(extractedContent);

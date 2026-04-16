@@ -455,13 +455,82 @@ function extractHTMLText(fileContent) {
   }
 }
 
+// CJK Unified Ideographs and common CJK ranges
+const CJK_REGEX =
+  /[\u2E80-\u2FFF\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F]/;
+
+/**
+ * Tokenize a CJK text run into overlapping bigrams.
+ * "我喜欢标签" → ["我喜", "喜欢", "欢标", "标签"]
+ * This is the standard approach for CJK full-text search without
+ * a segmentation dictionary (used by Elasticsearch, SQLite FTS, etc.)
+ */
+function cjkBigrams(text) {
+  const bigrams = [];
+  for (let i = 0; i < text.length - 1; i++) {
+    bigrams.push(text.substring(i, i + 2));
+  }
+  // Also include individual characters for single-char search
+  for (let i = 0; i < text.length; i++) {
+    bigrams.push(text[i]);
+  }
+  return bigrams;
+}
+
 function createTextIndex(textContent) {
   if (!textContent) {
     return "";
   }
-  // Normalize whitespace, split once, deduplicate, and rejoin
-  const tokens = textContent.replace(/\s+/g, " ").trim().split(" ");
-  return [...new Set(tokens)].join(" ");
+  const normalized = textContent.toLowerCase().replace(/\s+/g, " ").trim();
+  const tokens = new Set();
+
+  // Split into space-separated segments
+  const segments = normalized.split(" ");
+  for (const segment of segments) {
+    if (!segment) continue;
+
+    if (CJK_REGEX.test(segment)) {
+      // Segment contains CJK characters — extract bigrams from CJK runs
+      // and regular tokens from non-CJK parts
+      let cjkRun = "";
+      let latinRun = "";
+      for (const ch of segment) {
+        if (CJK_REGEX.test(ch)) {
+          // Flush any Latin run
+          if (latinRun.length > 1 && latinRun.length <= 50) {
+            tokens.add(latinRun);
+          }
+          latinRun = "";
+          cjkRun += ch;
+        } else {
+          // Flush any CJK run
+          if (cjkRun) {
+            for (const bigram of cjkBigrams(cjkRun)) {
+              tokens.add(bigram);
+            }
+            cjkRun = "";
+          }
+          latinRun += ch;
+        }
+      }
+      // Flush remaining runs
+      if (cjkRun) {
+        for (const bigram of cjkBigrams(cjkRun)) {
+          tokens.add(bigram);
+        }
+      }
+      if (latinRun.length > 1 && latinRun.length <= 50) {
+        tokens.add(latinRun);
+      }
+    } else {
+      // Pure non-CJK segment — standard token filtering
+      if (segment.length > 1 && segment.length <= 50) {
+        tokens.add(segment);
+      }
+    }
+  }
+
+  return [...tokens].join(" ");
 }
 
 module.exports = {

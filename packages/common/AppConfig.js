@@ -144,7 +144,7 @@ const isAndroid =
   navigator.userAgent.toLowerCase().includes("android");
 const isMobile = isCordovaiOS || isCordovaAndroid || isCapacitor || isIOS || isAndroid;
 
-let folderFullTextFile = "tsft.json";
+let folderFullTextFile = "tsft.jsonl";
 
 const SearchTypes = {
   any: "any",

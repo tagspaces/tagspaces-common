@@ -152,8 +152,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
   }
 
   function saveTextFilePromise(param, content, overwrite) {
-    const filePath = getPath(param);
-    console.log("Saving file: " + filePath);
     return saveFilePromise(param, content, overwrite);
   }
 
@@ -315,17 +313,14 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       fs.readdir(metaPath, (error, entries) => {
         if (error) {
           try {
-            console.warn(
-              "Error listing meta directory, trying to create: " + metaPath,
-            );
             fs.ensureDirSync(metaPath);
             if (AppConfig.isWin) {
-              execFile("attrib", ["+h", metaPath], (err, stdout) => {
-                if (err) console.error(err);
+              execFile("attrib", ["+h", metaPath], (err) => {
+                if (err) console.warn("attrib error: " + err.message);
               });
             }
           } catch (e) {
-            console.warn("Error creating: " + metaPath);
+            // .ts folder could not be created — metadata will be skipped
           }
           resolve([]); // returning results even if any promise fails
           return;
@@ -362,7 +357,11 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         textContent = await extractPDFcontent(buffer);
         await saveTextFilePromise({ path: pdfContentPath }, textContent, true);
       } catch (e) {
-        console.error("Failed to extractPDFcontent in:" + entry.path, e);
+        console.warn(
+          "Skipping PDF extraction: " +
+            entry.name +
+            (e.message ? " (" + e.message.split("\n")[0] + ")" : ""),
+        );
       }
     }
     return textContent;
@@ -390,7 +389,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
       try {
         eentry.meta = await fs.readJson(folderMetaPath);
       } catch (err) {
-        console.error("Failed reading meta folder file " + folderMetaPath, err);
+        // Corrupted or missing tsm.json — skip silently
       }
     }
 
@@ -441,7 +440,10 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
               setEntryLinks(enhancedEntry, metaFileObj.description);
             }
           } catch (err) {
-            console.warn(`Error reading metadata file: ${metaPath}`, err);
+            console.warn(
+              `Skipping corrupted metadata: ${metaPath}` +
+                (err.message ? " (" + err.message.split("\n")[0] + ")" : ""),
+            );
           }
         }
       }
@@ -491,8 +493,8 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
         fs.readdir(path, async (error, entries) => {
           if (error) {
-            console.warn("Error listing directory " + path);
-            resolve(enhancedEntries); // returning results even if any promise fails
+            // Directory not readable — skip
+            resolve(enhancedEntries);
             return;
           }
 
@@ -550,7 +552,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   );
                 }
               } catch (e) {
-                console.error("Can not load properties for: " + entryPath, e);
+                // Properties unavailable — entry added without stat data
               }
               enhancedEntries.push(eentry);
             }
@@ -568,8 +570,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           }
         });
       } catch (e) {
-        console.warn("Error listing directory " + path, e);
-        reject(new Error("Error listing directory " + path)); // returning results even if any promise fails
+        reject(new Error("Error listing directory " + path));
       }
     });
   }
@@ -580,6 +581,15 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     extractLinks = false,
   ) {
     try {
+      // Skip directories — only extract text from files
+      if (!eentry.isFile) {
+        return;
+      }
+      // Skip files larger than 128MB to avoid ERR_STRING_TOO_LONG crashes
+      const MAX_TEXT_EXTRACT_SIZE = 128 * 1024 * 1024;
+      if (eentry.size && eentry.size > MAX_TEXT_EXTRACT_SIZE) {
+        return;
+      }
       const fileName = eentry.name.toLowerCase();
       // Ignoring files starting with ._ e.g. on macOS
       if (fileName.startsWith("._")) {
@@ -600,7 +610,12 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         extractTxtContentAndLinks(eentry, textContent, extractLinks);
       }
     } catch (error) {
-      console.error(`Error reading file at ${eentry.path}:`, error);
+      console.warn(
+        `Skipping text extraction: ${eentry.name}` +
+          (error.message
+            ? " (" + error.message.split("\n")[0] + ")"
+            : ""),
+      );
     }
   }
 

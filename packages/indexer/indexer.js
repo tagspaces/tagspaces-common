@@ -14,8 +14,16 @@ const {
 } = require("@tagspaces/tagspaces-common/utils-io");
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
-// Pre-compile regex pattern for newline replacement to avoid recreating it on every call
+// Pre-compile regex patterns
 const NEWLINE_REGEX = /[\r\n]+/g;
+// Matches data:...base64,... or data:...;charset=... URLs (embedded images, fonts, etc.)
+const DATA_URL_REGEX = /data:[^\s"')]+/g;
+// Matches markdown image syntax with long src (base64 or very long URLs)
+const MD_IMAGE_REGEX = /!\[[^\]]*\]\([^)]{500,}\)/g;
+// Matches HTML img tags with long src attributes
+const HTML_IMG_LONG_SRC_REGEX = /<img[^>]*src="[^"]{500,}"[^>]*\/?>/gi;
+// Max description length to store in the index (characters)
+const MAX_DESCRIPTION_LENGTH = 4000;
 
 /**
  * Helper function to extract directory path from param object
@@ -26,11 +34,31 @@ function extractDirectoryPath(param) {
 }
 
 /**
- * Helper function to clean and process description metadata
+ * Clean description for index storage: strip data URLs, large embedded
+ * content (base64 images, long inline SVGs), and cap total length.
+ * The full description remains in the sidecar .json file — this is
+ * only the searchable excerpt stored in tsi.json.
  */
 function cleanDescription(description) {
   if (!description) return undefined;
-  return description.replace(NEWLINE_REGEX, " ").trim();
+  // Cap input before regex to prevent scanning multi-MB descriptions.
+  // Use 10x the output limit to give regex room to strip embedded content
+  // while still finding the useful text within.
+  const input =
+    description.length > MAX_DESCRIPTION_LENGTH * 10
+      ? description.substring(0, MAX_DESCRIPTION_LENGTH * 10)
+      : description;
+  let cleaned = input
+    .replace(DATA_URL_REGEX, "")
+    .replace(MD_IMAGE_REGEX, "")
+    .replace(HTML_IMG_LONG_SRC_REGEX, "")
+    .replace(NEWLINE_REGEX, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (cleaned.length > MAX_DESCRIPTION_LENGTH) {
+    cleaned = cleaned.substring(0, MAX_DESCRIPTION_LENGTH);
+  }
+  return cleaned || undefined;
 }
 
 /**
@@ -70,6 +98,7 @@ function createIndex(
     listDirectoryPromise,
     getFileContentPromise,
     extractPDFcontent,
+    onProgress,
     ...restParam
   } = param;
   if (!listDirectoryPromise) {
@@ -78,8 +107,6 @@ function createIndex(
     );
   }
   const path = restParam.path;
-  // console.log("createDirectoryIndex started:" + path);
-  // console.time("createDirectoryIndex");
   const directoryIndex = [];
   let counter = 0;
 
@@ -96,26 +123,23 @@ function createIndex(
     async (fileEntry) => {
       counter += 1;
       directoryIndex.push(getIndexedEntry(fileEntry, path));
+      if (onProgress) {
+        onProgress({ count: counter, entry: fileEntry });
+      }
     },
     async (directoryEntry) => {
       if (directoryEntry.name !== AppConfig.metaFolder) {
         counter += 1;
         directoryIndex.push(getIndexedEntry(directoryEntry, path));
+        if (onProgress) {
+          onProgress({ count: counter, entry: directoryEntry });
+        }
       }
     },
     ignorePatterns,
     isWalking,
   )
     .then(() => {
-      // entries - can be used for further processing
-      // window.walkCanceled = false;
-      console.log(
-        "Directory index created " +
-          path +
-          " containing " +
-          directoryIndex.length,
-      );
-      // console.timeEnd("createDirectoryIndex");
       return directoryIndex;
     })
     .catch((err) => {
@@ -123,6 +147,261 @@ function createIndex(
       // console.timeEnd("createDirectoryIndex");
       console.warn("Error creating index: " + err);
       return directoryIndex;
+    });
+}
+
+/**
+ * Incremental indexing: compares existing index with current directory state,
+ * only processes added/modified entries. Much faster than full re-index when
+ * most files are unchanged.
+ *
+ * @param param - Same as createIndex (must include listDirectoryPromise, etc.)
+ * @param mode - Index modes (loadMeta, extractTextContent, extractLinks)
+ * @param ignorePatterns - Glob patterns to skip
+ * @param isWalking - Cancellation callback
+ * @param existingIndex - Previously loaded index entries (from tsi.json)
+ * @param existingFullText - Optional fulltext map from tsft.json
+ * @returns Promise<{ index, fullText, stats }>
+ */
+function createIncrementalIndex(
+  param,
+  mode = ["loadMeta"],
+  ignorePatterns = [],
+  isWalking = () => true,
+  existingIndex = [],
+  existingFullText = null,
+) {
+  const {
+    listDirectoryPromise,
+    getFileContentPromise,
+    extractPDFcontent,
+    ...restParam
+  } = param;
+  if (!listDirectoryPromise) {
+    return Promise.reject(
+      new Error(
+        "Error creating incremental index: no listDirectoryPromise in params!",
+      ),
+    );
+  }
+  const rootPath = restParam.path;
+
+  // Step 1: Build lookup Map from existing index
+  const existingMap = new Map();
+  for (const entry of existingIndex) {
+    existingMap.set(entry.path, entry);
+  }
+
+  const added = [];
+  const modified = [];
+  const unchanged = [];
+
+  // Step 2: Fast shallow walk (stat only, no meta/text extraction)
+  return walkDirectory(
+    restParam,
+    listDirectoryPromise,
+    {
+      recursive: true,
+      skipMetaFolder: true,
+      skipDotHiddenFolder: true,
+      mode: [], // Empty mode = stat only, fast
+    },
+    async (fileEntry) => {
+      const relativePath = cleanRootPath(fileEntry.path, rootPath);
+      const existing = existingMap.get(relativePath);
+      if (!existing) {
+        added.push(fileEntry);
+      } else if (
+        existing.lmdt !== fileEntry.lmdt ||
+        existing.size !== fileEntry.size
+      ) {
+        modified.push(fileEntry);
+      } else {
+        unchanged.push(existing);
+      }
+      existingMap.delete(relativePath);
+    },
+    async (directoryEntry) => {
+      if (directoryEntry.name !== AppConfig.metaFolder) {
+        const relativePath = cleanRootPath(directoryEntry.path, rootPath);
+        const existing = existingMap.get(relativePath);
+        if (!existing) {
+          added.push(directoryEntry);
+        } else {
+          unchanged.push(existing);
+        }
+        existingMap.delete(relativePath);
+      }
+    },
+    ignorePatterns,
+    isWalking,
+  )
+    .then(async () => {
+      // Step 3: Remaining entries in existingMap are deleted
+      const deletedCount = existingMap.size;
+
+      const stats = {
+        added: added.length,
+        modified: modified.length,
+        deleted: deletedCount,
+        unchanged: unchanged.length,
+      };
+
+      console.log(
+        `Incremental index for ${rootPath}: ` +
+          `${stats.added} added, ${stats.modified} modified, ` +
+          `${stats.deleted} deleted, ${stats.unchanged} unchanged`,
+      );
+
+      // Step 4: If nothing changed, return existing index as-is
+      if (
+        added.length === 0 &&
+        modified.length === 0 &&
+        deletedCount === 0
+      ) {
+        return {
+          index: existingIndex,
+          fullText: existingFullText,
+          stats,
+        };
+      }
+
+      // Step 5: Process added + modified entries with full mode
+      const changedEntries = [...added, ...modified];
+      const processedEntries = [];
+
+      if (changedEntries.length > 0 && mode.length > 0) {
+        // Re-walk only changed entries' directories, or process individually
+        // For simplicity, do a targeted walk with full mode for each changed entry
+        for (const entry of changedEntries) {
+          if (!isWalking()) break;
+          processedEntries.push(getIndexedEntry(entry, rootPath));
+        }
+
+        // If we need metadata, do a second targeted walk for changed entries
+        if (
+          mode.includes("loadMeta") ||
+          mode.includes("extractTextContent")
+        ) {
+          // Re-walk with full mode to get metadata for changed entries
+          const changedDirs = new Set();
+          for (const entry of changedEntries) {
+            changedDirs.add(
+              extractContainingDirectoryPath(entry.path, "/"),
+            );
+          }
+
+          const changedPaths = new Set(
+            changedEntries.map((e) => cleanRootPath(e.path, rootPath)),
+          );
+          const fullEntries = [];
+
+          // Walk with full mode but only keep entries that are in our changed set
+          await walkDirectory(
+            restParam,
+            listDirectoryPromise,
+            {
+              recursive: true,
+              skipMetaFolder: true,
+              skipDotHiddenFolder: true,
+              mode,
+              ...(extractPDFcontent && { extractText: extractPDFcontent }),
+            },
+            async (fileEntry) => {
+              const relPath = cleanRootPath(fileEntry.path, rootPath);
+              if (changedPaths.has(relPath)) {
+                fullEntries.push(getIndexedEntry(fileEntry, rootPath));
+                changedPaths.delete(relPath);
+              }
+            },
+            async (directoryEntry) => {
+              if (directoryEntry.name !== AppConfig.metaFolder) {
+                const relPath = cleanRootPath(
+                  directoryEntry.path,
+                  rootPath,
+                );
+                if (changedPaths.has(relPath)) {
+                  fullEntries.push(
+                    getIndexedEntry(directoryEntry, rootPath),
+                  );
+                  changedPaths.delete(relPath);
+                }
+              }
+            },
+            ignorePatterns,
+            isWalking,
+          );
+
+          // Build a map of fully processed entries
+          const fullEntryMap = new Map();
+          for (const entry of fullEntries) {
+            fullEntryMap.set(entry.path, entry);
+          }
+
+          // Replace shallow entries with fully processed ones
+          processedEntries.length = 0;
+          for (const entry of changedEntries) {
+            const relPath = cleanRootPath(entry.path, rootPath);
+            const fullEntry = fullEntryMap.get(relPath);
+            processedEntries.push(
+              fullEntry || getIndexedEntry(entry, rootPath),
+            );
+          }
+        }
+      } else {
+        // No mode flags, just index basic info
+        for (const entry of changedEntries) {
+          processedEntries.push(getIndexedEntry(entry, rootPath));
+        }
+      }
+
+      // Step 6: Merge unchanged + processed entries
+      const newIndex = [...unchanged, ...processedEntries];
+
+      // Step 7: Update fulltext map
+      let newFullText = existingFullText
+        ? { ...existingFullText }
+        : null;
+      if (newFullText) {
+        // Remove deleted entries
+        for (const [path] of existingMap) {
+          delete newFullText[path];
+        }
+        // Add/update changed entries
+        for (const entry of processedEntries) {
+          if (entry.textContent) {
+            newFullText[entry.path] = entry.textContent;
+          }
+        }
+      } else if (processedEntries.some((e) => e.textContent)) {
+        newFullText = {};
+        // Collect from unchanged
+        for (const entry of unchanged) {
+          if (entry.textContent) {
+            newFullText[entry.path] = entry.textContent;
+          }
+        }
+        // Add from processed
+        for (const entry of processedEntries) {
+          if (entry.textContent) {
+            newFullText[entry.path] = entry.textContent;
+          }
+        }
+      }
+
+      return {
+        index: newIndex,
+        fullText: newFullText,
+        stats,
+      };
+    })
+    .catch((err) => {
+      console.warn("Error creating incremental index: " + err);
+      return {
+        index: existingIndex,
+        fullText: existingFullText,
+        stats: { added: 0, modified: 0, deleted: 0, unchanged: 0 },
+      };
     });
 }
 
@@ -174,25 +453,54 @@ function persistIndex(param, directoryIndex) {
   }
   const directoryPath = extractDirectoryPath(param);
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
-  const indexJson = JSON.stringify(directoryIndex);
-  
-  return param
+  const folderFullTextPath = getMetaFullTextFilePath(directoryPath);
+
+  // Split: strip textContent from main index, collect into fulltext map
+  const fullTextMap = {};
+  let hasFullText = false;
+  const strippedIndex = directoryIndex.map((entry) => {
+    if (entry && entry.textContent) {
+      fullTextMap[entry.path] = entry.textContent;
+      hasFullText = true;
+      const { textContent, ...rest } = entry;
+      return rest;
+    }
+    return entry;
+  });
+
+  const indexJson = JSON.stringify(strippedIndex);
+
+  const saveIndex = param
     .saveTextFilePromise(
       { ...param, path: folderIndexPath },
       indexJson,
       true,
     )
-    .then((result) => {
-      if (result) {
-        console.log(
-          `Index persisted for: ${directoryPath} to ${folderIndexPath}`,
-        );
-      }
-      return result;
-    })
     .catch((err) => {
       console.error(`Error saving the index for ${folderIndexPath}`, err);
     });
+
+  // Persist fulltext separately as JSONL if there is any
+  if (hasFullText) {
+    const fullTextJsonl = serializeFullTextJsonl(fullTextMap);
+    const saveFullText = param
+      .saveTextFilePromise(
+        { ...param, path: folderFullTextPath },
+        fullTextJsonl,
+        true,
+      )
+      .catch((err) => {
+        console.error(
+          `Error saving fulltext index for ${folderFullTextPath}`,
+          err,
+        );
+      });
+    return Promise.all([saveIndex, saveFullText]).then(
+      ([indexResult]) => indexResult,
+    );
+  }
+
+  return saveIndex;
 }
 
 /**
@@ -384,6 +692,105 @@ function removeFromIndex(param) {
     });
 }
 
+function getMetaFullTextFilePath(
+  directoryPath,
+  dirSeparator = AppConfig.dirSeparator,
+) {
+  const basePath =
+    directoryPath &&
+    directoryPath.length > 0 &&
+    directoryPath !== dirSeparator
+      ? `${directoryPath}${dirSeparator}`
+      : "";
+
+  return normalizePath(
+    `${basePath}${AppConfig.metaFolder}${dirSeparator}${AppConfig.folderFullTextFile}`,
+  );
+}
+
+/**
+ * Parse JSONL fulltext content. Each line: {"p":"relative/path","t":"token1 token2"}
+ * Resilient — skips corrupted lines.
+ * @param {string} content - Raw JSONL string
+ * @returns {Object} { relativePath: textContent } map
+ */
+function parseFullTextJsonl(content) {
+  const map = {};
+  if (!content) return map;
+  const lines = content.split("\n");
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    try {
+      const { p, t } = JSON.parse(line);
+      if (p && t) map[p] = t;
+    } catch (e) {
+      console.warn("Skipping malformed JSONL line");
+    }
+  }
+  return map;
+}
+
+/**
+ * Serialize fulltext map to JSONL format.
+ * @param {Object} fullTextMap - { relativePath: textContent }
+ * @returns {string} JSONL string
+ */
+function serializeFullTextJsonl(fullTextMap) {
+  const lines = [];
+  for (const [p, t] of Object.entries(fullTextMap)) {
+    lines.push(JSON.stringify({ p, t }));
+  }
+  return lines.join("\n") + "\n";
+}
+
+/**
+ * Load the separate fulltext index file (tsft.jsonl).
+ * Returns { relativePath: textContent } map or undefined if not found.
+ * Handles both JSONL (new) and JSON (old) formats for backward compatibility.
+ */
+function loadFullTextIndex(param, getFileContentPromise) {
+  if (!getFileContentPromise) {
+    return Promise.resolve(undefined);
+  }
+  const directoryPath = extractDirectoryPath(param);
+  const fullTextPath = getMetaFullTextFilePath(directoryPath);
+  return getFileContentPromise({ ...param, path: fullTextPath }, "text")
+    .then((content) => {
+      if (!content) return undefined;
+      const trimmed = content.trim();
+      // Detect format: JSONL starts with { on first line, JSON object also starts with {
+      // but JSONL has multiple lines each starting with {
+      // Safest: try JSONL first (line-by-line), which also handles a single-line JSON object
+      if (trimmed.startsWith("{") && !trimmed.startsWith("{\"p\"")) {
+        // Old JSON object format: {"relative/path": "text content", ...}
+        try {
+          return JSON.parse(trimmed);
+        } catch (e) {
+          // Fall through to JSONL parsing
+        }
+      }
+      return parseFullTextJsonl(content);
+    })
+    .catch((e) => {
+      console.log("Fulltext index not found:", e.message || e);
+      return undefined;
+    });
+}
+
+/**
+ * Merge fulltext content into index entries in-place.
+ * @param {Array} indexEntries - The directory index entries
+ * @param {Object} fullTextMap - { path: textContent }
+ */
+function mergeFullTextIntoIndex(indexEntries, fullTextMap) {
+  if (!fullTextMap || !indexEntries) return;
+  for (const entry of indexEntries) {
+    if (entry.path && fullTextMap[entry.path]) {
+      entry.textContent = fullTextMap[entry.path];
+    }
+  }
+}
+
 function getMetaIndexFilePath(
   directoryPath,
   dirSeparator = AppConfig.dirSeparator,
@@ -418,11 +825,17 @@ function loadJSONFile(param, getFileContentPromise) {
 
 module.exports = {
   createIndex,
+  createIncrementalIndex,
   persistIndex,
   hasIndex,
   loadIndex,
   enhanceDirectoryIndex,
   getMetaIndexFilePath,
+  getMetaFullTextFilePath,
+  parseFullTextJsonl,
+  serializeFullTextJsonl,
+  loadFullTextIndex,
+  mergeFullTextIntoIndex,
   loadJSONFile,
   addToIndex,
   removeFromIndex,

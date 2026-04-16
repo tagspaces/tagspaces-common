@@ -269,27 +269,14 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
 
     if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
       // Extracting the body tag
-      try {
-        textContent = fileContent.match(BODY_REGEX)[0].trim();
-      } catch (e) {
-        console.error(
-          "Error parsing the body of the HTML document: " +
-            fileName +
-            " with: " +
-            e,
-        );
+      const bodyMatch = fileContent.match(BODY_REGEX);
+      if (bodyMatch && bodyMatch[0]) {
+        textContent = bodyMatch[0].trim();
       }
     } else if (fileName.endsWith(".mhtml")) {
-      try {
-        const sourceUrl = fileContent.match(SOURCE_URL_MHTML_REGEX)[0].trim();
-        textContent = sourceUrl;
-      } catch (e) {
-        console.error(
-          "Error parsing the body of the MHTML document: " +
-            fileName +
-            " with: " +
-            e,
-        );
+      const sourceMatch = fileContent.match(SOURCE_URL_MHTML_REGEX);
+      if (sourceMatch && sourceMatch[0]) {
+        textContent = sourceMatch[0].trim();
       }
     }
 
@@ -298,7 +285,10 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
       setEntryLinks(eentry, textContent);
     }
   } catch (error) {
-    console.error(`Error reading file at ${eentry.path}:`, error);
+    console.warn(
+      `Skipping content extraction: ${eentry.name}` +
+        (error.message ? " (" + error.message.split("\n")[0] + ")" : ""),
+    );
   }
 }
 
