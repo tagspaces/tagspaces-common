@@ -22,7 +22,7 @@ Monorepo of shared libraries for [TagSpaces](https://github.com/nicoth-in/tagspa
 | `common-aws3` | S3 object store I/O via AWS SDK v3 |
 | `indexer` | Directory indexing, search index creation/persistence |
 | `tagspaces-ws` | WebSocket server |
-| `tagspaces-shell` | Shell utilities |
+| `tagspaces-cli` | CLI tool for thumbnails, indexing, tagging, descriptions |
 
 ## Testing
 
