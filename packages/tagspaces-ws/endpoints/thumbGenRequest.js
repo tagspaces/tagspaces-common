@@ -1,9 +1,15 @@
 const {
   processAllThumbnails,
 } = require("@tagspaces/tagspaces-workers/tsnodethumbgen");
+const {
+  collectBody,
+  safeJsonParse,
+  validatePaths,
+  sendError,
+} = require("../security");
 
 function handleThumbGen(req, res) {
-  const baseURL = "http://" + req.headers.host + "/";
+  const baseURL = "http://127.0.0.1/";
   const reqUrl = new URL(req.url, baseURL);
 
   const generatePdf = reqUrl.searchParams.has("pdf")
@@ -15,34 +21,32 @@ function handleThumbGen(req, res) {
     : false;
 
   if (req.method === "POST") {
-    let body = "";
-    req.on("data", function (data) {
-      body += data;
-    });
-    req.on("end", async () => {
-      try {
-        let arrayPaths;
-        // handle html form data
-        if (body.startsWith("p=")) {
-          arrayPaths = [decodeURIComponent(body.substr(2))];
-        } else {
-          arrayPaths = JSON.parse(body);
-        }
-        let extractPDFfunction;
-        if (
-          extractPdfContent &&
-          arrayPaths.some((path) => path.toLowerCase().endsWith(".pdf"))
-        ) {
-          extractPDFfunction =
-            require("@tagspaces/tagspaces-pdf-extraction").extractPDFcontent;
-        }
+    collectBody(req, res)
+      .then(async (body) => {
+        try {
+          let arrayPaths;
+          if (body.startsWith("p=")) {
+            arrayPaths = [decodeURIComponent(body.substr(2))];
+          } else {
+            arrayPaths = safeJsonParse(body);
+          }
 
-        const thumbs = [];
-        let statusCode = 200;
-        if (arrayPaths && arrayPaths.length > 0) {
-          for (const path of arrayPaths) {
+          const safePaths = validatePaths(arrayPaths);
+
+          let extractPDFfunction;
+          if (
+            extractPdfContent &&
+            safePaths.some((p) => p.toLowerCase().endsWith(".pdf"))
+          ) {
+            extractPDFfunction =
+              require("@tagspaces/tagspaces-pdf-extraction").extractPDFcontent;
+          }
+
+          const thumbs = [];
+          let statusCode = 200;
+          for (const filePath of safePaths) {
             const success = await processAllThumbnails(
-              path,
+              filePath,
               generatePdf,
               extractPDFfunction,
             );
@@ -55,18 +59,16 @@ function handleThumbGen(req, res) {
               statusCode = 400;
             }
           }
-        }
 
-        res.statusCode = statusCode;
-        res.setHeader("Content-Type", "application/json");
-        res.setHeader("Cache-Control", "no-store, must-revalidate");
-        res.end(JSON.stringify(thumbs));
-      } catch (e) {
-        console.log(e);
-        res.statusCode = 400;
-        res.end();
-      }
-    });
+          res.statusCode = statusCode;
+          res.setHeader("Content-Type", "application/json");
+          res.setHeader("Cache-Control", "no-store, must-revalidate");
+          res.end(JSON.stringify(thumbs));
+        } catch (e) {
+          sendError(res, 400, "Thumbnail generation failed", e);
+        }
+      })
+      .catch(() => {});
   }
 }
 

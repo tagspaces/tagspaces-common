@@ -70,8 +70,12 @@ module.exports.createWS = function (port, key) {
   const requestHandler = async (req, res) => {
     const { controller, cleanup, signal } = attachAbortToRequest(req, res);
     try {
-      const baseURL = "http://" + req.headers.host + "/";
+      // Use fixed hostname:port instead of Host header to prevent Host header injection
+      const baseURL = "http://" + hostname + ":" + port + "/";
       const reqUrl = new URL(req.url, baseURL);
+
+      // Security headers on all responses
+      res.setHeader("X-Content-Type-Options", "nosniff");
       if (reqUrl.pathname === "/thumb-gen") {
         if (!verifyAuth(req.headers.authorization, res, key)) {
           return;
@@ -105,7 +109,7 @@ module.exports.createWS = function (port, key) {
       if (!res.writableEnded) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(
-          JSON.stringify({ ok: false, error: err.message || "Internal error" })
+          JSON.stringify({ ok: false, error: "Internal server error" })
         );
       }
     } finally {
@@ -115,6 +119,8 @@ module.exports.createWS = function (port, key) {
   };
 
   const server = ws.createServer(requestHandler);
+  // 5 minute timeout for long-running operations (indexing large directories)
+  server.setTimeout(5 * 60 * 1000);
 
   const errorHandler = (error) => {
     if (error.syscall !== "listen") {

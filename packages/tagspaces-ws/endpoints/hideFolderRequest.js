@@ -1,43 +1,46 @@
+const { execFile } = require("child_process");
 const { AppConfig } = require("@tagspaces/tagspaces-common");
+const {
+  collectBody,
+  safeJsonParse,
+  validatePath,
+  sendError,
+} = require("../security");
 
 function hideFolder(req, res) {
   if (req.method === "POST") {
-    let body = "";
-    req.on("data", function (data) {
-      body += data;
-      // console.log("Partial body: " + body);
-    });
-    req.on("end", async () => {
-      // console.log('Body: ' + parse(body));
-      function resSuccess(succeeded) {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.setHeader("Cache-Control", "no-store, must-revalidate");
-        res.end(JSON.stringify({ success: succeeded }));
-      }
-      try {
-        const data = JSON.parse(body);
-        const dirPath = data.path;
+    collectBody(req, res)
+      .then(async (body) => {
+        try {
+          const data = safeJsonParse(body);
+          const dirPath = validatePath(data.path);
 
-        if (AppConfig.isWin) {
-          execFile("attrib", ["+h", dirPath], (err, stdout) => {
-            if (err) {
-              console.error(err);
-              return resSuccess(false);
-            }
+          function resSuccess(succeeded) {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Cache-Control", "no-store, must-revalidate");
+            res.end(JSON.stringify({ success: succeeded }));
+          }
+
+          if (AppConfig.isWin) {
+            execFile("attrib", ["+h", dirPath], (err) => {
+              if (err) {
+                console.error("attrib error:", err.message);
+                return resSuccess(false);
+              }
+              resSuccess(true);
+            });
+          } else {
             resSuccess(true);
-          });
-        } else {
-          resSuccess(true);
+          }
+        } catch (e) {
+          sendError(res, 400, "Hide folder failed", e);
         }
-      } catch (e) {
-        console.log(e);
-        res.statusCode = 400;
-        res.end();
-      }
-    });
+      })
+      .catch(() => {});
   }
 }
+
 module.exports = {
   hideFolder,
 };
