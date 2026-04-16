@@ -1,11 +1,11 @@
-# @tagspaces/tagspaces-cli
+# @tagspaces/shell
 
 A command-line tool for managing files and folders compatible with the [TagSpaces](https://www.tagspaces.org) Desktop and Web applications. It can generate search indexes, create thumbnails, clean up obsolete metadata, add tags, set descriptions, and search indexed directories.
 
 ## Installation
 
 ```bash
-npm install -g @tagspaces/tagspaces-cli
+npm install -g @tagspaces/shell
 ```
 
 ## Commands

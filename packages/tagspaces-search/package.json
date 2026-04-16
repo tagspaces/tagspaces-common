@@ -6,6 +6,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
+    "test": "jest --config=jest.config.js",
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {

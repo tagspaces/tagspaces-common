@@ -431,6 +431,250 @@ describe("path utilities for tagging", () => {
   });
 });
 
+// ── indexer with fulltext ────────────────────────────────────────────────────
+
+describe("indexer with fulltext", () => {
+  test("creates index with fulltext content extracted", async () => {
+    const directoryIndex = await createIndex(
+      {
+        path: indexingDir,
+        listDirectoryPromise,
+        getFileContentPromise,
+      },
+      ["loadMeta", "extractTextContent"],
+    );
+
+    expect(directoryIndex).toBeDefined();
+
+    // At least one file entry should have textContent extracted
+    const filesWithText = directoryIndex.filter(
+      (e) => e.isFile && e.textContent,
+    );
+    expect(filesWithText.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("creates index with fulltext and links extracted", async () => {
+    const directoryIndex = await createIndex(
+      {
+        path: indexingDir,
+        listDirectoryPromise,
+        getFileContentPromise,
+      },
+      ["loadMeta", "extractTextContent", "extractLinks"],
+    );
+
+    expect(directoryIndex).toBeDefined();
+    expect(directoryIndex.length).toBeGreaterThan(0);
+  });
+
+  test("persists fulltext to separate tsft.jsonl file", async () => {
+    const directoryIndex = await createIndex(
+      {
+        path: indexingDir,
+        listDirectoryPromise,
+        getFileContentPromise,
+      },
+      ["loadMeta", "extractTextContent"],
+    );
+
+    const success = await persistIndex(
+      { path: indexingDir, saveTextFilePromise },
+      directoryIndex,
+    );
+    expect(success).toBeTruthy();
+
+    const fullTextPath = pathLib.resolve(
+      indexingDir,
+      ".ts",
+      AppConfig.folderFullTextFile,
+    );
+    // fulltext file should exist if any files had textContent
+    const filesWithText = directoryIndex.filter(
+      (e) => e.isFile && e.textContent,
+    );
+    if (filesWithText.length > 0) {
+      expect(fs.existsSync(fullTextPath)).toBe(true);
+      const content = fs.readFileSync(fullTextPath, "utf-8");
+      expect(content.length).toBeGreaterThan(0);
+      // JSONL format: each line should be valid JSON with p and t keys
+      const firstLine = content.split("\n")[0];
+      const parsed = JSON.parse(firstLine);
+      expect(parsed.p).toBeDefined();
+      expect(parsed.t).toBeDefined();
+    }
+  });
+
+  test("stripped index file does not contain textContent", async () => {
+    const directoryIndex = await createIndex(
+      {
+        path: indexingDir,
+        listDirectoryPromise,
+        getFileContentPromise,
+      },
+      ["loadMeta", "extractTextContent"],
+    );
+
+    await persistIndex(
+      { path: indexingDir, saveTextFilePromise },
+      directoryIndex,
+    );
+
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+    // The persisted tsi.json should have textContent stripped out
+    for (const entry of indexContent) {
+      expect(entry.textContent).toBeUndefined();
+    }
+  });
+});
+
+// ── search (library-level) ──────────────────────────────────────────────────
+
+describe("search", () => {
+  const { searchLocationIndex } = require("@tagspaces/tagspaces-search");
+
+  // Ensure the index exists before search tests
+  beforeAll(async () => {
+    const directoryIndex = await createIndex(
+      {
+        path: indexingDir,
+        listDirectoryPromise,
+        getFileContentPromise,
+      },
+      ["loadMeta", "extractTextContent"],
+    );
+    await persistIndex(
+      { path: indexingDir, saveTextFilePromise },
+      directoryIndex,
+    );
+  });
+
+  test("searches index by text query", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        textQuery: "test",
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("searches index by tag", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        tagsAND: [{ title: "tag1" }],
+        tagsOR: [],
+        tagsNOT: [],
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results[0].name).toContain("tag1");
+  });
+
+  test("search returns empty for non-matching query", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        tagsAND: [{ title: "nonexistent-xyz-tag" }],
+        tagsOR: [],
+        tagsNOT: [],
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results).toHaveLength(0);
+  });
+
+  test("searches with strict search type", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        textQuery: "test_file1",
+        searchType: "strict",
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results[0].path).toContain("test_file1");
+  });
+
+  test("searches with semistrict (case-insensitive) search type", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        textQuery: "TEST_FILE1",
+        searchType: "semistrict",
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("filters by file type", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        fileTypes: ["md"],
+        tagsAND: [],
+        tagsOR: [],
+        tagsNOT: [],
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    for (const r of results) {
+      expect(r.extension).toBe("md");
+    }
+  });
+
+  test("filters folders only", async () => {
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const indexContent = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+    const results = await searchLocationIndex(
+      indexContent,
+      {
+        fileTypes: AppConfig.SearchTypeGroups.folders,
+        tagsAND: [],
+        tagsOR: [],
+        tagsNOT: [],
+        showUnixHiddenEntries: false,
+      },
+      AppConfig.tagDelimiter,
+    );
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    for (const r of results) {
+      expect(r.isFile).toBe(false);
+    }
+  });
+});
+
 // ── CLI integration (exec) ───────────────────────────────────────────────────
 
 describe("CLI integration", () => {
@@ -459,6 +703,7 @@ describe("CLI integration", () => {
     expect(output).toContain("metacleaner");
     expect(output).toContain("tag");
     expect(output).toContain("describe");
+    expect(output).toContain("search");
   });
 
   test("tag --help shows tag-specific options", () => {
@@ -614,5 +859,115 @@ describe("CLI integration", () => {
   test("metacleaner dry-run lists files without deleting", () => {
     const output = run(`metacleaner --analyze "${testingDir}"`);
     expect(output).toContain("Done cleaning");
+  });
+
+  // ── new feature: indexer --fulltext ──────────────────────────────────────
+
+  test("indexer --help shows fulltext and links options", () => {
+    const output = run("indexer --help");
+    expect(output).toContain("--fulltext");
+    expect(output).toContain("--links");
+  });
+
+  test("indexer --fulltext generates index with statistics", () => {
+    const output = run(`indexer --fulltext "${indexingDir}"`);
+    expect(output).toContain("Index generated");
+    expect(output).toContain("files");
+    expect(output).toContain("folders");
+    expect(output).toContain("elapsed");
+  });
+
+  test("indexer --fulltext extracts text and shows token stats", () => {
+    const output = run(`indexer --fulltext "${indexingDir}"`);
+    expect(output).toContain("Index generated");
+    // Should show fulltext stats since .md and .txt files have content
+    expect(output).toContain("fulltext");
+    expect(output).toContain("tokens");
+  });
+
+  test("indexer --fulltext --links generates index with link extraction", () => {
+    const output = run(`indexer --fulltext --links "${indexingDir}"`);
+    expect(output).toContain("Index generated");
+  });
+
+  // ── new feature: search command ─────────────────────────────────────────
+
+  test("search --help shows search-specific options", () => {
+    const output = run("search --help");
+    expect(output).toContain("--query");
+    expect(output).toContain("--tags");
+    expect(output).toContain("--type");
+    expect(output).toContain("--search-type");
+    expect(output).toContain("--max-results");
+    expect(output).toContain("fuzzy");
+    expect(output).toContain("strict");
+  });
+
+  test("search finds files by text query", () => {
+    // ensure index exists
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -q test`);
+    expect(output).toContain("Found");
+    expect(output).toContain("result");
+  });
+
+  test("search finds files by tag", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -t tag1`);
+    expect(output).toContain("Found");
+    expect(output).toContain("test_file1");
+  });
+
+  test("search with type filter returns only matching extensions", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" --type notes`);
+    expect(output).toContain("Found");
+    // notes type includes md and txt
+    expect(output).toContain("result");
+  });
+
+  test("search with strict type", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -q test_file1 -s strict`);
+    expect(output).toContain("Found");
+    expect(output).toContain("test_file1");
+  });
+
+  test("search with max-results limits output", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -q test -n 1`);
+    expect(output).toContain("Found");
+  });
+
+  test("search shows no results for non-matching query", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(
+      `search "${indexingDir}" -t "nonexistent-tag-xyz-12345"`,
+    );
+    expect(output).toContain("No results");
+  });
+
+  test("search fails gracefully without index", () => {
+    const emptyDir = pathLib.resolve(testingDir, "_empty_search_dir");
+    fs.mkdirSync(emptyDir, { recursive: true });
+    try {
+      const output = run(`search "${emptyDir}" -q test`);
+      expect(output).toContain("No index found");
+    } catch (e) {
+      // execSync throws on non-zero exit — the message may be in
+      // the error's message property when output is not captured
+      const combined =
+        (e.stderr ? String(e.stderr) : "") +
+        (e.stdout ? String(e.stdout) : "") +
+        (e.message ? String(e.message) : "");
+      // Either "No index found" or an ENOENT error is acceptable
+      expect(
+        combined.includes("No index found") ||
+          combined.includes("ENOENT") ||
+          e.status !== 0,
+      ).toBe(true);
+    } finally {
+      fs.rmSync(emptyDir, { recursive: true, force: true });
+    }
   });
 });

@@ -1,4 +1,5 @@
 .ts
 !__test__/indexingLocation/.ts
 !__test__/indexingLocation/testFolder/.ts
+__test__/indexingLocation/.ts/tsft.jsonl
 
