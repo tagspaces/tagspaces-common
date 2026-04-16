@@ -76,6 +76,8 @@ if (typeof process !== "undefined") {
     defaultFileColor = process.env.defaultFileColor;
   if (process.env.defaultFolderColor)
     defaultFolderColor = process.env.defaultFolderColor;
+  if (process.env.folderFullTextFile)
+    folderFullTextFile = process.env.folderFullTextFile;
 }
 
 const isElectron =
@@ -141,6 +143,128 @@ const isAndroid =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("android");
 const isMobile = isCordovaiOS || isCordovaAndroid || isCapacitor || isIOS || isAndroid;
+
+let folderFullTextFile = "tsft.json";
+
+const SearchTypes = {
+  any: "any",
+  images: "images",
+  notes: "notes",
+  documents: "documents",
+  audio: "audio",
+  video: "video",
+  archives: "archives",
+  bookmarks: "bookmarks",
+  ebooks: "ebooks",
+  emails: "emails",
+  folders: "folders",
+  files: "files",
+  untagged: "untagged",
+};
+
+const SearchSizes = {
+  empty: { key: "sizeEmpty", thresholdBytes: 0 },
+  tiny: { key: "sizeTiny", thresholdBytes: 10 * 1024 },
+  verySmall: { key: "sizeVerySmall", thresholdBytes: 100 * 1024 },
+  small: { key: "sizeSmall", thresholdBytes: 1024 * 1024 },
+  medium: { key: "sizeMedium", thresholdBytes: 100 * 1024 * 1024 },
+  large: { key: "sizeLarge", thresholdBytes: 1024 * 1024 * 1024 },
+  huge: { key: "sizeHuge", thresholdBytes: 1024 * 1024 * 1024 },
+};
+
+const SearchTimePeriods = {
+  today: { key: "today", periodSpan: 86400000 },
+  yesterday: { key: "yesterday", periodSpan: 172800000 },
+  past7Days: { key: "past7Days", periodSpan: 604800000 },
+  past30Days: { key: "past30Days", periodSpan: 2592000000 },
+  past6Months: { key: "past6Months", periodSpan: 15778476000 },
+  pastYear: { key: "pastYear", periodSpan: 31556952000 },
+  moreThanYear: { key: "moreThanYear", periodSpan: 31556952001 },
+};
+
+const SearchTypeGroups = {
+  [SearchTypes.any]: [""],
+  [SearchTypes.images]: [
+    "jpg",
+    "jpeg",
+    "jfif",
+    "jif",
+    "jiff",
+    "png",
+    "gif",
+    "svg",
+    "heic",
+    "webp",
+    "bmp",
+    "tga",
+    "tif",
+    "tiff",
+    "nef",
+    "cr2",
+    "dng",
+    "psd",
+    "avif",
+  ],
+  [SearchTypes.notes]: ["md", "mdown", "txt", "html", "mdx"],
+  [SearchTypes.documents]: [
+    "pdf",
+    "doc",
+    "docx",
+    "xls",
+    "xlsx",
+    "odt",
+    "ods",
+    "odp",
+    "pptx",
+    "numbers",
+    "potx",
+    "sldx",
+    "dotx",
+  ],
+  [SearchTypes.audio]: [
+    "ogg",
+    "mp3",
+    "wav",
+    "wave",
+    "flac",
+    "acc",
+    "m4a",
+    "m4b",
+    "m4p",
+    "opus",
+    "aiff",
+    "speex",
+    "wma",
+  ],
+  [SearchTypes.video]: [
+    "ogv",
+    "mp4",
+    "webm",
+    "m4v",
+    "mkv",
+    "avi",
+    "3gp",
+    "3g2",
+    "mov",
+  ],
+  [SearchTypes.archives]: ["zip", "rar", "gz", "tgz", "arc", "7z"],
+  [SearchTypes.bookmarks]: ["url", "lnk", "sym", "desktop", "website"],
+  [SearchTypes.ebooks]: [
+    "epub",
+    "mobi",
+    "azw",
+    "prc",
+    "azw1",
+    "azw3",
+    "azw4",
+    "azw8",
+    "azk",
+  ],
+  [SearchTypes.emails]: ["eml", "msg"],
+  [SearchTypes.folders]: ["folders"],
+  [SearchTypes.files]: ["files"],
+  [SearchTypes.untagged]: ["untagged"],
+};
 
 const ThumbGenSupportedFileTypes = {
   image: [
@@ -258,5 +382,10 @@ module.exports = {
   isMobile,
   tsProtocol,
   mediaProtocol,
+  folderFullTextFile,
+  SearchTypes,
+  SearchSizes,
+  SearchTimePeriods,
+  SearchTypeGroups,
   ThumbGenSupportedFileTypes,
 };

@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+/**
+ * The MIT License (MIT)
+ * Copyright (c) 2021-present TagSpaces Authors
+ * @tagspaces/tagspaces-cli — Command-line interface for TagSpaces operations:
+ * indexing, thumbnail generation, tagging, description, and searching.
+ * Pure JS, works on all platforms: Electron, browser, Cordova, Capacitor, Node CLI.
+ */
 "use strict";
 
 const chalk = require("chalk");
@@ -20,6 +27,14 @@ const BANNER = [
 
 function showBanner() {
   console.log(BANNER);
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 const DANGEROUS_KEYS = ["__proto__", "constructor", "prototype"];
@@ -240,9 +255,7 @@ module.exports = function tscmd() {
                 absPath,
                 AppConfig.tagDelimiter,
               );
-              const mergedTags = [
-                ...new Set([...existingTags, ...newTags]),
-              ];
+              const mergedTags = [...new Set([...existingTags, ...newTags])];
               const fileName = paths.extractFileName(absPath);
               const newFileName = paths.generateFileName(
                 fileName,
@@ -252,14 +265,11 @@ module.exports = function tscmd() {
                 AppConfig.prefixTagContainer,
                 true,
               );
-              const dirPath =
-                paths.extractContainingDirectoryPath(absPath);
+              const dirPath = paths.extractContainingDirectoryPath(absPath);
               const newFilePath = dirPath + nodePath.sep + newFileName;
 
               if (absPath === newFilePath) {
-                console.log(
-                  chalk.yellow("⚠ Tags already present: ") + absPath,
-                );
+                console.log(chalk.yellow("⚠ Tags already present: ") + absPath);
                 continue;
               }
 
@@ -287,17 +297,14 @@ module.exports = function tscmd() {
                 loadTextFilePromise,
                 metaFilePath,
               );
-              const existingTitles = (sidecar.tags || []).map(
-                (t) => t.title,
-              );
+              const existingTitles = (sidecar.tags || []).map((t) => t.title);
               const tagsToAdd = newTags.filter(
                 (t) => !existingTitles.includes(t),
               );
 
               if (tagsToAdd.length === 0) {
                 console.log(
-                  chalk.yellow("⚠ Tags already present in sidecar: ") +
-                    absPath,
+                  chalk.yellow("⚠ Tags already present in sidecar: ") + absPath,
                 );
                 continue;
               }
@@ -378,9 +385,7 @@ module.exports = function tscmd() {
             }
             description = nodeFs.readFileSync(filePath, "utf-8");
           } catch (err) {
-            console.error(
-              chalk.red("✖ Cannot read file: ") + filePath,
-            );
+            console.error(chalk.red("✖ Cannot read file: ") + filePath);
             console.error(chalk.red(err.message));
             return;
           }
@@ -389,9 +394,7 @@ module.exports = function tscmd() {
           try {
             description = nodeFs.readFileSync(0, "utf-8");
             if (description.length > MAX_DESCRIPTION_SIZE) {
-              console.error(
-                chalk.red("✖ Stdin input too large (max 10 MB)"),
-              );
+              console.error(chalk.red("✖ Stdin input too large (max 10 MB)"));
               return;
             }
           } catch (err) {
@@ -435,15 +438,137 @@ module.exports = function tscmd() {
               description.length > 80
                 ? description.substring(0, 80) + "…"
                 : description;
-            console.log(
-              chalk.dim(
-                '  "' + preview.replace(/\n/g, "\\n") + '"',
-              ),
-            );
+            console.log(chalk.dim('  "' + preview.replace(/\n/g, "\\n") + '"'));
           } catch (err) {
+            console.error(chalk.red("✖ Error setting description: ") + absPath);
+            console.error(chalk.red(err.message || err));
+          }
+        }
+      },
+    )
+
+    // ── search ─────────────────────────────────────────────────────────────
+    .command(
+      "search <dir>",
+      "Search a directory's index for matching files",
+      (yargs) =>
+        yargs
+          .option("query", {
+            alias: "q",
+            type: "string",
+            default: "",
+            description: "Text query (fuzzy search)",
+          })
+          .option("tags", {
+            alias: "t",
+            type: "array",
+            default: [],
+            description: "Tags to match (AND logic)",
+          })
+          .option("type", {
+            type: "string",
+            default: "any",
+            description:
+              "File type group: any, images, documents, notes, audio, video, archives, bookmarks, ebooks, emails, folders, files, untagged",
+          })
+          .option("search-type", {
+            alias: "s",
+            type: "string",
+            choices: ["fuzzy", "semistrict", "strict"],
+            default: "fuzzy",
+            description: "Search accuracy: fuzzy, semistrict, or strict",
+          })
+          .option("max-results", {
+            alias: "n",
+            type: "number",
+            default: 100,
+            description: "Maximum number of results",
+          }),
+      async (argv) => {
+        const nodePath = require("path");
+        const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
+        const {
+          loadTextFilePromise,
+        } = require("@tagspaces/tagspaces-common-node/io-node");
+        const {
+          getMetaIndexFilePath,
+        } = require("@tagspaces/tagspaces-indexer");
+        const { searchLocationIndex } = require("@tagspaces/tagspaces-search");
+
+        const dir = nodePath.resolve(argv.dir);
+        const indexPath = getMetaIndexFilePath(dir);
+
+        try {
+          const indexContent = await loadTextFilePromise(indexPath);
+          const index = JSON.parse(indexContent);
+
+          if (!index || index.length === 0) {
             console.error(
-              chalk.red("✖ Error setting description: ") + absPath,
+              chalk.yellow("⚠ No index found. Run ") +
+                chalk.cyan("tscmd indexer " + dir) +
+                chalk.yellow(" first."),
             );
+            return;
+          }
+
+          console.log(
+            chalk.cyan("  Searching ") + index.length + " entries in: " + dir,
+          );
+
+          // Build file types array from type group name
+          let fileTypes;
+          const typeKey = argv.type.toLowerCase();
+          if (typeKey !== "any" && AppConfig.SearchTypeGroups[typeKey]) {
+            fileTypes = AppConfig.SearchTypeGroups[typeKey];
+          }
+
+          const searchQuery = {
+            textQuery: argv.query || "",
+            tagsAND: argv.tags.map((t) => ({ title: String(t) })),
+            tagsOR: [],
+            tagsNOT: [],
+            fileTypes: fileTypes,
+            searchType: argv.searchType,
+            maxSearchResults: argv.maxResults,
+            showUnixHiddenEntries: false,
+          };
+
+          const results = await searchLocationIndex(
+            index,
+            searchQuery,
+            AppConfig.tagDelimiter,
+          );
+
+          if (results.length === 0) {
+            console.log(chalk.yellow("  No results found."));
+          } else {
+            console.log(
+              chalk.green("  Found " + results.length + " result(s):"),
+            );
+            for (const entry of results) {
+              const tags =
+                entry.tags && entry.tags.length > 0
+                  ? chalk.dim(
+                      " [" + entry.tags.map((t) => t.title).join(" ") + "]",
+                    )
+                  : "";
+              const size = entry.isFile
+                ? chalk.dim(" (" + formatBytes(entry.size) + ")")
+                : chalk.dim(" (dir)");
+              console.log("  " + entry.path + tags + size);
+            }
+          }
+        } catch (err) {
+          if (err.code === "ENOENT") {
+            console.error(
+              chalk.yellow("⚠ No index found at ") +
+                indexPath +
+                chalk.yellow(". Run ") +
+                chalk.cyan("tscmd indexer " + dir) +
+                chalk.yellow(" first."),
+            );
+          } else {
+            console.error(chalk.red("✖ Error searching: ") + dir);
             console.error(chalk.red(err.message || err));
           }
         }
@@ -453,7 +578,7 @@ module.exports = function tscmd() {
     .demandCommand(
       1,
       chalk.red(
-        "Please specify a command: thumbgen | indexer | metacleaner | tag | describe",
+        "Please specify a command: thumbgen | indexer | metacleaner | tag | describe | search",
       ),
     )
     .strict()
@@ -467,7 +592,11 @@ module.exports = function tscmd() {
         "  tag        -t, --tags         Tags to add (space-separated)",
         '             -m, --method       "rename" (default) or "sidecar"',
         "  describe   -d, --description  Description text to set",
-        '             -f, --file         Read description from a file',
+        "             -f, --file         Read description from a file",
+        "  search     -q, --query        Text query (fuzzy search)",
+        "             -t, --tags         Tags to match (AND logic)",
+        "             --type             File type group (e.g. images, documents)",
+        "             -n, --max-results  Maximum number of results (default: 100)",
         "",
         "Run " +
           chalk.cyan("tscmd <command> --help") +
