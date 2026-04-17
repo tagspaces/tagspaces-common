@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "dompurify": "3.3.1",
+    "jszip": "3.10.1",
     "marked": "^15.0.4",
     "picomatch": "^3.0.1",
     "uuid": "^9.0.0"

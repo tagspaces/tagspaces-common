@@ -563,6 +563,233 @@ describe("Common misc unit tests", () => {
       expect(entry.textContent).toBeDefined();
       expect(entry.textContent).not.toContain("data:");
     });
+
+    // --- Markdown variants ---
+
+    test("should handle .marp files as markdown", () => {
+      const entry = {
+        name: "deck.marp",
+        path: "/p/deck.marp",
+        isFile: true,
+      };
+      const content =
+        "---\nmarp: true\n---\n\n# Slide Title\n\nImportant **content** here.";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toBeDefined();
+      expect(entry.textContent).toContain("slide");
+      expect(entry.textContent).toContain("important");
+    });
+
+    // --- HTML variants ---
+
+    test("should handle .htm files via body match", () => {
+      const entry = { name: "a.htm", path: "/p/a.htm", isFile: true };
+      const content =
+        "<html><head><title>IgnoredTitle</title></head><body>Searchable body text</body></html>";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("searchable");
+      expect(entry.textContent).not.toContain("ignoredtitle");
+    });
+
+    test("should handle .xhtml files via body match", () => {
+      const entry = { name: "a.xhtml", path: "/p/a.xhtml", isFile: true };
+      const content =
+        '<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml">' +
+        "<head><title>IgnoredTitle</title></head>" +
+        "<body><h1>XHTML Heading</h1><p>xhtml body text</p></body></html>";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("xhtml");
+      expect(entry.textContent).not.toContain("ignoredtitle");
+    });
+
+    test("should handle .shtml files via body match", () => {
+      const entry = { name: "a.shtml", path: "/p/a.shtml", isFile: true };
+      const content =
+        "<html><head><title>Header</title></head>" +
+        "<body><!--#include file=\"inc.html\"--><p>shtml content body</p></body></html>";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("shtml");
+    });
+
+    test("should handle .eml files as plain text (no body match)", () => {
+      const entry = { name: "msg.eml", path: "/p/msg.eml", isFile: true };
+      const content =
+        "From: alice@example.com\nTo: bob@tagspaces.org\n" +
+        "Subject: Meeting notes\n\nHi Bob,\nHere are the notes.\nThanks,\nAlice";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("meeting");
+      expect(entry.textContent).toContain("alice");
+      expect(entry.textContent).toContain("notes");
+    });
+
+    test("should handle .mhtml: keep source URL and extract body text", () => {
+      const entry = { name: "page.mhtml", path: "/p/page.mhtml", isFile: true };
+      const content =
+        "From: <Saved by Browser>\r\n" +
+        "Snapshot-Content-Location: https://example.com/article\r\n" +
+        "MIME-Version: 1.0\r\n" +
+        'Content-Type: multipart/related; boundary="----=_boundary_1"\r\n' +
+        "\r\n" +
+        "------=_boundary_1\r\n" +
+        "Content-Type: text/html; charset=utf-8\r\n" +
+        "Content-Transfer-Encoding: quoted-printable\r\n" +
+        "Content-Location: https://example.com/article\r\n" +
+        "\r\n" +
+        "<html><body><h1>Article Title</h1>" +
+        "<p>This is the main article body with interesting searchable content.</p>" +
+        "</body></html>\r\n" +
+        "------=_boundary_1--\r\n";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      // source URL should be preserved
+      expect(entry.textContent).toContain("example.com");
+      // body text should now be extracted (was previously discarded)
+      expect(entry.textContent).toContain("article");
+      expect(entry.textContent).toContain("searchable");
+    });
+
+    test("should decode quoted-printable in .mhtml bodies", () => {
+      const entry = { name: "qp.mhtml", path: "/p/qp.mhtml", isFile: true };
+      const content =
+        "Snapshot-Content-Location: https://example.com/page\r\n" +
+        'Content-Type: multipart/related; boundary="b"\r\n' +
+        "\r\n" +
+        "--b\r\n" +
+        "Content-Type: text/html; charset=utf-8\r\n" +
+        "Content-Transfer-Encoding: quoted-printable\r\n" +
+        "\r\n" +
+        // "café" encoded as quoted-printable: caf=C3=A9
+        "<html><body><p>caf=C3=A9 and more</p></body></html>\r\n" +
+        "--b--\r\n";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("café");
+    });
+
+    // --- Shortcut formats ---
+
+    test("should index .url files with URL and name", () => {
+      const entry = { name: "bookmark.url", path: "/p/bookmark.url", isFile: true };
+      const content =
+        "[InternetShortcut]\nURL=https://tagspaces.org\nIconIndex=0";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("tagspaces.org");
+      expect(entry.textContent).toContain("internetshortcut");
+    });
+
+    test("should index .website files", () => {
+      const entry = { name: "pinned.website", path: "/p/pinned.website", isFile: true };
+      const content =
+        "[InternetShortcut]\nURL=https://github.com/tagspaces";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("github.com");
+    });
+
+    test("should index .webloc plist files", () => {
+      const entry = { name: "mac.webloc", path: "/p/mac.webloc", isFile: true };
+      // Real .webloc files have newlines/indentation between tags —
+      // without whitespace the entire XML is one unsearchable token.
+      const content =
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<plist version="1.0">\n' +
+        "  <dict>\n" +
+        "    <key>URL</key>\n" +
+        "    <string>https://docs.tagspaces.org</string>\n" +
+        "  </dict>\n" +
+        "</plist>";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("docs.tagspaces.org");
+    });
+
+    test("should index .desktop entries", () => {
+      const entry = { name: "app.desktop", path: "/p/app.desktop", isFile: true };
+      const content =
+        "[Desktop Entry]\nType=Link\nName=TagSpaces\nURL=https://tagspaces.org";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("tagspaces");
+      expect(entry.textContent).toContain("link");
+    });
+
+    test("should strip data URLs from shortcut files", () => {
+      const entry = { name: "big.url", path: "/p/big.url", isFile: true };
+      const bigBlob = "A".repeat(5000);
+      const content =
+        "[InternetShortcut]\nURL=https://example.com\n" +
+        `IconFile=data:image/png;base64,${bigBlob}\nIconIndex=0`;
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).not.toContain("AAAA");
+      expect(entry.textContent).not.toContain("data:image");
+      expect(entry.textContent).toContain("example.com");
+    });
+
+    // --- CSV ---
+
+    test("should index .csv and treat comma/semicolon as separators", () => {
+      const entry = { name: "data.csv", path: "/p/data.csv", isFile: true };
+      const content =
+        "Name,Email,Company\n" +
+        "Alice,alice@example.com,Acme\n" +
+        "Bob;bob@example.com;Widgets";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("alice");
+      expect(entry.textContent).toContain("widgets");
+      // commas/semicolons should be replaced — each value its own token
+      expect(entry.textContent).not.toMatch(/alice,/);
+      expect(entry.textContent).not.toMatch(/bob;/);
+    });
+
+    test("should strip surrounding quotes from quoted CSV cells", () => {
+      const entry = { name: "q.csv", path: "/p/q.csv", isFile: true };
+      const content = '"Smith, John","Designer"\n"Doe, Jane","Engineer"';
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("smith");
+      expect(entry.textContent).toContain("designer");
+      expect(entry.textContent).not.toMatch(/"smith/);
+    });
+
+    // --- VCF ---
+
+    test("should index .vcf contact fields", () => {
+      const entry = { name: "c.vcf", path: "/p/c.vcf", isFile: true };
+      const content =
+        "BEGIN:VCARD\nVERSION:3.0\n" +
+        "FN:Jane Doe\nEMAIL:jane@tagspaces.org\n" +
+        "ORG:Acme Corporation\nTITLE:CEO\n" +
+        "TEL:+1-555-1234\nEND:VCARD";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).toContain("jane");
+      expect(entry.textContent).toContain("tagspaces.org");
+      expect(entry.textContent).toContain("acme");
+      expect(entry.textContent).toContain("ceo");
+      expect(entry.textContent).toContain("555");
+    });
+
+    test("should strip PHOTO field and its folded continuation lines", () => {
+      const entry = { name: "p.vcf", path: "/p/p.vcf", isFile: true };
+      const photoBlob = "X".repeat(200);
+      const content =
+        "BEGIN:VCARD\nVERSION:3.0\nFN:Test Person\n" +
+        `PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQ${photoBlob}\n` +
+        ` ${photoBlob}\n ${photoBlob}\nEMAIL:test@example.com\nEND:VCARD`;
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).not.toContain("XXX");
+      expect(entry.textContent).not.toContain("/9j/");
+      expect(entry.textContent).toContain("test person");
+      expect(entry.textContent).toContain("test@example.com");
+    });
+
+    test("should strip vCard LOGO/SOUND/KEY binary fields", () => {
+      const entry = { name: "lk.vcf", path: "/p/lk.vcf", isFile: true };
+      const blob = "Z".repeat(200);
+      const content =
+        "BEGIN:VCARD\nVERSION:3.0\nFN:Corp Rep\n" +
+        `LOGO;ENCODING=b:${blob}\n ${blob}\n` +
+        `SOUND;ENCODING=b:${blob}\n ${blob}\n` +
+        `KEY;ENCODING=b:${blob}\n ${blob}\n` +
+        "ORG:Company Name\nEND:VCARD";
+      misc.extractTxtContentAndLinks(entry, content, false);
+      expect(entry.textContent).not.toContain("ZZZ");
+      expect(entry.textContent).toContain("company");
+      expect(entry.textContent).toContain("corp rep");
+    });
   });
 
   describe("setEntryLinks function", () => {

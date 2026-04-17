@@ -726,8 +726,14 @@ module.exports = function tscmd() {
         } = require("@tagspaces/tagspaces-common-node/io-node");
         const {
           getMetaIndexFilePath,
+          getMetaFullTextFilePath,
+          parseFullTextJsonl,
+          mergeFullTextIntoIndex,
         } = require("@tagspaces/tagspaces-indexer");
         const { searchLocationIndex } = require("@tagspaces/tagspaces-search");
+        const {
+          joinPaths,
+        } = require("@tagspaces/tagspaces-common/paths");
 
         const dir = nodePath.resolve(argv.dir);
         const indexPath = getMetaIndexFilePath(dir);
@@ -743,6 +749,36 @@ module.exports = function tscmd() {
                 chalk.yellow(" first."),
             );
             return;
+          }
+
+          // Load fulltext (tsft.jsonl) when a text query is provided —
+          // indexes store relative paths, convert to absolute so the merge
+          // against index entries (absolute paths) matches.
+          if (argv.query && argv.query.length > 1) {
+            try {
+              const ftPath = getMetaFullTextFilePath(dir);
+              const ftContent = await loadTextFilePromise(ftPath);
+              if (ftContent) {
+                const trimmed = ftContent.trim();
+                let ftMap;
+                if (trimmed.startsWith("{") && !trimmed.startsWith('{"p"')) {
+                  try {
+                    ftMap = JSON.parse(trimmed);
+                  } catch (e) {
+                    ftMap = parseFullTextJsonl(ftContent);
+                  }
+                } else {
+                  ftMap = parseFullTextJsonl(ftContent);
+                }
+                if (ftMap) {
+                  // Index entries store relative paths (as persisted);
+                  // keys match directly — no conversion needed for CLI.
+                  mergeFullTextIntoIndex(index, ftMap);
+                }
+              }
+            } catch (e) {
+              // No fulltext index — tag/file-type searches still work
+            }
           }
 
           console.log(

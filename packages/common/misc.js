@@ -250,6 +250,77 @@ function createLink(urlmatch) {
   }
 }
 
+/**
+ * Decode quoted-printable encoding commonly used in MHTML text parts.
+ * Handles soft line breaks (=\r?\n) and hex byte sequences (=E2=80=99).
+ */
+function decodeQuotedPrintable(str) {
+  if (!str || str.indexOf("=") === -1) return str;
+  // Remove soft line breaks
+  let out = str.replace(/=\r?\n/g, "");
+  // Decode =XX hex bytes — collect runs of =XX and decode as UTF-8
+  out = out.replace(/(?:=[0-9A-Fa-f]{2})+/g, (seq) => {
+    const bytes = [];
+    for (let i = 0; i < seq.length; i += 3) {
+      bytes.push(parseInt(seq.substr(i + 1, 2), 16));
+    }
+    try {
+      return Buffer.from(bytes).toString("utf8");
+    } catch (e) {
+      return seq;
+    }
+  });
+  return out;
+}
+
+/**
+ * Extract meaningful text from an MHTML document.
+ *
+ * MHTML is MIME multipart: one main text/html part plus embedded resources
+ * (images, CSS, fonts) as additional parts. The previous implementation kept
+ * only the Snapshot-Content-Location header, discarding all the actual body
+ * text. This version:
+ *   1. Keeps the source URL (useful for searchability)
+ *   2. Finds the first text/html part and extracts its body
+ *   3. Decodes quoted-printable if that encoding is used
+ */
+function extractMhtmlText(fileContent) {
+  if (!fileContent) return "";
+
+  const parts = [];
+
+  // 1. Source URL
+  const sourceMatch = fileContent.match(SOURCE_URL_MHTML_REGEX);
+  if (sourceMatch && sourceMatch[0]) {
+    parts.push(sourceMatch[0].trim());
+  }
+
+  // 2. First text/html part. Case-insensitive header matching; the body
+  //    starts after the blank line that follows the part headers.
+  const htmlPartMatch = fileContent.match(
+    /Content-Type:\s*text\/html[^\r\n]*(?:\r?\n[^\r\n]+)*\r?\n\r?\n([\s\S]*?)(?:\r?\n--|\r?\n$)/i,
+  );
+  if (htmlPartMatch && htmlPartMatch[1]) {
+    let body = htmlPartMatch[1];
+
+    // Find the encoding from the part headers (look back from the body start)
+    const headerEnd = fileContent.indexOf(htmlPartMatch[1]);
+    const headerBlock = fileContent.substring(
+      Math.max(0, headerEnd - 500),
+      headerEnd,
+    );
+    if (/Content-Transfer-Encoding:\s*quoted-printable/i.test(headerBlock)) {
+      body = decodeQuotedPrintable(body);
+    }
+
+    // Prefer the <body> contents; fall back to full HTML if no body tag
+    const bodyTagMatch = body.match(BODY_REGEX);
+    parts.push(bodyTagMatch && bodyTagMatch[0] ? bodyTagMatch[0] : body);
+  }
+
+  return parts.join(" ");
+}
+
 function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
   const fileName = eentry.name.toLowerCase();
 
@@ -268,6 +339,7 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
     ".xhtml",
     ".shtml",
     ".eml",
+    ".mhtml",
     ".website",
     ".url",
     ".webloc",
@@ -311,10 +383,7 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
         textContent = bodyMatch[0].trim();
       }
     } else if (fileName.endsWith(".mhtml")) {
-      const sourceMatch = textContent.match(SOURCE_URL_MHTML_REGEX);
-      if (sourceMatch && sourceMatch[0]) {
-        textContent = sourceMatch[0].trim();
-      }
+      textContent = extractMhtmlText(textContent);
     } else if (fileName.endsWith(".csv")) {
       // Replace field separators with spaces so each cell value becomes its
       // own token. Also strip surrounding quotes from quoted fields.

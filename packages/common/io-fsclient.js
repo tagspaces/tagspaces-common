@@ -17,6 +17,10 @@ const {
   setEntryLinks,
   extractTxtContentAndLinks,
 } = require("./misc");
+const {
+  extractOfficeText,
+  isOfficeExtension,
+} = require("./office-extractor");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
 const { execFile } = require("child_process");
@@ -603,6 +607,18 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
       if (fileName.endsWith(".pdf")) {
         const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
+        eentry.textContent = createTextIndex(textContent);
+        if (textContent && extractLinks) {
+          setEntryLinks(eentry, textContent);
+        }
+      } else if (isOfficeExtension(fileName)) {
+        // ZIP-based office/epub formats — read as binary, extract via JSZip
+        const ext = fileName.substring(fileName.lastIndexOf("."));
+        const buffer = await getFileContentPromise(
+          { path: eentry.path },
+          "arraybuffer",
+        );
+        const textContent = await extractOfficeText(buffer, ext);
         eentry.textContent = createTextIndex(textContent);
         if (textContent && extractLinks) {
           setEntryLinks(eentry, textContent);

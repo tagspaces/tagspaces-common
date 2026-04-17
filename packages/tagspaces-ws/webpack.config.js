@@ -12,9 +12,24 @@ class CopyPdfWorkerPlugin {
   apply(compiler) {
     compiler.hooks.afterEmit.tap("CopyPdfWorkerPlugin", (compilation) => {
       try {
-        const src = require.resolve(
-          "pdfjs-dist/legacy/build/pdf.worker.mjs",
+        // Resolve from the pdf-extraction package (where pdfjs-dist is a
+        // direct dependency) — not from the ws package directly.
+        const pdfExtractionDir = join(
+          __dirname,
+          "..",
+          "pdf-extraction",
         );
+        let src;
+        try {
+          src = require.resolve(
+            "pdfjs-dist/legacy/build/pdf.worker.mjs",
+            { paths: [pdfExtractionDir, __dirname] },
+          );
+        } catch (e1) {
+          src = require.resolve(
+            "pdfjs-dist/legacy/build/pdf.worker.mjs",
+          );
+        }
         const dest = join(
           compiler.options.output.path,
           "pdf.worker.mjs",
