@@ -22,5 +22,6 @@
     "@capacitor/splash-screen": "^6.0.0",
     "@capawesome/capacitor-file-picker": "^6.0.0",
     "@tagspaces/tagspaces-common": "^4.7.0"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }

@@ -9,5 +9,6 @@
   },
   "dependencies": {
     "@tagspaces/tagspaces-common-node": "^4.7.0"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }

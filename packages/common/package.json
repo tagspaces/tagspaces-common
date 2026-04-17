@@ -19,5 +19,6 @@
     "marked": "^15.0.4",
     "picomatch": "^3.0.1",
     "uuid": "^9.0.0"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }

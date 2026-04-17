@@ -15,5 +15,6 @@
   },
   "dependencies": {
     "pdfjs-dist": "5.6.205"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }

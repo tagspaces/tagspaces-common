@@ -14,5 +14,6 @@
     "@tagspaces/tagspaces-common-node": "^4.7.0",
     "@tagspaces/tagspaces-pdf-extraction": "^4.7.0",
     "@tagspaces/tagspaces-thumbgen-image": "^4.5.60"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }

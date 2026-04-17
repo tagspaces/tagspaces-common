@@ -15,5 +15,6 @@
     "adm-zip": "0.5.16",
     "fs-extra": "11.3.3",
     "klaw": "4.1.0"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }

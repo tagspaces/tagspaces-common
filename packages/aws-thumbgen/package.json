@@ -12,5 +12,6 @@
     "@tagspaces/tagspaces-common-aws3": "^4.7.0",
     "@tagspaces/tagspaces-thumbgen-image": "^4.5.60",
     "@tagspaces/tagspaces-thumbgen-pdf": "^4.5.53"
-  }
+  },
+  "gitHead": "7742faa6fcf476e9af49e1a787dbbd761b3cc766"
 }
