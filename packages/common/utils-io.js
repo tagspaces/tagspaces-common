@@ -393,15 +393,18 @@ function extractTextContent(fileName, textContent) {
   const fileExtension = fileName
     .toLowerCase()
     .substring(fileName.lastIndexOf("."));
-  const fileContent = textContent.toLowerCase();
+
+  // Don't lowercase the full content here — createTextIndex() already
+  // lowercases the final tokens. Calling .toLowerCase() on multi-MB
+  // strings upfront is expensive and the lexers preserve case anyway.
   let joinedTokens;
 
   if (MARKDOWN_EXTS.has(fileExtension)) {
-    joinedTokens = extractMarkdownText(fileContent);
+    joinedTokens = extractMarkdownText(textContent);
   } else if (HTML_EXTS.has(fileExtension)) {
-    joinedTokens = extractHTMLText(fileContent);
+    joinedTokens = extractHTMLText(textContent);
   } else {
-    joinedTokens = fileContent;
+    joinedTokens = textContent;
   }
 
   return createTextIndex(joinedTokens);

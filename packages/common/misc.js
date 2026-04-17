@@ -30,6 +30,11 @@ const MD_LINK_REGEX = /\[[^\]]{0,500}\]\(([^)]{1,2000})\)/g;
 const PLAIN_URL_REGEX = /https?:\/\/(?:[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=])+/g;
 const TS_LINK_REGEX = /ts:\/\/(?:[^\s\)]{1,2000})/g; // Bounded length to prevent abuse
 const DATA_URL_REGEX = /data:[^ \t\r\n]+/g;
+// Strip entire <img ...> tags whose src is a data URL — much faster than
+// letting the parser/tokenizer process hundreds of KB of inline base64.
+const DATA_URL_IMG_TAG_REGEX = /<img\b[^>]*\bsrc\s*=\s*["']data:[^"']*["'][^>]*\/?>/gi;
+// Strip base64 images embedded inline in markdown via ![alt](data:...)
+const MD_DATA_URL_IMG_REGEX = /!\[[^\]]*\]\(data:[^)]*\)/g;
 const BODY_REGEX = /<body[^>]*>([\s\S]*?)<\/body>/i;
 const SOURCE_URL_MHTML_REGEX =
   /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
@@ -264,17 +269,27 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
       return;
     }
 
-    // remove all dataurls
-    let textContent = fileContent.replace(DATA_URL_REGEX, "");
+    // Strip embedded data URLs FIRST — before any other regex work.
+    // HTML/MD files in TagSpaces commonly have base64 images inlined.
+    // These can dominate the file size and slow every subsequent step
+    // (body match, toLowerCase, marked lexer).
+    //
+    // Order matters: strip whole <img src="data:..."> and markdown
+    // ![alt](data:...) first, then any remaining bare "data:..." URIs.
+    let textContent = fileContent
+      .replace(DATA_URL_IMG_TAG_REGEX, "")
+      .replace(MD_DATA_URL_IMG_REGEX, "")
+      .replace(DATA_URL_REGEX, "");
 
     if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
-      // Extracting the body tag
-      const bodyMatch = fileContent.match(BODY_REGEX);
+      // Match body on the already-cleaned content (not the raw one) —
+      // otherwise the body match would drag all the dataurls back in.
+      const bodyMatch = textContent.match(BODY_REGEX);
       if (bodyMatch && bodyMatch[0]) {
         textContent = bodyMatch[0].trim();
       }
     } else if (fileName.endsWith(".mhtml")) {
-      const sourceMatch = fileContent.match(SOURCE_URL_MHTML_REGEX);
+      const sourceMatch = textContent.match(SOURCE_URL_MHTML_REGEX);
       if (sourceMatch && sourceMatch[0]) {
         textContent = sourceMatch[0].trim();
       }
