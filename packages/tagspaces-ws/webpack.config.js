@@ -1,6 +1,34 @@
 const { join, resolve } = require("path");
+const fs = require("fs");
 const webpack = require("webpack");
 const CleanPlugin = require("clean-webpack-plugin");
+
+/**
+ * Small inline plugin: copies pdfjs-dist's pdf.worker.mjs into the bundle
+ * output directory so the runtime fake worker can resolve it next to
+ * the bundle (our pdf-extraction/src/index.js looks for it there).
+ */
+class CopyPdfWorkerPlugin {
+  apply(compiler) {
+    compiler.hooks.afterEmit.tap("CopyPdfWorkerPlugin", (compilation) => {
+      try {
+        const src = require.resolve(
+          "pdfjs-dist/legacy/build/pdf.worker.mjs",
+        );
+        const dest = join(
+          compiler.options.output.path,
+          "pdf.worker.mjs",
+        );
+        fs.copyFileSync(src, dest);
+      } catch (e) {
+        console.warn(
+          "CopyPdfWorkerPlugin: could not copy pdf.worker.mjs —",
+          e.message,
+        );
+      }
+    });
+  }
+}
 
 // package.json contains the version number of the dependencies
 // that we want to make external.  Parsing the package.json
@@ -64,6 +92,7 @@ module.exports = {
     new webpack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
     }),
+    new CopyPdfWorkerPlugin(),
   ],
   target: "node",
   externals: {

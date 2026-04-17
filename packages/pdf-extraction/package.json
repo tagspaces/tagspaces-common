@@ -14,6 +14,6 @@
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "pdf2json": "^3.1.4"
+    "pdfjs-dist": "5.6.205"
   }
 }
