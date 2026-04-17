@@ -32,14 +32,23 @@ const TS_LINK_REGEX = /ts:\/\/(?:[^\s\)]{1,2000})/g; // Bounded length to preven
 const DATA_URL_REGEX = /data:[^ \t\r\n]+/g;
 // Strip entire <img ...> tags whose src is a data URL — much faster than
 // letting the parser/tokenizer process hundreds of KB of inline base64.
-const DATA_URL_IMG_TAG_REGEX = /<img\b[^>]*\bsrc\s*=\s*["']data:[^"']*["'][^>]*\/?>/gi;
+const DATA_URL_IMG_TAG_REGEX =
+  /<img\b[^>]*\bsrc\s*=\s*["']data:[^"']*["'][^>]*\/?>/gi;
 // Strip base64 images embedded inline in markdown via ![alt](data:...)
 const MD_DATA_URL_IMG_REGEX = /!\[[^\]]*\]\(data:[^)]*\)/g;
 const BODY_REGEX = /<body[^>]*>([\s\S]*?)<\/body>/i;
 const SOURCE_URL_MHTML_REGEX =
   /(?<=Snapshot-Content-Location:\s)(https?:\/\/[^\s]+)/;
 // Prefixes to skip when extracting relative links
-const SKIP_PREFIXES = ["javascript:", "mailto:", "data:", "file:", "#", "tel:", "blob:"];
+const SKIP_PREFIXES = [
+  "javascript:",
+  "mailto:",
+  "data:",
+  "file:",
+  "#",
+  "tel:",
+  "blob:",
+];
 
 // Configuration constants for security
 const MAX_CONTENT_LENGTH = 10 * 1024 * 1024; // 10MB limit
@@ -253,10 +262,18 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
   const supportedExtensions = [
     ".txt",
     ".md",
+    ".marp",
     ".htm",
     ".html",
+    ".xhtml",
+    ".shtml",
+    ".eml",
     ".website",
     ".url",
+    ".webloc",
+    ".desktop",
+    ".csv",
+    ".vcf",
   ];
   const fileExt = "." + fileName.split(".").pop();
 
@@ -281,7 +298,12 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
       .replace(MD_DATA_URL_IMG_REGEX, "")
       .replace(DATA_URL_REGEX, "");
 
-    if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
+    if (
+      fileName.endsWith(".htm") ||
+      fileName.endsWith(".html") ||
+      fileName.endsWith(".xhtml") ||
+      fileName.endsWith(".shtml")
+    ) {
       // Match body on the already-cleaned content (not the raw one) —
       // otherwise the body match would drag all the dataurls back in.
       const bodyMatch = textContent.match(BODY_REGEX);
@@ -293,6 +315,22 @@ function extractTxtContentAndLinks(eentry, fileContent, extractLinks = false) {
       if (sourceMatch && sourceMatch[0]) {
         textContent = sourceMatch[0].trim();
       }
+    } else if (fileName.endsWith(".csv")) {
+      // Replace field separators with spaces so each cell value becomes its
+      // own token. Also strip surrounding quotes from quoted fields.
+      textContent = textContent.replace(/[,;]+/g, " ").replace(/"/g, " ");
+    } else if (fileName.endsWith(".vcf")) {
+      // vCard: strip embedded binary fields (PHOTO, LOGO, SOUND, KEY) which
+      // can carry large base64 payloads across folded continuation lines.
+      // A folded continuation line starts with whitespace; the field ends at
+      // the next line that doesn't start with whitespace.
+      textContent = textContent.replace(
+        /^(PHOTO|LOGO|SOUND|KEY)[^\r\n]*\r?\n(?:[ \t][^\r\n]*\r?\n)*/gim,
+        "",
+      );
+      // Replace vCard separators (: ; ,) with spaces so field names and
+      // values become individual tokens.
+      textContent = textContent.replace(/[:;,]+/g, " ");
     }
 
     eentry.textContent = extractTextContent(fileName, textContent);

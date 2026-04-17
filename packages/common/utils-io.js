@@ -30,8 +30,15 @@ const SCRIPT_STYLE_REGEX =
   /<(?:script|style)[^>]*>[\s\S]*?<\/(?:script|style)>/gi;
 
 // File extension sets for faster lookup
-const MARKDOWN_EXTS = new Set([".md"]);
-const HTML_EXTS = new Set([".mhtml", ".html", ".htm"]);
+const MARKDOWN_EXTS = new Set([".md", ".marp"]);
+const HTML_EXTS = new Set([
+  ".mhtml",
+  ".html",
+  ".htm",
+  ".xhtml",
+  ".shtml",
+  ".eml",
+]);
 
 /**
  * @param param (path - string or Object)
