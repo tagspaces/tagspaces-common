@@ -446,12 +446,43 @@ function getIndexedEntry(entry, dirPath) {
  * @param param
  * @param directoryIndex
  */
-function persistIndex(param, directoryIndex) {
+async function persistIndex(param, directoryIndex) {
   if (!param.saveTextFilePromise) {
     console.error("persistIndex param.saveTextFilePromise is not set!");
-    return Promise.resolve(false);
+    return false;
   }
   const directoryPath = extractDirectoryPath(param);
+
+  // Don't persist index for directories that no longer exist.
+  // Otherwise the downstream fs-extra / create-directory calls would
+  // silently recreate the deleted directory via the .ts subpath.
+  // Prefer an explicit checkDirExist callback; fall back to listDirectoryPromise
+  // which will throw if the directory doesn't exist.
+  const dirExistCheck = param.checkDirExist || param.listDirectoryPromise;
+  if (typeof dirExistCheck === "function") {
+    try {
+      if (param.checkDirExist) {
+        const exists = await param.checkDirExist(directoryPath);
+        if (!exists) {
+          console.log(
+            "Skipping index persist — directory does not exist: " +
+              directoryPath,
+          );
+          return false;
+        }
+      } else {
+        // listDirectoryPromise throws/rejects if the path doesn't exist
+        await param.listDirectoryPromise({ path: directoryPath }, []);
+      }
+    } catch (e) {
+      console.log(
+        "Skipping index persist — directory not accessible: " +
+          directoryPath,
+      );
+      return false;
+    }
+  }
+
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   const folderFullTextPath = getMetaFullTextFilePath(directoryPath);
 

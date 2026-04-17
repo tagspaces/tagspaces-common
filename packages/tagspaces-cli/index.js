@@ -148,20 +148,43 @@ module.exports = function tscmd() {
             type: "boolean",
             default: false,
             description: "Extract links from file content (requires --fulltext)",
+          })
+          .option("force", {
+            type: "boolean",
+            default: false,
+            description: "Force full re-index (skip incremental)",
           }),
       async (argv) => {
         const {
           persistIndex,
           createIndex,
+          createIncrementalIndex,
+          getMetaIndexFilePath,
+          getMetaFullTextFilePath,
+          parseFullTextJsonl,
         } = require("@tagspaces/tagspaces-indexer");
+        const {
+          loadJSONString,
+        } = require("@tagspaces/tagspaces-common/utils-io");
         const {
           listDirectoryPromise,
           getFileContentPromise,
           saveTextFilePromise,
+          loadTextFilePromise,
+          checkDirExist,
         } = require("@tagspaces/tagspaces-common-node/io-node");
+        const extractPDFcontent = argv.fulltext
+          ? require("@tagspaces/tagspaces-pdf-extraction").extractPDFcontent
+          : undefined;
 
         for (const dir of argv.dirs) {
           try {
+            if (!(await checkDirExist(dir))) {
+              console.error(
+                chalk.red("✖ Directory does not exist: ") + dir,
+              );
+              continue;
+            }
             const mode = ["loadMeta"];
             if (argv.fulltext) {
               mode.push("extractTextContent");
@@ -179,46 +202,130 @@ module.exports = function tscmd() {
 
             const startTime = Date.now();
             let lastDir = "";
-            const directoryIndex = await createIndex(
-              {
-                path: dir,
-                listDirectoryPromise,
-                getFileContentPromise,
-                onProgress({ count, entry }) {
-                  const entryDir = entry.isFile
-                    ? entry.path.substring(
-                        0,
-                        entry.path.lastIndexOf("/"),
-                      )
-                    : entry.path;
-                  if (entryDir !== lastDir) {
-                    lastDir = entryDir;
-                    const shortDir =
-                      entryDir.length > 60
-                        ? "…" + entryDir.slice(-59)
-                        : entryDir;
-                    spinner.update(
-                      count + " entries  " + chalk.dim(shortDir),
-                    );
+            const progressReporter = ({ count, entry }) => {
+              const entryDir = entry.isFile
+                ? entry.path.substring(0, entry.path.lastIndexOf("/"))
+                : entry.path;
+              if (entryDir !== lastDir) {
+                lastDir = entryDir;
+                const shortDir =
+                  entryDir.length > 60
+                    ? "…" + entryDir.slice(-59)
+                    : entryDir;
+                spinner.update(
+                  count + " entries  " + chalk.dim(shortDir),
+                );
+              }
+            };
+
+            // Try incremental indexing if an existing index is present
+            let directoryIndex;
+            let incrementalStats;
+            if (!argv.force) {
+              try {
+                const indexPath = getMetaIndexFilePath(dir);
+                const existingContent = await loadTextFilePromise(indexPath);
+                const existingIndex = existingContent
+                  ? loadJSONString(existingContent)
+                  : null;
+
+                if (existingIndex && existingIndex.length > 0) {
+                  // Also load existing fulltext for incremental updates
+                  let existingFullText = null;
+                  if (argv.fulltext) {
+                    try {
+                      const ftPath = getMetaFullTextFilePath(dir);
+                      const ftContent = await loadTextFilePromise(ftPath);
+                      if (ftContent) {
+                        const trimmed = ftContent.trim();
+                        if (
+                          trimmed.startsWith("{") &&
+                          !trimmed.startsWith('{"p"')
+                        ) {
+                          try {
+                            existingFullText = JSON.parse(trimmed);
+                          } catch (e) {
+                            existingFullText = parseFullTextJsonl(ftContent);
+                          }
+                        } else {
+                          existingFullText = parseFullTextJsonl(ftContent);
+                        }
+                      }
+                    } catch (e) {
+                      // No fulltext file yet
+                    }
                   }
+
+                  spinner.update(
+                    "Incremental indexing (" +
+                      existingIndex.length +
+                      " existing entries)...",
+                  );
+                  const result = await createIncrementalIndex(
+                    {
+                      path: dir,
+                      listDirectoryPromise,
+                      getFileContentPromise,
+                      onProgress: progressReporter,
+                      ...(extractPDFcontent && { extractPDFcontent }),
+                    },
+                    mode,
+                    [],
+                    () => true,
+                    existingIndex,
+                    existingFullText,
+                  );
+                  directoryIndex = result.index;
+                  incrementalStats = result.stats;
+                }
+              } catch (e) {
+                // No existing index — fall through to full
+              }
+            }
+
+            if (!directoryIndex) {
+              directoryIndex = await createIndex(
+                {
+                  path: dir,
+                  listDirectoryPromise,
+                  getFileContentPromise,
+                  onProgress: progressReporter,
+                  ...(extractPDFcontent && { extractPDFcontent }),
                 },
-              },
-              mode,
-            );
+                mode,
+              );
+            }
 
             spinner.update(
               "Saving index (" + directoryIndex.length + " entries)...",
             );
             const success = await persistIndex(
-              { path: dir, saveTextFilePromise },
+              { path: dir, saveTextFilePromise, checkDirExist },
               directoryIndex,
             );
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
             if (success) {
               spinner.stop(
-                chalk.green("✔ Index generated: ") + dir,
+                chalk.green(
+                  incrementalStats ? "✔ Index updated: " : "✔ Index generated: ",
+                ) + dir,
               );
+
+              if (incrementalStats) {
+                console.log(
+                  chalk.dim(
+                    "  incremental: +" +
+                      incrementalStats.added +
+                      " ~" +
+                      incrementalStats.modified +
+                      " -" +
+                      incrementalStats.deleted +
+                      " =" +
+                      incrementalStats.unchanged,
+                  ),
+                );
+              }
 
               // Statistics
               let files = 0;

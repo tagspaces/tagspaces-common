@@ -312,17 +312,22 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     return new Promise((resolve) => {
       fs.readdir(metaPath, (error, entries) => {
         if (error) {
+          // Only create the .ts folder if its parent directory exists.
+          // Otherwise we'd resurrect directories that were deleted or
+          // create meta folders inside non-existent paths.
           try {
-            fs.ensureDirSync(metaPath);
-            if (AppConfig.isWin) {
-              execFile("attrib", ["+h", metaPath], (err) => {
-                if (err) console.warn("attrib error: " + err.message);
-              });
+            if (fs.existsSync(path) && fs.statSync(path).isDirectory()) {
+              fs.ensureDirSync(metaPath);
+              if (AppConfig.isWin) {
+                execFile("attrib", ["+h", metaPath], (err) => {
+                  if (err) console.warn("attrib error: " + err.message);
+                });
+              }
             }
           } catch (e) {
             // .ts folder could not be created — metadata will be skipped
           }
-          resolve([]); // returning results even if any promise fails
+          resolve([]);
           return;
         }
         resolve(

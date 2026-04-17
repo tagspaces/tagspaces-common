@@ -851,7 +851,7 @@ describe("CLI integration", () => {
 
   test("indexer generates index via CLI", () => {
     const output = run(`indexer "${indexingDir}"`);
-    expect(output).toContain("Index generated");
+    expect(output).toMatch(/Index (generated|updated)/);
     const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
     expect(fs.existsSync(indexPath)).toBe(true);
   });
@@ -871,15 +871,24 @@ describe("CLI integration", () => {
 
   test("indexer --fulltext generates index with statistics", () => {
     const output = run(`indexer --fulltext "${indexingDir}"`);
-    expect(output).toContain("Index generated");
+    expect(output).toMatch(/Index (generated|updated)/);
     expect(output).toContain("files");
     expect(output).toContain("folders");
     expect(output).toContain("elapsed");
   });
 
   test("indexer --fulltext extracts text and shows token stats", () => {
+    // Remove any existing index so fulltext extraction runs fresh
+    const indexPath = pathLib.resolve(indexingDir, ".ts", "tsi.json");
+    const fullTextPath = pathLib.resolve(
+      indexingDir,
+      ".ts",
+      AppConfig.folderFullTextFile,
+    );
+    cleanup(indexPath, fullTextPath);
+
     const output = run(`indexer --fulltext "${indexingDir}"`);
-    expect(output).toContain("Index generated");
+    expect(output).toMatch(/Index (generated|updated)/);
     // Should show fulltext stats since .md and .txt files have content
     expect(output).toContain("fulltext");
     expect(output).toContain("tokens");
@@ -887,7 +896,7 @@ describe("CLI integration", () => {
 
   test("indexer --fulltext --links generates index with link extraction", () => {
     const output = run(`indexer --fulltext --links "${indexingDir}"`);
-    expect(output).toContain("Index generated");
+    expect(output).toMatch(/Index (generated|updated)/);
   });
 
   // ── new feature: search command ─────────────────────────────────────────

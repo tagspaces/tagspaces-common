@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@tagspaces/tagspaces-metacleaner": "^4.6.1",
+    "@tagspaces/tagspaces-pdf-extraction": "^4.6.1",
     "@tagspaces/tagspaces-search": "^4.6.1",
     "@tagspaces/tagspaces-workers": "^4.6.1",
     "chalk": "4.1.2",

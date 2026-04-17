@@ -3,6 +3,7 @@ const {
   getFileContentPromise,
   saveTextFilePromise,
   loadTextFilePromise,
+  checkDirExist,
 } = require("@tagspaces/tagspaces-common-node/io-node");
 const {
   persistIndex,
@@ -118,7 +119,11 @@ function handleIndexer(req, res, signal) {
           }
 
           const success = await persistIndex(
-            { path: safePath, saveTextFilePromise },
+            {
+              path: safePath,
+              saveTextFilePromise,
+              checkDirExist,
+            },
             directoryIndex,
           );
           if (success) {

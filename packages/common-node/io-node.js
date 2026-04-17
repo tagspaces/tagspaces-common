@@ -87,6 +87,14 @@ function mkdirpSync(dir) {
   fsClient.mkdirpSync(dir);
 }
 
+function checkDirExist(entryPath) {
+  return new Promise((resolve) => {
+    require("fs").stat(entryPath, (err, stat) => {
+      resolve(!err && stat && stat.isDirectory());
+    });
+  });
+}
+
 function isDirectory(entryPath) {
   return fsClient.isDirectory(entryPath);
 }
@@ -181,6 +189,7 @@ module.exports = {
   saveBinaryFilePromise,
   getPropertiesPromise,
   isDirectory,
+  checkDirExist,
   loadTextFilePromise,
   getFileContentPromise,
   extractAndSavePdf,
