@@ -74,6 +74,7 @@ function handleIndexer(req, res, signal) {
               mode.push("extractLinks");
             }
           }
+
           const param = {
             path: safePath,
             listDirectoryPromise,
@@ -91,9 +92,6 @@ function handleIndexer(req, res, signal) {
               const existingFullText = extractText
                 ? await loadExistingFullText(safePath)
                 : null;
-              console.log(
-                "Attempting incremental index for: " + safePath,
-              );
               const result = await createIncrementalIndex(
                 param,
                 mode,
@@ -126,9 +124,6 @@ function handleIndexer(req, res, signal) {
             },
             directoryIndex,
           );
-          if (success) {
-            console.log("Index generated in folder: " + safePath);
-          }
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.setHeader("Cache-Control", "no-store, must-revalidate");

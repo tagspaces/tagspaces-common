@@ -69,7 +69,7 @@ function safeJSONParse(jsonString, filePath) {
   try {
     return JSON.parse(jsonString.trim()) || [];
   } catch (ex) {
-    console.warn(`Error JSON.parse for ${filePath}:`, ex);
+    console.warn("Error parsing JSON metadata file");
     return [];
   }
 }
@@ -248,8 +248,7 @@ function createIncrementalIndex(
       };
 
       console.log(
-        `Incremental index for ${rootPath}: ` +
-          `${stats.added} added, ${stats.modified} modified, ` +
+        `Incremental index: ${stats.added} added, ${stats.modified} modified, ` +
           `${stats.deleted} deleted, ${stats.unchanged} unchanged`,
       );
 
@@ -464,10 +463,7 @@ async function persistIndex(param, directoryIndex) {
       if (param.checkDirExist) {
         const exists = await param.checkDirExist(directoryPath);
         if (!exists) {
-          console.log(
-            "Skipping index persist — directory does not exist: " +
-              directoryPath,
-          );
+          console.log("Skipping index persist — directory does not exist");
           return false;
         }
       } else {
@@ -475,10 +471,7 @@ async function persistIndex(param, directoryIndex) {
         await param.listDirectoryPromise({ path: directoryPath }, []);
       }
     } catch (e) {
-      console.log(
-        "Skipping index persist — directory not accessible: " +
-          directoryPath,
-      );
+      console.log("Skipping index persist — directory not accessible");
       return false;
     }
   }
@@ -508,7 +501,7 @@ async function persistIndex(param, directoryIndex) {
       true,
     )
     .catch((err) => {
-      console.error(`Error saving the index for ${folderIndexPath}`, err);
+      console.error("Error saving the index:", err.message || err);
     });
 
   // Persist fulltext separately as JSONL if there is any
@@ -522,8 +515,8 @@ async function persistIndex(param, directoryIndex) {
       )
       .catch((err) => {
         console.error(
-          `Error saving fulltext index for ${folderFullTextPath}`,
-          err,
+          "Error saving fulltext index:",
+          err.message || err,
         );
       });
     return Promise.all([saveIndex, saveFullText]).then(
@@ -803,7 +796,7 @@ function loadFullTextIndex(param, getFileContentPromise) {
       return parseFullTextJsonl(content);
     })
     .catch((e) => {
-      console.log("Fulltext index not found:", e.message || e);
+      // fulltext index not found or unreadable
       return undefined;
     });
 }
@@ -849,7 +842,7 @@ function loadJSONFile(param, getFileContentPromise) {
   return getFileContentPromise(param, "text")
     .then((jsonContent) => loadJSONString(jsonContent))
     .catch((e) => {
-      console.log(`File not exist: ${param.path}`, e);
+      // file does not exist or is not readable
       return undefined;
     });
 }
