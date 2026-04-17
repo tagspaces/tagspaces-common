@@ -400,5 +400,66 @@ describe("Common utils-io unit tests", () => {
       const testCount = tokens.filter((t) => t === "test").length;
       expect(testCount).toBe(1);
     });
+
+    test("should decode HTML entities", () => {
+      const fileName = "document.html";
+      const content = "<body><p>Tom &amp; Jerry cost &#36;5</p></body>";
+      const result = utilsIO.extractTextContent(fileName, content);
+      expect(result).toContain("tom");
+      expect(result).toContain("jerry");
+      // &amp; → & then lowercase preserves the ampersand
+      expect(result).not.toContain("amp");
+    });
+
+    test("should strip HTML comments", () => {
+      const fileName = "document.html";
+      const content = "<p>Visible</p><!-- hidden comment --><p>Also visible</p>";
+      const result = utilsIO.extractTextContent(fileName, content);
+      expect(result).toContain("visible");
+      expect(result).not.toContain("hidden");
+      expect(result).not.toContain("comment");
+    });
+
+    test("should not stack-overflow on adversarial markdown-like HTML", () => {
+      // The marked lexer's emStrong regex can blow the call stack on
+      // certain inputs. Our regex-based HTML extractor must be immune.
+      const fileName = "document.html";
+      const content =
+        "<body><p>" +
+        "*".repeat(10000) +
+        "</p><p>real content here</p><p>" +
+        "_".repeat(10000) +
+        "</p></body>";
+      // Must not throw a RangeError
+      expect(() =>
+        utilsIO.extractTextContent(fileName, content),
+      ).not.toThrow();
+      const result = utilsIO.extractTextContent(fileName, content);
+      expect(result).toContain("real");
+      expect(result).toContain("content");
+    });
+
+    test("should handle HTML tags without collapsing adjacent text", () => {
+      // <b>foo</b>bar should become "foo bar", not "foobar"
+      const fileName = "document.html";
+      const content = "<body><b>foo</b>bar<i>baz</i>qux</body>";
+      const result = utilsIO.extractTextContent(fileName, content);
+      expect(result).toContain("foo");
+      expect(result).toContain("bar");
+      expect(result).toContain("baz");
+      expect(result).toContain("qux");
+      // Adjacent text nodes must not merge — explicit space from tag replacement
+      expect(result).not.toMatch(/foobar/);
+      expect(result).not.toMatch(/bazqux/);
+    });
+
+    test("markdown extraction returns plain text tokens", () => {
+      const fileName = "doc.md";
+      const content = "# Heading\n\nSome plain paragraph text here.";
+      const result = utilsIO.extractTextContent(fileName, content);
+      expect(result).toContain("heading");
+      expect(result).toContain("plain");
+      expect(result).toContain("paragraph");
+    });
   });
 });

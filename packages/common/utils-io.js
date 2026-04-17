@@ -421,14 +421,21 @@ function extractTextContent(fileName, textContent) {
  * Extract text tokens from Markdown content
  * @private
  */
+// Cap input size for the marked lexer — some adversarial inputs can blow
+// the call stack via catastrophic backtracking in emStrong
+const MAX_LEXER_INPUT = 2 * 1024 * 1024; // 2 MB
+
 function extractMarkdownText(fileContent) {
   try {
+    const input =
+      fileContent.length > MAX_LEXER_INPUT
+        ? fileContent.substring(0, MAX_LEXER_INPUT)
+        : fileContent;
     const MarkedLib = getMarked();
     const lexer = new MarkedLib.Lexer({});
-    const tokens = lexer.inlineTokens(fileContent);
+    const tokens = lexer.inlineTokens(input);
     const contentArray = tokens.map((token) => {
       if (token.type === "text" && token.text) {
-        // Single pass: remove punctuation and newlines
         return token.text
           .replace(PUNCTUATION_REGEX, "")
           .replace(NEWLINE_REGEX, "")
@@ -438,30 +445,72 @@ function extractMarkdownText(fileContent) {
     });
     return contentArray.join(" ");
   } catch (error) {
-    console.warn("Error extracting markdown text:", error);
-    return fileContent;
+    console.warn("Error extracting markdown text:", error && error.message);
+    // Fallback: strip common markdown syntax so we still get readable text
+    return fileContent
+      .replace(/```[\s\S]*?```/g, " ") // fenced code blocks
+      .replace(/`[^`]*`/g, " ") // inline code
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, " ") // images
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1") // links — keep text
+      .replace(/[*_~#>-]+/g, " ") // markdown syntax chars
+      .replace(/\s+/g, " ")
+      .trim();
   }
 }
 
+// Pre-compile for HTML entity decoding
+const HTML_ENTITY_REGEX = /&(amp|lt|gt|quot|apos|nbsp|#(\d+)|#x([0-9a-fA-F]+));/g;
+const HTML_ENTITY_MAP = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+};
+
+function decodeHtmlEntities(str) {
+  if (!str || str.indexOf("&") === -1) return str;
+  return str.replace(HTML_ENTITY_REGEX, (match, name, dec, hex) => {
+    if (HTML_ENTITY_MAP[name] !== undefined) return HTML_ENTITY_MAP[name];
+    if (dec) {
+      const code = parseInt(dec, 10);
+      return Number.isFinite(code) ? String.fromCharCode(code) : match;
+    }
+    if (hex) {
+      const code = parseInt(hex, 16);
+      return Number.isFinite(code) ? String.fromCharCode(code) : match;
+    }
+    return match;
+  });
+}
+
 /**
- * Extract text tokens from HTML/MHTML content
+ * Extract text tokens from HTML/MHTML content using direct tag stripping.
+ *
+ * We used to run this through marked's inline lexer, but that could blow
+ * the call stack on pathological inputs (emStrong's backtracking regex).
+ * For fulltext extraction, tag stripping + entity decoding is sufficient
+ * and much more reliable — no recursion, no catastrophic regex.
+ *
  * @private
  */
 function extractHTMLText(fileContent) {
   try {
-    // Remove script and style tags in a single pass for better performance
-    const cleanedHTML = fileContent.replace(SCRIPT_STYLE_REGEX, " ");
-    const MarkedLib = getMarked();
-    const lexer = new MarkedLib.Lexer({});
-    const tokens = lexer.inlineTokens(cleanedHTML);
-    return tokens
-      .filter((token) => token.type === "text" && token.text)
-      .map((token) => token.text.trim())
-      .filter((text) => text.length > 0)
-      .join(" ");
+    // Strip <script> and <style> blocks in one pass (they hold no searchable text)
+    let text = fileContent.replace(SCRIPT_STYLE_REGEX, " ");
+    // Strip HTML comments — can contain embedded base64 or weird content
+    text = text.replace(/<!--[\s\S]*?-->/g, " ");
+    // Replace every remaining tag with a single space so adjacent text nodes
+    // don't collide: "<b>foo</b>bar" → " foo  bar"
+    text = text.replace(/<[^>]+>/g, " ");
+    // Decode common entities
+    text = decodeHtmlEntities(text);
+    // Collapse whitespace
+    return text.replace(/\s+/g, " ").trim();
   } catch (error) {
-    console.warn("Error extracting HTML text:", error);
-    return fileContent;
+    console.warn("Error extracting HTML text:", error && error.message);
+    return "";
   }
 }
 
