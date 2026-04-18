@@ -150,6 +150,19 @@ tscmd search /some/folder -q "meeting notes"
 tscmd search /some/folder -t project important
 ```
 
+**Prefix grammar in `-q`** — for OR/NOT filters and mixed fulltext+tag queries, use prefixes inside the query string:
+
+- `+tag` — entry must have this tag (AND)
+- `-tag` — entry must **not** have this tag (NOT)
+- `|tag` — entry must have at least one of these (OR)
+- bare words — fulltext search
+
+```bash
+tscmd search /some/folder -q "notes +work -draft |urgent |important"
+```
+
+Tags passed via `-t` are merged with any `+tag` tokens parsed from `-q`. Always quote the `-q` value so the shell does not interpret `|` as a pipe or `-tag` as a flag.
+
 **Filter by file type group** (images, documents, notes, audio, video, archives, bookmarks, ebooks, emails, folders, files, untagged):
 
 ```bash

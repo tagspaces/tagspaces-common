@@ -956,6 +956,50 @@ describe("CLI integration", () => {
     expect(output).toContain("No results");
   });
 
+  // ── new feature: prefix grammar in -q (+AND, -NOT, |OR) ────────────────
+
+  test("search -q '+tag' filters by AND tag", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -q "+tag1"`);
+    expect(output).toContain("Found 1 result");
+    expect(output).toContain("test_file1");
+  });
+
+  test("search -q '-tag' excludes NOT tag", () => {
+    run(`indexer "${indexingDir}"`);
+    // exclude tag2 from an OR query that would otherwise match both files
+    const output = run(`search "${indexingDir}" -q "|tag1 |tag3 -tag2"`);
+    expect(output).toContain("Found 1 result");
+    expect(output).toContain("test_file2");
+  });
+
+  test("search -q '|tag1 |tag3' matches OR tags", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -q "|tag1 |tag3"`);
+    expect(output).toContain("Found 2 result");
+  });
+
+  test("search -q mixes bare fulltext with +tag filter", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -q "test +tag1"`);
+    expect(output).toContain("Found 1 result");
+    expect(output).toContain("test_file1");
+  });
+
+  test("search -t and +tag in -q are merged as AND", () => {
+    run(`indexer "${indexingDir}"`);
+    const output = run(`search "${indexingDir}" -t tag1 -q "+tag2"`);
+    expect(output).toContain("Found 1 result");
+    expect(output).toContain("test_file1");
+  });
+
+  test("search --help documents the +/-/| prefix grammar", () => {
+    const output = run("search --help");
+    expect(output).toMatch(/\+tag/);
+    expect(output).toMatch(/-tag/);
+    expect(output).toMatch(/\|tag/);
+  });
+
   test("search fails gracefully without index", () => {
     const emptyDir = pathLib.resolve(testingDir, "_empty_search_dir");
     fs.mkdirSync(emptyDir, { recursive: true });

@@ -63,6 +63,38 @@ const MAX_DESCRIPTION_SIZE = 10 * 1024 * 1024; // 10 MB
 // eslint-disable-next-line no-control-regex
 const INVALID_TAG_CHARS = /[/\\[\]\x00-\x1f]/;
 
+/**
+ * Parse a query string into a structured search query.
+ * Bare words become the fulltext query; tokens prefixed with
+ *   +  → tagsAND
+ *   -  → tagsNOT
+ *   |  → tagsOR
+ * A bare prefix char with no word (e.g. "+") is ignored.
+ */
+function parseQuery(query) {
+  const textParts = [];
+  const tagsAND = [];
+  const tagsNOT = [];
+  const tagsOR = [];
+  if (query) {
+    for (const raw of String(query).split(/\s+/)) {
+      if (!raw) continue;
+      const prefix = raw[0];
+      const rest = raw.slice(1);
+      if (prefix === "+" && rest) tagsAND.push(rest);
+      else if (prefix === "-" && rest) tagsNOT.push(rest);
+      else if (prefix === "|" && rest) tagsOR.push(rest);
+      else textParts.push(raw);
+    }
+  }
+  return {
+    textQuery: textParts.join(" "),
+    tagsAND,
+    tagsNOT,
+    tagsOR,
+  };
+}
+
 async function loadSidecarJSON(loadTextFilePromise, metaFilePath) {
   try {
     const content = await loadTextFilePromise(metaFilePath);
@@ -691,13 +723,14 @@ module.exports = function tscmd() {
             alias: "q",
             type: "string",
             default: "",
-            description: "Text query (fuzzy search)",
+            description:
+              'Query string. Bare words = fulltext. Prefixes: +tag (AND), -tag (NOT), |tag (OR). e.g. "notes +work -draft |urgent"',
           })
           .option("tags", {
             alias: "t",
             type: "array",
             default: [],
-            description: "Tags to match (AND logic)",
+            description: "Tags to match (AND logic, merged with +tag from -q)",
           })
           .option("type", {
             type: "string",
@@ -751,10 +784,11 @@ module.exports = function tscmd() {
             return;
           }
 
-          // Load fulltext (tsft.jsonl) when a text query is provided —
-          // indexes store relative paths, convert to absolute so the merge
-          // against index entries (absolute paths) matches.
-          if (argv.query && argv.query.length > 1) {
+          // Parse -q into textQuery + tag filters (+/-/| prefixes)
+          const parsed = parseQuery(argv.query);
+
+          // Load fulltext (tsft.jsonl) when a bare-word query is present.
+          if (parsed.textQuery && parsed.textQuery.length > 1) {
             try {
               const ftPath = getMetaFullTextFilePath(dir);
               const ftContent = await loadTextFilePromise(ftPath);
@@ -792,11 +826,17 @@ module.exports = function tscmd() {
             fileTypes = AppConfig.SearchTypeGroups[typeKey];
           }
 
+          // Merge -t tags (AND) with +tags parsed from -q, dedup by title
+          const andTitles = new Set([
+            ...argv.tags.map((t) => String(t)),
+            ...parsed.tagsAND,
+          ]);
+
           const searchQuery = {
-            textQuery: argv.query || "",
-            tagsAND: argv.tags.map((t) => ({ title: String(t) })),
-            tagsOR: [],
-            tagsNOT: [],
+            textQuery: parsed.textQuery,
+            tagsAND: [...andTitles].map((title) => ({ title })),
+            tagsOR: parsed.tagsOR.map((title) => ({ title })),
+            tagsNOT: parsed.tagsNOT.map((title) => ({ title })),
             fileTypes: fileTypes,
             searchType: argv.searchType,
             maxSearchResults: argv.maxResults,
