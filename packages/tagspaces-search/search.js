@@ -52,17 +52,20 @@ const fuseOptions = {
   ],
 };
 
+// Return a copy of each entry with tag titles restored to their original case.
+// Non-mutating — the prepared index may be cached and reused across searches,
+// so we must not mutate its tag objects.
 function setOriginTitle(results) {
   return results.map((entry) => {
-    if (entry.tags && entry.tags.length) {
-      entry.tags.map((tag) => {
-        if (tag.originTitle) {
-          tag.title = tag.originTitle;
-        }
-        return tag;
-      });
-    }
-    return entry;
+    if (!entry.tags || !entry.tags.length) return entry;
+    const hasOrigin = entry.tags.some((t) => t.originTitle);
+    if (!hasOrigin) return entry;
+    return {
+      ...entry,
+      tags: entry.tags.map((tag) =>
+        tag.originTitle ? { ...tag, title: tag.originTitle } : tag,
+      ),
+    };
   });
 }
 
@@ -215,11 +218,14 @@ function searchLocationIndex(
       ) {
         results = results.slice(0, searchQuery.maxSearchResults);
       }
-      // Remove textContent from results to reduce memory
+      // Unwrap Fuse.js result shape and strip textContent for the response.
+      // Non-mutating — the prepared index may be cached, so we must not
+      // delete textContent from its entries.
       results = results.map((result) => {
         const item = result.item !== undefined ? result.item : result;
         if (item.textContent) {
-          item.textContent = undefined;
+          const { textContent, ...rest } = item;
+          return rest;
         }
         return item;
       });

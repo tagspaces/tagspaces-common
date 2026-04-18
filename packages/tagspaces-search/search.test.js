@@ -372,4 +372,90 @@ describe("searchLocationIndex", () => {
     );
     expect(results.length).toBeGreaterThanOrEqual(1);
   });
+
+  test("cached prepared index stays searchable across multiple calls", async () => {
+    // Regression: setOriginTitle used to mutate tag.title back to the
+    // uppercase original, breaking tag lookups on the second search.
+    const { prepareIndex } = require("./prepare-index");
+    const rawIndex = [
+      makeEntry({
+        name: "a.txt",
+        path: "a.txt",
+        meta: { tags: [{ title: "Important" }, { title: "Work" }] },
+      }),
+    ];
+    const prepared = prepareIndex(rawIndex, " ", false);
+
+    const r1 = await searchLocationIndex(
+      rawIndex,
+      { tagsAND: [{ title: "important" }], showUnixHiddenEntries: false },
+      " ",
+      { preparedIndex: prepared },
+    );
+    expect(r1).toHaveLength(1);
+
+    // Second call on the same cached prepared index must still work.
+    const r2 = await searchLocationIndex(
+      rawIndex,
+      { tagsAND: [{ title: "important" }], showUnixHiddenEntries: false },
+      " ",
+      { preparedIndex: prepared },
+    );
+    expect(r2).toHaveLength(1);
+
+    // Different tag on the same cache must also still match.
+    const r3 = await searchLocationIndex(
+      rawIndex,
+      { tagsAND: [{ title: "work" }], showUnixHiddenEntries: false },
+      " ",
+      { preparedIndex: prepared },
+    );
+    expect(r3).toHaveLength(1);
+  });
+
+  test("does not mutate prepared index tag titles", async () => {
+    const { prepareIndex } = require("./prepare-index");
+    const rawIndex = [
+      makeEntry({
+        name: "a.txt",
+        path: "a.txt",
+        meta: { tags: [{ title: "MixedCase" }] },
+      }),
+    ];
+    const prepared = prepareIndex(rawIndex, " ", false);
+    expect(prepared[0].tags[0].title).toBe("mixedcase");
+
+    await searchLocationIndex(
+      rawIndex,
+      { tagsAND: [{ title: "mixedcase" }], showUnixHiddenEntries: false },
+      " ",
+      { preparedIndex: prepared },
+    );
+    // Prepared index entry must remain lowercase for future searches.
+    expect(prepared[0].tags[0].title).toBe("mixedcase");
+    expect(prepared[0].tags[0].originTitle).toBe("MixedCase");
+  });
+
+  test("does not strip textContent from cached prepared index", async () => {
+    const { prepareIndex } = require("./prepare-index");
+    const rawIndex = [
+      makeEntry({
+        name: "a.md",
+        path: "a.md",
+        extension: "md",
+        textContent: "searchable content here",
+      }),
+    ];
+    const prepared = prepareIndex(rawIndex, " ", false);
+    expect(prepared[0].textContent).toBe("searchable content here");
+
+    await searchLocationIndex(
+      rawIndex,
+      { textQuery: "searchable", showUnixHiddenEntries: false },
+      " ",
+      { preparedIndex: prepared },
+    );
+    // textContent must remain so a second fulltext search can find it.
+    expect(prepared[0].textContent).toBe("searchable content here");
+  });
 });
