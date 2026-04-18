@@ -9,6 +9,36 @@
 
 const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 
+// File size predicates keyed by the size category keys. Built once at
+// module load — rebuilding per filterIndex call allocated 7 closures on
+// every search.
+const FILE_SIZE_PREDICATES = {
+  [AppConfig.SearchSizes.empty.key]: (entry) =>
+    entry.size === AppConfig.SearchSizes.empty.thresholdBytes && entry.isFile,
+  [AppConfig.SearchSizes.tiny.key]: (entry) =>
+    entry.size > AppConfig.SearchSizes.empty.thresholdBytes &&
+    entry.size <= AppConfig.SearchSizes.tiny.thresholdBytes &&
+    entry.isFile,
+  [AppConfig.SearchSizes.verySmall.key]: (entry) =>
+    entry.size > AppConfig.SearchSizes.tiny.thresholdBytes &&
+    entry.size <= AppConfig.SearchSizes.verySmall.thresholdBytes &&
+    entry.isFile,
+  [AppConfig.SearchSizes.small.key]: (entry) =>
+    entry.size > AppConfig.SearchSizes.verySmall.thresholdBytes &&
+    entry.size <= AppConfig.SearchSizes.small.thresholdBytes &&
+    entry.isFile,
+  [AppConfig.SearchSizes.medium.key]: (entry) =>
+    entry.size > AppConfig.SearchSizes.small.thresholdBytes &&
+    entry.size <= AppConfig.SearchSizes.medium.thresholdBytes &&
+    entry.isFile,
+  [AppConfig.SearchSizes.large.key]: (entry) =>
+    entry.size > AppConfig.SearchSizes.medium.thresholdBytes &&
+    entry.size <= AppConfig.SearchSizes.large.thresholdBytes &&
+    entry.isFile,
+  [AppConfig.SearchSizes.huge.key]: (entry) =>
+    entry.size > AppConfig.SearchSizes.huge.thresholdBytes && entry.isFile,
+};
+
 /**
  * Filter entries by tag AND/OR/NOT criteria using Set-based O(1) lookups.
  * Replaces the previous JMESPath-based implementation.
@@ -151,36 +181,9 @@ function filterIndex(data, searchQuery) {
     (entry) => entry.cdt,
   );
 
-  // File size filtering
-  const fileSizeMap = {
-    [AppConfig.SearchSizes.empty.key]: (entry) =>
-      entry.size === AppConfig.SearchSizes.empty.thresholdBytes && entry.isFile,
-    [AppConfig.SearchSizes.tiny.key]: (entry) =>
-      entry.size > AppConfig.SearchSizes.empty.thresholdBytes &&
-      entry.size <= AppConfig.SearchSizes.tiny.thresholdBytes &&
-      entry.isFile,
-    [AppConfig.SearchSizes.verySmall.key]: (entry) =>
-      entry.size > AppConfig.SearchSizes.tiny.thresholdBytes &&
-      entry.size <= AppConfig.SearchSizes.verySmall.thresholdBytes &&
-      entry.isFile,
-    [AppConfig.SearchSizes.small.key]: (entry) =>
-      entry.size > AppConfig.SearchSizes.verySmall.thresholdBytes &&
-      entry.size <= AppConfig.SearchSizes.small.thresholdBytes &&
-      entry.isFile,
-    [AppConfig.SearchSizes.medium.key]: (entry) =>
-      entry.size > AppConfig.SearchSizes.small.thresholdBytes &&
-      entry.size <= AppConfig.SearchSizes.medium.thresholdBytes &&
-      entry.isFile,
-    [AppConfig.SearchSizes.large.key]: (entry) =>
-      entry.size > AppConfig.SearchSizes.medium.thresholdBytes &&
-      entry.size <= AppConfig.SearchSizes.large.thresholdBytes &&
-      entry.isFile,
-    [AppConfig.SearchSizes.huge.key]: (entry) =>
-      entry.size > AppConfig.SearchSizes.huge.thresholdBytes && entry.isFile,
-  };
-
-  if (searchQuery.fileSize && fileSizeMap[searchQuery.fileSize]) {
-    results = results.filter(fileSizeMap[searchQuery.fileSize]);
+  // File size filtering — predicates are module-level (see FILE_SIZE_PREDICATES)
+  if (searchQuery.fileSize && FILE_SIZE_PREDICATES[searchQuery.fileSize]) {
+    results = results.filter(FILE_SIZE_PREDICATES[searchQuery.fileSize]);
   }
 
   // Tag time period filtering
