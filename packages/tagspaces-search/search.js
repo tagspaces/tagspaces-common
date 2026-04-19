@@ -11,23 +11,52 @@ const { isPathStartsWith } = require("@tagspaces/tagspaces-common/paths");
 const { filterByTags, filterIndex } = require("./filters");
 const { prepareIndex } = require("./prepare-index");
 
+/**
+ * Split a text query into individual terms, respecting double-quoted phrases.
+ *
+ *   hello world         → ["hello", "world"]
+ *   "hello world"       → ["hello world"]
+ *   foo "bar baz" qux   → ["foo", "bar baz", "qux"]
+ *   '' or whitespace    → []
+ *
+ * Used by the strict and semistrict search paths to AND-combine terms.
+ * Fuzzy mode keeps using Fuse.js's own extended-search parser (which already
+ * supports space-as-AND and richer operators like `|`, `!`, `^`, `$`).
+ */
+function splitSearchTerms(query) {
+  if (!query || typeof query !== "string") return [];
+  const terms = [];
+  const re = /"([^"]*)"|(\S+)/g;
+  let m;
+  while ((m = re.exec(query)) !== null) {
+    const term = (m[1] !== undefined ? m[1] : m[2]).trim();
+    if (term) terms.push(term);
+  }
+  return terms;
+}
+
 const fuseOptions = {
   shouldSort: true,
-  threshold: 0.3,
+  // Tightened from 0.3 — 0.3 matched entries 1-2 edit-distance from the
+  // query, producing noise for short terms ("run" matched "rum", "rug",
+  // "won"). 0.2 still forgives typos but rejects spurious matches.
+  threshold: 0.2,
   ignoreLocation: true,
-  distance: 1000,
+  // (distance is only consulted when ignoreLocation is false — omitted)
+  //
+  // 1 is needed for single-character CJK queries to match bigram-indexed
+  // content. Latin 1-char queries are rejected at an outer length gate
+  // before Fuse ever runs, so this doesn't hurt Latin search.
   minMatchCharLength: 1,
   useExtendedSearch: true,
+  // Weights rank where a match counts most. Filenames win — that's what
+  // users type toward in almost every search. id and tagsDescription
+  // are demoted because they rarely represent user intent.
   keys: [
     {
       name: "name",
       getFn: (entry) => entry.name,
-      weight: 0.2,
-    },
-    {
-      name: "id",
-      getFn: (entry) => (entry.meta ? entry.meta.id : undefined),
-      weight: 0.1,
+      weight: 0.4,
     },
     {
       name: "description",
@@ -40,14 +69,19 @@ const fuseOptions = {
       weight: 0.2,
     },
     {
-      name: "tagsDescription",
-      getFn: (entry) => entry.tagsDescription,
-      weight: 0.2,
-    },
-    {
       name: "path",
       getFn: (entry) => entry.path,
       weight: 0.1,
+    },
+    {
+      name: "tagsDescription",
+      getFn: (entry) => entry.tagsDescription,
+      weight: 0.05,
+    },
+    {
+      name: "id",
+      getFn: (entry) => (entry.meta ? entry.meta.id : undefined),
+      weight: 0.05,
     },
   ],
 };
@@ -159,51 +193,65 @@ function searchLocationIndex(
     results = filterIndex(results, searchQuery);
     searched = searched || results.length <= resultCount;
 
-    // Full-text search
-    if (
-      searchQuery &&
-      searchQuery.textQuery &&
-      searchQuery.textQuery.length > 1
-    ) {
+    // Full-text search — require a non-trivial query (at least one non-empty
+    // term of length > 1). Whitespace-only queries are a no-op.
+    const rawQuery =
+      searchQuery && searchQuery.textQuery ? searchQuery.textQuery : "";
+    const hasMeaningfulQuery =
+      rawQuery.trim().length > 1 ||
+      (rawQuery.trim().length === 1 && /[\u2E80-\u9FFF]/.test(rawQuery));
+    if (searchQuery && rawQuery && hasMeaningfulQuery) {
       const textResultCount = results.length;
-      console.log("fuse query: " + searchQuery.textQuery);
+      console.log("fuse query: " + rawQuery);
       console.time("fuse");
       if (
         searchQuery.searchType &&
         searchQuery.searchType.includes("strict")
       ) {
-        results = results.filter((entry) => {
-          const ignoreCase = searchQuery.searchType === "semistrict";
-          const textQuery = ignoreCase
-            ? searchQuery.textQuery.toLowerCase()
-            : searchQuery.textQuery;
-          let description = entry.meta ? entry.meta.description : undefined;
-          if (ignoreCase && description) {
-            description = description.toLowerCase();
-          }
-          let metaId = entry.meta ? entry.meta.id : undefined;
-          if (ignoreCase && metaId) {
-            metaId = metaId.toLowerCase();
-          }
-          let textContent = entry.textContent;
-          if (ignoreCase && textContent) {
-            textContent = textContent.toLowerCase();
-          }
-          let path = entry.path;
-          if (ignoreCase && path) {
-            path = path.toLowerCase();
-          }
-          const foundInDescr = description && description.includes(textQuery);
-          const foundInMetaId = metaId && metaId.includes(textQuery);
-          const foundInContent = textContent && textContent.includes(textQuery);
-          const foundInPath = path && path.includes(textQuery);
-          return foundInPath || foundInDescr || foundInContent || foundInMetaId;
-        });
+        const ignoreCase = searchQuery.searchType === "semistrict";
+        // Split on whitespace (respecting quoted phrases) and AND-combine —
+        // every non-empty term must match at least one of the searchable
+        // fields. This matches fuzzy-mode's AND semantics; before this
+        // change, strict mode treated the whole query as one literal
+        // substring, so "hello world" required the exact phrase.
+        const rawTerms = splitSearchTerms(rawQuery);
+        const terms = ignoreCase
+          ? rawTerms.map((t) => t.toLowerCase())
+          : rawTerms;
+        if (terms.length > 0) {
+          results = results.filter((entry) => {
+            let description = entry.meta ? entry.meta.description : undefined;
+            let metaId = entry.meta ? entry.meta.id : undefined;
+            let textContent = entry.textContent;
+            let path = entry.path;
+            if (ignoreCase) {
+              if (description) description = description.toLowerCase();
+              if (metaId) metaId = metaId.toLowerCase();
+              if (textContent) textContent = textContent.toLowerCase();
+              if (path) path = path.toLowerCase();
+            }
+            // Every term must match at least ONE field
+            for (const term of terms) {
+              const foundInPath = path && path.includes(term);
+              const foundInDescr =
+                description && description.includes(term);
+              const foundInContent =
+                textContent && textContent.includes(term);
+              const foundInMetaId = metaId && metaId.includes(term);
+              if (
+                !(foundInPath || foundInDescr || foundInContent || foundInMetaId)
+              ) {
+                return false;
+              }
+            }
+            return true;
+          });
+        }
       } else {
-        // Fuzzy search with Fuse.js
-        const fuse =
-          opts.fuseInstance || new Fuse(results, fuseOptions);
-        results = fuse.search(searchQuery.textQuery);
+        // Fuzzy search with Fuse.js — extended search handles space=AND,
+        // `|`=OR, and richer operators (see docs in the UI help).
+        const fuse = opts.fuseInstance || new Fuse(results, fuseOptions);
+        results = fuse.search(rawQuery);
       }
       console.timeEnd("fuse");
       searched = searched || results.length <= textResultCount;

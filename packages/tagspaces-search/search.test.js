@@ -458,4 +458,171 @@ describe("searchLocationIndex", () => {
     // textContent must remain so a second fulltext search can find it.
     expect(prepared[0].textContent).toBe("searchable content here");
   });
+
+  // --- multi-term text queries ---
+
+  describe("multi-term strict search", () => {
+    const multiTermIndex = [
+      makeEntry({
+        name: "meeting-notes.md",
+        path: "/docs/meeting-notes.md",
+        textContent: "agenda for quarterly project kickoff discussion",
+      }),
+      makeEntry({
+        name: "budget.txt",
+        path: "/docs/budget.txt",
+        textContent: "annual budget planning with no project data here",
+      }),
+      makeEntry({
+        name: "readme.md",
+        path: "/code/readme.md",
+        textContent: "project setup instructions and discussion guide",
+      }),
+    ];
+
+    test("ANDs multiple terms in strict mode (same field)", async () => {
+      // "project discussion" → both words in textContent
+      // Matches meeting-notes.md + readme.md, not budget.txt
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "project discussion",
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      const names = results.map((r) => r.name).sort();
+      expect(names).toEqual(["meeting-notes.md", "readme.md"]);
+    });
+
+    test("ANDs terms across different fields", async () => {
+      // "docs kickoff" → "docs" in path, "kickoff" in textContent (same entry)
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "docs kickoff",
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      expect(results.map((r) => r.name)).toEqual(["meeting-notes.md"]);
+    });
+
+    test("case-insensitive in semistrict mode", async () => {
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "PROJECT DISCUSSION",
+          searchType: "semistrict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      const names = results.map((r) => r.name).sort();
+      expect(names).toEqual(["meeting-notes.md", "readme.md"]);
+    });
+
+    test("case-sensitive in strict mode", async () => {
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "PROJECT",
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      // 'PROJECT' uppercase not present in any entry
+      expect(results).toEqual([]);
+    });
+
+    test("quoted phrase stays a single term", async () => {
+      // "quarterly project" → space-separated = AND in strict mode
+      // "\"quarterly project\"" → single phrase, must match verbatim
+      const withPhrase = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: '"quarterly project"',
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      // Only meeting-notes has the literal phrase
+      expect(withPhrase.map((r) => r.name)).toEqual(["meeting-notes.md"]);
+    });
+
+    test("term that doesn't exist excludes all entries", async () => {
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "project nonexistentterm",
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      expect(results).toEqual([]);
+    });
+
+    test("ignores whitespace-only queries", async () => {
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "   ",
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      // No filtering should happen → all entries (or 0 when `searched` stays false)
+      // The contract is: no throw, no random subset.
+      expect(Array.isArray(results)).toBe(true);
+    });
+
+    test("single-char Latin query is a no-op (too short)", async () => {
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "a",
+          searchType: "strict",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      // Length gate rejects it; result is not filtered by text
+      expect(Array.isArray(results)).toBe(true);
+    });
+  });
+
+  describe("multi-term fuzzy search", () => {
+    const multiTermIndex = [
+      makeEntry({
+        name: "meeting-notes.md",
+        path: "/docs/meeting-notes.md",
+        textContent: "project kickoff discussion",
+      }),
+      makeEntry({
+        name: "budget.txt",
+        path: "/docs/budget.txt",
+        textContent: "annual budget",
+      }),
+    ];
+
+    test("Fuse extended-search ANDs space-separated terms", async () => {
+      const results = await searchLocationIndex(
+        multiTermIndex,
+        {
+          textQuery: "project discussion",
+          searchType: "fuzzy",
+          showUnixHiddenEntries: true,
+        },
+        " ",
+      );
+      // Only meeting-notes has both terms
+      expect(results.map((r) => r.name)).toEqual(["meeting-notes.md"]);
+    });
+  });
 });
