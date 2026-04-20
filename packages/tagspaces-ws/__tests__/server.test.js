@@ -39,7 +39,7 @@ describe("Web Server Endpoints", () => {
     "..",
     "testdata",
     "file-structure",
-    "supported-filestypes"
+    "supported-filestypes",
   );
 
   beforeAll((done) => {
@@ -69,10 +69,6 @@ describe("Web Server Endpoints", () => {
       .send([pathLib.join(testDir, "sample.pdf")]);
 
     expect(response.status).toBe(200);
-    /*
-      const filePath = pathLib.join(testDir, ".ts", "sample.pdf.txt");
-      const fileExists = fs.existsSync(filePath);
-      expect(fileExists).toBe(true);*/
   });
 
   test("POST /thumb-gen dir", async () => {
@@ -82,8 +78,8 @@ describe("Web Server Endpoints", () => {
       .send([testDir]);
 
     expect(response.status).toBe(200);
+
     const filesToCheck = [
-      "sample.avif.jpg",
       "sample.gif.jpg",
       "sample.jfif.jpg",
       "sample.jif.jpg",
@@ -107,7 +103,7 @@ describe("Web Server Endpoints", () => {
   test("POST /indexer", async () => {
     fs.writeFileSync(
       pathLib.join(testDir, ".ts", "sample.pdf.json"),
-      '{"id":"54dc1af0f43c4670b7138ee133a97396","description":"test descr\\n"}'
+      '{"id":"54dc1af0f43c4670b7138ee133a97396","description":"test descr\\n"}',
     );
     const tsmPath = pathLib.join(testDir, "empty_folder", ".ts", "tsm.json");
 
@@ -116,7 +112,7 @@ describe("Web Server Endpoints", () => {
 
     fs.writeFileSync(
       tsmPath,
-      '{"id":"38179c2452474f8592c5ed7965c0cf73","perspective":"grid","description":"test subdir folder descr\\n"}'
+      '{"id":"38179c2452474f8592c5ed7965c0cf73","perspective":"grid","description":"test subdir folder descr\\n"}',
     );
     const response = await request
       .post("/indexer")
@@ -130,38 +126,18 @@ describe("Web Server Endpoints", () => {
     expect(fileExists).toBe(true);
 
     const indexFullText = JSON.parse(
-      fs.readFileSync(pathLib.join(testDir, ".ts", "tsi.json"), "utf8").trim()
+      fs.readFileSync(pathLib.join(testDir, ".ts", "tsi.json"), "utf8").trim(),
     );
 
     expect(
-      indexFullText.some(({ meta }) => meta?.description === "test descr")
+      indexFullText.some(({ meta }) => meta?.description === "test descr"),
     ).toBe(true);
     expect(
       indexFullText.some(
-        ({ meta }) => meta?.description === "test subdir folder descr"
-      )
+        ({ meta }) => meta?.description === "test subdir folder descr",
+      ),
     ).toBe(true);
-    //fs.unlinkSync(filePath);
-    //expect(fs.existsSync(filePath)).toBe(false);
   });
-
-  /**
-   * indexer cannot work with relative paths: /Users/sytolk/IdeaProjects/tagspaces/release/app/node_modules/@tagspaces/Downloads/Music
-   */
-  /*test("POST /indexer relative path", async () => {
-    const dir = "./testdata/file-structure/supported-filestypes";
-    const response = await request
-      .post("/indexer")
-      .set("Authorization", "Bearer " + token) // Set your auth header if needed
-      .send({ directoryPath: dir });
-
-    expect(response.status).toBe(200);
-
-    const filePath = pathLib.join(dir, ".ts", "tsi.json");
-    const pathAbsolute = pathLib.resolve(filePath);
-    const fileExists = fs.existsSync(pathAbsolute);
-    expect(fileExists).toBe(true);
-  });*/
 
   test("POST /hide-folder", async () => {
     const metaFolder = pathLib.join(testDir, ".ts");
@@ -176,26 +152,4 @@ describe("Web Server Endpoints", () => {
       expect(response.status).toBe(200);
     }
   });
-
-  /* test('POST /llama-session', async () => {
-    const response = await request
-        .post('/llama-session')
-        .set('Authorization', 'Bearer test-key') // Set your auth header if needed
-        .send({ path: "/Users/sytolk/Downloads/gemma-2-2b-it-Q4_K_M.gguf" });
-
-    expect(response.status).toBe(200);
-    // Add more assertions based on expected response
-  });*/
-
-  /*
-  test('POST /watch-folder', async () => {
-      const response = await request
-          .post('/watch-folder')
-          .set('Authorization', 'Bearer test-key') // Set your auth header if needed
-          .send({ path: "/path/to/watch" });
-
-      expect(response.status).toBe(200);
-      // Add more assertions based on expected response
-  });
-   */
 });

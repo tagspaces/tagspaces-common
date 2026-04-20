@@ -65,7 +65,7 @@ module.exports = (env, argv) => {
     target: "node",
 
     externals: {
-      sharp: "commonjs sharp",
+      "wasm-vips": "commonjs wasm-vips",
       yargs: "commonjs yargs",
       "yargs/yargs": "commonjs yargs/yargs",
     },

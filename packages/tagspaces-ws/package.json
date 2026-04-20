@@ -14,9 +14,6 @@
     "build": "npx rimraf build && npx cross-env NODE_ENV=production webpack --config webpack.config.js --mode production",
     "start": "node build/index.js -p 40352",
     "start-dev": "node index.js -p 2000 -k e2eTestKey",
-    "install-node-linux": "npm install --arch=x64 --platform=linux sharp",
-    "install-node-mac": "npm install --arch=x64 --platform=darwin sharp",
-    "install-node-win": "npm install --arch=x64 --platform=win32 sharp",
     "kill-process": "lsof -n -i4TCP:40352 | awk '{print$2}' | tail -1 | xargs kill -9",
     "test-data-download": "npx rimraf testdata && git clone --depth 1 https://github.com/tagspaces/testdata",
     "test": "npm run test-data-download && npx cross-env NODE_OPTIONS=--experimental-vm-modules jest && npx rimraf testdata",
@@ -30,6 +27,7 @@
     "@tagspaces/tagspaces-workers": "^4.7.2",
     "find-free-ports": "3.1.1",
     "jsonwebtoken": "9.0.3",
+    "wasm-vips": "0.0.17",
     "ws": "8.19.0"
   },
   "devDependencies": {
@@ -39,9 +37,6 @@
     "supertest": "7.2.2",
     "webpack": "5.105.2",
     "webpack-cli": "6.0.1"
-  },
-  "peerDependencies": {
-    "sharp": ">=0.32.0"
   },
   "gitHead": "f000d89f40d3aad60711c34693acb3630dbd4f1f"
 }

@@ -5,12 +5,11 @@
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
-    "debug-sharp": "npm add --ignore-scripts=false --verbose sharp",
-    "debug-sharp-node": "ldd node_modules/sharp/build/Release/sharp-linux-x64.node",
+    "test": "jest --config=./jest.config.js",
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "async": "^3.2.4",
-    "sharp": "^0.32.6"
+    "@tagspaces/tagspaces-common": "^4.7.2",
+    "wasm-vips": "0.0.17"
   }
 }
