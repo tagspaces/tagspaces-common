@@ -75,6 +75,8 @@ cd packages/common && npm run unlink-ts  # Removes symlinks
 - `tsft.jsonl` uses relative paths as keys.
 - The renderer's in-memory index has **absolute** paths (after `enhanceDirectoryIndex` joins the location root).
 - **Bug pattern**: when merging fulltext into the in-memory index, you must convert tsft keys from relative to absolute first (see `loadFullTextIfNeeded` in the renderer).
+- **`persistIndex` normalizes paths**: both the common-package `persistIndex` (indexer.js) and the renderer's own `persistIndex` (LocationIndexContextProvider.tsx) run `cleanRootPath(entry.path, directoryPath)` on every entry before writing. This keeps the on-disk format canonical (relative) regardless of whether the caller hands in already-relative entries (fresh `createIndex` output) or absolute-path entries (enhanced index cached in `index.current`, or entries produced by `addToIndex`/`removeFromIndex`). `cleanRootPath` is a no-op when its second argument isn't a prefix, so the guard is safe for both shapes.
+- **Invariant**: anything written to `tsi.json` / `tsft.jsonl` must be relative. If you add a new persist path, either feed it relative entries or apply the same `cleanRootPath` guard — otherwise `enhanceDirectoryIndex` will double-join the root and searches silently miss.
 
 ### Incremental indexing
 

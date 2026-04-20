@@ -479,17 +479,24 @@ async function persistIndex(param, directoryIndex) {
   const folderIndexPath = getMetaIndexFilePath(directoryPath);
   const folderFullTextPath = getMetaFullTextFilePath(directoryPath);
 
+  // Persisted tsi.json / tsft.jsonl must store paths relative to the
+  // directory being indexed. createIndex / createIncrementalIndex already
+  // produce relative entries, but addToIndex / removeFromIndex (and other
+  // external callers) may feed absolute paths. cleanRootPath is a no-op
+  // when the root isn't a prefix, so running it unconditionally is safe.
   // Split: strip textContent from main index, collect into fulltext map
   const fullTextMap = {};
   let hasFullText = false;
   const strippedIndex = directoryIndex.map((entry) => {
-    if (entry && entry.textContent) {
-      fullTextMap[entry.path] = entry.textContent;
+    if (!entry) return entry;
+    const relPath = cleanRootPath(entry.path, directoryPath);
+    if (entry.textContent) {
+      fullTextMap[relPath] = entry.textContent;
       hasFullText = true;
       const { textContent, ...rest } = entry;
-      return rest;
+      return { ...rest, path: relPath };
     }
-    return entry;
+    return entry.path === relPath ? entry : { ...entry, path: relPath };
   });
 
   const indexJson = JSON.stringify(strippedIndex);
@@ -594,13 +601,16 @@ function enhanceDirectoryIndex(
     directoryPath = cleanTrailingDirSeparator(directoryPath);
   }
   
-  // Cache the platform path conversion function result
-  const convertPath = (entryPath) => joinPaths(
-    dirSeparator,
-    directoryPath,
-    toPlatformPath(entryPath),
-  );
-  
+  // Cache the platform path conversion function result.
+  // Defensive: legacy tsi.json files may contain absolute paths (written
+  // before persist normalization was added). cleanRootPath is a no-op
+  // when its second argument isn't a prefix, so running it here is safe
+  // for clean relative inputs and avoids a double-join for legacy ones.
+  const convertPath = (entryPath) => {
+    const relPath = cleanRootPath(entryPath, directoryPath, dirSeparator);
+    return joinPaths(dirSeparator, directoryPath, toPlatformPath(relPath));
+  };
+
   return directoryIndex.map((entry) => ({
     ...entry,
     locationID,
