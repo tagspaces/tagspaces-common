@@ -240,6 +240,27 @@ function createIncrementalIndex(
       // Step 3: Remaining entries in existingMap are deleted
       const deletedCount = existingMap.size;
 
+      // If fulltext extraction was requested but we have no existing
+      // fulltext data, unchanged entries need to go through text extraction
+      // too — otherwise enabling fulltext on a location that already has a
+      // non-fulltext tsi.json would short-circuit below and silently skip
+      // text extraction forever (until tsi.json is deleted manually).
+      const needsFullTextRebuild =
+        mode.includes("extractTextContent") &&
+        unchanged.length > 0 &&
+        (!existingFullText ||
+          Object.keys(existingFullText).length === 0);
+      if (needsFullTextRebuild) {
+        console.log(
+          `Incremental index: promoting ${unchanged.length} unchanged ` +
+            `entries to modified for fulltext extraction (no existing tsft)`,
+        );
+        for (const entry of unchanged) {
+          modified.push(entry);
+        }
+        unchanged.length = 0;
+      }
+
       const stats = {
         added: added.length,
         modified: modified.length,
