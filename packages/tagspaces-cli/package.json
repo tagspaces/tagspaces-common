@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/shell",
   "description": "Shell script for creating thumbnails and search index for the TagSpaces applications",
-  "version": "4.8.1",
+  "version": "4.8.2",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "@tagspaces/tagspaces-metacleaner": "^4.7.2",
-    "@tagspaces/tagspaces-pdf-extraction": "^4.7.2",
+    "@tagspaces/tagspaces-pdf-extraction": "^4.8.2",
     "@tagspaces/tagspaces-search": "^4.7.2",
-    "@tagspaces/tagspaces-workers": "^4.8.0",
+    "@tagspaces/tagspaces-workers": "^4.8.2",
     "chalk": "4.1.2",
     "yargs": "18.0.0"
   },
