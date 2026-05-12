@@ -8,6 +8,40 @@ const MAX_PDF_SIZE = 128 * 1024 * 1024; // 128 MB
 // so it can find the worker regardless of bundling context.
 let pdfjsPromise = null;
 
+// pdfjs ships a DOMMatrix polyfill but gates it on an `isNodeJS` check that
+// excludes Electron utility processes (where process.type === "utility").
+// Our WS server runs as a utility process, so pdfjs's polyfill never fires
+// and page.getTextContent() throws "DOMMatrix is not defined". Polyfill the
+// same canvas globals ourselves before loading pdfjs.
+function polyfillCanvasGlobals() {
+  if (typeof globalThis.DOMMatrix !== "undefined") return;
+  try {
+    // getBuiltinModule is webpack-invisible — pdfjs uses the same trick.
+    const mod = process.getBuiltinModule
+      ? process.getBuiltinModule("module")
+      : null;
+    if (!mod) return;
+    const requireFn = mod.createRequire(__filename);
+    const canvas = requireFn("@napi-rs/canvas");
+    if (canvas && canvas.DOMMatrix) {
+      globalThis.DOMMatrix = canvas.DOMMatrix;
+    }
+    if (canvas && canvas.Path2D && typeof globalThis.Path2D === "undefined") {
+      globalThis.Path2D = canvas.Path2D;
+    }
+    if (
+      canvas &&
+      canvas.ImageData &&
+      typeof globalThis.ImageData === "undefined"
+    ) {
+      globalThis.ImageData = canvas.ImageData;
+    }
+  } catch (e) {
+    // @napi-rs/canvas not resolvable; getTextContent will throw and the
+    // outer caller will surface it.
+  }
+}
+
 function resolveWorkerPath() {
   const path = require("path");
   // Try several known locations:
@@ -26,6 +60,7 @@ function resolveWorkerPath() {
 
 function getPdfjs() {
   if (!pdfjsPromise) {
+    polyfillCanvasGlobals();
     pdfjsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfjs) => {
       try {
         if (!pdfjs.GlobalWorkerOptions.workerSrc) {

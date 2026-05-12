@@ -11,6 +11,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config=./jest.config.js",
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
