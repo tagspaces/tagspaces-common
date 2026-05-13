@@ -48,7 +48,7 @@ function generateThumbnailTimeout(fsEntry, generatePdf) {
   return Promise.race([
     generateThumbnail(fsEntry, generatePdf),
     new Promise((resolve) =>
-      setTimeout(() => resolve(undefined), AppConfig.maxThumbGenTime)
+      setTimeout(() => resolve(undefined), AppConfig.maxThumbGenTime),
     ),
   ]);
 }
@@ -98,7 +98,7 @@ function generateThumbnail(fsEntry, generatePdf) {
   return checkThumbUpToDate(fsEntry).then((upToDate) => {
     if (!upToDate) {
       const fileType = tsThumb.getFileType(fsEntry.path);
-      console.log("Generating thumbnail for: " + fsEntry.path);
+      // console.log("Generating thumbnail for: " + fsEntry.path);
       if (isThumbGenSupportedFileType(fileType, "image")) {
         const image = fs.readFileSync(fsEntry.path);
         return tsThumb
@@ -107,12 +107,12 @@ function generateThumbnail(fsEntry, generatePdf) {
           .catch((error) => {
             console.error(
               "Generating thumbnail failed: " + fsEntry.path,
-              error
+              error,
             );
           });
       } else if (fileType === "pdf" && generatePdf) {
         console.info(
-          fsEntry.path + ": PDF thumbs generation not supported from WS!"
+          fsEntry.path + ": PDF thumbs generation not supported from WS!",
         );
         return Promise.resolve(true);
         /*const pdf = fs.readFileSync(filePath);
@@ -132,7 +132,7 @@ function generateThumbnail(fsEntry, generatePdf) {
         return Promise.resolve(true);
       }
     } else {
-      console.log("Thumbnail is up to Date: " + fsEntry.path);
+      // console.log("Thumbnail is up to Date: " + fsEntry.path);
       return Promise.resolve(thumbGenResults(true));
     }
   });
@@ -141,12 +141,12 @@ function generateThumbnail(fsEntry, generatePdf) {
 module.exports.processAllThumbnails = async function (
   entryPath,
   generatePdf = false,
-  extractPDFcontent = undefined
+  extractPDFcontent = undefined,
 ) {
   if (
     entryPath.endsWith(AppConfig.dirSeparator + AppConfig.metaFolder) ||
     entryPath.endsWith(
-      AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator
+      AppConfig.dirSeparator + AppConfig.metaFolder + AppConfig.dirSeparator,
     )
   ) {
     return Promise.resolve(false); // dont generate thumbnails for .ts folder
@@ -180,13 +180,13 @@ module.exports.processAllThumbnails = async function (
       (directoryEntry) => {
         if (directoryEntry.name !== AppConfig.metaFolder) {
         }
-      }
+      },
     )
       .then((results) => {
         // entries - can be used for further processing
         // window.walkCanceled = false;
         if (results.length > 0) {
-          console.log("Directory thumbnails created " + entryPath);
+          // console.log("Directory thumbnails created " + entryPath);
           return true;
         }
         return false;
