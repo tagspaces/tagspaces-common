@@ -357,7 +357,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         { path: pdfContentPath },
         "text",
       );
-    } else if (extractPDFcontent) {
+    } else if (typeof extractPDFcontent === "function") {
       try {
         const buffer = await getFileContentPromise(
           { path: entry.path },
@@ -556,7 +556,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                 if (mode.includes("extractTextContent")) {
                   await extractTextContentLinks(
                     eentry,
-                    param.extractPDFcontent,
+                    param.extendedExtraction || param.extractPDFcontent,
                     mode.includes("extractLinks"),
                   );
                 }
@@ -586,7 +586,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
 
   async function extractTextContentLinks(
     eentry,
-    extractPDFcontent = false,
+    extendedExtraction = false,
     extractLinks = false,
   ) {
     try {
@@ -605,13 +605,17 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return;
       }
 
+      // extendedExtraction is the Pro extractor: either the PDF parser
+      // function (Pro) or a falsy value (Lite). Truthy = also do Office.
       if (fileName.endsWith(".pdf")) {
-        const textContent = await extractAndSavePdf(eentry, extractPDFcontent);
+        if (!extendedExtraction) return;
+        const textContent = await extractAndSavePdf(eentry, extendedExtraction);
         eentry.textContent = createTextIndex(textContent);
         if (textContent && extractLinks) {
           setEntryLinks(eentry, textContent);
         }
       } else if (isOfficeExtension(fileName)) {
+        if (!extendedExtraction) return;
         // ZIP-based office/epub formats — read as binary, extract via JSZip
         const ext = fileName.substring(fileName.lastIndexOf("."));
         const buffer = await getFileContentPromise(

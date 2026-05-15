@@ -205,7 +205,7 @@ module.exports = function tscmd() {
           loadTextFilePromise,
           checkDirExist,
         } = require("@tagspaces/tagspaces-common-node/io-node");
-        const extractPDFcontent = argv.fulltext
+        const extendedExtraction = argv.fulltext
           ? require("@tagspaces/tagspaces-pdf-extraction").extractPDFcontent
           : undefined;
 
@@ -299,7 +299,7 @@ module.exports = function tscmd() {
                       listDirectoryPromise,
                       getFileContentPromise,
                       onProgress: progressReporter,
-                      ...(extractPDFcontent && { extractPDFcontent }),
+                      ...(extendedExtraction && { extendedExtraction }),
                     },
                     mode,
                     [],
@@ -322,7 +322,7 @@ module.exports = function tscmd() {
                   listDirectoryPromise,
                   getFileContentPromise,
                   onProgress: progressReporter,
-                  ...(extractPDFcontent && { extractPDFcontent }),
+                  ...(extendedExtraction && { extendedExtraction }),
                 },
                 mode,
               );

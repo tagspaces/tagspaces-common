@@ -63,6 +63,7 @@ function handleIndexer(req, res, signal) {
             extractLinks,
             ignorePatterns,
             forceFullReindex,
+            extendedExtraction,
           } = safeJsonParse(body);
 
           const safePath = validatePath(directoryPath);
@@ -79,7 +80,8 @@ function handleIndexer(req, res, signal) {
             path: safePath,
             listDirectoryPromise,
             getFileContentPromise,
-            ...(extractText && { extractPDFcontent }),
+            extendedExtraction:
+              extractText && extendedExtraction ? extractPDFcontent : false,
           };
           const isWalking = () => !signal.aborted;
           const patterns = ignorePatterns || [];
