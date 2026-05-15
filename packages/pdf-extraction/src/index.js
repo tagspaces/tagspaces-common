@@ -45,9 +45,14 @@ function polyfillCanvasGlobals() {
 function resolveWorkerPath() {
   const path = require("path");
   // Try several known locations:
-  // 1. Resolved via Node's module resolution (non-webpack context)
+  // 1. Resolved via Node's module resolution (non-webpack context).
+  //    In a webpack bundle, require.resolve is rewritten to return a numeric
+  //    module id — pdfjs's workerSrc setter then throws "Invalid workerSrc
+  //    type" and we silently fall back to undefined. Guard with typeof so the
+  //    bundle path falls through to the __dirname fallback below.
   try {
-    return require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    const resolved = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    if (typeof resolved === "string") return resolved;
   } catch (e) {
     // fall through
   }
