@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-ws",
   "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
-  "version": "4.8.4",
+  "version": "4.8.5",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "build/index.js",
@@ -22,9 +22,9 @@
     "pkg-publish": "npm run build && npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-indexer": "^4.8.3",
+    "@tagspaces/tagspaces-indexer": "^4.8.5",
     "@tagspaces/tagspaces-pdf-extraction": "^4.8.4",
-    "@tagspaces/tagspaces-workers": "^4.8.4",
+    "@tagspaces/tagspaces-workers": "^4.8.5",
     "find-free-ports": "3.1.1",
     "jsonwebtoken": "9.0.3",
     "wasm-vips": "0.0.17",
