@@ -933,14 +933,21 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return;
       }
       mkdirpSync(newDirPath);
+      // Merge semantics: copyDirectoryPromise uses fs.copy with clobber:true,
+      // so same-named files in the destination get overwritten, files unique
+      // to the destination are preserved (no data loss on dest). Then the
+      // source is removed.
       copyDirectoryPromise(param, newDirPath, onProgress)
         .then(() => deleteDirectoryPromise(dirPath))
         .then(() => {
           resolve(newDirPath);
         })
         .catch((error) => {
-          console.debug("copyDirectoryPromise", error);
-          resolve(newDirPath);
+          // Propagate so the renderer's .catch fires and the user sees
+          // a real failure notification instead of an apparent success
+          // that leaves the source directory undeleted on disk.
+          console.debug("moveDirectoryPromise failed:", error);
+          reject(error);
         });
     });
   }
