@@ -17,10 +17,7 @@ const {
   setEntryLinks,
   extractTxtContentAndLinks,
 } = require("./misc");
-const {
-  extractOfficeText,
-  isOfficeExtension,
-} = require("./office-extractor");
+const { extractOfficeText, isOfficeExtension } = require("./office-extractor");
 const AppConfig = require("./AppConfig");
 const picomatch = require("picomatch/posix");
 const { execFile } = require("child_process");
@@ -529,6 +526,38 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
                   eentry.isFile = stats.isFile();
                   eentry.size = stats.size;
 
+                  // Detect symlinks (lstat-based) and try to resolve target
+                  // type so they classify correctly as file vs folder.
+                  if (
+                    typeof stats.isSymbolicLink === "function" &&
+                    stats.isSymbolicLink()
+                  ) {
+                    eentry.isSymbolicLink = true;
+                    try {
+                      const targetStats = await new Promise((res) =>
+                        fs.stat(entryPath, (err, s) => res(err ? null : s)),
+                      );
+                      if (targetStats) {
+                        eentry.isFile = targetStats.isFile();
+                        if (typeof fs.realpath === "function") {
+                          eentry.symlinkTargetPath = await new Promise((res) =>
+                            fs.realpath(entryPath, (err, p) =>
+                              res(err ? undefined : p),
+                            ),
+                          );
+                        }
+                      } else {
+                        // Broken symlink: treat as folder-like so it stays
+                        // visible but flagged.
+                        eentry.isFile = false;
+                        eentry.isBrokenSymlink = true;
+                      }
+                    } catch (_) {
+                      eentry.isFile = false;
+                      eentry.isBrokenSymlink = true;
+                    }
+                  }
+
                   // Helper function to extract timestamp from various formats
                   const getTimestamp = (msValue, dateValue) => {
                     return typeof msValue === "number"
@@ -637,9 +666,7 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     } catch (error) {
       console.warn(
         `Skipping text extraction: ${eentry.name}` +
-          (error.message
-            ? " (" + error.message.split("\n")[0] + ")"
-            : ""),
+          (error.message ? " (" + error.message.split("\n")[0] + ")" : ""),
       );
     }
   }

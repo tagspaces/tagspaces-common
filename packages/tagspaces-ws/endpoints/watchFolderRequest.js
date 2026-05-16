@@ -28,6 +28,7 @@ function startWatching(folderPath, depth) {
       (/(^|[\/\\])\../.test(path) && !path.includes(".ts")) ||
       (path.includes(".ts") && path.includes("tsi.json")),
     ignoreInitial: true,
+    followSymlinks: false,
     depth,
   });
 
