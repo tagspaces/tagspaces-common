@@ -24,6 +24,7 @@ let endTagContainer = "]";
 let tagDelimiter = " ";
 let prefixTagContainer = "";
 let maxCollectedTag = 500;
+let maxJSONSize = 100 * 1024 * 1024; // 100MB cap for loadJSONString DoS guard
 let maxThumbSize = 500;
 let maxBgndSize = 3840;
 let thumbBgColor = "#FFFFFF";
@@ -352,6 +353,7 @@ module.exports = {
   tagDelimiter,
   prefixTagContainer,
   maxCollectedTag,
+  maxJSONSize,
   maxThumbSize,
   maxBgndSize,
   thumbBgColor,

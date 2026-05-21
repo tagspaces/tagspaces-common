@@ -295,10 +295,13 @@ function loadJSONString(jsonContent) {
     return undefined;
   }
 
-  const MAX_JSON_SIZE = 50 * 1024 * 1024; // 50MB limit
-  if (jsonContent.length > MAX_JSON_SIZE) {
+  const maxJSONSize =
+    typeof AppConfig.maxJSONSize === "number" && AppConfig.maxJSONSize > 0
+      ? AppConfig.maxJSONSize
+      : 100 * 1024 * 1024; // 100MB default
+  if (jsonContent.length > maxJSONSize) {
     console.error(
-      `Error parsing JSON: input exceeds maximum allowed size of ${MAX_JSON_SIZE} bytes`,
+      `Error parsing JSON: input exceeds maximum allowed size of ${maxJSONSize} bytes`,
     );
     return undefined;
   }
