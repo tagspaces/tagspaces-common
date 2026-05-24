@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-common-capacitor",
   "description": "TagSpaces common Capacitor module",
-  "version": "4.8.5",
+  "version": "4.8.6",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "main": "index.js",
@@ -21,7 +21,7 @@
     "@capacitor/share": "^6.0.0",
     "@capacitor/splash-screen": "^6.0.0",
     "@capawesome/capacitor-file-picker": "^6.0.0",
-    "@tagspaces/tagspaces-common": "^4.8.5"
+    "@tagspaces/tagspaces-common": "^4.8.6"
   },
   "gitHead": "f000d89f40d3aad60711c34693acb3630dbd4f1f"
 }
