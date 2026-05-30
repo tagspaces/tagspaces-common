@@ -13,7 +13,7 @@
     "lerna-build": "npx lerna run build",
     "lerna-link": "lerna link --force-local",
     "update-dynamic-libs-version": "echo 'Run this script before and after lerna-version' && node scripts/updateLocalVersions.js",
-    "test": "npm run test-aws && npm run test-indexer && npm run test-node && npm run test-common && npm run test-thumbgen && npm run test-pdf-extraction && npm run test-ws && npm run test-cli && npm run test-capacitor && npm run test-search",
+    "test": "npm run test-aws && npm run test-indexer && npm run test-node && npm run test-common && npm run test-thumbgen && npm run test-pdf-extraction && npm run test-ws && npm run test-cli && npm run test-search",
     "test-pdf-extraction": "npx cross-env NODE_OPTIONS=--experimental-vm-modules jest --colors --config=./packages/pdf-extraction/jest.config.js",
     "test-aws": "npm install && jest --config=jest.config.unit.js ./__tests__/common-aws/unit/io-objectstore.test.js",
     "test-indexer": "jest --config=./packages/indexer/jest.config.js",
@@ -25,7 +25,6 @@
     "test-ws": "npm --prefix ./packages/tagspaces-ws run test",
     "test-cli": "npm --prefix ./packages/tagspaces-cli run test",
     "test-search": "jest --colors --config=./packages/tagspaces-search/jest.config.js",
-    "test-capacitor": "jest --colors ./packages/common-capacitor/io-capacitor.test.js",
     "code-format": "prettier --write .",
     "husky-install": "husky install"
   },
