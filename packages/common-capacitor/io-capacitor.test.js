@@ -1060,6 +1060,7 @@ describe("module exports", () => {
     "resolveFullPath",
     "getAppStorageFileSystem",
     "getFileSystem",
+    "getICloudContainer",
     "saveSettingsFile",
     "loadSettingsFile",
     "saveSettings",

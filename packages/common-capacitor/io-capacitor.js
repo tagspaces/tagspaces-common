@@ -48,6 +48,8 @@ try {
 const { registerPlugin } = require("@capacitor/core");
 const StoragePermission = registerPlugin("StoragePermission");
 const IntentHandler = registerPlugin("IntentHandler");
+// iOS-only: bridges FileManager.url(forUbiquityContainerIdentifier:) (see ICloudPlugin.swift)
+const ICloud = registerPlugin("ICloud");
 
 const appSettingFile = "settings.json";
 const appSettingTagsFile = "settingsTags.json";
@@ -68,6 +70,17 @@ function resolveCapacitorPath(absolutePath) {
   let path = absolutePath;
 
   if (platform === "ios") {
+    // iCloud ubiquity-container paths live outside the app sandbox, so they
+    // can't be addressed relative to Directory.Documents. They are passed as
+    // raw absolute paths (containing "/Mobile Documents/"). @capacitor/filesystem
+    // addresses raw paths when no `directory` is given, but resolves them with
+    // URL(string:) — which returns nil for unencoded spaces. So build a
+    // percent-encoded file:// URL here (slashes preserved, spaces → %20).
+    if (path.startsWith("file://") || path.includes("/Mobile Documents/")) {
+      const abs = path.startsWith("file://") ? path.substring(7) : path;
+      const encoded = abs.split("/").map(encodeURIComponent).join("/");
+      return { path: "file://" + encoded, directory: undefined };
+    }
     // iOS: paths are relative to Documents directory
     if (path.startsWith("/")) {
       path = path.substring(1);
@@ -322,6 +335,23 @@ function getDevicePaths() {
     };
   }
   return Promise.resolve(paths);
+}
+
+/**
+ * Resolve the iCloud Drive ubiquity container's Documents path (iOS only).
+ * Returns { available, containerPath, documentsPath }. `available` is false when
+ * the user isn't signed into iCloud or has iCloud Drive disabled. documentsPath
+ * is a raw absolute path (with literal spaces) suitable for use as a location
+ * path; resolveCapacitorPath() encodes it at the plugin boundary.
+ */
+function getICloudContainer() {
+  if (Capacitor.getPlatform() !== "ios") {
+    return Promise.resolve({ available: false });
+  }
+  return ICloud.getUbiquityContainer().catch((err) => {
+    console.warn("getICloudContainer failed: " + err);
+    return { available: false };
+  });
 }
 
 function handleStartParameters() {
@@ -1140,6 +1170,7 @@ module.exports = {
   loadSettingsTags,
   sendFile,
   getDevicePaths,
+  getICloudContainer,
   handleStartParameters,
   quitApp,
   listMetaDirectoryPromise,
