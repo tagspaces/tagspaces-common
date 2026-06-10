@@ -97,7 +97,15 @@ const isWeb =
   !isJsDom &&
   typeof document !== "undefined" &&
   document.URL.startsWith("http") &&
-  !document.URL.startsWith("http://localhost:1212/");
+  !document.URL.startsWith("http://localhost:1212/") &&
+  // Capacitor Android uses androidScheme: 'https' (document.URL is
+  // https://localhost/...), which would otherwise misclassify the native
+  // app as a web build and hide the Local location type, force S3 defaults,
+  // etc. iOS Capacitor uses capacitor:// so it's already excluded above.
+  !(typeof window !== "undefined" &&
+    window.Capacitor !== undefined &&
+    typeof window.Capacitor.isNativePlatform === "function" &&
+    window.Capacitor.isNativePlatform());
 const isFirefox =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("firefox"); // typeof InstallTrigger !== 'undefined';
