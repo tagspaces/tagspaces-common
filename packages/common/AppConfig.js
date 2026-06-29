@@ -122,14 +122,6 @@ const isMacLike =
   navigator.userAgent.match(/(Mac|iPhone|iPod|iPad)/i);
 const isMac = typeof process !== "undefined" && process.platform === "darwin";
 const dirSeparator = isWin && !isWeb ? "\\" : "/";
-const isCordovaiOS =
-  typeof window !== "undefined" &&
-  /^file:\/{3}[^\/]/i.test(window.location.href) &&
-  /ios|iphone|ipod|ipad/i.test(navigator.userAgent);
-const isCordovaAndroid =
-  typeof document !== "undefined" &&
-  document.URL.indexOf("file:///android_asset") === 0;
-const isCordova = isCordovaiOS || isCordovaAndroid;
 const isCapacitor =
   typeof window !== "undefined" &&
   window.Capacitor !== undefined &&
@@ -143,7 +135,7 @@ const isCapacitoriOS =
   isCapacitor &&
   typeof window !== "undefined" &&
   window.Capacitor.getPlatform() === "ios";
-const isNativeMobile = isCordova || isCapacitor;
+const isNativeMobile = isCapacitor;
 const iOSMatcher =
   typeof navigator !== "undefined" &&
   navigator.userAgent.match(/(iPad|iPhone|iPod)/i);
@@ -151,7 +143,7 @@ const isIOS = iOSMatcher && iOSMatcher.length > 0;
 const isAndroid =
   typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("android");
-const isMobile = isCordovaiOS || isCordovaAndroid || isCapacitor || isIOS || isAndroid;
+const isMobile = isCapacitor || isIOS || isAndroid;
 
 let folderFullTextFile = "tsft.jsonl";
 
@@ -379,9 +371,6 @@ module.exports = {
   isMacLike,
   isMac,
   dirSeparator,
-  isCordovaiOS,
-  isCordovaAndroid,
-  isCordova,
   isCapacitor,
   isCapacitorAndroid,
   isCapacitoriOS,
