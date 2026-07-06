@@ -1,7 +1,7 @@
 {
   "name": "@tagspaces/tagspaces-thumbgen-image",
   "description": "TagSpaces common thumbnails image generation module",
-  "version": "4.8.8",
+  "version": "4.8.9",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
   "scripts": {
@@ -9,7 +9,7 @@
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.8.8",
+    "@tagspaces/tagspaces-common": "^4.8.9",
     "wasm-vips": "0.0.17"
   }
 }
