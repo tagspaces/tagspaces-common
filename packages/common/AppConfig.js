@@ -16,6 +16,10 @@ let folderIndexFile = "tsi.json";
 let folderThumbFile = "tst.jpg";
 let folderBgndFile = "tsb.jpg";
 let metaFileExt = ".json";
+// Globally ignored during listing/indexing: macOS AppleDouble resource-fork
+// files (._*) and Finder metadata (.DS_Store). Merged into every location's
+// ignorePatterns in listDirectoryPromise.
+let defaultIgnorePatterns = ["._*", ".DS_Store"];
 let thumbFileExt = ".jpg";
 let thumbType = "image/jpeg";
 let contentFileExt = ".txt";
@@ -345,6 +349,7 @@ module.exports = {
   folderThumbFile,
   folderBgndFile,
   metaFileExt,
+  defaultIgnorePatterns,
   thumbFileExt,
   thumbType,
   contentFileExt,

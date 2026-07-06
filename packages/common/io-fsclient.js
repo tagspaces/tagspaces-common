@@ -423,12 +423,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
     for (const metaEntry of metaContent) {
       const { path: metaPath } = metaEntry;
 
-      const metaFileName = tsPaths.extractFileName(metaPath);
-      if (metaFileName?.startsWith("._")) {
-        // skip loading meta for hidden system files on mac starting with ._
-        continue;
-      }
-
       // Process metadata JSON files
       if (metaPath.endsWith(AppConfig.metaFileExt)) {
         const baseName = metaPath.slice(0, -metaExtLen);
@@ -492,8 +486,13 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
           : [];
 
         const enhancedEntries = [];
-        const isMatch =
-          ignorePatterns.length > 0 ? picomatch(ignorePatterns) : null;
+        // Always ignore macOS AppleDouble/.DS_Store junk on top of the
+        // per-location patterns (see AppConfig.defaultIgnorePatterns).
+        const allPatterns = [
+          ...AppConfig.defaultIgnorePatterns,
+          ...ignorePatterns,
+        ];
+        const isMatch = allPatterns.length > 0 ? picomatch(allPatterns) : null;
         const separator = path.endsWith(dirSeparator) ? "" : dirSeparator;
         let entryPath;
 
@@ -629,10 +628,6 @@ function createFsClient(fs, dirSeparator = AppConfig.dirSeparator) {
         return;
       }
       const fileName = eentry.name.toLowerCase();
-      // Ignoring files starting with ._ e.g. on macOS
-      if (fileName.startsWith("._")) {
-        return;
-      }
 
       // extendedExtraction is the Pro extractor: either the PDF parser
       // function (Pro) or a falsy value (Lite). Truthy = also do Office.

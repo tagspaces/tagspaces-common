@@ -1,9 +1,19 @@
 const fs = require("fs-extra");
 const pathLib = require("path");
 const utilsIO = require("@tagspaces/tagspaces-common/utils-io");
+const AppConfig = require("@tagspaces/tagspaces-common/AppConfig");
 const {
   listDirectoryPromise,
 } = require("@tagspaces/tagspaces-common-node/io-node");
+
+// walkDirectory applies AppConfig.defaultIgnorePatterns on top of any
+// per-call patterns, so filter the same junk from readdirSync before
+// comparing counts.
+const picomatch = require("picomatch");
+const isIgnored = picomatch(AppConfig.defaultIgnorePatterns);
+function listVisible(dir) {
+  return fs.readdirSync(dir).filter((n) => !isIgnored(n));
+}
 
 describe("Common utils-io unit tests", () => {
   test("walkDirectory", async () => {
@@ -20,12 +30,8 @@ describe("Common utils-io unit tests", () => {
       { path: dir },
       listDirectoryPromise
     );
-    // try {
-    const files = fs.readdirSync(dir);
+    const files = listVisible(dir);
     expect(entries.length).toBe(files.length);
-    /*} catch (err) {
-      console.error('Error reading directory:', err);
-    }*/
   });
 
   test("enhanceEntry", async () => {
@@ -43,11 +49,11 @@ describe("Common utils-io unit tests", () => {
       listDirectoryPromise
     );
     const enhancedEntries = entries.map(utilsIO.enhanceEntry);
-    const files = fs.readdirSync(dir);
+    const files = listVisible(dir);
     expect(enhancedEntries.length).toBe(files.length);
 
-    expect(enhancedEntries[1].name).toBe("empty_folder");
-    expect(enhancedEntries[1].isFile).toBe(false);
+    expect(enhancedEntries[0].name).toBe("empty_folder");
+    expect(enhancedEntries[0].isFile).toBe(false);
 
     const lastEntry = enhancedEntries[enhancedEntries.length - 1];
     expect(lastEntry.name).toBe("sample_exif[iptc].jpg");

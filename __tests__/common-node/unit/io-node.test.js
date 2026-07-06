@@ -223,6 +223,38 @@ describe("io-node unit tests", () => {
     );*/
   });
 
+  test("io-node.listDirectoryPromise.skips macOS AppleDouble and .DS_Store", async () => {
+    const os = require("os");
+    const tmpDir = fs.mkdtempSync(pathLib.join(os.tmpdir(), "ts-appledouble-"));
+    try {
+      fs.writeFileSync(pathLib.join(tmpDir, "normal.txt"), "hello");
+      fs.writeFileSync(pathLib.join(tmpDir, "._normal.txt"), "resource fork");
+      fs.writeFileSync(pathLib.join(tmpDir, "._orphan"), "resource fork");
+      fs.writeFileSync(pathLib.join(tmpDir, ".DS_Store"), "finder junk");
+      // a regular dot-hidden file must NOT be filtered — we only target ._* / .DS_Store
+      fs.writeFileSync(pathLib.join(tmpDir, ".regularhidden"), "keep me");
+
+      // No caller ignorePatterns passed — relies solely on the global
+      // AppConfig.defaultIgnorePatterns merged inside listDirectoryPromise.
+      const list = await listDirectoryPromise({ path: tmpDir }, ["loadMeta"]);
+      const names = list.map((entry) => entry.name);
+
+      expect(names).toContain("normal.txt");
+      expect(names).toContain(".regularhidden");
+      expect(names).not.toContain("._normal.txt");
+      expect(names).not.toContain("._orphan");
+      expect(names).not.toContain(".DS_Store");
+      // belt-and-suspenders: nothing starting with ._ survived
+      expect(names.some((n) => n.startsWith("._"))).toBe(false);
+
+      // the global default patterns are actually configured
+      expect(AppConfig.defaultIgnorePatterns).toContain("._*");
+      expect(AppConfig.defaultIgnorePatterns).toContain(".DS_Store");
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   test("io-node.saveTextFilePromise", async () => {
     const filePath = pathLib.resolve(
       __dirname,
