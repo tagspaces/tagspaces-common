@@ -139,6 +139,44 @@ describe("Web Server Endpoints", () => {
     ).toBe(true);
   });
 
+  test("POST /indexer honors caller ignorePatterns and global ._ defaults", async () => {
+    const os = require("os");
+    const dir = fs.mkdtempSync(pathLib.join(os.tmpdir(), "ws-ignore-"));
+    try {
+      fs.writeFileSync(pathLib.join(dir, "keep.txt"), "keep me");
+      fs.writeFileSync(pathLib.join(dir, "ignoreme.log"), "drop me");
+      // macOS AppleDouble junk — must be dropped by the global defaults even
+      // though the caller never lists it.
+      fs.writeFileSync(pathLib.join(dir, "._keep.txt"), "resource fork");
+
+      const response = await request
+        .post("/indexer")
+        .set("Authorization", "Bearer " + token)
+        .send({
+          directoryPath: dir,
+          extractText: false,
+          ignorePatterns: ["*.log"],
+          forceFullReindex: true,
+        });
+
+      expect(response.status).toBe(200);
+
+      const index = JSON.parse(
+        fs.readFileSync(pathLib.join(dir, ".ts", "tsi.json"), "utf8").trim(),
+      );
+      const names = index.map((e) => e.name);
+
+      expect(names).toContain("keep.txt");
+      // caller-supplied pattern reached the index walk
+      expect(names).not.toContain("ignoreme.log");
+      // global AppConfig.defaultIgnorePatterns applied on the worker path too
+      expect(names).not.toContain("._keep.txt");
+      expect(names.some((n) => n.startsWith("._"))).toBe(false);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }, 10000);
+
   test("POST /hide-folder", async () => {
     const metaFolder = pathLib.join(testDir, ".ts");
     const response = await request
