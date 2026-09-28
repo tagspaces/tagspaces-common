@@ -44,6 +44,19 @@ function polyfillCanvasGlobals() {
 
 function resolveWorkerPath() {
   const path = require("path");
+  const { pathToFileURL } = require("url");
+  // pdfjs loads its fake worker with `await import(workerSrc)`. A bare
+  // filesystem path only resolves on POSIX — on Windows the ESM loader
+  // rejects "C:\…\pdf.worker.mjs" with ERR_UNSUPPORTED_ESM_URL_SCHEME
+  // ("Received protocol 'c:'"), so every PDF failed text extraction there.
+  // Always hand pdfjs a file:// URL, which works on all platforms.
+  const toFileUrl = (p) => {
+    try {
+      return pathToFileURL(p).href;
+    } catch (e) {
+      return p;
+    }
+  };
   // Try several known locations:
   // 1. Resolved via Node's module resolution (non-webpack context).
   //    In a webpack bundle, require.resolve is rewritten to return a numeric
@@ -52,13 +65,13 @@ function resolveWorkerPath() {
   //    bundle path falls through to the __dirname fallback below.
   try {
     const resolved = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
-    if (typeof resolved === "string") return resolved;
+    if (typeof resolved === "string") return toFileUrl(resolved);
   } catch (e) {
     // fall through
   }
   // 2. Next to the bundle itself (WS webpack build copies it here)
   if (typeof __dirname !== "undefined") {
-    return path.join(__dirname, "pdf.worker.mjs");
+    return toFileUrl(path.join(__dirname, "pdf.worker.mjs"));
   }
   return undefined;
 }
@@ -184,4 +197,6 @@ async function extractPDFcontent(arrayBuffer) {
 
 module.exports = {
   extractPDFcontent,
+  // exported for tests
+  resolveWorkerPath,
 };

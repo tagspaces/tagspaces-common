@@ -1,6 +1,9 @@
 "use strict";
 
-const { extractPDFcontent } = require("../../src/index.js");
+const {
+  extractPDFcontent,
+  resolveWorkerPath,
+} = require("../../src/index.js");
 
 // Build a tiny but valid PDF in memory so the test is self-contained
 // (no external fixture, no testdata clone). The xref offsets are computed
@@ -59,6 +62,16 @@ describe("extractPDFcontent", () => {
     await expect(
       extractPDFcontent(Buffer.from("not a pdf at all", "utf8")),
     ).rejects.toThrow(/Not a valid PDF file/);
+  });
+
+  test("worker src is a file:// URL, not a bare path", () => {
+    // pdfjs does `await import(workerSrc)`. A drive-letter path such as
+    // "C:\\…\\pdf.worker.mjs" is rejected by Node's ESM loader with
+    // ERR_UNSUPPORTED_ESM_URL_SCHEME, which broke PDF text extraction on
+    // Windows only (POSIX absolute paths happen to resolve).
+    const workerSrc = resolveWorkerPath();
+    expect(typeof workerSrc).toBe("string");
+    expect(new URL(workerSrc).protocol).toBe("file:");
   });
 
   test("rejects PDFs over the size limit", async () => {
