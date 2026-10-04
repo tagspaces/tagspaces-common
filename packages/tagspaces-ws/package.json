@@ -25,10 +25,8 @@
     "@tagspaces/tagspaces-indexer": "^4.8.9",
     "@tagspaces/tagspaces-pdf-extraction": "^4.8.10",
     "@tagspaces/tagspaces-workers": "^4.8.10",
-    "find-free-ports": "3.1.1",
     "jsonwebtoken": "9.0.3",
-    "wasm-vips": "0.0.17",
-    "ws": "8.19.0"
+    "wasm-vips": "0.0.17"
   },
   "devDependencies": {
     "clean-webpack-plugin": "4.0.0",

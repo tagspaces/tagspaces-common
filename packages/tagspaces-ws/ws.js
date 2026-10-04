@@ -1,7 +1,6 @@
 "use strict";
 const ws = require("http");
 const { verifyAuth } = require("./auth");
-const { watchFolder } = require("./endpoints/watchFolderRequest");
 const { hideFolder } = require("./endpoints/hideFolderRequest");
 const { defaultRequest } = require("./endpoints/defaultRequest");
 const { handleIndexer } = require("./endpoints/indexerRequest");
@@ -90,9 +89,6 @@ module.exports.createWS = function (port, key) {
         if (!verifyAuth(req.headers.authorization, res, key)) return;
         // pass signal down so indexing can abort
         await handleIndexer(req, res, signal);
-      } else if (reqUrl.pathname === "/watch-folder") {
-        if (!verifyAuth(req.headers.authorization, res, key)) return;
-        await watchFolder(req, res);
       } else if (reqUrl.pathname === "/hide-folder") {
         if (!verifyAuth(req.headers.authorization, res, key)) return;
         await hideFolder(req, res);
