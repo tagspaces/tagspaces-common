@@ -117,10 +117,48 @@ Uses **pdfjs-dist** (same library as the renderer's viewer). Replaced `pdf2json`
 
 ### tagspaces-ws security hardening
 
-- Auth via JWT (`jsonwebtoken`). Key passed via `-k` CLI arg (visible in `ps aux` — consider env var long-term).
-- Binds to `127.0.0.1` only.
-- **Path validation**: `security.validatePath` rejects `..` sequences and non-string inputs.
-- **Body size limit**: 1 MB (see `security.collectBody`). Requests are JSON configs only — no actual file uploads.
-- **Prototype pollution guard**: `security.safeJsonParse` strips `__proto__`, `constructor`, `prototype` keys.
-- **Error sanitization**: `security.sendError` logs details internally but returns generic messages to the client to avoid leaking paths.
-- **No path-exposing logs**: privacy concern since pm2 persists logs to disk. Removed all `console.log(path)` in the hot path.
+This server walks, reads and writes arbitrary directories, so treat every one of
+these as load-bearing. The endpoints are `POST /indexer`, `POST /thumb-gen` and
+an authenticated `GET /` health probe — nothing else.
+
+- **Key**: required, read from the `TS_WS_KEY` **environment variable**, which
+  `index.js` deletes from its own env right after reading so spawned children do
+  not inherit it. `-k` is kept only for standalone CLI use: a process command
+  line is readable by other local processes (`ps`, WMIC), an environment is not.
+  The app generates the key in memory per launch (`tagspaces/src/main/wsAuth.ts`);
+  it is never written to disk or shipped. A key that ships is a public key — this
+  is how `KEY=production-<version>` in `app.asar/.env` made the auth meaningless.
+- **Token shape**: `jwt.verify` pins `algorithms: ["HS256"]` and requires
+  `iss`/`aud`/`exp` plus a `sub` that equals the pathname being called, so a
+  token cannot be replayed later or against a different endpoint. A bare
+  `jwt.verify(token, key)` checks the signature only and accepts any payload,
+  including one with no expiry.
+- **Host allowlist**: `req.headers.host` must be exactly
+  `127.0.0.1|localhost|[::1]:<port>`, else the socket is destroyed. This is the
+  control that stops DNS rebinding — parsing the request URL against a fixed
+  base does not, it only prevents the Host from choosing the route.
+- **Browser rejection**: any request carrying `Origin`, `Referer`, `Cookie` or a
+  `Sec-Fetch-*` header gets `403`. The only legitimate client is the Electron
+  main process via `http.request`, which sends none of them. Fails closed, and
+  still holds once rebinding has removed the CORS preflight.
+- **Exact route table + bare 404**: unknown paths get a status-only `404`. The
+  old catch-all "Hello from the TagSpaces WS" page answered any path and any
+  method unauthenticated, which made the port trivial to fingerprint.
+- **Path validation**: `security.validatePath` requires an absolute path,
+  rejects null bytes and UNC/device paths (`\\?\`, `\\.\`, `\\server\share`),
+  collapses `..` via `path.resolve`, and canonicalizes through `realpath` (or the
+  nearest existing ancestor) so a symlink cannot redirect a checked write. It
+  deliberately does **not** constrain *which* directory may be touched — that is
+  an authorization decision for the main process, which knows the user's
+  configured locations.
+- **Body size limit**: 1 MB (see `security.collectBody`). Requests are JSON
+  configs only — no actual file uploads. `application/json` is required.
+- **Prototype pollution guard**: `security.safeJsonParse` strips `__proto__`,
+  `constructor`, `prototype` keys.
+- **Error sanitization**: `security.sendError` logs details internally but
+  returns generic messages to the client to avoid leaking paths. Auth failures
+  return a bare `401` and never say why.
+- **Timeouts**: `headersTimeout` 10s / `requestTimeout` 30s bound slow-header
+  clients; the 5-minute `setTimeout` covers legitimately long indexing runs.
+- **No path-exposing logs**: privacy concern since logs may be persisted to disk.
+  Removed all `console.log(path)` in the hot path.

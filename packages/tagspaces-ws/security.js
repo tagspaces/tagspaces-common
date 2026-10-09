@@ -1,14 +1,32 @@
 "use strict";
 
 const path = require("path");
+const fs = require("fs");
 
 const MAX_BODY_SIZE = 2 * 1024 * 1024; // 1 MB — request bodies are JSON with paths/config only
 
 /**
- * Validate and sanitize a file/directory path.
- * Rejects paths containing traversal sequences or non-absolute paths.
+ * Windows paths that bypass normal path semantics: the extended-length and
+ * device namespaces (\\?\, \\.\) and UNC shares (\\server\share). None of
+ * these is ever a legitimate target for indexing or thumbnailing, and the
+ * first two defeat path normalization entirely.
+ */
+function isDeviceOrUncPath(p) {
+  return /^[\\/]{2}/.test(p);
+}
+
+/**
+ * Validate and canonicalize a file/directory path.
+ *
+ * Note what this does and does not do. It guarantees the returned path is
+ * absolute, fully resolved, and free of symlink indirection -- so a caller
+ * cannot have us normalize one path and then write through a link to another.
+ * It does NOT constrain *which* directory may be touched: that is an
+ * authorization decision and belongs to the main process, which knows the
+ * user's configured locations. This function is the last line, not the first.
+ *
  * @param {string} userPath - The path to validate
- * @returns {string} Resolved absolute path
+ * @returns {string} Canonical absolute path
  * @throws {Error} If path is invalid
  */
 function validatePath(userPath) {
@@ -16,23 +34,56 @@ function validatePath(userPath) {
     throw new Error("Path is required and must be a string");
   }
 
-  // Resolve to absolute path
+  if (userPath.indexOf("\0") !== -1) {
+    throw new Error("Path must not contain null bytes");
+  }
+
+  if (isDeviceOrUncPath(userPath)) {
+    throw new Error("UNC and device paths are not allowed");
+  }
+
+  // Require a genuinely absolute path. The previous implementation only warned
+  // on relative input and then resolved it against the worker's cwd, which made
+  // the target depend on where the process happened to be started.
+  if (!path.isAbsolute(userPath)) {
+    throw new Error("Path must be absolute");
+  }
+
+  // path.resolve collapses any ".." segments; a substring check for ".." was
+  // both bypassable and wrong (it rejected legitimate names like "a..b").
   const resolved = path.resolve(userPath);
 
-  // Reject if the original path contained traversal sequences
-  if (userPath.includes("..")) {
-    throw new Error("Path traversal not allowed");
-  }
+  // Canonicalize through any symlinks so later writes land where we checked.
+  // The path may legitimately not exist yet (a .ts folder about to be created),
+  // in which case we canonicalize the nearest existing ancestor instead.
+  return realpathOrNearest(resolved);
+}
 
-  // Must be absolute (after resolve it always is, but verify the original was too)
-  if (!path.isAbsolute(userPath) && !userPath.startsWith("/")) {
-    // On Windows, path.isAbsolute handles drive letters
-    // On Unix, check for leading /
-    // Allow relative paths that resolve safely (e.g. from CWD), but warn
-    console.warn("Relative path received, resolved to:", resolved);
-  }
+function realpathOrNearest(resolved) {
+  let current = resolved;
+  const trailing = [];
 
-  return resolved;
+  for (;;) {
+    try {
+      const real = fs.realpathSync(current);
+      const candidate = path.join(real, ...trailing.reverse());
+      if (isDeviceOrUncPath(candidate)) {
+        throw new Error("Path resolves outside the local filesystem");
+      }
+      return candidate;
+    } catch (e) {
+      if (e && e.code !== "ENOENT") {
+        throw e;
+      }
+      const parent = path.dirname(current);
+      if (parent === current) {
+        // Reached the filesystem root without finding anything that exists.
+        return resolved;
+      }
+      trailing.push(path.basename(current));
+      current = parent;
+    }
+  }
 }
 
 /**
@@ -117,6 +168,7 @@ function sendError(res, statusCode, message, err) {
 
 module.exports = {
   validatePath,
+  isDeviceOrUncPath,
   validatePaths,
   collectBody,
   safeJsonParse,

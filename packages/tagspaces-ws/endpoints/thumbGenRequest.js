@@ -24,14 +24,10 @@ function handleThumbGen(req, res) {
     collectBody(req, res)
       .then(async (body) => {
         try {
-          let arrayPaths;
-          if (body.startsWith("p=")) {
-            arrayPaths = [decodeURIComponent(body.substr(2))];
-          } else {
-            arrayPaths = safeJsonParse(body);
-          }
-
-          const safePaths = validatePaths(arrayPaths);
+          // JSON only: the router rejects anything that is not
+          // application/json, so the old form-encoded "p=<path>" branch was
+          // both unreachable and a second, laxer way in.
+          const safePaths = validatePaths(safeJsonParse(body));
 
           let extractPDFfunction;
           if (
