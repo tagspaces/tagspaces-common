@@ -3,16 +3,39 @@
 const path = require("path");
 const fs = require("fs");
 
-const MAX_BODY_SIZE = 2 * 1024 * 1024; // 1 MB — request bodies are JSON with paths/config only
+// Windows device namespaces: \\?\ (extended-length) and \\.\ (devices), in
+// either slash flavour since Windows accepts both. These defeat path
+// normalization entirely -- \\?\ skips "..", relative and length handling, and
+// \\.\ addresses raw devices like \\.\PhysicalDrive0 -- so neither is ever a
+// legitimate target for indexing or thumbnailing.
+//
+// Note what this deliberately does NOT match: a plain UNC share such as
+// \\server\share\Photos. That is just a remote filesystem, a Windows user can
+// pick one in the directory picker, and it worked before this validation
+// existed. Rejecting it broke network-share locations. On POSIX a backslash is
+// an ordinary filename character, so these forms are not absolute paths there
+// and get rejected by the isAbsolute check instead.
+const DEVICE_NAMESPACE = /^[\\/]{2}[?.][\\/]/;
+
+function isDeviceNamespacePath(p) {
+  return DEVICE_NAMESPACE.test(p);
+}
 
 /**
- * Windows paths that bypass normal path semantics: the extended-length and
- * device namespaces (\\?\, \\.\) and UNC shares (\\server\share). None of
- * these is ever a legitimate target for indexing or thumbnailing, and the
- * first two defeat path normalization entirely.
+ * Windows realpath can hand back an extended-length path (\\?\C:\x, or
+ * \\?\UNC\server\share) when a path is long. Convert it back to the
+ * conventional form instead of rejecting it, so long paths keep working.
  */
-function isDeviceOrUncPath(p) {
-  return /^[\\/]{2}/.test(p);
+function normalizeExtendedLengthPath(p) {
+  if (!/^[\\/]{2}\?[\\/]/.test(p)) {
+    return p;
+  }
+  const rest = p.slice(4);
+  if (/^UNC[\\/]/i.test(rest)) {
+    // \\?\UNC\server\share -> \\server\share
+    return "\\\\" + rest.slice(4);
+  }
+  return rest;
 }
 
 /**
@@ -38,8 +61,8 @@ function validatePath(userPath) {
     throw new Error("Path must not contain null bytes");
   }
 
-  if (isDeviceOrUncPath(userPath)) {
-    throw new Error("UNC and device paths are not allowed");
+  if (isDeviceNamespacePath(userPath)) {
+    throw new Error("Device paths are not allowed");
   }
 
   // Require a genuinely absolute path. The previous implementation only warned
@@ -67,10 +90,7 @@ function realpathOrNearest(resolved) {
     try {
       const real = fs.realpathSync(current);
       const candidate = path.join(real, ...trailing.reverse());
-      if (isDeviceOrUncPath(candidate)) {
-        throw new Error("Path resolves outside the local filesystem");
-      }
-      return candidate;
+      return normalizeExtendedLengthPath(candidate);
     } catch (e) {
       if (e && e.code !== "ENOENT") {
         throw e;
@@ -99,79 +119,9 @@ function validatePaths(paths) {
   return paths.map(validatePath);
 }
 
-/**
- * Collect request body with size limit protection.
- * @param {IncomingMessage} req - HTTP request
- * @param {ServerResponse} res - HTTP response
- * @param {number} [maxSize] - Maximum body size in bytes
- * @returns {Promise<string>} Collected body string
- */
-function collectBody(req, res, maxSize = MAX_BODY_SIZE) {
-  return new Promise((resolve, reject) => {
-    let body = "";
-    let exceeded = false;
-
-    req.on("data", (chunk) => {
-      if (exceeded) return;
-      body += chunk;
-      if (body.length > maxSize) {
-        exceeded = true;
-        res.writeHead(413, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Request body too large" }));
-        req.destroy();
-        reject(new Error("Request body too large"));
-      }
-    });
-
-    req.on("end", () => {
-      if (!exceeded) {
-        resolve(body);
-      }
-    });
-
-    req.on("error", (err) => {
-      reject(err);
-    });
-  });
-}
-
-/**
- * Sanitize JSON.parse with prototype pollution protection.
- * @param {string} jsonString - JSON string to parse
- * @returns {any} Parsed object
- */
-function safeJsonParse(jsonString) {
-  return JSON.parse(jsonString, (key, value) => {
-    if (key === "__proto__" || key === "constructor" || key === "prototype") {
-      return undefined;
-    }
-    return value;
-  });
-}
-
-/**
- * Send a generic error response without leaking internal details.
- * @param {ServerResponse} res - HTTP response
- * @param {number} statusCode - HTTP status code
- * @param {string} message - Safe error message for client
- * @param {Error} [err] - Internal error to log (not sent to client)
- */
-function sendError(res, statusCode, message, err) {
-  if (err) {
-    console.error(message + ":", err.message || err);
-  }
-  if (!res.writableEnded) {
-    res.writeHead(statusCode, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ success: false, error: message }));
-  }
-}
-
 module.exports = {
   validatePath,
-  isDeviceOrUncPath,
   validatePaths,
-  collectBody,
-  safeJsonParse,
-  sendError,
-  MAX_BODY_SIZE,
+  isDeviceNamespacePath,
+  normalizeExtendedLengthPath,
 };

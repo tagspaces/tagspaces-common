@@ -1,30 +1,27 @@
 #!/usr/bin/env node
 
-const argv = process.argv.slice(2);
-const httpServer = require("./ws");
-const port = argv[0] === "-p" ? parseInt(argv[1]) : 8888;
+/**
+ * Worker process for search-index creation and thumbnail generation.
+ *
+ * This runs only as an Electron utilityProcess child and communicates over
+ * `process.parentPort`. It is not a server: it opens no socket, listens on no
+ * port and holds no key. The message port exists solely between this process
+ * and the parent that forked it, which the operating system guarantees -- so
+ * there is nothing for another local process, a port scan or a (DNS-rebound)
+ * web page to reach, and no secret to pass, store or leak.
+ *
+ */
 
-// The signing key arrives in the environment, not in argv: a process's command
-// line is readable by other processes on every supported platform (`ps`,
-// WMIC/CIM), so a key passed as `-k` leaks to any local onlooker regardless of
-// how random it is. `-k` is kept only for standalone/CLI use.
-// Delete it from our own env right after reading so the thumbnail and indexer
-// child processes we spawn do not inherit it.
-let key = process.env.TS_WS_KEY;
-if (key) {
-  delete process.env.TS_WS_KEY;
-} else if (argv[2] === "-k") {
-  key = argv[3];
-}
-
-if (!key) {
+if (!process.parentPort) {
   console.error(
-    "No signing key provided. Set TS_WS_KEY in the environment (preferred) or pass -k <key>.",
+    "This worker must be started as an Electron utilityProcess; " +
+      "process.parentPort is missing. To run an operation outside Electron, " +
+      "require ./operations.js directly.",
   );
   process.exit(1);
 }
 
-httpServer.createWS(port, key);
+require("./ipc").createIpcServer(process.parentPort);
 
 // Warm up wasm-vips so the first thumbnail request doesn't pay the wasm
 // compile cost (~50-150ms). Fire-and-forget — if init fails the thumbnail

@@ -13,16 +13,16 @@ Monorepo of shared libraries for [TagSpaces](https://github.com/nicoth-in/tagspa
 
 ## Key packages
 
-| Package | Purpose |
-|---|---|
-| `common` | Core utilities: paths, misc helpers, AppConfig, io-fsclient, utils-io |
-| `common-node` | Node.js filesystem I/O (wraps io-fsclient with fs-extra) |
-| `common-capacitor` | Mobile I/O via Capacitor 6 (replaces Cordova) |
-| `common-cordova` | Legacy mobile I/O (deprecated) |
-| `common-aws3` | S3 object store I/O via AWS SDK v3 |
-| `indexer` | Directory indexing, search index creation/persistence |
-| `tagspaces-ws` | WebSocket server |
-| `tagspaces-cli` | CLI tool for thumbnails, indexing, tagging, descriptions |
+| Package            | Purpose                                                               |
+| ------------------ | --------------------------------------------------------------------- |
+| `common`           | Core utilities: paths, misc helpers, AppConfig, io-fsclient, utils-io |
+| `common-node`      | Node.js filesystem I/O (wraps io-fsclient with fs-extra)              |
+| `common-capacitor` | Mobile I/O via Capacitor 6 (replaces Cordova)                         |
+| `common-cordova`   | Legacy mobile I/O (deprecated)                                        |
+| `common-aws3`      | S3 object store I/O via AWS SDK v3                                    |
+| `indexer`          | Directory indexing, search index creation/persistence                 |
+| `tagspaces-ws`     | WebSocket server                                                      |
+| `tagspaces-cli`    | CLI tool for thumbnails, indexing, tagging, descriptions              |
 
 ## Testing
 
@@ -81,6 +81,7 @@ cd packages/common && npm run unlink-ts  # Removes symlinks
 ### Incremental indexing
 
 `createIncrementalIndex(param, mode, ignorePatterns, isWalking, existingIndex, existingFullText)` uses a two-pass algorithm:
+
 1. Fast shallow walk with `mode: []` (stat only, no meta/text extraction) to detect added/modified/deleted/unchanged entries via `lmdt` + `size` comparison.
 2. Targeted full-mode walk only for added/modified entries.
 
@@ -109,56 +110,83 @@ Fuse.js's `minMatchCharLength` is set to 1 so single-character CJK queries work.
 Uses **pdfjs-dist** (same library as the renderer's viewer). Replaced `pdf2json` in v4.6+ — **2-3× faster** on multi-MB PDFs and produces richer text output.
 
 **Gotchas:**
+
 - **Buffer vs Uint8Array**: Node's `Buffer` extends `Uint8Array`, but pdfjs explicitly rejects Buffer. Check `Buffer.isBuffer(x)` FIRST, then convert via `new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)`.
 - **Webpack rewrites `require.resolve()`** at compile time to a relative string. For the bundled WS, use `path.join(__dirname, "pdf.worker.mjs")` instead.
 - **Worker file**: pdfjs spawns a "fake worker" in Node by dynamically importing `pdf.worker.mjs`. In webpack bundles, the worker must be copied next to the bundle — the WS webpack config has an inline `CopyPdfWorkerPlugin` for this.
 - **Unhandled rejections**: `loadingTask.promise` can emit rejections even after we handle the main one. Attach a defensive `.catch(() => {})`.
 - **Early validation**: check magic bytes (`%PDF-`) before passing to pdfjs, and size cap at 128 MB.
 
-### tagspaces-ws security hardening
+### tagspaces-ws: a worker, not a server
 
-This server walks, reads and writes arbitrary directories, so treat every one of
-these as load-bearing. The endpoints are `POST /indexer`, `POST /thumb-gen` and
-an authenticated `GET /` health probe — nothing else.
+This package walks directories, extracts text and writes thumbnails on
+arbitrary paths. It is reached **only** over the Electron `utilityProcess`
+message port. There is no HTTP transport, no listening socket and no key.
 
-- **Key**: required, read from the `TS_WS_KEY` **environment variable**, which
-  `index.js` deletes from its own env right after reading so spawned children do
-  not inherit it. `-k` is kept only for standalone CLI use: a process command
-  line is readable by other local processes (`ps`, WMIC), an environment is not.
-  The app generates the key in memory per launch (`tagspaces/src/main/wsAuth.ts`);
-  it is never written to disk or shipped. A key that ships is a public key — this
-  is how `KEY=production-<version>` in `app.asar/.env` made the auth meaningless.
-- **Token shape**: `jwt.verify` pins `algorithms: ["HS256"]` and requires
-  `iss`/`aud`/`exp` plus a `sub` that equals the pathname being called, so a
-  token cannot be replayed later or against a different endpoint. A bare
-  `jwt.verify(token, key)` checks the signature only and accepts any payload,
-  including one with no expiry.
-- **Host allowlist**: `req.headers.host` must be exactly
-  `127.0.0.1|localhost|[::1]:<port>`, else the socket is destroyed. This is the
-  control that stops DNS rebinding — parsing the request URL against a fixed
-  base does not, it only prevents the Host from choosing the route.
-- **Browser rejection**: any request carrying `Origin`, `Referer`, `Cookie` or a
-  `Sec-Fetch-*` header gets `403`. The only legitimate client is the Electron
-  main process via `http.request`, which sends none of them. Fails closed, and
-  still holds once rebinding has removed the CORS preflight.
-- **Exact route table + bare 404**: unknown paths get a status-only `404`. The
-  old catch-all "Hello from the TagSpaces WS" page answered any path and any
-  method unauthenticated, which made the port trivial to fingerprint.
-- **Path validation**: `security.validatePath` requires an absolute path,
-  rejects null bytes and UNC/device paths (`\\?\`, `\\.\`, `\\server\share`),
-  collapses `..` via `path.resolve`, and canonicalizes through `realpath` (or the
-  nearest existing ancestor) so a symlink cannot redirect a checked write. It
-  deliberately does **not** constrain *which* directory may be touched — that is
-  an authorization decision for the main process, which knows the user's
-  configured locations.
-- **Body size limit**: 1 MB (see `security.collectBody`). Requests are JSON
-  configs only — no actual file uploads. `application/json` is required.
-- **Prototype pollution guard**: `security.safeJsonParse` strips `__proto__`,
-  `constructor`, `prototype` keys.
-- **Error sanitization**: `security.sendError` logs details internally but
-  returns generic messages to the client to avoid leaking paths. Auth failures
-  return a bare `401` and never say why.
-- **Timeouts**: `headersTimeout` 10s / `requestTimeout` 30s bound slow-header
-  clients; the 5-minute `setTimeout` covers legitimately long indexing runs.
-- **No path-exposing logs**: privacy concern since logs may be persisted to disk.
-  Removed all `console.log(path)` in the hot path.
+Four files:
+
+- **`operations.js`** — the work (`runIndexer`, `runThumbGen`). Transport-agnostic
+  and what the tests drive directly. Add features here.
+- **`ipc.js`** — `process.parentPort` transport. `{id, op, params}` /
+  `{op:"cancel", target}` in; `{id, ok, result|error, name}` out. Ops: `ping`,
+  `indexer`, `thumbGen`. Op lookup uses `hasOwnProperty`, so inherited `Object`
+  members (`__proto__`, `constructor`, `toString`) are not callable as ops.
+  Malformed messages are ignored rather than crashing the worker.
+- **`index.js`** — exits with an error if `process.parentPort` is missing.
+- **`security.js`** — path validation only.
+
+**To run an operation outside Electron, `require("./operations.js")` directly.
+Do not reopen a port for it.**
+
+#### Why there is no HTTP transport any more
+
+There used to be a loopback HTTP server here, authenticated with a JWT key.
+
+So: **never add a listening socket to this package.** If that ever seems
+necessary, the bar is re-implementing all of the above, and the reported
+vulnerability class comes back with it.
+
+#### Path validation (`security.js`)
+
+- `validatePath` requires an absolute path, rejects null bytes, collapses `..`
+  via `path.resolve`, and canonicalizes through `realpath` (or the nearest
+  existing ancestor, since `.ts/` may not exist yet) so a symlink cannot
+  redirect a checked write. It deliberately does **not** constrain _which_
+  directory may be touched — that is an authorization decision for the caller,
+  which knows the user's configured locations.
+- **Blocked: Windows device namespaces only** (`\\?\`, `\\.\`, either slash
+  flavour). `\\?\` skips `..`/relative/length normalization and `\\.\`
+  addresses raw devices, so neither is a legitimate index target.
+  **A plain UNC share (`\\server\share\Photos`) is deliberately allowed** — it
+  is just a remote filesystem, a Windows user can pick one in the directory
+  picker, and it worked before this validation existed. Blocking all `\\…`
+  paths broke network-share locations; do not "tighten" it back.
+  On POSIX a backslash is an ordinary filename character, so these forms are not
+  absolute there and the `isAbsolute` check rejects them anyway. A leading `//`
+  on POSIX is fine and `path.resolve` collapses it.
+- **Windows `realpath` can return an extended-length path** (`\\?\C:\x`, or
+  `\\?\UNC\server\share`) for long paths. `normalizeExtendedLengthPath`
+  converts those back to the conventional form instead of rejecting them, so
+  long paths and mapped drives that resolve to UNC targets keep working.
+- `realpath` costs ~16 µs per path (≈8 ms per 500 files). That is the price of
+  the symlink guarantee; it is once per request for the indexer and once per
+  file for thumbnails, where real image encoding dwarfs it.
+
+#### Guards that moved to the main process
+
+The worker used to parse the renderer's JSON itself. That parse now happens in
+the app's `src/main/util.ts`, and the two protections moved there with it: a
+prototype-pollution-safe `JSON.parse` reviver and a payload size cap (the HTTP
+body reader's 1 MB limit). Don't drop them.
+
+#### Tests
+
+`__tests__/ipc.test.js` (message transport, including a real PNG so the actual
+thumbnail payload crosses the port — structured clone refuses values JSON would
+have accepted) and `__tests__/security.test.js` (the full Windows/POSIX path
+matrix as pure string logic, so the Windows cases are checked from a macOS or
+Linux host). `npx jest` in the package; no testdata clone needed.
+
+Note the package pins prettier 2.3.2 but its sources are formatted in prettier 3
+style (trailing commas in argument lists). Format with prettier 3, or the
+package's own prettier will fight the existing files.

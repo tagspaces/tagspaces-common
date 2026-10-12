@@ -1,6 +1,6 @@
 {
   "name": "@tagspaces/tagspaces-ws",
-  "description": "Web Service for creating thumbnails and index used by the TagSpaces application",
+  "description": "Electron utilityProcess worker for creating thumbnails and search indexes, used by the TagSpaces application",
   "version": "4.9.0",
   "author": "TagSpaces Authors <contact@tagspaces.org>",
   "license": "MIT",
@@ -12,12 +12,7 @@
   "scripts": {
     "build:dev": "webpack --config webpack.config.js --mode development",
     "build": "npx rimraf build && npx cross-env NODE_ENV=production webpack --config webpack.config.js --mode production",
-    "start": "node build/index.js -p 40352",
-    "start-dev": "node index.js -p 2000 -k e2eTestKey",
-    "kill-process": "lsof -n -i4TCP:40352 | awk '{print$2}' | tail -1 | xargs kill -9",
-    "test-data-download": "npx rimraf testdata && git clone --depth 1 https://github.com/tagspaces/testdata",
-    "test": "npm run test-data-download && npx cross-env NODE_OPTIONS=--experimental-vm-modules jest && npx rimraf testdata",
-    "test-only": "npx cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "npx cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "npmpack": "npm run build && npx shx cp -rL build/** ../../../tagspaces/release/app/node_modules/@tagspaces/tagspaces-ws/",
     "pkg-publish": "npm run build && npm publish --access public"
   },
@@ -25,14 +20,12 @@
     "@tagspaces/tagspaces-indexer": "^4.8.9",
     "@tagspaces/tagspaces-pdf-extraction": "^4.8.10",
     "@tagspaces/tagspaces-workers": "^4.8.10",
-    "jsonwebtoken": "9.0.3",
     "wasm-vips": "0.0.17"
   },
   "devDependencies": {
     "clean-webpack-plugin": "4.0.0",
     "jest": "30.2.0",
     "node-loader": "2.1.0",
-    "supertest": "7.2.2",
     "webpack": "5.105.2",
     "webpack-cli": "6.0.1"
   },
