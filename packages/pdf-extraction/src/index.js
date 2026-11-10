@@ -186,10 +186,12 @@ async function extractPDFcontent(arrayBuffer) {
     }
     return parts.join("");
   } finally {
+    // pdfjs v6 removed PDFDocumentProxy.destroy(); the loading task owns the
+    // transport/worker and releases everything (it is what doc.destroy()
+    // delegated to in v5). Also covers the case where getDocument rejected.
     if (doc) {
-      await doc.destroy();
+      await loadingTask.destroy();
     } else {
-      // loadingTask still holding resources if getDocument rejected
       loadingTask.destroy().catch(() => {});
     }
   }
