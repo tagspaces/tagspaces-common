@@ -156,6 +156,14 @@ async function extractPDFcontent(arrayBuffer) {
     disableAutoFetch: true,
     disableStream: true,
     verbosity: 0,
+    // Security: never let a crafted PDF reach dynamic code generation.
+    // isEvalSupported gated the eval/new Function font-glyph compiler
+    // (CVE-2024-4367) and defaulted to true up to pdfjs v5; v6 removed that
+    // code path and ignores the option, so this pins the safe behaviour if
+    // the dependency is ever downgraded. XFA forms and PDF JavaScript are
+    // never needed for text extraction.
+    isEvalSupported: false,
+    enableXfa: false,
   });
   // Ensure any internal pdfjs promise rejections don't become unhandled —
   // the outer await/destroy() will surface the real error.
