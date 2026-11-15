@@ -10,10 +10,10 @@
     "pkg-publish": "npm publish --access public"
   },
   "dependencies": {
-    "@tagspaces/tagspaces-common": "^4.8.9",
-    "fuse.js": "^7.0.0",
-    "mgrs": "^2.1.0",
-    "open-location-code-typescript": "^1.5.0"
+    "@tagspaces/tagspaces-common": "4.8.9",
+    "fuse.js": "7.5.0",
+    "mgrs": "2.2.0",
+    "open-location-code-typescript": "1.5.0"
   },
   "gitHead": "f000d89f40d3aad60711c34693acb3630dbd4f1f"
 }
