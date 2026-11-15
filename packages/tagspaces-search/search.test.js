@@ -626,3 +626,72 @@ describe("searchLocationIndex", () => {
     });
   });
 });
+
+// --- cached Fuse instance + narrowing filters ---
+
+describe("searchLocationIndex with a cached fuseInstance", () => {
+  const Fuse = require("fuse.js");
+  const { prepareIndex } = require("./prepare-index");
+  const rawIndex = [
+    makeEntry({
+      name: "report.pdf",
+      path: "docs/report.pdf",
+      extension: "pdf",
+    }),
+    makeEntry({
+      name: "report.txt",
+      path: "notes/report.txt",
+      extension: "txt",
+    }),
+    makeEntry({
+      name: "reports",
+      path: "docs/reports",
+      isFile: false,
+      extension: "",
+    }),
+  ];
+
+  function cached() {
+    const prepared = prepareIndex(rawIndex, " ", false);
+    return {
+      preparedIndex: prepared,
+      fuseInstance: new Fuse(prepared, fuseOptions),
+    };
+  }
+
+  test("text query keeps the file type filter (no folders, no other types)", async () => {
+    // Regression: the cached Fuse instance covers the whole index, so the
+    // text search used to bring back entries the type filter had removed.
+    const results = await searchLocationIndex(
+      rawIndex,
+      { textQuery: "report", fileTypes: ["pdf", "docx"] },
+      " ",
+      cached()
+    );
+    expect(results.map((r) => r.name)).toEqual(["report.pdf"]);
+  });
+
+  test("text query keeps the folder scope", async () => {
+    const results = await searchLocationIndex(
+      rawIndex,
+      {
+        textQuery: "report",
+        searchBoxing: "folder",
+        currentDirectory: "notes",
+      },
+      " ",
+      cached()
+    );
+    expect(results.map((r) => r.name)).toEqual(["report.txt"]);
+  });
+
+  test("without other filters the cached instance returns all matches", async () => {
+    const results = await searchLocationIndex(
+      rawIndex,
+      { textQuery: "report" },
+      " ",
+      cached()
+    );
+    expect(results).toHaveLength(3);
+  });
+});

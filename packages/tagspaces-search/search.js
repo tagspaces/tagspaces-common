@@ -162,6 +162,10 @@ function searchLocationIndex(
         );
 
     let searched = false;
+    // The cached Fuse instance (options.fuseInstance) is built over the whole
+    // prepared index; remember it so the text search can be narrowed to what
+    // the scope / tag / type / date filters below leave over.
+    const unfiltered = results;
 
     // Scope to current folder (with sub-folders)
     if (searchQuery.searchBoxing === "folder") {
@@ -250,8 +254,19 @@ function searchLocationIndex(
       } else {
         // Fuzzy search with Fuse.js — extended search handles space=AND,
         // `|`=OR, and richer operators (see docs in the UI help).
-        const fuse = opts.fuseInstance || new Fuse(results, fuseOptions);
-        results = fuse.search(rawQuery);
+        if (opts.fuseInstance) {
+          const fuseResults = opts.fuseInstance.search(rawQuery);
+          if (results === unfiltered) {
+            results = fuseResults;
+          } else {
+            // Without this, a text query would bring back entries the
+            // filters already removed (e.g. folders for type "documents").
+            const allowed = new Set(results);
+            results = fuseResults.filter((r) => allowed.has(r.item));
+          }
+        } else {
+          results = new Fuse(results, fuseOptions).search(rawQuery);
+        }
       }
       console.timeEnd("fuse");
       searched = searched || results.length <= textResultCount;
